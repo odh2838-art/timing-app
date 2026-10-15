@@ -577,7 +577,8 @@ function calcInd(bars){
     if (i <= 14){ ag += g/14; al += lo/14; rsi.push(i === 14 ? 100 - 100/(1 + ag/(al||1e-9)) : null); }
     else { ag = (ag*13 + g)/14; al = (al*13 + lo)/14; rsi.push(100 - 100/(1 + ag/(al||1e-9))); } });
   const chU = h.map((_,i) => i >= 20 ? Math.max(...h.slice(i-20, i)) : null), chL = l.map((_,i) => i >= 20 ? Math.min(...l.slice(i-20, i)) : null);   // 어제까지 20일 채널
-  return { e21: ema(21), s50: bars.map(b => b[5]), s200: bars.map(b => b[6]), m20, bbU, bbL, spanA, spanB, rsi, chU, chL };
+  const nh = h.map((v,i) => i >= 60 && v >= Math.max(...h.slice(i-60, i)));   // 60일 신고가 (지표견 차트의 빨간 점)
+  return { e21: ema(21), s50: bars.map(b => b[5]), s200: bars.map(b => b[6]), m20, bbU, bbL, spanA, spanB, rsi, chU, chL, nh };
 }
 
 function mountChart(box, s){
@@ -656,6 +657,7 @@ function mountChart(box, s){
     const bw = Math.max(1, cw * 0.7);
     for (let i = i0; i <= i1; i++){ const b = bars[i], col = b[4] >= b[1] ? COL.up : COL.down, top = y(Math.max(b[1], b[4])), bh = Math.max(1, Math.abs(y(b[1]) - y(b[4])));
       p += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width="${cw > 6 ? 1 : .8}"/><rect x="${x(i) - bw/2}" y="${top}" width="${bw}" height="${bh}" fill="${col}"/>`; }
+    for (let i = i0; i <= i1; i++) if (ind.nh[i]) p += `<circle cx="${x(i)}" cy="${y(bars[i][2]) - 5}" r="1.8" fill="${COL.up}" opacity=".8"/>`;
     zones.forEach(z => { if (z.lo <= hi && z.lo >= lo) p += `<text x="${L+6}" y="${Math.min(H0-8, y(z.lo) + 16)}" font-size="13" font-weight="600" fill="#1B8A4A" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(z.label)} 구간</text>`; });
     /* 신호 말풍선 (보이는 것 중 최근 6개, 겹치지 않게) */
     const C = {buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"]}, boxes = [];
@@ -668,7 +670,7 @@ function mountChart(box, s){
       p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="6" fill="${bg}"/><text x="${cx}" y="${by + 14.5}" font-size="13" font-weight="600" fill="${fg}" text-anchor="middle">${esc(text)}</text>`;
     };
     (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1).slice(-6).forEach(m => chip(idx[m[0]], m[1], m[2], m[3]));
-    if (s.vcp?.vcp && i1 === N - 1) chip(N - 1, "VCP 형성", "info", false);
+    if (s.vcp?.vcp && i1 === N - 1 && !(s.marks || []).some(m => m[1] === "VCP 형성" && idx[m[0]] >= N - 15)) chip(N - 1, "VCP 형성", "info", false);
     p += `</g>`;
     g += p;
     const last = s.price ?? bars[N-1][4], lc = (s.chg ?? 0) >= 0 ? COL.up : COL.down;
