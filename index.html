@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F5F5F7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="타이밍">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<title>타이밍</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#F5F5F7; --card:#FFFFFF; --fg:#1D1D1F; --fg2:#6E6E73; --fg3:#AEAEB2; --line:#E5E5EA;
+  --blue:#0071E3; --up:#F04452; --down:#3182F6;
+  --buy:#1B8A4A; --buy-bg:#E8F7EE; --sell:#D22F3C; --sell-bg:#FDEBEC;
+  --wait:#B26A00; --wait-bg:#FFF4E0; --info:#1B64DA; --info-bg:#EAF2FE; --hold-bg:#F2F2F5;
+  --r:18px;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:16px;line-height:1.45;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+.wrap{max-width:640px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right,0px)) 110px max(16px,env(safe-area-inset-left,0px))}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:28px 0 14px}
+.top h1{font-size:32px;font-weight:800;letter-spacing:-.03em;margin:0;line-height:1.1}
+.sub{color:var(--fg2);font-size:13px}
+.pill-btn{background:var(--card);border-radius:999px;padding:9px 15px;font-size:14px;font-weight:600;color:var(--blue);box-shadow:0 0 0 1px var(--line) inset;white-space:nowrap}
+.pill-btn.primary{background:var(--blue);color:#fff;box-shadow:none}
+.pill-btn:disabled{opacity:.45}
+.card{background:var(--card);border-radius:var(--r);padding:18px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.regimes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.regime{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:999px;padding:8px 14px;font-size:14px}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.list{background:var(--card);border-radius:var(--r);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:15px 18px;width:100%;text-align:left}
+.row+.row{border-top:1px solid var(--line)}
+.row:active{background:#F2F2F5}
+.row .main{flex:1;min-width:0}
+.row .name{font-size:17px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.row .tk{font-size:13px;font-weight:500;color:var(--fg3)}
+.row .head{font-size:14px;margin-top:3px}
+.row .px{text-align:right;flex:none}
+.row .px b{display:block;font-size:16px;font-variant-numeric:tabular-nums}
+.chg{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px;line-height:1.5}
+.t-buy{background:var(--buy-bg);color:var(--buy)} .t-sell{background:var(--sell-bg);color:var(--sell)}
+.t-wait{background:var(--wait-bg);color:var(--wait)} .t-hold,.t-dark{background:var(--hold-bg);color:var(--fg)}
+.t-info{background:var(--info-bg);color:var(--info)}
+.c-buy{color:var(--buy)} .c-sell{color:var(--sell)} .c-wait{color:var(--wait)} .c-hold{color:var(--fg)}
+.empty{text-align:center;padding:48px 20px;color:var(--fg2)}
+.empty b{display:block;color:var(--fg);font-size:18px;margin-bottom:6px}
+.sec-title{font-size:13px;font-weight:600;color:var(--fg2);margin:26px 4px 8px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.86);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20}
+.tabbar button{flex:1;max-width:160px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--fg3);padding:4px 0}
+.tabbar button.on{color:var(--blue)}
+.tabbar svg{width:24px;height:24px}
+/* 상세 */
+.back{display:inline-flex;align-items:center;gap:2px;color:var(--blue);font-size:17px;padding:18px 0 4px}
+.dhead{padding:6px 0 14px}
+.dhead h2{font-size:28px;font-weight:800;letter-spacing:-.03em;margin:0}
+.bigpx{font-size:34px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:6px}
+.verdict{font-size:20px;font-weight:700;letter-spacing:-.02em;margin:0 0 4px}
+.chart svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--fg2);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.plan{display:grid;grid-template-columns:1fr auto auto;gap:9px 14px;font-variant-numeric:tabular-nums;align-items:baseline}
+.plan .k{color:var(--fg2)} .plan .v{font-weight:700;text-align:right} .plan .p{font-size:13px;color:var(--fg2);text-align:right;min-width:56px}
+.plan .rr{grid-column:1/-1;border-top:1px solid var(--line);padding-top:11px;display:flex;justify-content:space-between;font-weight:700}
+.items{display:flex;flex-direction:column}
+.item{display:flex;gap:10px;padding:11px 0;font-size:15px}
+.item+.item{border-top:1px solid var(--line)}
+.item .m{flex:none;width:22px;text-align:center}
+.item .t{flex:1;min-width:0}
+.item .t b{margin-right:6px}
+.item .s{color:var(--fg2)}
+.zone{display:flex;justify-content:space-between;gap:12px;padding:12px 0}
+.zone+.zone{border-top:1px solid var(--line)}
+.zone .rng{font-weight:700;font-variant-numeric:tabular-nums}
+.zone .why{font-size:13px;color:var(--fg2);margin-top:2px}
+.ccount{font-size:13px;font-weight:600;color:var(--fg2)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form .full{grid-column:1/-1}
+.field label{display:block;font-size:13px;color:var(--fg2);margin:0 0 5px 2px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:0;border-radius:12px;padding:12px 13px;font-size:16px;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{box-shadow:0 0 0 2px var(--blue) inset}
+.step{grid-column:1/-1;font-size:15px;font-weight:700;margin-top:6px}
+.btn{display:block;width:100%;border-radius:14px;padding:15px;font-size:17px;font-weight:600;text-align:center}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.ghost{background:var(--card);color:var(--blue)}
+.btn.danger{background:var(--card);color:var(--sell)}
+.btn:disabled{opacity:.45}
+.note{font-size:13px;color:var(--fg2);line-height:1.55}
+.note a{color:var(--blue)}
+/* 검색 시트 */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:640px;height:88vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;padding:10px max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--fg3);margin:0 auto 10px}
+.sheet-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sheet-top h3{margin:0;font-size:20px;font-weight:800}
+.search{display:flex;align-items:center;gap:8px;background:#E3E3E8;border-radius:12px;padding:10px 12px}
+.search input{flex:1;border:0;background:none;outline:none;font-size:17px;min-width:0}
+.results{flex:1;overflow:auto;margin-top:12px;border-radius:var(--r)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:rgba(29,29,31,.92);color:#fff;padding:12px 18px;border-radius:14px;font-size:15px;z-index:40;max-width:calc(100% - 32px);text-align:center;display:flex;gap:10px;align-items:center}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.mono{font-variant-numeric:tabular-nums}
+.alert-row{display:flex;gap:12px;padding:14px 18px;align-items:flex-start}
+.alert-row+.alert-row{border-top:1px solid var(--line)}
+.alert-row .ic{font-size:20px;line-height:1.2;flex:none}
+.alert-row .when{font-size:12px;color:var(--fg3)}
+.err{background:var(--sell-bg);color:var(--sell);border-radius:14px;padding:12px 14px;font-size:14px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="tabbar" id="tabbar" hidden>
+  <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>종목</button>
+  <button data-tab="alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>알림</button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
+</nav>
+<script>
+"use strict";
+/* ───────── 저장 (이 기기에만) ───────── */
+const LS = {
+  get(k, d=null){ try{ const v = localStorage.getItem(k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const S = {
+  token: LS.get("tok", ""), repo: LS.get("repo", "odh2838-art/timing-agent"),
+  tab: "home", detail: null, dash: null, csv: null, alerts: null, err: "", busy: null
+};
+const CSV_PATH = "종목.csv";
+const HEAD = ["시장","티커","이름","박스하단","박스상단","저항","1차매수일","1차가격","2차매수일","2차가격","3차매수일","3차가격","조절분상태","조절분매도일","메모"];
+
+/* ───────── GitHub ───────── */
+const enc = p => p.split("/").map(encodeURIComponent).join("/");
+async function gh(path, opt={}){
+  const res = await fetch("https://api.github.com/repos/" + S.repo + path, {
+    ...opt, cache:"no-store",
+    headers:{ "Authorization":"Bearer " + S.token, "X-GitHub-Api-Version":"2022-11-28",
+              "Accept": opt.raw ? "application/vnd.github.raw+json" : "application/vnd.github+json",
+              ...(opt.body ? {"Content-Type":"application/json"} : {}) }
+  });
+  if (res.status === 401) throw new Error("토큰이 만료됐거나 잘못됐습니다. 설정에서 새 토큰을 넣어 주세요.");
+  if (res.status === 403) throw new Error("토큰 권한이 부족합니다. Contents·Actions 읽기/쓰기를 허용해 주세요.");
+  if (res.status === 404) { const e = new Error("없음"); e.nf = true; throw e; }
+  if (!res.ok) throw new Error("GitHub 응답 " + res.status);
+  if (res.status === 204) return null;
+  return opt.raw ? res.text() : res.json();
+}
+const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,"")), c => c.charCodeAt(0)));
+const b64enc = s => { const b = new TextEncoder().encode(s); let x=""; for (let i=0;i<b.length;i+=0x8000) x += String.fromCharCode.apply(null, b.subarray(i,i+0x8000)); return btoa(x); };
+async function readJSON(path, d){ try{ return JSON.parse(await gh("/contents/" + enc(path) + "?ref=main", {raw:true})); }catch(e){ if (e.nf) return d; throw e; } }
+
+/* ───────── CSV ───────── */
+function parseCSV(t){
+  const rows=[]; let row=[], f="", q=false;
+  for (let i=0;i<t.length;i++){
+    const c=t[i];
+    if (q){ if (c==='"'){ if (t[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=c; }
+    else if (c==='"') q=true;
+    else if (c===','){ row.push(f); f=""; }
+    else if (c==='\n' || c==='\r'){ if (c==='\r' && t[i+1]==='\n') i++; row.push(f); f=""; if (row.some(x=>x!=="")) rows.push(row); row=[]; }
+    else f+=c;
+  }
+  row.push(f); if (row.some(x=>x!=="")) rows.push(row);
+  return rows;
+}
+const cell = v => /[",\n\r]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
+function csvText(head, rows){ return [head, ...rows.map(r => head.map(h => r[h] ?? ""))].map(r => r.map(x => cell(String(x))).join(",")).join("\n") + "\n"; }
+async function loadCSV(){
+  const j = await gh("/contents/" + enc(CSV_PATH) + "?ref=main");
+  let txt = b64dec(j.content); const bom = txt.charCodeAt(0) === 0xFEFF; if (bom) txt = txt.slice(1);
+  const rows = parseCSV(txt); const head = rows.shift() || HEAD;
+  S.csv = { sha:j.sha, bom, head, rows: rows.map(r => Object.fromEntries(head.map((h,i)=>[h, (r[i]??"").trim()]))) };
+  return S.csv;
+}
+async function saveCSV(msg){
+  const c = S.csv; const txt = (c.bom ? "﻿" : "") + csvText(c.head, c.rows);
+  const r = await gh("/contents/" + enc(CSV_PATH), { method:"PUT", body: JSON.stringify({ message: msg, content: b64enc(txt), sha: c.sha, branch:"main" }) });
+  c.sha = r.content.sha;
+}
+const symOf = (mk, tk) => mk === "코스피" ? tk + ".KS" : mk === "코스닥" ? tk + ".KQ" : tk;
+
+/* ───────── 점검 실행 ───────── */
+async function dispatch(cmd, symbol){
+  const since = Date.now() - 5000;
+  await gh("/actions/workflows/agent.yml/dispatches", { method:"POST", body: JSON.stringify({ ref:"main", inputs: symbol ? {cmd, symbol} : {cmd} }) });
+  return since;
+}
+async function waitRun(since, label){
+  S.busy = label; toast(label + " · 보통 2–3분", true);
+  let id = null;
+  for (let i=0;i<60;i++){
+    await sleep(i < 3 ? 4000 : 8000);
+    try{
+      const j = await gh("/actions/runs?event=workflow_dispatch&per_page=5");
+      const run = id ? j.workflow_runs.find(r => r.id === id) : j.workflow_runs.find(r => Date.parse(r.created_at) >= since);
+      if (!run) continue;
+      id = run.id;
+      if (run.status === "completed"){
+        S.busy = null;
+        if (run.conclusion === "success"){ await refresh(); toast("점검을 마쳤습니다"); }
+        else toast("점검이 실패했습니다. GitHub Actions 기록을 확인해 주세요.");
+        return;
+      }
+    }catch(e){}
+  }
+  S.busy = null; toast("아직 진행 중입니다. 잠시 뒤 새로고침해 주세요.");
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ───────── 데이터 ───────── */
+async function refresh(){
+  S.err = "";
+  try{
+    const [d] = await Promise.all([readJSON("상태/대시보드.json", {stocks:{}, regimes:{}}), loadCSV()]);
+    S.dash = d; S.alerts = null;
+    LS.set("dash", d);
+  }catch(e){ S.err = e.message; }
+  render();
+}
+async function catalog(){
+  const c = LS.get("catalog");
+  if (c && Date.now() - c.t < 7*864e5) return c.rows;
+  const rows = await readJSON("상태/종목사전.json", []);
+  if (rows.length) LS.set("catalog", {t:Date.now(), rows});
+  return rows;
+}
+/* 한글로 많이 찾는 미국 종목 */
+const ALIAS = {"엔비디아":"NVDA","애플":"AAPL","테슬라":"TSLA","마이크로소프트":"MSFT","마소":"MSFT","아마존":"AMZN","알파벳":"GOOGL","구글":"GOOGL","메타":"META","페이스북":"META","넷플릭스":"NFLX","브로드컴":"AVGO","에이엠디":"AMD","팔란티어":"PLTR","티에스엠씨":"TSM","대만반도체":"TSM","코스트코":"COST","일라이릴리":"LLY","릴리":"LLY","노보노디스크":"NVO","버크셔":"BRK-B","제이피모건":"JPM","비자":"V","마스터카드":"MA","월마트":"WMT","오라클":"ORCL","어도비":"ADBE","세일즈포스":"CRM","인텔":"INTC","퀄컴":"QCOM","마이크론":"MU","에이에스엠엘":"ASML","슈퍼마이크로":"SMCI","코인베이스":"COIN","스타벅스":"SBUX","나이키":"NKE","디즈니":"DIS","코카콜라":"KO","펩시":"PEP","맥도날드":"MCD","아이온큐":"IONQ","로켓랩":"RKLB","유니티":"U","쇼피파이":"SHOP","우버":"UBER","에어비앤비":"ABNB","로빈후드":"HOOD","소파이":"SOFI","리비안":"RIVN","루시드":"LCID","크라우드스트라이크":"CRWD","스노우플레이크":"SNOW","팔로알토":"PANW","암":"ARM","델":"DELL","아이비엠":"IBM","시스코":"CSCO","보잉":"BA","캐터필러":"CAT","엑슨모빌":"XOM","셰브론":"CVX","화이자":"PFE","모더나":"MRNA","존슨앤존슨":"JNJ","유나이티드헬스":"UNH","버티브":"VRT","비스트라":"VST","컨스텔레이션":"CEG","마이크로스트래티지":"MSTR","스트래티지":"MSTR","앱러빈":"APP","써클":"CRCL"};
+
+/* ───────── 화면 ───────── */
+const $app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isKR = m => m === "코스피" || m === "코스닥";
+const num = (v, mk) => v == null || isNaN(v) ? "-" : (isKR(mk) ? Math.round(v).toLocaleString("ko-KR") : (+v).toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}));
+const pct = v => v == null || isNaN(v) ? "-" : (v > 0 ? "+" : "") + v.toFixed(1) + "%";
+const strip = s => String(s).replace(/\*\*/g, "");
+const TONE_DOT = {buy:"var(--buy)", sell:"var(--sell)", wait:"var(--wait)", hold:"var(--fg3)"};
+const REG_DOT = {"양호":"var(--buy)", "보통":"var(--wait)", "약세":"var(--sell)"};
+
+function render(){
+  document.getElementById("tabbar").hidden = !S.token;
+  document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab && !S.detail));
+  if (!S.token) return renderSetup();
+  if (S.detail) return renderDetail(S.detail);
+  if (S.tab === "alerts") return renderAlerts();
+  if (S.tab === "settings") return renderSettings();
+  renderHome();
+}
+
+function renderSetup(msg){
+  $app.innerHTML = `<div class="wrap" style="padding-top:40px">
+    <h1 style="font-size:32px;font-weight:800;letter-spacing:-.03em;margin:0 0 8px">타이밍</h1>
+    <p class="sub" style="font-size:16px;margin:0 0 28px">내 종목의 매수 구간을 지켜보고 디스코드로 알려줍니다.</p>
+    ${msg ? `<div class="err">${esc(msg)}</div>` : ""}
+    <div class="card stack">
+      <div class="field"><label>GitHub 토큰</label><input id="tok" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…"></div>
+      <div class="field"><label>저장소</label><input id="repo" value="${esc(S.repo)}" autocapitalize="off" spellcheck="false"></div>
+      <button class="btn primary" id="go">연결</button>
+    </div>
+    <p class="note" style="margin:16px 4px">토큰은 이 기기 브라우저에만 저장되고 GitHub(api.github.com)에만 보냅니다. 다른 곳으로는 나가지 않습니다. 공용 기기에서는 쓰지 마세요.</p>
+  </div>`;
+  document.getElementById("go").onclick = async () => {
+    const t = document.getElementById("tok").value.trim(), r = document.getElementById("repo").value.trim();
+    if (!t) return;
+    S.token = t; S.repo = r;
+    try{ await gh(""); LS.set("tok", t); LS.set("repo", r); S.tab = "home"; render(); refresh(); }
+    catch(e){ S.token = ""; renderSetup(e.nf ? "저장소를 찾을 수 없습니다. 이름과 토큰의 저장소 권한을 확인해 주세요." : e.message); }
+  };
+}
+
+function stockList(){
+  const st = S.dash?.stocks || {};
+  return (S.csv?.rows || []).map(r => ({ row:r, sym: symOf(r["시장"], r["티커"]), d: st[symOf(r["시장"], r["티커"])] }));
+}
+
+function renderHome(){
+  const d = S.dash, list = stockList();
+  const regs = Object.entries(d?.regimes || {});
+  $app.innerHTML = `<div class="wrap">
+    <div class="top"><div><h1>타이밍</h1><div class="sub">${d?.updated ? "마지막 점검 " + esc(d.updated) : "불러오는 중…"}</div></div>
+      <button class="pill-btn" id="check" ${S.busy ? "disabled" : ""}>지금 점검</button></div>
+    ${S.err ? `<div class="err">${esc(S.err)}</div>` : ""}
+    ${regs.length ? `<div class="regimes">${regs.map(([n,g]) => `<div class="regime"><span class="dot" style="background:${REG_DOT[g.label]||"var(--fg3)"}"></span><b>${esc(n)}</b> ${esc(g.label)} <span class="sub">${g.points}/${g.total}</span></div>`).join("")}</div>` : ""}
+    ${!S.csv ? `<div class="empty">불러오는 중…</div>` : list.length ? `<div class="list">${list.map((x,i) => {
+      const s = x.d;
+      if (!s) return `<button class="row" data-i="${i}"><div class="main"><div class="name">${esc(x.row["이름"]||x.row["티커"])} <span class="tk">${esc(x.row["티커"])}</span></div><div class="head sub">다음 점검 때 계산됩니다</div></div></button>`;
+      const tags = [s.mom ? `<span class="tag t-sell">모멘텀 SELL</span>` : "", s.vcp?.vcp ? `<span class="tag t-info">VCP</span>` : "", s.p1 ? `<span class="tag t-dark">${esc(s.plan_text)}</span>` : ""].join("");
+      return `<button class="row" data-i="${i}"><div class="main"><div class="name">${esc(s.name)} <span class="tk">${esc(s.ticker)}</span> ${tags}</div>
+        <div class="head"><span class="dot" style="display:inline-block;margin-right:6px;vertical-align:1px;background:${TONE_DOT[s.tone]||"var(--fg3)"}"></span>${esc(s.head)}</div></div>
+        <div class="px"><b>${num(s.price, s.market)}</b><span class="chg ${s.chg>=0?"up":"down"}">${pct(s.chg)}</span></div></button>`;
+    }).join("")}</div>` : `<div class="empty card"><b>등록한 종목이 없습니다</b>아래 버튼으로 기업을 찾아 추가하세요.</div>`}
+    <div style="margin-top:14px"><button class="btn ghost" id="add">기업 추가</button></div>
+    ${d?.errors?.length ? `<p class="note" style="margin:14px 4px">받지 못한 종목: ${d.errors.map(esc).join(", ")}</p>` : ""}
+  </div>`;
+  document.getElementById("add").onclick = openSearch;
+  document.getElementById("check").onclick = async () => { try{ const t = await dispatch("앱-갱신"); render(); waitRun(t, "전 종목 점검 중"); }catch(e){ toast(e.message); } };
+  $app.querySelectorAll(".row").forEach(b => b.onclick = () => { S.detail = list[+b.dataset.i].sym; render(); scrollTo(0,0); });
+}
+
+/* 캔들 차트 (SVG) */
+function chartSVG(s){
+  const bars = s.bars || []; if (bars.length < 5) return `<div class="empty">차트 자료가 없습니다</div>`;
+  const W=360, H=230, L=6, R=52, T=10, B=22, n=bars.length, cw=(W-L-R)/n;
+  const zones = (s.zones||[]).filter(z => z.label !== "지지");
+  let lo = Math.min(...bars.map(b=>b[3])), hi = Math.max(...bars.map(b=>b[2]));
+  const extra = [s.plan?.stop, s.wall?.v, ...zones.flatMap(z=>[z.lo,z.hi])].filter(v => v != null && v > lo*0.75 && v < hi*1.25);
+  lo = Math.min(lo, ...extra); hi = Math.max(hi, ...extra); const pad=(hi-lo)*0.06; lo-=pad; hi+=pad;
+  const y = v => T + (hi - v) / (hi - lo) * (H - T - B), x = i => L + cw*i + cw/2;
+  let g = "";
+  zones.forEach(z => { g += `<rect x="${L}" y="${y(z.hi)}" width="${W-L-R}" height="${Math.max(2, y(z.lo)-y(z.hi))}" fill="#1B8A4A" opacity=".12"/>
+    <text x="${W-R+4}" y="${(y(z.hi)+y(z.lo))/2+4}" font-size="10" font-weight="700" fill="#1B8A4A">${esc(z.label)}</text>`; });
+  for (let k=0;k<=4;k++){ const v = lo + (hi-lo)*k/4; g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#E5E5EA" stroke-width=".6"/><text x="${W-R+4}" y="${y(v)+3}" font-size="9" fill="#AEAEB2">${num(v, s.market)}</text>`; }
+  if (s.wall?.v && s.wall.v < hi) g += `<line x1="${L}" x2="${W-R}" y1="${y(s.wall.v)}" y2="${y(s.wall.v)}" stroke="#D22F3C" stroke-width=".9" stroke-dasharray="4 3"/>`;
+  if (s.vcp?.vcp && s.vcp.pivot) g += `<line x1="${L}" x2="${W-R}" y1="${y(s.vcp.pivot)}" y2="${y(s.vcp.pivot)}" stroke="#1B64DA" stroke-width=".9" stroke-dasharray="2 3"/>`;
+  const line = (k, col) => { let p=""; bars.forEach((b,i) => { if (b[k]!=null) p += (p?"L":"M") + x(i).toFixed(1) + " " + y(b[k]).toFixed(1); }); return p ? `<path d="${p}" fill="none" stroke="${col}" stroke-width="1.4" stroke-linejoin="round"/>` : ""; };
+  bars.forEach((b,i) => { const up = b[4] >= b[1], col = up ? "#F04452" : "#3182F6", top = y(Math.max(b[1],b[4])), bh = Math.max(1, Math.abs(y(b[1])-y(b[4])));
+    g += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width=".8"/><rect x="${x(i)-cw*0.36}" y="${top}" width="${cw*0.72}" height="${bh}" fill="${col}"/>`; });
+  g += line(5, "#FF9F0A") + line(6, "#8E8E93");
+  const last = s.price ?? bars[n-1][4];
+  g += `<line x1="${L}" x2="${W-R}" y1="${y(last)}" y2="${y(last)}" stroke="${(s.chg??0)>=0?"#F04452":"#3182F6"}" stroke-width=".6" opacity=".5"/><rect x="${W-R+1}" y="${y(last)-8}" width="${R-2}" height="16" rx="4" fill="${(s.chg??0)>=0?"#F04452":"#3182F6"}"/><text x="${W-R+5}" y="${y(last)+4}" font-size="10" font-weight="700" fill="#fff">${num(last, s.market)}</text>`;
+  [0, Math.floor(n/2), n-1].forEach(i => g += `<text x="${Math.min(x(i), W-R-30)}" y="${H-6}" font-size="9" fill="#AEAEB2">${bars[i][0].slice(5).replace("-","/")}</text>`);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 90일 일봉 차트" font-family="Pretendard Variable,-apple-system,sans-serif">${g}</svg>`;
+}
+
+const MARK = {"✔":"c-buy","✖":"c-sell","➖":"sub","❔":"sub"};
+function itemsHTML(lines){
+  return `<div class="items">${lines.map(l => { const t = strip(l); const m = t.match(/^(\S+)\s+(\S+(?:\s지점)?)\s+(.*)$/);
+    return m ? `<div class="item"><span class="m ${MARK[m[1]]||""}">${esc(m[1])}</span><div class="t"><b>${esc(m[2])}</b><span class="s">${esc(m[3])}</span></div></div>` : `<div class="item"><div class="t">${esc(t)}</div></div>`; }).join("")}</div>`;
+}
+
+function renderDetail(sym){
+  const x = stockList().find(v => v.sym === sym);
+  if (!x){ S.detail = null; return render(); }
+  const s = x.d, row = x.row, mk = row["시장"];
+  const pl = s?.plan;
+  const pr = (v, base) => base ? pct((v/base-1)*100) : "";
+  const sepa = s?.sepa || [];
+  const nOk = sepa.filter(v => v[0] === "✔").length;
+  $app.innerHTML = `<div class="wrap">
+    <button class="back" id="back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>종목</button>
+    <div class="dhead"><h2>${esc(s?.name || row["이름"] || row["티커"])}</h2><div class="sub">${esc(row["티커"])} · ${esc(mk)}${s ? " · " + esc(s.updated) + " 기준" : ""}</div>
+      ${s ? `<div class="bigpx">${num(s.price, mk)} <span class="chg ${s.chg>=0?"up":"down"}" style="font-size:17px">${pct(s.chg)}</span></div>` : ""}</div>
+    ${s ? `
+    <div class="stack">
+      <div class="card"><p class="verdict c-${esc(s.tone)}">${esc(s.head)}</p><div class="sub">${esc(pl.mode)} · ${esc(s.plan_text)}${s.mom ? " · 하락 모멘텀 진행 중" : ""}${s.vcp?.vcp ? " · VCP 형성" : ""}</div></div>
+      <div class="card chart">${chartSVG(s)}
+        <div class="legend"><span><i style="background:#FF9F0A"></i>50일선</span><span><i style="background:#8E8E93"></i>200일선</span><span><i style="background:#1B8A4A;opacity:.35;height:8px"></i>매수 구간</span>${s.wall ? `<span><i style="background:#D22F3C"></i>위쪽 벽</span>` : ""}${s.vcp?.vcp ? `<span><i style="background:#1B64DA"></i>VCP 피벗</span>` : ""}</div></div>
+      <div class="card"><div class="plan">
+        <span class="k">진입</span><span class="v">${num(pl.entry, mk)}</span><span class="p"></span>
+        <span class="k">현재가</span><span class="v">${num(s.price, mk)}</span><span class="p">${pr(s.price, pl.entry)}</span>
+        <span class="k">손절</span><span class="v c-sell">${num(pl.stop, mk)}</span><span class="p">${pr(pl.stop, pl.entry)}</span>
+        <span class="k">목표</span><span class="v c-buy">${num(pl.target, mk)}</span><span class="p">${pr(pl.target, pl.entry)}</span>
+        <div class="rr"><span>손익비</span><span>1 : ${pl.rr == null ? "-" : pl.rr.toFixed(1)} · ${esc(strip(pl.grade).replace("👍 ",""))}</span></div></div></div>
+    </div>
+    ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)} – ${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
+    ${sepa.length ? `<div class="sec-title">SEPA 5요소 · ${nOk}/5 통과</div><div class="card" style="padding-block:4px">${itemsHTML(sepa.map(v => v.join(" ")))}</div>` : ""}
+    <div class="sec-title">전설 4인 · 찬성 ${s.votes[0]} 중립 ${s.votes[1]} 반대 ${s.votes[2]}</div><div class="card" style="padding-block:4px">${itemsHTML(s.legends)}</div>
+    <div class="sec-title">지금 상태</div><div class="card" style="padding-block:4px"><div class="items">${s.state.map(l => { const t=strip(l); return `<div class="item"><span class="m">${esc(t.slice(0,2))}</span><div class="t">${esc(t.slice(2).trim().replace(/\s{2,}/," · "))}</div></div>`; }).join("")}</div></div>
+    ${s.cautions?.length ? `<div class="sec-title">주의</div><div class="card" style="padding-block:4px"><div class="items">${s.cautions.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
+    ` : `<div class="card empty"><b>아직 계산 전입니다</b>다음 점검(또는 지금 점검) 뒤에 구간이 나옵니다.</div>`}
+
+    <div class="sec-title">내 기록</div>
+    <div class="card"><div class="form" id="form">
+      ${fld("1차매수일","1차 매수일","date")}${fld("1차가격","1차 가격","num")}
+      ${fld("2차매수일","2차 매수일","date")}${fld("2차가격","2차 가격","num")}
+      ${fld("3차매수일","3차 매수일","date")}${fld("3차가격","3차 가격","num")}
+      <div class="step">직접 정한 구간 (비우면 자동)</div>
+      ${fld("박스하단","구간 하단","num")}${fld("박스상단","구간 상단","num")}
+      ${fld("저항","저항 (선택)","num")}
+      <div class="field"><label>조절분</label><select data-k="조절분상태"><option value="">보유</option><option value="매도" ${row["조절분상태"]==="매도"?"selected":""}>매도함</option></select></div>
+      ${fld("조절분매도일","조절분 매도일","date")}
+      <div class="field full"><label>메모</label><textarea data-k="메모" rows="2">${esc(row["메모"])}</textarea></div>
+      <div class="full"><button class="btn primary" id="save">기록 저장</button></div>
+    </div>
+    <p class="note" style="margin:10px 2px 0">매수하면 꼭 기록하세요. 기록이 있어야 다음 단계 알림으로 넘어갑니다.</p></div>
+
+    <div class="stack" style="margin-top:22px">
+      <button class="btn ghost" id="send" ${S.busy?"disabled":""}>디스코드로 카드 보내기</button>
+      <button class="btn danger" id="del">종목 삭제</button>
+    </div>
+  </div>`;
+  function fld(k, label, type){
+    const v = row[k] || "";
+    return `<div class="field"><label>${label}</label><input data-k="${k}" value="${esc(v)}" ${type==="date"?'type="date"':'inputmode="decimal" placeholder="숫자만"'}></div>`;
+  }
+  document.getElementById("back").onclick = () => { S.detail = null; render(); };
+  document.getElementById("save").onclick = async (ev) => {
+    const btn = ev.currentTarget; btn.disabled = true;
+    try{
+      await loadCSV(); const r = S.csv.rows.find(v => symOf(v["시장"], v["티커"]) === sym);
+      if (!r) throw new Error("종목을 찾지 못했습니다");
+      for (const el of document.querySelectorAll("#form [data-k]")){
+        let v = el.value.trim(); if (el.inputMode === "decimal") v = v.replace(/[^\d.]/g, "");
+        r[el.dataset.k] = v;
+      }
+      await saveCSV(`앱: ${r["이름"]||r["티커"]} 기록 수정`);
+      toast("저장했습니다 · 반영을 위해 점검합니다");
+      const t = await dispatch("앱-갱신"); waitRun(t, "다시 계산 중");
+    }catch(e){ toast(e.message); }
+    btn.disabled = false;
+  };
+  document.getElementById("send").onclick = async () => { try{ await dispatch("status", sym); toast("카드를 보내는 중입니다 · 2–3분 뒤 디스코드에 옵니다"); }catch(e){ toast(e.message); } };
+  const del = document.getElementById("del");
+  del.onclick = async () => {
+    if (!del.dataset.sure){ del.dataset.sure = 1; del.textContent = "한 번 더 누르면 삭제됩니다"; setTimeout(() => { del.dataset.sure = ""; del.textContent = "종목 삭제"; }, 4000); return; }
+    del.disabled = true;
+    try{
+      await loadCSV(); S.csv.rows = S.csv.rows.filter(v => symOf(v["시장"], v["티커"]) !== sym);
+      await saveCSV(`앱: ${row["이름"]||row["티커"]} 삭제`);
+      if (S.dash?.stocks) delete S.dash.stocks[sym];
+      S.detail = null; render(); toast("삭제했습니다");
+    }catch(e){ toast(e.message); del.disabled = false; }
+  };
+}
+
+/* 기업 검색 · 추가 */
+async function openSearch(){
+  const bg = document.createElement("div"); bg.className = "sheet-bg";
+  bg.innerHTML = `<div class="sheet" role="dialog" aria-label="기업 추가"><div class="grab"></div>
+    <div class="sheet-top"><h3>기업 추가</h3><button class="pill-btn" id="close">닫기</button></div>
+    <div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" placeholder="삼성전자, 엔비디아, NVDA, 005930" autocomplete="off"></div>
+    <div class="results" id="res"><div class="empty">기업 목록을 불러오는 중…</div></div></div>`;
+  document.body.appendChild(bg);
+  const close = () => bg.remove();
+  bg.onclick = e => { if (e.target === bg) close(); };
+  bg.querySelector("#close").onclick = close;
+  const $q = bg.querySelector("#q"), $r = bg.querySelector("#res");
+  let rows = [];
+  try{ rows = await catalog(); }catch(e){ $r.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  if (!rows.length){ $r.innerHTML = `<div class="empty"><b>기업 목록이 아직 없습니다</b>설정에서 '지금 점검'을 한 번 실행하면 만들어집니다.</div>`; }
+  const have = new Set(stockList().map(v => v.sym));
+  const run = () => {
+    const q = $q.value.trim(); if (!q){ $r.innerHTML = `<div class="empty">이름이나 코드로 찾으세요</div>`; return; }
+    const ql = q.toLowerCase(), alias = ALIAS[q.replace(/\s/g,"")];
+    const scored = [];
+    for (const r of rows){
+      const [m, c, n] = r; const nl = n.toLowerCase(), cl = c.toLowerCase();
+      let sc = 0;
+      if (alias && c === alias && m === "미국") sc = 100;
+      else if (cl === ql) sc = 90; else if (nl === ql) sc = 85;
+      else if (nl.startsWith(ql)) sc = 70; else if (cl.startsWith(ql)) sc = 60; else if (nl.includes(ql)) sc = 40;
+      if (sc){ if (m !== "미국") sc += 3; scored.push([sc, r]); }
+    }
+    scored.sort((a,b) => b[0]-a[0] || a[1][2].length - b[1][2].length);
+    const top = scored.slice(0, 40).map(v => v[1]);
+    $r.innerHTML = top.length ? `<div class="list">${top.map((r,i) => { const s = symOf(r[0], r[1]); const on = have.has(s);
+      return `<button class="row" data-i="${i}" ${on?"disabled":""}><div class="main"><div class="name" style="font-size:16px">${esc(r[2])}</div><div class="sub">${esc(r[0])} · ${esc(r[1])}</div></div><span class="pill-btn ${on?"":"primary"}" style="padding:6px 12px">${on?"등록됨":"추가"}</span></button>`; }).join("")}</div>` : `<div class="empty">찾는 기업이 없습니다</div>`;
+    $r.querySelectorAll(".row:not([disabled])").forEach(b => b.onclick = () => add(top[+b.dataset.i], b));
+  };
+  const add = async (r, b) => {
+    b.disabled = true; b.querySelector(".pill-btn").textContent = "추가 중";
+    const [m, c, n0] = r;
+    const krName = Object.entries(ALIAS).find(([k,v]) => v === c && m === "미국")?.[0];
+    const name = m === "미국" ? (krName || n0.replace(/,?\s+(Inc\.?|Corporation|Corp\.?|Ltd\.?|Holdings?|plc|N\.V\.|Co\.?)$/i, "").replace(/\s+Class [A-Z].*$/i,"")) : n0;
+    try{
+      await loadCSV();
+      if (S.csv.rows.some(v => symOf(v["시장"], v["티커"]) === symOf(m, c))) throw new Error("이미 등록된 종목입니다");
+      S.csv.rows.push(Object.fromEntries(S.csv.head.map(h => [h, h==="시장"?m : h==="티커"?c : h==="이름"?name : ""])));
+      await saveCSV(`앱: ${name} 추가`);
+      have.add(symOf(m, c)); b.querySelector(".pill-btn").textContent = "등록됨"; b.querySelector(".pill-btn").classList.remove("primary");
+      render();
+      const t = await dispatch("status", symOf(m, c));
+      waitRun(t, name + " 계산 중 · 카드가 디스코드로 갑니다");
+    }catch(e){ toast(e.message); b.disabled = false; b.querySelector(".pill-btn").textContent = "추가"; }
+  };
+  let tm; $q.oninput = () => { clearTimeout(tm); tm = setTimeout(run, 120); };
+  $q.focus(); run();
+}
+
+const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡"};
+async function renderAlerts(){
+  $app.innerHTML = `<div class="wrap"><div class="top"><div><h1>알림</h1><div class="sub">최근 디스코드로 보낸 100건</div></div></div><div id="al"><div class="empty">불러오는 중…</div></div></div>`;
+  try{ if (!S.alerts) S.alerts = await readJSON("상태/알림내역.json", []); }catch(e){ document.getElementById("al").innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
+  if (S.tab !== "alerts" || S.detail) return;
+  const a = S.alerts;
+  document.getElementById("al").innerHTML = a.length ? `<div class="list">${a.map(h => `<div class="alert-row"><span class="ic">${ICON[h.kind]||"•"}</span><div style="flex:1;min-width:0"><div><b>${esc(h.name)}</b> <span class="sub">${esc(h.title)}</span></div><div class="when">${esc(h.t)}${h.price!=null && h.kind!=="news" ? " · " + esc(num(h.price, (h.symbol||"").match(/\.K[SQ]$/) ? "코스피" : "미국")) : ""}</div></div></div>`).join("")}</div>` : `<div class="card empty"><b>아직 보낸 알림이 없습니다</b>구간 도착·진입·이탈 신호가 생기면 여기에도 남습니다.</div>`;
+}
+
+function renderSettings(){
+  $app.innerHTML = `<div class="wrap"><div class="top"><div><h1>설정</h1></div></div>
+    <div class="card stack">
+      <div><div class="sub">저장소</div><b>${esc(S.repo)}</b></div>
+      <a class="btn ghost" style="text-decoration:none;background:var(--bg)" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener">GitHub 실행 기록 보기</a>
+      <button class="btn ghost" style="background:var(--bg)" id="hello">디스코드 연결 확인</button>
+      <button class="btn ghost" style="background:var(--bg)" id="recat">기업 검색 목록 새로 받기</button>
+    </div>
+    <div class="sec-title">자동 점검 시간 (한국 시간)</div>
+    <div class="card note" style="font-size:14px;color:var(--fg)">
+      한국장 10:30 · 13:00 · 14:50 · 마감 후 15:50<br>미국장 23:50 · 01:50 · 03:50 · 마감 후 07:10<br>토요일 09:00 주간 요약
+    </div>
+    <div class="sec-title">토큰</div>
+    <div class="card stack"><p class="note" style="margin:0">토큰은 이 기기에만 저장돼 있습니다. 만료되면 GitHub에서 새로 만들어 다시 넣으세요.</p>
+      <button class="btn danger" style="background:var(--bg)" id="out">토큰 지우기</button></div>
+    <p class="note" style="margin:18px 4px">모든 내용은 미리 정한 규칙을 기계적으로 적용한 참고 자료이며 투자 자문이 아닙니다. 매수 이유와 최종 결정은 직접 합니다.</p>
+  </div>`;
+  document.getElementById("hello").onclick = async () => { try{ await dispatch("hello"); toast("1–2분 뒤 디스코드에 인사 메시지가 오면 연결된 것입니다"); }catch(e){ toast(e.message); } };
+  document.getElementById("recat").onclick = async () => { LS.del("catalog"); try{ await catalog(); toast("새로 받았습니다"); }catch(e){ toast(e.message); } };
+  document.getElementById("out").onclick = () => { LS.del("tok"); S.token = ""; S.dash = null; S.csv = null; render(); };
+}
+
+let toastT;
+function toast(msg, spin){
+  document.querySelectorAll(".toast").forEach(t => t.remove());
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status");
+  t.innerHTML = (spin ? `<span class="spin"></span>` : "") + `<span>${esc(msg)}</span>`;
+  document.body.appendChild(t); clearTimeout(toastT);
+  if (!spin) toastT = setTimeout(() => t.remove(), 3800);
+}
+
+document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; S.detail = null; render(); scrollTo(0,0); });
+window.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.token && !S.busy) refresh(); });
+S.dash = LS.get("dash");
+render();
+if (S.token) refresh();
+</script>
+</body>
+</html>
