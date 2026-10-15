@@ -552,8 +552,8 @@ async function removeStock(sym){
 /* ───────── 차트: 기간 · 끌어서 이동 · 벌려서 확대 · 길게 눌러 가격 · 보조지표 ─────────
    bars: [날짜, 시, 고, 저, 종, 50일선, 200일선, 거래량]  (EMA·볼린저·일목·RSI는 여기서 계산) */
 const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2년",500]];
-const IND_LIST = [["ma","이평선"],["bb","볼린저"],["ich","일목"],["vol","거래량"],["rsi","RSI"]];
-const IND = Object.assign({ma:true, bb:false, ich:false, vol:true, rsi:false}, LS.get("ind", {}));
+const IND_LIST = [["ma","이평선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"]];   // 지표견이 쓰는 도구만
+const IND = Object.assign({ma:true, ch:false, ich:false, vol:true}, LS.get("ind", {})); IND.bb = false; IND.rsi = false;
 const COL = {up:"#F04452", down:"#3182F6", e21:"#FF9F0A", s50:"#30B566", s200:"#8E5CF6", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
 
 function calcInd(bars){
@@ -571,7 +571,8 @@ function calcInd(bars){
   c.forEach((v,i) => { if (i === 0){ rsi.push(null); return; } const d = v - c[i-1], g = Math.max(d,0), lo = Math.max(-d,0);
     if (i <= 14){ ag += g/14; al += lo/14; rsi.push(i === 14 ? 100 - 100/(1 + ag/(al||1e-9)) : null); }
     else { ag = (ag*13 + g)/14; al = (al*13 + lo)/14; rsi.push(100 - 100/(1 + ag/(al||1e-9))); } });
-  return { e21: ema(21), s50: bars.map(b => b[5]), s200: bars.map(b => b[6]), m20, bbU, bbL, spanA, spanB, rsi };
+  const chU = h.map((_,i) => i >= 20 ? Math.max(...h.slice(i-20, i)) : null), chL = l.map((_,i) => i >= 20 ? Math.min(...l.slice(i-20, i)) : null);   // 어제까지 20일 채널
+  return { e21: ema(21), s50: bars.map(b => b[5]), s200: bars.map(b => b[6]), m20, bbU, bbL, spanA, spanB, rsi, chU, chL };
 }
 
 function mountChart(box, s){
@@ -603,7 +604,7 @@ function mountChart(box, s){
   const legend = () => {
     const it = [];
     if (IND.ma) it.push(["EMA 21", COL.e21], ["50일선", COL.s50], ["200일선", COL.s200]);
-    if (IND.bb) it.push(["볼린저 20·2", COL.bb]);
+    if (IND.ch) it.push(["20일 채널", COL.bb]);
     if (IND.ich) it.push(["일목 구름", "#30B566"]);
     it.push(["매수 구간", "rgba(27,138,74,.35)"]);
     if (s.sr_line) it.push(["SR 손절선", "#8B5E3C"]);
@@ -639,6 +640,7 @@ function mountChart(box, s){
       let up = "", dn = ""; for (let i = i0; i <= i1; i++){ if (ind.bbU[i] == null) continue; up += (up ? "L" : "M") + x(i) + " " + y(ind.bbU[i]); dn = "L" + x(i) + " " + y(ind.bbL[i]) + dn; }
       if (up) p += `<path d="${up}${dn.replace(/^L/, "L")}Z" fill="${COL.bb}" opacity=".06"/>` + path(ind.bbU, COL.bb, 1) + path(ind.bbL, COL.bb, 1) + path(ind.m20, COL.bb, 1, "3 3");
     }
+    if (IND.ch) p += path(ind.chU, "#1B64DA", 1, "4 3") + path(ind.chL, "#1B64DA", 1, "4 3");
     if (s.wall?.v) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.wall.v)}" y2="${y(s.wall.v)}" stroke="#D22F3C" stroke-width=".9" stroke-dasharray="4 3"/>`;
     if (s.vcp?.vcp && s.vcp.pivot) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.vcp.pivot)}" y2="${y(s.vcp.pivot)}" stroke="#1B64DA" stroke-width=".9" stroke-dasharray="2 3"/>`;
     if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.s50, COL.s50, 1.6) + path(ind.e21, COL.e21, 1.4);
