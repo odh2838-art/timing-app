@@ -11,6 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
+<meta name="app-version" content="2026-10-16-4">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -571,7 +572,7 @@ async function removeStock(sym){
 /* ───────── 차트: 기간 · 끌어서 이동 · 벌려서 확대 · 길게 눌러 가격 · 보조지표 ─────────
    bars: [날짜, 시, 고, 저, 종, 50일선, 200일선, 거래량]  (EMA·볼린저·일목·RSI는 여기서 계산) */
 const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2년",500]];
-const AUX = new Set(["TP1","TP2","분할청산 · 14선","최종 청산 @SR","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파"]);
+const AUX = new Set(["TP1","TP2","분할청산 · 14선","분할청산 · 21선","최종 청산 @SR","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파","갭 발생","모멘텀 BUY"]);   // 검증에서 평소와 같았던 표시는 기본으로 숨김
 const easy = w => String(w).replace(/(\d+)일선/g, "$1일 평균선").replace("돌파 자리", "예전에 뚫고 올라간 가격");
 const isAux = t => AUX.has(t) || t.includes("삼각형") || t.includes("쐐기");
 const IND_LIST = [["ma","이평선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["pat","청산·패턴"]];   // 지표견이 쓰는 도구만
@@ -631,7 +632,7 @@ function mountChart(box, s){
     if (IND.ich) it.push(["일목 구름", "#30B566"]);
     it.push(["매수 구간", "rgba(27,138,74,.35)"]);
     if (s.sr_line) it.push(["SR 손절선", "#8B5E3C"]);
-    if (s.wall) it.push(["위쪽 벽 (팔 물량 많은 가격)", "#D22F3C"]);
+    if (s.wall) it.push(["위쪽 벽", "#D22F3C"]);
     $leg.innerHTML = it.map(([t,c]) => `<span><i style="background:${c}"></i>${t}</span>`).join("");
   };
   const clamp = () => { V.n = Math.max(15, Math.min(N, V.n)); V.end = Math.max(V.n - 1, Math.min(N - 1, V.end)); };
@@ -695,7 +696,7 @@ function mountChart(box, s){
       vis.forEach(m => { const i = idx[m[0]], [, fg] = C[m[2]] || C.info, up = m[2] === "sell", k = i + (up ? "u" : "d"), o = (stack[k] = (stack[k] || 0) + 1) - 1;
         const yy = up ? y(bars[i][2]) - 7 - o * 8 : y(bars[i][3]) + 7 + o * 8, r_ = Math.max(2.4, Math.min(4, cw * 0.35));
         p += up ? `<path d="M${x(i) - r_} ${yy - r_} L${x(i) + r_} ${yy - r_} L${x(i)} ${yy + r_ * .6}Z" fill="${fg}"/>` : `<path d="M${x(i) - r_} ${yy + r_} L${x(i) + r_} ${yy + r_} L${x(i)} ${yy - r_ * .6}Z" fill="${fg}"/>`; });
-      vis.slice(-2).reverse().forEach(m => chip(idx[m[0]], m[1], m[2], m[2] !== "sell"));
+      vis.slice(-1).forEach(m => chip(idx[m[0]], m[1], m[2], m[2] !== "sell"));   // 글자는 가장 최근 1개만
     }
     if (s.vcp?.vcp && i1 === N - 1 && !(s.marks || []).some(m => m[1] === "VCP 형성" && idx[m[0]] >= N - 15)) chip(N - 1, "VCP 형성", "info", false);
     p += `</g>`;
@@ -826,7 +827,7 @@ function renderDetail(sym){
         ${pl.tp1 && pl.tp1 < pl.target * 0.97 ? `<span class="k">절반 팔 가격</span><span class="v c-buy">${num(pl.tp1, mk)}</span><span class="p">${pr(pl.tp1, pl.entry)}</span>` : ""}
         <span class="k">목표 가격</span><span class="v c-buy">${num(pl.target, mk)}</span><span class="p">${pr(pl.target, pl.entry)}</span>
         <div class="rr"><span>손익비</span><span>1 : ${pl.rr == null ? "-" : pl.rr.toFixed(1)} · ${esc(strip(pl.grade).replace("👍 ",""))}</span></div></div></div>
-      ${s.notes?.length ? `<div class="card notes"><div class="cap">최근 표시</div>${s.notes.map(x => `<div class="note-i"><div class="nh"><span class="tag t-${esc(x.tone === "buy" ? "buy" : x.tone === "sell" ? "sell" : "info")}">${esc(x.label)}</span><span class="sub">${esc(x.date.slice(5).replace("-", "/"))}</span></div><div>${esc(x.what)}</div><div class="adv">→ ${esc(x.advice)} <span class="sub" style="font-weight:400">· ${esc(x.proof)}</span></div></div>`).join("")}</div>` : ""}
+      ${s.notes?.length ? `<div class="card notes"><div class="cap">최근 표시</div>${s.notes.slice(0, 3).map(x => `<div class="note-i"><div class="nh"><span class="tag t-${esc(x.tone === "buy" ? "buy" : x.tone === "sell" ? "sell" : "info")}">${esc(x.label)}</span><span class="sub">${esc(x.date.slice(5).replace("-", "/"))}</span></div><div class="adv">${esc(x.advice)}${Math.abs(x.score) >= 1 ? ` <span class="sub" style="font-weight:400">(검증 ${x.score > 0 ? "+" : "−"}${Math.abs(x.score).toFixed(1)}%p)</span>` : ""}</div></div>`).join("")}</div>` : ""}
     </div>
     ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)} – ${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
     ${s.cautions?.length ? `<div class="sec-title">주의</div><div class="card" style="padding-block:4px"><div class="items">${s.cautions.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
@@ -1113,6 +1114,17 @@ function renderSettings(){
 }
 
 let toastT;
+/* 새 버전이 올라오면 다시 불러오기 (홈 화면에 추가한 앱은 예전 화면을 오래 들고 있음) */
+async function checkVersion(){
+  try{
+    const mine = document.querySelector('meta[name="app-version"]')?.content;
+    const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"})).text();
+    const v = (t.match(/name="app-version" content="([^"]+)"/) || [])[1];
+    if (v && mine && v !== mine && !S.dirty){ toast("새 버전으로 바꾸는 중"); setTimeout(() => location.reload(), 600); }
+  }catch(e){}
+}
+addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
+setTimeout(checkVersion, 1500);
 function toast(msg, spin){
   document.querySelectorAll(".toast").forEach(t => t.remove());
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); t.setAttribute("aria-live","polite");
