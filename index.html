@@ -1004,8 +1004,8 @@ async function openSearch(){
   run();
 }
 
-const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", st:"🧪", sc:"🌊", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
-const BUY_K = new Set(["entry","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
+const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", st:"🧪", pull_buy:"🪃", vcp_buy:"🌀", sc:"🌊", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
+const BUY_K = new Set(["entry","pull_buy","vcp_buy","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
 const SELL_K = new Set(["breakdown","momentum","fail","final","overheat","trim","entry_weak"]);
 let alertFilter = "all";
 function scorecard(list){
