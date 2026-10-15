@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-7">
+<meta name="app-version" content="2026-10-16-8">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -167,6 +167,7 @@ body.sheet-open{background:#1D1D1F}
 .kv div{display:flex;flex-direction:column;gap:3px;min-width:0}
 .kv span{font-size:var(--t-small);color:var(--fg2)} .kv b{font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .note-i .nh{flex-wrap:wrap}
+.patn{padding:0 10px;margin-top:var(--gap-inner);font-size:var(--t-small);line-height:1.5}
 .cset{margin-top:var(--gap-inner);padding:0 10px}
 .cset>summary{list-style:none;cursor:pointer;font-size:var(--t-small);color:var(--blue);font-weight:600;padding:6px 0}
 .cset>summary::-webkit-details-marker{display:none}
@@ -667,6 +668,7 @@ function mountChart(box, s){
     <div class="seg" role="tablist" aria-label="기간">${PERIODS.filter(p => p[1] <= N + 10).map(([t,k]) => `<button role="tab" data-k="${Math.min(k,N)}">${t}</button>`).join("")}<span class="thumb"></span></div>
     <div class="readout" aria-live="polite"></div>
     <div class="plot"></div>
+    ${s.pattern ? `<div class="patn"><b>${esc(s.pattern.lines[0].replace("모양 · ", ""))}</b> <span class="sub">${s.pattern.grade === "정식" ? "" : "· 참고(" + esc(s.pattern.reasons.join(", ")) + ")"}</span><div class="sub">패턴 돌파는 10번 중 6번 다시 안으로 → 참고만</div></div>` : ""}
     <details class="cset"><summary class="press">선·표시 설정</summary>
     <div class="inds" style="padding:0">${IND_LIST.filter(([k]) => k !== "vol" || hasVol).map(([k,t]) => `<button class="chip press" data-ind="${k}" aria-pressed="${!!IND[k]}">${t}</button>`).join("")}</div>
     <div class="legend" style="padding:0"></div></details>`;
@@ -724,6 +726,10 @@ function mountChart(box, s){
       if (up) p += `<path d="${up}${dn.replace(/^L/, "L")}Z" fill="${COL.bb}" opacity=".06"/>` + path(ind.bbU, COL.bb, 1) + path(ind.bbL, COL.bb, 1) + path(ind.m20, COL.bb, 1, "3 3");
     }
     if (IND.ch) p += path(ind.chU, "#1B64DA", 1, "4 3") + path(ind.chL, "#1B64DA", 1, "4 3");
+    if (IND.pat && s.pattern){   // 진행 중인 패턴: 인식할 때 고정한 위·아래 선
+      const pl_ = pts => pts.filter(q => q[0] in idx).map(q => `${x(idx[q[0]])},${y(q[1])}`).join(" ");
+      [s.pattern.upper, s.pattern.lower].forEach(ln => { const ps = pl_(ln || []); if (ps.split(" ").length === 2) p += `<polyline points="${ps}" fill="none" stroke="#8E5CF6" stroke-width="1.2" stroke-dasharray="${s.pattern.grade === "정식" ? "0" : "4 3"}" opacity=".8"/>`; });
+    }
     if (s.wall?.v) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.wall.v)}" y2="${y(s.wall.v)}" stroke="#D22F3C" stroke-width=".9" stroke-dasharray="4 3"/>`;
     if (s.vcp?.vcp && s.vcp.pivot) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.vcp.pivot)}" y2="${y(s.vcp.pivot)}" stroke="#1B64DA" stroke-width=".9" stroke-dasharray="2 3"/>`;
     if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.s50, COL.s50, 1.6) + path(ind.e21, COL.e21, 1.4);
