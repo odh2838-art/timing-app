@@ -38,8 +38,14 @@ button{cursor:pointer;border:0;background:none;padding:0;-webkit-user-select:non
 :focus{outline:none} :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:10px}
 .wrap{max-width:640px;margin:0 auto;padding:0 max(var(--gutter),env(safe-area-inset-right,0px)) 120px max(var(--gutter),env(safe-area-inset-left,0px))}
 
-/* 화면 전환 */
-#app{will-change:transform}
+/* 화면 전환 (아이폰처럼: 새 화면은 오른쪽에서, 뒤 화면은 살짝 물러나며 어두워짐) */
+html,body{overflow-x:clip}
+#app{position:relative;z-index:2;background:var(--bg);min-height:100vh;min-height:100dvh;transform-origin:50% 50%}
+.ghost{position:fixed;left:0;right:0;z-index:1;background:var(--bg);pointer-events:none;min-height:100vh}
+.ghost.top{z-index:4;box-shadow:-8px 0 24px rgba(0,0,0,.08)}
+#app.over{box-shadow:-8px 0 24px rgba(0,0,0,.08)}
+.shade{position:fixed;inset:0;z-index:3;background:rgba(0,0,0,.1);pointer-events:none;opacity:0}
+body.sheet-open{background:#1D1D1F}
 .v-push{animation:push .38s var(--ease) both}
 .v-pop{animation:pop .34s var(--ease) both}
 .v-fade{animation:fade .24s var(--ease-out) both}
@@ -78,6 +84,18 @@ button{cursor:pointer;border:0;background:none;padding:0;-webkit-user-select:non
 .list{background:var(--card);border-radius:var(--r-card);overflow:hidden}
 .row{display:flex;align-items:center;gap:12px;padding:var(--pad-card);width:100%;text-align:left;min-height:44px}
 .row+.row{box-shadow:0 -1px 0 var(--line)}
+/* 밀어서 삭제 · 편집 */
+.swipe{position:relative;overflow:hidden;background:var(--sell)}
+.swipe+.swipe{box-shadow:0 -1px 0 var(--line)}
+.swipe>.row{background:var(--card);position:relative;z-index:1;transition:transform .35s var(--ease);will-change:transform}
+.swipe .act{position:absolute;right:0;top:0;bottom:0;min-width:88px;color:#fff;font-weight:600;font-size:var(--t-body);display:flex;align-items:center;justify-content:flex-end;padding-right:22px}
+.swipe.gone{transition:height .3s var(--ease),opacity .3s}
+.minus{width:0;height:24px;flex:none;border-radius:50%;background:var(--sell);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-right:-12px;transform:scale(.4);opacity:0;transition:width .3s var(--ease),margin .3s var(--ease),transform .3s var(--ease),opacity .2s}
+.minus::before{content:"";width:11px;height:2.5px;border-radius:2px;background:#fff}
+.editing .minus{width:24px;margin-right:0;transform:none;opacity:1}
+.editing .px .spark{display:none}
+.enter{animation:rowin .5s var(--ease) both}
+@keyframes rowin{from{opacity:0;transform:translateY(-10px)}}
 .row .main{flex:1;min-width:0}
 .row .name{font-size:var(--t-body);font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .row .tk{font-size:var(--t-small);font-weight:400;color:var(--fg2)}
@@ -122,8 +140,16 @@ button{cursor:pointer;border:0;background:none;padding:0;-webkit-user-select:non
 .grade .setup{font-size:var(--t-detail);color:var(--fg2);margin-top:var(--gap-sub)}
 .b-buy{background:var(--buy-bg)} .b-wait{background:var(--wait-bg)} .b-sell{background:var(--sell-bg)}
 .chart{padding:var(--pad-card) var(--gap-sub) var(--pad-card)}
-.chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
-.chart .readout{display:flex;gap:12px;font-size:var(--t-small);color:var(--fg2);padding:0 10px var(--gap-sub);min-height:calc(2 * 1.45 * var(--t-small) + var(--gap-sub));align-content:flex-start;align-items:baseline;flex-wrap:wrap;row-gap:0}
+.plot{touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:grab}
+.plot:active{cursor:grabbing}
+.plot svg{display:block}
+.seg{position:relative;display:flex;background:var(--fill);border-radius:10px;padding:3px;margin:0 10px var(--gap-inner)}
+.seg button{flex:1;position:relative;z-index:1;min-height:36px;font-size:var(--t-small);font-weight:600;color:var(--fg)}
+.seg .thumb{position:absolute;top:3px;bottom:3px;left:3px;width:0;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:transform .32s var(--ease),width .32s var(--ease),opacity .2s}
+.inds{display:flex;gap:var(--gap-sub);flex-wrap:wrap;padding:0 10px;margin-top:var(--gap-inner)}
+.chip{min-height:36px;padding:0 14px;border-radius:999px;background:var(--fill);font-size:var(--t-small);font-weight:600;color:var(--fg2);transition:background-color .2s,color .2s,transform .16s var(--ease-out)}
+.chip[aria-pressed=true]{background:var(--info-bg);color:var(--info)}
+.chart .readout{display:flex;gap:12px;font-size:var(--t-small);color:var(--fg2);padding:0 10px var(--gap-sub);min-height:calc(3 * 1.45 * var(--t-small) + var(--gap-sub));align-content:flex-start;align-items:baseline;flex-wrap:wrap;row-gap:0}
 .chart .readout b{color:var(--fg)}
 .chart .draw{animation:fade .5s var(--ease-out) both}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--t-small);color:var(--fg2);margin-top:var(--gap-sub);padding:0 10px}
@@ -174,10 +200,10 @@ button{cursor:pointer;border:0;background:none;padding:0;-webkit-user-select:non
 .search input{flex:1;border:0;background:none;outline:none;font-size:var(--t-body);min-width:0;padding:10px 0}
 .results{flex:1;overflow:auto;margin-top:12px;-webkit-overflow-scrolling:touch;padding-bottom:16px}
 
-.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));background:rgba(29,29,31,.92);color:#fff;padding:12px 18px;border-radius:var(--r-control);font-size:var(--t-detail);z-index:40;max-width:calc(100% - 32px);display:flex;gap:10px;align-items:center;animation:tin .35s var(--ease) both;transform:translateX(-50%)}
+.toast{position:fixed;left:0;right:0;margin:0 auto;width:fit-content;bottom:calc(76px + env(safe-area-inset-bottom,0px));background:rgba(29,29,31,.92);color:#fff;padding:12px 18px;border-radius:var(--r-control);font-size:var(--t-detail);z-index:40;max-width:calc(100% - 2 * var(--gutter));display:flex;gap:10px;align-items:center;animation:tin .35s var(--ease) both}
 .toast.out{animation:tout .25s var(--ease-out) both}
-@keyframes tin{from{opacity:0;transform:translate(-50%,16px) scale(.96)}to{opacity:1;transform:translate(-50%,0)}}
-@keyframes tout{to{opacity:0;transform:translate(-50%,8px)}}
+@keyframes tin{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes tout{to{opacity:0;transform:translateY(8px)}}
 .spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;flex:none;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
 .alert-row{display:flex;gap:12px;padding:var(--pad-card);align-items:flex-start;width:100%;text-align:left}
@@ -332,15 +358,44 @@ function render(how = "fade"){
   tb.classList.toggle("away", !!S.detail);
   document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
   const keep = how === "none" ? scrollY : 0;
+  const slide = (how === "push" || how === "pop") && !REDUCED;
+  const ghost = slide ? snapshot() : null;
   if (!S.token) renderSetup();
   else if (S.detail) renderDetail(S.detail);
   else if (S.tab === "alerts") renderAlerts();
   else if (S.tab === "settings") renderSettings();
   else renderHome();
   $app.classList.remove("v-push","v-pop","v-fade");
-  if (how !== "none" && !REDUCED){ void $app.offsetWidth; $app.classList.add("v-" + how); }
+  if (how === "fade" && !REDUCED){ void $app.offsetWidth; $app.classList.add("v-fade"); }
   if (how === "none") scrollTo(0, keep); else if (how === "pop") scrollTo(0, S.listY || 0); else scrollTo(0, 0);
   bindNavbar();
+  if (ghost) slidePages(how, ghost);
+}
+/* 지금 화면을 통째로 떼어 고정 (전환하는 동안 뒤/앞 화면 역할).
+   복사하지 않고 옮기므로 손가락이 닿아 있던 요소도 그대로 살아 있다. */
+function snapshot(){
+  const g = document.createElement("div"); g.className = "ghost"; g.setAttribute("aria-hidden", "true");
+  g.style.top = $app.getBoundingClientRect().top + "px";
+  while ($app.firstChild) g.appendChild($app.firstChild);
+  document.body.appendChild(g); return g;
+}
+const PAGE_MS = 500, PAGE_EASE = "cubic-bezier(.32,.72,0,1)";
+function slidePages(how, ghost, from = 0){
+  const shade = document.createElement("div"); shade.className = "shade"; document.body.appendChild(shade);
+  const W = innerWidth, o = { duration: PAGE_MS * (1 - from), easing: PAGE_EASE, fill: "forwards" };
+  let anims;
+  if (how === "push"){   // 새 화면이 위로 덮으며 들어옴
+    $app.classList.add("over");
+    anims = [ $app.animate([{transform:`translateX(${W}px)`}, {transform:"none"}], o),
+              ghost.animate([{transform:"none"}, {transform:`translateX(${-W*.3}px)`}], o),
+              shade.animate([{opacity:0}, {opacity:1}], o) ];
+  } else {               // 앞 화면이 오른쪽으로 빠지고 뒤 화면이 돌아옴
+    ghost.classList.add("top");
+    anims = [ ghost.animate([{transform:`translateX(${W*from}px)`}, {transform:`translateX(${W}px)`}], o),
+              $app.animate([{transform:`translateX(${-W*.3*(1-from)}px)`}, {transform:"none"}], o),
+              shade.animate([{opacity:1-from}, {opacity:0}], o) ];
+  }
+  Promise.all(anims.map(a => a.finished)).then(() => { anims.forEach(a => a.cancel()); ghost.remove(); shade.remove(); $app.classList.remove("over"); });
 }
 function go(how, fn){ if (how === "push") S.listY = scrollY; S.dirty = false; fn(); render(how); }
 
@@ -396,33 +451,95 @@ function renderHome(){
   const skeleton = `<div class="list">${[0,1,2].map(() => `<div class="row"><div class="main"><div class="sk" style="width:40%;height:18px"></div><div class="sk" style="width:62%;height:14px;margin-top:8px"></div></div><div class="sk" style="width:64px;height:30px"></div></div>`).join("")}</div>`;
   $app.innerHTML = `<div class="wrap">
     <div class="ptr" id="ptr" aria-hidden="true"><span class="spin" style="margin-bottom:10px"></span></div>
-    <div class="navbar"><div class="side"></div><span class="mini">rooru.invest</span><div class="side r"><button class="text-btn press" id="check" data-busy ${S.busy ? "disabled" : ""}>지금 점검</button></div></div>
+    <div class="navbar"><div class="side">${list.length ? `<button class="text-btn press" id="edit" style="margin-left:-6px;margin-right:0">${S.edit ? "완료" : "편집"}</button>` : ""}</div><span class="mini">rooru.invest</span><div class="side r"><button class="text-btn press" id="check" data-busy ${S.busy ? "disabled" : ""}>지금 점검</button></div></div>
     <div class="title-block" data-anchor><h1 class="big">rooru.invest</h1><div class="sub">${d?.updated ? "오동엔진 마지막 점검 " + esc(d.updated) : "불러오는 중…"}</div></div>
     ${S.err ? `<div class="err" role="alert">${esc(S.err)}</div>` : ""}
     ${regs.length ? `<div class="regimes">${regs.map(([n,g]) => `<div class="regime"><span class="dot" style="background:${REG_DOT[g.label]||"var(--fg3)"}"></span><b>${esc(n)}</b> ${esc(g.label)} <span class="sub">${g.points}/${g.total}</span></div>`).join("")}</div>` : ""}
-    ${!S.csv ? skeleton : list.length ? `<div class="list">${list.map((x,i) => {
-      const s = x.d;
-      if (!s) return `<button class="row press" data-i="${i}"><div class="main"><div class="name">${esc(x.row["이름"]||x.row["티커"])} <span class="tk">${esc(x.row["티커"])}</span></div><div class="head sub">계산 대기 · 다음 점검 때 나옵니다</div></div>${CHEV}</button>`;
+    ${!S.csv ? skeleton : list.length ? `<div class="list ${S.edit ? "editing" : ""}" id="stocks">${list.map((x,i) => {
+      const s = x.d, nm = s?.name || x.row["이름"] || x.row["티커"];
+      const wrap = inner => `<div class="swipe ${S.justAdded === x.sym ? "enter" : ""}" data-sym="${esc(x.sym)}"><button class="act" tabindex="-1" aria-label="${esc(nm)} 삭제">삭제</button><div class="row press" role="button" tabindex="0" data-i="${i}"><span class="minus" role="button" aria-label="${esc(nm)} 삭제 버튼 보이기"></span>${inner}</div></div>`;
+      if (!s) return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(x.row["티커"])}</span></div><div class="head sub">계산 대기 · 다음 점검 때 나옵니다</div></div>${CHEV}`);
       const tags = s.p1 ? `<span class="tag t-dark">${esc(s.plan_text)}</span>` : "";
-      return `<button class="row press" data-i="${i}" aria-label="${esc(s.name)} 자세히"><div class="main"><div class="name">${esc(s.name)} <span class="tk">${esc(s.ticker)}</span></div>
+      return wrap(`<div class="main"><div class="name">${esc(s.name)} <span class="tk">${esc(s.ticker)}</span></div>
         <div class="head">${gradeTag(s.grade)}<span>${esc(s.head)}</span>${tags}</div></div>
-        <div class="px">${spark(s.bars, s.chg)}<div><b>${num(s.price, s.market)}</b><span class="chg ${s.chg>=0?"up":"down"}">${pct(s.chg)}</span></div></div></button>`;
-    }).join("")}</div>` : `<div class="empty card"><b>지켜볼 기업을 추가하세요</b>추가하면 오동엔진이 매수 구간을 계산하고, 구간에 오면 디스코드로 알려줍니다.</div>`}
+        <div class="px">${spark(s.bars, s.chg)}<div><b>${num(s.price, s.market)}</b><span class="chg ${s.chg>=0?"up":"down"}">${pct(s.chg)}</span></div></div>`);
+    }).join("")}</div>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">줄을 왼쪽으로 밀면 삭제돼요</p>` : `<div class="empty card"><b>지켜볼 기업을 추가하세요</b>추가하면 오동엔진이 매수 구간을 계산하고, 구간에 오면 디스코드로 알려줍니다.</div>`}
     <div style="margin-top:var(--gap-block)"><button class="btn primary press" id="add"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>기업 추가</button></div>
     ${d?.errors?.length ? `<p class="note" style="margin:14px 4px">받지 못한 종목: ${d.errors.map(esc).join(", ")}</p>` : ""}
     <p class="note" style="margin:18px 4px 0;text-align:center">아래로 당기면 새로고침</p>
   </div>`;
   document.getElementById("add").onclick = openSearch;
   document.getElementById("check").onclick = async () => { try{ const t = await dispatch("앱-갱신"); waitRun(t, "전 종목 점검 중"); }catch(e){ toast(e.message); } };
-  $app.querySelectorAll(".row[data-i]").forEach(b => b.onclick = () => go("push", () => S.detail = list[+b.dataset.i].sym));
+  S.justAdded = null;
+  const ed = $app.querySelector("#edit");
+  if (ed) ed.onclick = () => { S.edit = !S.edit; ed.textContent = S.edit ? "완료" : "편집"; $app.querySelector("#stocks")?.classList.toggle("editing", S.edit); closeSwipes(); };
+  bindSwipes(list);
+}
+
+/* 종목 줄: 왼쪽으로 밀면 삭제 버튼, 끝까지 밀면 바로 삭제 */
+let openRow = null;
+function closeSwipes(except){ $app.querySelectorAll(".swipe>.row").forEach(r => { if (r !== except){ r.style.transform = ""; r.parentElement.querySelector(".act").style.width = ""; } }); if (!except) openRow = null; }
+function bindSwipes(list){
+  $app.querySelectorAll(".swipe").forEach(sw => {
+    const row = sw.querySelector(".row"), act = sw.querySelector(".act"), sym = sw.dataset.sym;
+    let x0 = null, y0 = 0, base = 0, dx = 0, dir = null, swiped = 0;
+    const set = (t, anim) => { row.style.transition = anim ? "" : "none"; act.style.transition = anim ? "width .35s var(--ease)" : "none"; row.style.transform = t ? `translateX(${t}px)` : ""; act.style.width = Math.max(88, -t) + "px"; };
+    sw.addEventListener("touchstart", e => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; dx = 0; dir = null; base = openRow === row ? -88 : 0; }, {passive:true});
+    sw.addEventListener("touchmove", e => {
+      if (x0 == null) return; const t = e.touches[0]; dx = t.clientX - x0;
+      if (!dir){ if (Math.abs(dx) < 8 && Math.abs(t.clientY - y0) < 8) return; dir = Math.abs(dx) > Math.abs(t.clientY - y0) ? "h" : "v"; if (dir === "h") closeSwipes(row); }
+      if (dir !== "h") return;
+      e.preventDefault(); const W = sw.clientWidth; let tx = Math.min(0, base + dx); if (tx < -W) tx = -W;
+      set(tx < 0 ? tx : 0, false);
+    }, {passive:false});
+    sw.addEventListener("touchend", () => {
+      if (dir !== "h"){ x0 = null; return; }
+      x0 = null; swiped = Date.now(); const W = sw.clientWidth, tx = Math.min(0, base + dx);
+      if (-tx > W * 0.55) removeRow(sw, sym);                     // 끝까지 밀었으면 바로 삭제
+      else if (-tx > 44){ set(-88, true); openRow = row; }         // 버튼이 보이게 멈춤
+      else { set(0, true); if (openRow === row) openRow = null; }
+    });
+    row.addEventListener("click", e => {
+      if (Date.now() - swiped < 400) return;                     // 방금 민 손가락이 만든 탭은 무시
+      if (e.target.closest(".minus")){ e.stopPropagation(); closeSwipes(row); set(-88, true); openRow = row; return; }
+      if (openRow){ e.preventDefault(); closeSwipes(); return; }  // 열린 줄이 있으면 닫기만
+      go("push", () => S.detail = sym);
+    });
+    row.addEventListener("keydown", e => { if (e.key === "Enter") row.click(); });
+    act.onclick = () => removeRow(sw, sym);
+  });
+}
+/* 줄이 왼쪽으로 빠지고 접히듯 사라진 뒤, 실제 삭제는 뒤에서 */
+function removeRow(sw, sym){
+  const row = sw.querySelector(".row"), h = sw.offsetHeight;
+  row.style.transition = REDUCED ? "none" : ""; row.style.transform = `translateX(-100%)`;
+  sw.querySelector(".act").style.width = "100%";
+  sw.style.height = h + "px"; sw.classList.add("gone");
+  requestAnimationFrame(() => requestAnimationFrame(() => { sw.style.height = "0px"; sw.style.opacity = "0"; }));
+  setTimeout(() => sw.remove(), REDUCED ? 0 : 320);
+  openRow = null;
+  removeStock(sym).catch(e => { toast(e.message); refresh(); });
+}
+async function removeStock(sym){
+  await loadCSV(); const gone = S.csv.rows.find(v => symOf(v["시장"], v["티커"]) === sym);
+  const name = S.dash?.stocks?.[sym]?.name || gone?.["이름"] || sym;
+  S.csv.rows = S.csv.rows.filter(v => symOf(v["시장"], v["티커"]) !== sym);
+  await saveCSV(`앱: ${name} 삭제`);
+  if (gone){ const bin = LS.get("removed", {}); bin[sym] = gone; LS.set("removed", bin); }
+  if (S.dash?.stocks) delete S.dash.stocks[sym];
+  toast(name + " 삭제 · 다시 추가하면 기록도 돌아와요");
 }
 
 /* 아래로 당겨 새로고침 (홈) */
 (() => {
   let y0 = null, pulled = 0;
   addEventListener("touchstart", e => { y0 = (S.tab === "home" && !S.detail && scrollY <= 0 && !document.querySelector(".sheet-bg")) ? e.touches[0].clientY : null; pulled = 0; }, {passive:true});
+  let x0 = 0;
+  addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, {passive:true});
   addEventListener("touchmove", e => {
     if (y0 == null) return; const p = document.getElementById("ptr"); if (!p) return;
+    if (Math.abs(e.touches[0].clientX - x0) > Math.abs(e.touches[0].clientY - y0)){ y0 = null; p.style.height = "0"; return; }   // 옆으로 미는 중이면 새로고침 아님
     pulled = Math.max(0, Math.min(90, (e.touches[0].clientY - y0) * 0.5)); p.style.transition = "none"; p.style.height = pulled + "px";
   }, {passive:true});
   addEventListener("touchend", async () => {
@@ -432,65 +549,207 @@ function renderHome(){
   });
 })();
 
-/* 캔들 차트 (SVG) + 손가락으로 짚으면 그날 가격 */
-function chartSVG(s, Wpx){
-  const bars = s.bars || []; if (bars.length < 5) return `<div class="empty">차트 자료가 없습니다</div>`;
-  const W=Math.max(280, Math.round(Wpx||340)), H=Math.round(W*0.9), L=2, R=isKR(s.market)?76:62, T=26, B=24, n=bars.length, cw=(W-L-R)/n;
-  const zones = (s.zones||[]).filter(z => z.label !== "지지");
-  let lo = Math.min(...bars.map(b=>b[3])), hi = Math.max(...bars.map(b=>b[2]));
-  const extra = [s.plan?.stop, s.wall?.v, ...zones.flatMap(z=>[z.lo,z.hi])].filter(v => v != null && v > lo*0.92 && v < hi*1.06);  // 너무 먼 구간까지 담으면 캔들이 납작해진다
-  lo = Math.min(lo, ...extra); hi = Math.max(hi, ...extra); const pad=(hi-lo)*0.08; lo-=pad; hi+=pad;
-  const y = v => T + (hi - v) / (hi - lo) * (H - T - B), x = i => L + cw*i + cw/2;
-  const idx = {}; bars.forEach((b,i) => idx[b[0]] = i);
-  let g = "";
-  const zv = zones.filter(z => z.hi >= lo && z.lo <= hi);
-  zv.forEach(z => { g += `<rect x="${L}" y="${y(z.hi)}" width="${W-L-R}" height="${Math.max(2, y(z.lo)-y(z.hi))}" fill="#1B8A4A" opacity=".12"/>`; });
-  for (let k=0;k<=3;k++){ const v = lo + (hi-lo)*k/3; g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#E5E5EA" stroke-width=".6"/><text x="${W-R+6}" y="${y(v)+4}" font-size="13" fill="#8E8E93">${num(v, s.market)}</text>`; }
-  if (s.wall?.v && s.wall.v < hi) g += `<line x1="${L}" x2="${W-R}" y1="${y(s.wall.v)}" y2="${y(s.wall.v)}" stroke="#D22F3C" stroke-width=".9" stroke-dasharray="4 3"/>`;
-  if (s.vcp?.vcp && s.vcp.pivot) g += `<line x1="${L}" x2="${W-R}" y1="${y(s.vcp.pivot)}" y2="${y(s.vcp.pivot)}" stroke="#1B64DA" stroke-width=".9" stroke-dasharray="2 3"/>`;
-  const line = (k, col) => { let p=""; bars.forEach((b,i) => { if (b[k]!=null) p += (p?"L":"M") + x(i).toFixed(1) + " " + y(b[k]).toFixed(1); }); return p ? `<path d="${p}" fill="none" stroke="${col}" stroke-width="1.4" stroke-linejoin="round"/>` : ""; };
-  g += line(5, "#FF9F0A") + line(6, "#8E8E93");
-  bars.forEach((b,i) => { const up = b[4] >= b[1], col = up ? "#F04452" : "#3182F6", top = y(Math.max(b[1],b[4])), bh = Math.max(1, Math.abs(y(b[1])-y(b[4])));
-    g += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width=".8"/><rect x="${x(i)-cw*0.36}" y="${top}" width="${cw*0.72}" height="${bh}" fill="${col}"/>`; });
-  /* 신호 말풍선: 눌림목·돌파·돌파 실패·모멘텀 SELL */
-  const C = {buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"]};
-  zv.forEach(z => { g += `<text x="${L+6}" y="${y(z.lo)+16}" font-size="13" font-weight="600" fill="#1B8A4A" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(z.label)} 구간</text>`; });
-  const boxes = [];   // 이미 놓인 말풍선 (겹치지 않게 위아래로 비켜 놓는다)
-  const hit = (a) => boxes.some(b => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3);
-  const chip = (i, text, tone, below) => {
-    const [bg, fg] = C[tone] || C.info, w = text.length * 13 + 14, h = 20;
-    const cx = Math.max(L + w/2, Math.min(W - R - w/2 - 2, x(i)));
-    let by = below ? y(bars[i][3]) + 8 : y(bars[i][2]) - 8 - h;
-    for (let k = 0; k < 8 && hit({x:cx - w/2, y:by, w, h}); k++) by += below ? h + 4 : -(h + 4);
-    by = Math.max(2, Math.min(H - B - h, by));
-    boxes.push({x:cx - w/2, y:by, w, h});
-    g += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + h}" stroke="${fg}" stroke-width=".8" opacity=".5"/>
-      <rect x="${cx - w/2}" y="${by}" width="${w}" height="${h}" rx="6" fill="${bg}"/><text x="${cx}" y="${by + 14.5}" font-size="13" font-weight="600" fill="${fg}" text-anchor="middle">${esc(text)}</text>`;
-  };
-  (s.marks || []).filter(m => m[0] in idx).slice(-5).forEach(m => chip(idx[m[0]], m[1], m[2], m[3]));
-  if (s.vcp?.vcp) chip(n-1, "VCP 형성", "info", false);
-  const last = s.price ?? bars[n-1][4], lc = (s.chg??0) >= 0 ? "#F04452" : "#3182F6";
-  g += `<line x1="${L}" x2="${W-R}" y1="${y(last)}" y2="${y(last)}" stroke="${lc}" stroke-width=".6" opacity=".5"/><rect x="${W-R+2}" y="${y(last)-11}" width="${R-2}" height="22" rx="6" fill="${lc}"/><text x="${W-R+7}" y="${y(last)+5}" font-size="13" font-weight="600" fill="#fff">${num(last, s.market)}</text>`;
-  [0, Math.floor(n/2), n-1].forEach((i, k) => g += `<text x="${x(i)}" y="${H-6}" font-size="13" fill="#8E8E93" text-anchor="${["start","middle","end"][k]}">${+bars[i][0].slice(5,7)}/${+bars[i][0].slice(8)}</text>`);
-  g += `<g id="cross" style="display:none"><line id="cx" y1="${T}" y2="${H-B}" stroke="#1D1D1F" stroke-width=".7" stroke-dasharray="2 2"/><circle id="cd" r="3" fill="#1D1D1F"/></g>`;
-  return `<svg class="draw" viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 90일 일봉 차트" font-family="Pretendard Variable,-apple-system,sans-serif" data-l="${L}" data-cw="${cw}" data-lo="${lo}" data-hi="${hi}" data-t="${T}" data-b="${H-B}">${g}</svg>`;
+/* ───────── 차트: 기간 · 끌어서 이동 · 벌려서 확대 · 길게 눌러 가격 · 보조지표 ─────────
+   bars: [날짜, 시, 고, 저, 종, 50일선, 200일선, 거래량]  (EMA·볼린저·일목·RSI는 여기서 계산) */
+const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2년",500]];
+const IND_LIST = [["ma","이평선"],["bb","볼린저"],["ich","일목"],["vol","거래량"],["rsi","RSI"]];
+const IND = Object.assign({ma:true, bb:false, ich:false, vol:true, rsi:false}, LS.get("ind", {}));
+const COL = {up:"#F04452", down:"#3182F6", e21:"#FF9F0A", s50:"#30B566", s200:"#8E5CF6", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
+
+function calcInd(bars){
+  const n = bars.length, c = bars.map(b => b[4]), h = bars.map(b => b[2]), l = bars.map(b => b[3]);
+  const ema = (k) => { const a = 2/(k+1), o = []; let e = null; c.forEach((v,i) => { e = e == null ? v : v*a + e*(1-a); o.push(i >= k-1 ? e : null); }); return o; };
+  const sma = (k) => { const o = []; let s = 0; c.forEach((v,i) => { s += v; if (i >= k) s -= c[i-k]; o.push(i >= k-1 ? s/k : null); }); return o; };
+  const mid = (k, i) => { if (i < k-1) return null; let H = -Infinity, L = Infinity; for (let j = i-k+1; j <= i; j++){ H = Math.max(H, h[j]); L = Math.min(L, l[j]); } return (H+L)/2; };
+  const m20 = sma(20), bbU = [], bbL = [];
+  c.forEach((v,i) => { if (m20[i] == null){ bbU.push(null); bbL.push(null); return; } let q = 0; for (let j = i-19; j <= i; j++) q += (c[j]-m20[i])**2; const sd = Math.sqrt(q/20); bbU.push(m20[i]+2*sd); bbL.push(m20[i]-2*sd); });
+  const ten = c.map((_,i) => mid(9,i)), kij = c.map((_,i) => mid(26,i)), sB = c.map((_,i) => mid(52,i));
+  const spanA = c.map((_,i) => i >= 26 && ten[i-26] != null && kij[i-26] != null ? (ten[i-26]+kij[i-26])/2 : null);
+  const spanB = c.map((_,i) => i >= 26 ? sB[i-26] : null);
+  const rsi = []; let ag = 0, al = 0;
+  c.forEach((v,i) => { if (i === 0){ rsi.push(null); return; } const d = v - c[i-1], g = Math.max(d,0), lo = Math.max(-d,0);
+    if (i <= 14){ ag += g/14; al += lo/14; rsi.push(i === 14 ? 100 - 100/(1 + ag/(al||1e-9)) : null); }
+    else { ag = (ag*13 + g)/14; al = (al*13 + lo)/14; rsi.push(100 - 100/(1 + ag/(al||1e-9))); } });
+  return { e21: ema(21), s50: bars.map(b => b[5]), s200: bars.map(b => b[6]), m20, bbU, bbL, spanA, spanB, rsi };
 }
-function bindChart(s){
-  const svg = $app.querySelector(".chart svg"), out = $app.querySelector(".readout"); if (!svg || !out) return;
-  const bars = s.bars, D = svg.dataset, cw = +D.cw, L = +D.l, lo = +D.lo, hi = +D.hi, T = +D.t, Bt = +D.b;
-  const def = out.innerHTML, cross = svg.querySelector("#cross"), cxl = svg.querySelector("#cx"), cd = svg.querySelector("#cd");
-  const show = e => {
-    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * svg.viewBox.baseVal.width;
-    const i = Math.max(0, Math.min(bars.length-1, Math.floor((px - L) / cw))), b = bars[i], prev = bars[i-1];
-    const xx = L + cw*i + cw/2, yy = T + (hi - b[4]) / (hi - lo) * (Bt - T);
-    cross.style.display = ""; cxl.setAttribute("x1", xx); cxl.setAttribute("x2", xx); cd.setAttribute("cx", xx); cd.setAttribute("cy", yy);
-    const ch = prev ? (b[4]/prev[4]-1)*100 : 0;
-    out.innerHTML = `<b>${b[0].replace(/-/g,".")}</b><span>시 ${num(b[1], s.market)}</span><span>고 ${num(b[2], s.market)}</span><span>저 ${num(b[3], s.market)}</span><span>종 <b>${num(b[4], s.market)}</b> <span class="${ch>=0?"up":"down"}">${pct(ch)}</span></span>`;
+
+function mountChart(box, s){
+  const bars = s.bars || [], N = bars.length;
+  if (N < 10){ box.innerHTML = `<div class="empty">차트 자료가 없습니다</div>`; return; }
+  const hasVol = bars.some(b => b[7] != null);
+  const ind = calcInd(bars), idx = {}; bars.forEach((b,i) => idx[b[0]] = i);
+  const pdef = Math.min(N, (PERIODS.find(p => p[0] === LS.get("period")) || PERIODS[1])[1]);
+  const V = { n: pdef, end: N - 1 };
+  box.innerHTML = `
+    <div class="seg" role="tablist" aria-label="기간">${PERIODS.filter(p => p[1] <= N + 10).map(([t,k]) => `<button role="tab" data-k="${Math.min(k,N)}">${t}</button>`).join("")}<span class="thumb"></span></div>
+    <div class="readout" aria-live="polite"></div>
+    <div class="plot"></div>
+    <div class="inds">${IND_LIST.filter(([k]) => k !== "vol" || hasVol).map(([k,t]) => `<button class="chip press" data-ind="${k}" aria-pressed="${!!IND[k]}">${t}</button>`).join("")}</div>
+    <div class="legend"></div>`;
+  const $plot = box.querySelector(".plot"), $read = box.querySelector(".readout"), $seg = box.querySelector(".seg"), $leg = box.querySelector(".legend");
+  const hint = "끌어서 이동 · 벌려서 확대 · 길게 눌러 가격";
+  let cross = null, geo = null;
+
+  const segSync = (animate = true) => {
+    const btns = [...$seg.querySelectorAll("button")], k = Math.round(V.n);
+    const on = btns.find(b => +b.dataset.k === k && Math.round(V.end) === N - 1);
+    btns.forEach(b => b.setAttribute("aria-selected", b === on));
+    const th = $seg.querySelector(".thumb");
+    if (!on){ th.style.opacity = 0; return; }
+    th.style.transition = animate && !REDUCED ? "" : "none";
+    th.style.opacity = 1; th.style.width = on.offsetWidth + "px"; th.style.transform = `translateX(${on.offsetLeft - 3}px)`;
   };
-  const hide = () => { cross.style.display = "none"; out.innerHTML = def; };
-  svg.addEventListener("pointerdown", e => { show(e); svg.setPointerCapture(e.pointerId); });
-  svg.addEventListener("pointermove", e => { if (e.pointerType === "mouse" || e.buttons) show(e); });
-  svg.addEventListener("pointerup", hide); svg.addEventListener("pointercancel", hide); svg.addEventListener("pointerleave", hide);
+  const legend = () => {
+    const it = [];
+    if (IND.ma) it.push(["EMA 21", COL.e21], ["50일선", COL.s50], ["200일선", COL.s200]);
+    if (IND.bb) it.push(["볼린저 20·2", COL.bb]);
+    if (IND.ich) it.push(["일목 구름", "#30B566"]);
+    it.push(["매수 구간", "rgba(27,138,74,.35)"]);
+    if (s.wall) it.push(["위쪽 벽", "#D22F3C"]);
+    $leg.innerHTML = it.map(([t,c]) => `<span><i style="background:${c}"></i>${t}</span>`).join("");
+  };
+  const clamp = () => { V.n = Math.max(15, Math.min(N, V.n)); V.end = Math.max(V.n - 1, Math.min(N - 1, V.end)); };
+
+  function draw(){
+    clamp();
+    const W = Math.max(280, Math.round($plot.clientWidth || 320)), L = 2, R = isKR(s.market) ? 76 : 62;
+    const H0 = Math.round(W * 0.78), HV = IND.vol && hasVol ? 64 : 0, HR = IND.rsi ? 76 : 0, AX = 24, T = 28;
+    const H = H0 + HV + HR + AX, cw = (W - L - R) / V.n, start = V.end - V.n + 1;
+    const i0 = Math.max(0, Math.floor(start)), i1 = Math.min(N - 1, Math.ceil(V.end));
+    const x = i => L + (i - start + 0.5) * cw;
+    let lo = Infinity, hi = -Infinity;
+    for (let i = i0; i <= i1; i++){ lo = Math.min(lo, bars[i][3]); hi = Math.max(hi, bars[i][2]);
+      if (IND.bb && ind.bbU[i] != null){ lo = Math.min(lo, ind.bbL[i]); hi = Math.max(hi, ind.bbU[i]); } }
+    const zones = (s.zones || []).filter(z => z.label !== "지지");
+    [s.wall?.v, ...zones.flatMap(z => [z.lo, z.hi])].forEach(v => { if (v != null && v > lo * 0.94 && v < hi * 1.05){ lo = Math.min(lo, v); hi = Math.max(hi, v); } });
+    const pad = (hi - lo) * 0.07; lo -= pad; hi += pad;
+    const y = v => T + (hi - v) / (hi - lo) * (H0 - T - 6);
+    let g = `<defs><clipPath id="cp"><rect x="${L}" y="0" width="${W - L - R}" height="${H}"/></clipPath></defs>`;
+    for (let k = 0; k <= 3; k++){ const v = lo + (hi - lo) * (k + .5) / 4; g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${COL.grid}" stroke-width=".6"/><text x="${W-R+6}" y="${y(v)+4}" font-size="13" fill="${COL.axis}">${num(v, s.market)}</text>`; }
+    let p = `<g clip-path="url(#cp)">`;
+    zones.forEach(z => { if (z.hi >= lo && z.lo <= hi) p += `<rect x="${L}" y="${y(z.hi)}" width="${W-L-R}" height="${Math.max(2, y(z.lo) - y(z.hi))}" fill="#1B8A4A" opacity=".12"/>`; });
+    const path = (arr, col, w = 1.5, dash = "") => { let d = ""; for (let i = Math.max(0, i0 - 1); i <= Math.min(N - 1, i1 + 1); i++){ if (arr[i] == null){ continue; } d += (d ? "L" : "M") + x(i).toFixed(1) + " " + y(arr[i]).toFixed(1); } return d ? `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" ${dash ? `stroke-dasharray="${dash}"` : ""}/>` : ""; };
+    if (IND.ich){
+      for (let i = Math.max(1, i0); i <= i1; i++){ const a0 = ind.spanA[i-1], b0 = ind.spanB[i-1], a1 = ind.spanA[i], b1 = ind.spanB[i]; if ([a0,b0,a1,b1].some(v => v == null)) continue;
+        p += `<path d="M${x(i-1)} ${y(a0)}L${x(i)} ${y(a1)}L${x(i)} ${y(b1)}L${x(i-1)} ${y(b0)}Z" fill="${a1 >= b1 ? "#30B566" : "#F04452"}" opacity=".1"/>`; }
+    }
+    if (IND.bb){
+      let up = "", dn = ""; for (let i = i0; i <= i1; i++){ if (ind.bbU[i] == null) continue; up += (up ? "L" : "M") + x(i) + " " + y(ind.bbU[i]); dn = "L" + x(i) + " " + y(ind.bbL[i]) + dn; }
+      if (up) p += `<path d="${up}${dn.replace(/^L/, "L")}Z" fill="${COL.bb}" opacity=".06"/>` + path(ind.bbU, COL.bb, 1) + path(ind.bbL, COL.bb, 1) + path(ind.m20, COL.bb, 1, "3 3");
+    }
+    if (s.wall?.v) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.wall.v)}" y2="${y(s.wall.v)}" stroke="#D22F3C" stroke-width=".9" stroke-dasharray="4 3"/>`;
+    if (s.vcp?.vcp && s.vcp.pivot) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.vcp.pivot)}" y2="${y(s.vcp.pivot)}" stroke="#1B64DA" stroke-width=".9" stroke-dasharray="2 3"/>`;
+    if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.s50, COL.s50, 1.6) + path(ind.e21, COL.e21, 1.4);
+    const bw = Math.max(1, cw * 0.7);
+    for (let i = i0; i <= i1; i++){ const b = bars[i], col = b[4] >= b[1] ? COL.up : COL.down, top = y(Math.max(b[1], b[4])), bh = Math.max(1, Math.abs(y(b[1]) - y(b[4])));
+      p += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width="${cw > 6 ? 1 : .8}"/><rect x="${x(i) - bw/2}" y="${top}" width="${bw}" height="${bh}" fill="${col}"/>`; }
+    zones.forEach(z => { if (z.lo <= hi && z.lo >= lo) p += `<text x="${L+6}" y="${Math.min(H0-8, y(z.lo) + 16)}" font-size="13" font-weight="600" fill="#1B8A4A" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(z.label)} 구간</text>`; });
+    /* 신호 말풍선 (보이는 것 중 최근 6개, 겹치지 않게) */
+    const C = {buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"]}, boxes = [];
+    const hit = a => boxes.some(b => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3);
+    const chip = (i, text, tone, below) => {
+      const [bg, fg] = C[tone] || C.info, w = text.length * 13 + 14, hh = 20, cx = Math.max(L + w/2, Math.min(W - R - w/2 - 2, x(i)));
+      let by = below ? y(bars[i][3]) + 8 : y(bars[i][2]) - 8 - hh;
+      for (let k = 0; k < 8 && hit({x:cx - w/2, y:by, w, h:hh}); k++) by += below ? hh + 4 : -(hh + 4);
+      by = Math.max(2, Math.min(H0 - hh - 2, by)); boxes.push({x:cx - w/2, y:by, w, h:hh});
+      p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="6" fill="${bg}"/><text x="${cx}" y="${by + 14.5}" font-size="13" font-weight="600" fill="${fg}" text-anchor="middle">${esc(text)}</text>`;
+    };
+    (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1).slice(-6).forEach(m => chip(idx[m[0]], m[1], m[2], m[3]));
+    if (s.vcp?.vcp && i1 === N - 1) chip(N - 1, "VCP 형성", "info", false);
+    p += `</g>`;
+    g += p;
+    const last = s.price ?? bars[N-1][4], lc = (s.chg ?? 0) >= 0 ? COL.up : COL.down;
+    if (last >= lo && last <= hi) g += `<line x1="${L}" x2="${W-R}" y1="${y(last)}" y2="${y(last)}" stroke="${lc}" stroke-width=".6" opacity=".5"/><rect x="${W-R+2}" y="${y(last)-11}" width="${R-2}" height="22" rx="6" fill="${lc}"/><text x="${W-R+7}" y="${y(last)+5}" font-size="13" font-weight="600" fill="#fff">${num(last, s.market)}</text>`;
+    /* 거래량 */
+    let yo = H0;
+    if (HV){ let vm = 0; for (let i = i0; i <= i1; i++) vm = Math.max(vm, bars[i][7] || 0);
+      g += `<line x1="${L}" x2="${W-R}" y1="${yo}" y2="${yo}" stroke="${COL.grid}"/><text x="${W-R+6}" y="${yo+18}" font-size="13" fill="${COL.axis}">거래량</text><g clip-path="url(#cp)">`;
+      for (let i = i0; i <= i1; i++){ const v = bars[i][7] || 0, hh = vm ? v / vm * (HV - 10) : 0; g += `<rect x="${x(i) - bw/2}" y="${yo + HV - hh}" width="${bw}" height="${hh}" fill="${bars[i][4] >= bars[i][1] ? COL.up : COL.down}" opacity=".45"/>`; }
+      g += `</g>`; yo += HV; }
+    if (HR){ const ry = v => yo + 8 + (100 - v) / 100 * (HR - 14);
+      g += `<line x1="${L}" x2="${W-R}" y1="${yo}" y2="${yo}" stroke="${COL.grid}"/><rect x="${L}" y="${ry(70)}" width="${W-L-R}" height="${ry(30) - ry(70)}" fill="#8E5CF6" opacity=".06"/>
+        <text x="${W-R+6}" y="${ry(70)+4}" font-size="13" fill="${COL.axis}">70</text><text x="${W-R+6}" y="${ry(30)+4}" font-size="13" fill="${COL.axis}">30</text><g clip-path="url(#cp)">`;
+      let d = ""; for (let i = Math.max(0, i0 - 1); i <= Math.min(N - 1, i1 + 1); i++) if (ind.rsi[i] != null) d += (d ? "L" : "M") + x(i).toFixed(1) + " " + ry(ind.rsi[i]).toFixed(1);
+      g += `<path d="${d}" fill="none" stroke="#8E5CF6" stroke-width="1.4"/></g>`; yo += HR; }
+    /* 날짜 */
+    const span = i1 - i0, fmt = i => { const d = bars[i][0]; return span > 200 ? `${d.slice(2,4)}.${+d.slice(5,7)}` : `${+d.slice(5,7)}/${+d.slice(8)}`; };
+    [[i0, "start", Math.max(L, x(i0))], [Math.round((i0 + i1) / 2), "middle", x(Math.round((i0 + i1) / 2))], [i1, "end", Math.min(W - R, x(i1))]].forEach(([i, a, xx]) => g += `<text x="${xx}" y="${H - 6}" font-size="13" fill="${COL.axis}" text-anchor="${a}">${fmt(i)}</text>`);
+    /* 짚은 날 */
+    if (cross != null){ const i = Math.max(i0, Math.min(i1, cross)), b = bars[i], yy = y(b[4]);
+      g += `<line x1="${x(i)}" x2="${x(i)}" y1="${T - 8}" y2="${H - AX}" stroke="#1D1D1F" stroke-width=".7" stroke-dasharray="2 2"/>`;
+      if (yy >= 0 && yy <= H0) g += `<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="#1D1D1F" stroke-width=".7" stroke-dasharray="2 2"/><circle cx="${x(i)}" cy="${yy}" r="3.5" fill="#1D1D1F"/><rect x="${W-R+2}" y="${yy-11}" width="${R-2}" height="22" rx="6" fill="#1D1D1F"/><text x="${W-R+7}" y="${yy+5}" font-size="13" font-weight="600" fill="#fff">${num(b[4], s.market)}</text>`;
+      const pv = bars[i-1], ch = pv ? (b[4] / pv[4] - 1) * 100 : 0;
+      $read.innerHTML = `<b>${b[0].replace(/-/g, ".")}</b><span>시 ${num(b[1], s.market)}</span><span>고 ${num(b[2], s.market)}</span><span>저 ${num(b[3], s.market)}</span><span>종 <b>${num(b[4], s.market)}</b> <span class="${ch >= 0 ? "up" : "down"}">${pct(ch)}</span></span>${b[7] != null ? `<span>거래량 ${(+b[7]).toLocaleString()}</span>` : ""}${IND.rsi && ind.rsi[i] != null ? `<span>RSI ${ind.rsi[i].toFixed(0)}</span>` : ""}`;
+    } else {
+      const a = bars[i0][0], z = bars[i1][0];
+      $read.innerHTML = `<span><b>${a.replace(/-/g, ".")} – ${z.slice(5).replace("-", ".")}</b></span><span>${hint}</span>`;
+    }
+    $plot.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="일봉 차트" font-family="Pretendard Variable,-apple-system,sans-serif">${g}</svg>`;
+    geo = { L, cw, start, W };
+  }
+  let raf = 0; const redraw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); segSync(false); }); };
+  const tween = (n1, e1) => {   // 기간 버튼·두 번 탭: 부드럽게 옮겨 간다
+    if (REDUCED){ V.n = n1; V.end = e1; draw(); segSync(); return; }
+    const n0 = V.n, e0 = V.end, t0 = performance.now(), D = 380, ease = t => 1 - Math.pow(1 - t, 3);
+    const step = now => { const t = Math.min(1, (now - t0) / D), k = ease(t); V.n = n0 + (n1 - n0) * k; V.end = e0 + (e1 - e0) * k; draw(); if (t < 1) requestAnimationFrame(step); else segSync(); };
+    requestAnimationFrame(step);
+  };
+  $seg.onclick = e => { const b = e.target.closest("button"); if (!b) return; const k = +b.dataset.k; LS.set("period", b.textContent); tween(k, N - 1); };
+  box.querySelector(".inds").onclick = e => { const b = e.target.closest("[data-ind]"); if (!b) return; const k = b.dataset.ind; IND[k] = !IND[k]; LS.set("ind", IND); b.setAttribute("aria-pressed", IND[k]); legend(); draw(); };
+
+  /* 손가락 조작 */
+  const pts = new Map(); let drag = null, pinch = null, hold = 0, inertia = 0, lastTap = 0;
+  const idxAt = cx => { const r = $plot.getBoundingClientRect(), px = (cx - r.left) * (geo.W / r.width); return Math.round(geo.start + (px - geo.L) / geo.cw - 0.5); };
+  $plot.addEventListener("pointerdown", e => {
+    cancelAnimationFrame(inertia); pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); $plot.setPointerCapture(e.pointerId);
+    if (pts.size === 1){
+      drag = { x0:e.clientX, end0:V.end, moved:false, hist:[[e.clientX, e.timeStamp]] };
+      if (e.pointerType !== "mouse") hold = setTimeout(() => { if (!drag?.moved){ drag.cross = true; cross = idxAt(e.clientX); draw(); } }, 280);
+    } else if (pts.size === 2){
+      clearTimeout(hold); cross = null; const [a, b] = [...pts.values()];
+      const mid = (a.x + b.x) / 2; pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y), n0: V.n, c: geo.start + (((mid - $plot.getBoundingClientRect().left) * geo.W / $plot.getBoundingClientRect().width) - geo.L) / geo.cw, mid };
+      drag = null;
+    }
+  });
+  $plot.addEventListener("pointermove", e => {
+    if (!pts.has(e.pointerId)){ if (e.pointerType === "mouse"){ cross = idxAt(e.clientX); redraw(); } return; }
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if (pinch && pts.size === 2){
+      const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), r = $plot.getBoundingClientRect();
+      V.n = pinch.n0 * pinch.d0 / Math.max(20, d); clamp();
+      const cw = (geo.W - geo.L - (isKR(s.market) ? 76 : 62)) / V.n, mx = ((a.x + b.x) / 2 - r.left) * geo.W / r.width;
+      V.end = pinch.c - (mx - geo.L) / cw + V.n - 1; redraw(); return;
+    }
+    if (!drag) return;
+    if (drag.cross || (e.pointerType === "mouse" && !e.buttons)){ cross = idxAt(e.clientX); redraw(); return; }
+    const dx = e.clientX - drag.x0;
+    if (!drag.moved && Math.abs(dx) > 6){ drag.moved = true; clearTimeout(hold); cross = null; }
+    if (drag.moved){ V.end = drag.end0 - dx / geo.cw * ($plot.getBoundingClientRect().width ? geo.W / $plot.getBoundingClientRect().width : 1); drag.hist.push([e.clientX, e.timeStamp]); if (drag.hist.length > 6) drag.hist.shift(); redraw(); }
+  });
+  const up = e => {
+    pts.delete(e.pointerId); clearTimeout(hold);
+    if (pts.size < 2) pinch = null;
+    if (drag && pts.size === 0){
+      if (drag.cross){ cross = null; draw(); }
+      else if (drag.moved){   // 놓으면 관성으로 조금 더 흘러가다 멈춤
+        const [a, b] = [drag.hist[0], drag.hist[drag.hist.length - 1]], r = $plot.getBoundingClientRect();
+        let v = -((b[0] - a[0]) / Math.max(1, b[1] - a[1])) / geo.cw * (geo.W / r.width); let t = performance.now();
+        if (!REDUCED && Math.abs(v) > 0.002){ const step = now => { const dt = now - t; t = now; V.end += v * dt; v *= Math.pow(0.94, dt / 16); const e0 = V.end; clamp(); draw(); if (Math.abs(v) > 0.0008 && V.end === e0) inertia = requestAnimationFrame(step); else segSync(); }; inertia = requestAnimationFrame(step); }
+        else segSync();
+      } else {   // 두 번 탭하면 원래 기간으로
+        const now = performance.now(); if (now - lastTap < 300){ tween(pdef, N - 1); lastTap = 0; } else lastTap = now;
+      }
+      drag = null;
+    }
+  };
+  $plot.addEventListener("pointerup", up); $plot.addEventListener("pointercancel", up);
+  $plot.addEventListener("pointerleave", e => { if (e.pointerType === "mouse" && !pts.size){ cross = null; redraw(); } });
+  $plot.addEventListener("wheel", e => { e.preventDefault(); const r = $plot.getBoundingClientRect(), c = idxAt(e.clientX);
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)){ V.end += e.deltaX / geo.cw * 0.5; }
+    else { const f = Math.exp(e.deltaY * 0.002), n1 = Math.max(15, Math.min(N, V.n * f)); const frac = (c - (V.end - V.n + 1)) / V.n; V.n = n1; V.end = c - frac * n1 + n1 - 1; }
+    redraw(); }, {passive:false});
+  legend(); draw(); segSync(false);
+  return { redraw: () => { draw(); segSync(false); } };
 }
 
 const MARK = {"✔":"c-buy","✖":"c-sell","➖":"sub","❔":"sub"};
@@ -514,8 +773,7 @@ function renderDetail(sym){
     ${s ? `
     <div class="stack">
       ${g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}</div></div></div>` : ""}
-      <div class="card chart"><div class="readout"><span><b>최근 90일</b> · 짚으면 그날 가격</span></div><div id="chartBox"></div>
-        <div class="legend"><span><i style="background:#FF9F0A"></i>50일선</span><span><i style="background:#8E8E93"></i>200일선</span><span><i style="background:#1B8A4A;opacity:.35;height:8px"></i>매수 구간</span>${s.wall ? `<span><i style="background:#D22F3C"></i>위쪽 벽</span>` : ""}${s.vcp?.vcp ? `<span><i style="background:#1B64DA"></i>VCP 피벗</span>` : ""}</div></div>
+      <div class="card chart" id="chartBox"></div>
       <div class="card"><div class="plan">
         <span class="k">진입</span><span class="v">${num(pl.entry, mk)}</span><span class="p"></span>
         <span class="k">현재가</span><span class="v">${num(s.price, mk)}</span><span class="p">${pr(s.price, pl.entry)}</span>
@@ -555,7 +813,7 @@ function renderDetail(sym){
     const v = row[k] || "", id = "f-" + k;
     return `<div class="field"><label for="${id}">${label}</label><input id="${id}" data-k="${k}" value="${esc(v)}" ${type==="date"?'type="date"':'inputmode="decimal" placeholder="숫자만" enterkeyhint="done"'}></div>`;
   }
-  if (s){ const box = document.getElementById("chartBox"); box.innerHTML = chartSVG(s, box.clientWidth); bindChart(s); }
+  if (s) S.chart = mountChart($app.querySelector("#chartBox"), s);
   const $save = document.getElementById("save"), form = document.getElementById("form");
   S.drafts = S.drafts || {};
   const draft = S.drafts[sym];
@@ -582,48 +840,65 @@ function renderDetail(sym){
   del.onclick = async () => {
     del.disabled = true; del.querySelector(".main").textContent = "삭제 중…";
     try{
-      await loadCSV(); const gone = S.csv.rows.find(v => symOf(v["시장"], v["티커"]) === sym);
-      S.csv.rows = S.csv.rows.filter(v => symOf(v["시장"], v["티커"]) !== sym);
-      await saveCSV(`앱: ${name} 삭제`);
-      if (gone){ const bin = LS.get("removed", {}); bin[sym] = gone; LS.set("removed", bin); }
-      if (S.dash?.stocks) delete S.dash.stocks[sym];
-      go("pop", () => S.detail = null); toast(name + " 삭제했습니다 · 다시 추가하면 기록이 돌아옵니다");
+      await removeStock(sym);
+      go("pop", () => S.detail = null);
     }catch(e){ toast(e.message); del.disabled = false; del.querySelector(".main").textContent = "종목 삭제"; }
   };
 }
 function back(){ go("pop", () => S.detail = null); }  // 입력 중이던 내용은 S.drafts에 남아 있다
 
-/* 왼쪽 가장자리에서 밀면 뒤로 (상세 화면) */
+/* 왼쪽 가장자리에서 밀면 뒤로: 손가락을 따라 앞 화면이 밀리고 뒤 화면이 드러남 */
 (() => {
-  let x0 = null, y0 = 0, dx = 0;
-  addEventListener("touchstart", e => { const t = e.touches[0]; x0 = (S.detail && t.clientX < 28 && !document.querySelector(".sheet-bg")) ? t.clientX : null; y0 = t.clientY; dx = 0; }, {passive:true});
+  let x0 = null, y0 = 0, on = false, ghost = null, shade = null, last = [], detailY = 0, sym = null, cur = 0;
+  addEventListener("touchstart", e => { const t = e.touches[0]; x0 = (S.detail && t.clientX < 24 && !document.querySelector(".sheet-bg") && !REDUCED) ? t.clientX : null; y0 = t.clientY; on = false; last = [[t.clientX, e.timeStamp]]; }, {passive:true});
   addEventListener("touchmove", e => {
-    if (x0 == null) return; const t = e.touches[0]; dx = t.clientX - x0;
-    if (Math.abs(t.clientY - y0) > Math.abs(dx) && dx < 20){ x0 = null; $app.style.transform = ""; return; }
-    $app.style.transition = "none"; $app.style.transform = `translateX(${Math.max(0, dx)}px)`;
+    if (x0 == null) return; const t = e.touches[0], dx = t.clientX - x0, W = innerWidth;
+    if (!on){
+      if (Math.abs(t.clientY - y0) > Math.abs(dx)){ x0 = null; return; }
+      if (dx < 8) return;
+      on = true; sym = S.detail; detailY = scrollY;
+      ghost = snapshot(); ghost.classList.add("top");
+      S.listY = S.listY || 0; S.detail = null; render("none"); scrollTo(0, S.listY);
+      shade = document.createElement("div"); shade.className = "shade"; document.body.appendChild(shade);
+    }
+    const p = Math.max(0, Math.min(1, dx / W)); cur = Math.max(0, dx);
+    ghost.style.transform = `translateX(${dx}px)`; $app.style.transform = `translateX(${-W*.3*(1-p)}px)`; shade.style.opacity = 1 - p;
+    last.push([t.clientX, e.timeStamp]); if (last.length > 5) last.shift();
   }, {passive:true});
   addEventListener("touchend", () => {
-    if (x0 == null) return; x0 = null;
-    $app.style.transition = "transform .3s var(--ease)";
-    if (dx > 90){ $app.style.transform = `translateX(100%)`; setTimeout(() => { $app.style.transition = ""; $app.style.transform = ""; go("none", () => S.detail = null); $app.classList.add("v-fade"); }, 260); }
-    else { $app.style.transition = "transform .35s var(--ease-back)"; $app.style.transform = ""; setTimeout(() => $app.style.transition = "", 350); }
+    if (!on){ x0 = null; return; }
+    x0 = null; on = false;
+    const W = innerWidth, a = last[0], b = last[last.length - 1], v = (b[0] - a[0]) / Math.max(1, b[1] - a[1]);
+    const p = Math.min(1, cur / W);
+    ghost.style.transform = ""; $app.style.transform = ""; shade.remove();
+    if (p > 0.35 || v > 0.4) slidePages("pop", ghost, p);          // 끝까지 넘김
+    else {                                                          // 제자리로
+      const o = { duration: 300, easing: PAGE_EASE, fill: "forwards" }, sh = document.createElement("div"); sh.className = "shade"; document.body.appendChild(sh);
+      const an = [ ghost.animate([{transform:`translateX(${p*W}px)`}, {transform:"none"}], o), $app.animate([{transform:`translateX(${-W*.3*(1-p)}px)`}, {transform:`translateX(${-W*.3}px)`}], o), sh.animate([{opacity:1-p}, {opacity:1}], o) ];
+      Promise.all(an.map(x => x.finished)).then(() => {   // 떼어 둔 상세 화면을 그대로 되돌림 (입력·차트 상태 유지)
+        S.detail = sym; $app.innerHTML = ""; while (ghost.firstChild) $app.appendChild(ghost.firstChild);
+        document.getElementById("tabbar").classList.add("away"); bindNavbar(); scrollTo(0, detailY);
+        an.forEach(x => x.cancel()); ghost.remove(); sh.remove(); });
+    }
   });
 })();
 
-/* 기업 검색 · 추가 (아래에서 올라오는 시트) */
 /* 아래에서 올라오는 창: 같은 곡선(.32,.72,0,1)으로 열림 0.4초 · 닫힘 0.28초(끌다 놓으면 손가락 속도를 이어받아 0.12~0.28초)
    닫는 길 네 가지: ✕ · 바깥 터치 · 아래로 끌기(높이 1/3 또는 빠른 튕김) · Escape. 목록이 맨 위일 때만 끌려 내려간다. */
 function openSheet(label, inner){
   const bg = document.createElement("div"); bg.className = "sheet-bg";
   bg.innerHTML = `<div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}"><div class="grab" aria-hidden="true"></div>
     <div class="sheet-top"><h3>${esc(label)}</h3><button class="icon-btn press" data-x aria-label="닫기" style="margin-right:-12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>${inner}</div>`;
-  document.body.appendChild(bg); document.body.style.overflow = "hidden";
+  document.body.appendChild(bg); document.body.style.overflow = "hidden"; document.body.classList.add("sheet-open");
   const sheet = bg.querySelector(".sheet"), scrim = bg.querySelector(".scrim");
   const H = () => sheet.getBoundingClientRect().height;
   const move = (y, dur, curve) => {
     const t = REDUCED ? "none" : (dur ? `transform ${dur}ms ${curve}` : "none");
     sheet.style.transition = t; scrim.style.transition = REDUCED ? "none" : (dur ? `opacity ${dur}ms ${curve}` : "none");
     sheet.style.transform = `translateY(${y}px)`; scrim.style.opacity = Math.max(0, 1 - y / H());
+    const p = Math.max(0, 1 - y / H());   // 창이 올라온 만큼 뒤 화면이 작아지고 모서리가 둥글어짐
+    $app.style.transition = t.replace("transform", "transform") ; $app.style.transformOrigin = `50% ${scrollY + innerHeight / 2}px`;
+    $app.style.transform = p ? `scale(${1 - 0.06 * p})` : ""; $app.style.borderRadius = p ? `${14 * p}px` : ""; $app.style.overflow = p ? "hidden" : "";
   };
   requestAnimationFrame(() => requestAnimationFrame(() => move(0, 400, "var(--ease)")));
   let closed = false;
@@ -633,7 +908,7 @@ function openSheet(label, inner){
     const dur = v > 0 ? Math.max(120, Math.min(280, rest / v)) : 280;
     move(H(), dur, "var(--ease)"); document.body.style.overflow = "";
     removeEventListener("keydown", onKey);
-    setTimeout(() => bg.remove(), REDUCED ? 0 : dur);
+    setTimeout(() => { bg.remove(); document.body.classList.remove("sheet-open"); $app.style.transition = ""; $app.style.transform = ""; $app.style.borderRadius = ""; $app.style.overflow = ""; }, REDUCED ? 0 : dur);
   };
   const onKey = e => { if (e.key === "Escape") close(); };
   addEventListener("keydown", onKey);
@@ -704,7 +979,7 @@ async function openSearch(){
       S.csv.rows.push(old ? Object.fromEntries(S.csv.head.map(h => [h, old[h] ?? ""])) : Object.fromEntries(S.csv.head.map(h => [h, h==="시장"?m : h==="티커"?c : h==="이름"?name : ""])));
       await saveCSV(`앱: ${name} 추가`);
       if (old){ delete bin[symOf(m, c)]; LS.set("removed", bin); toast("예전 매수 기록도 되살렸습니다"); }
-      have.add(symOf(m, c)); pill.textContent = "등록됨 ✓"; pill.classList.remove("primary");
+      have.add(symOf(m, c)); pill.textContent = "등록됨 ✓"; pill.classList.remove("primary"); S.justAdded = symOf(m, c);
       render("none");
       const t = await dispatch("status", symOf(m, c));
       waitRun(t, name + " 계산 중 · 카드가 디스코드로 갑니다");
@@ -767,7 +1042,7 @@ document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => {
   if (S.tab === b.dataset.tab && !S.detail){ scrollTo({top:0, behavior: REDUCED ? "auto" : "smooth"}); return; }  // 같은 탭 다시 누르면 맨 위로
   go("fade", () => { S.tab = b.dataset.tab; S.detail = null; });
 });
-let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { const box = document.getElementById("chartBox"), x = S.detail && stockList().find(v => v.sym === S.detail); if (box && x?.d){ box.innerHTML = chartSVG(x.d, box.clientWidth); bindChart(x.d); } }, 150); });
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (S.detail && S.chart) S.chart.redraw(); }, 150); });
 addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.token && !S.busy) refresh(); });
 render("none");
 if (S.token) refresh();
