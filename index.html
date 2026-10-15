@@ -210,6 +210,11 @@ body.sheet-open{background:#1D1D1F}
 .alert-row+.alert-row{box-shadow:0 -1px 0 var(--line)}
 .alert-row .ic{font-size:var(--t-heading);line-height:1.2;flex:none}
 .alert-row .when{font-size:var(--t-small);color:var(--fg2);margin-top:var(--gap-text)}
+.sc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.sc-cell{min-width:0}
+.sc-v{font-size:var(--t-title);font-weight:700;line-height:1.25;margin:var(--gap-text) 0}
+.res{flex:none;text-align:right;font-weight:600;font-size:var(--t-body)}
+.seg:not(:has(.thumb)) button[aria-selected="true"]{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .err{background:var(--sell-bg);color:var(--sell);border-radius:var(--r-control);padding:var(--pad-card);font-size:var(--t-detail);margin-bottom:var(--gap-block)}
 
 @media (prefers-reduced-motion:reduce){
@@ -997,17 +1002,37 @@ async function openSearch(){
   run();
 }
 
-const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁"};
+const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", st:"🧪", sc:"🌊", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
+const BUY_K = new Set(["entry","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
+const SELL_K = new Set(["breakdown","momentum","fail","final","overheat","trim","entry_weak"]);
+let alertFilter = "all";
+function scorecard(list){
+  const stat = (arr, k) => { const v = arr.map(h => h[k]).filter(x => x != null); if (!v.length) return null;
+    return { n: v.length, avg: v.reduce((a,b) => a+b, 0) / v.length, win: v.filter(x => x > 0).length / v.length * 100 }; };
+  const buys = list.filter(h => BUY_K.has(h.kind)), sells = list.filter(h => SELL_K.has(h.kind));
+  const cell = (st, label) => st ? `<div class="sc-cell"><div class="sub">${label}</div><div class="sc-v ${st.avg>=0?"up":"down"}">${pct(st.avg)}</div><div class="sub">${st.n}건 · 오름 ${Math.round(st.win)}%</div></div>`
+                                  : `<div class="sc-cell"><div class="sub">${label}</div><div class="sc-v" style="color:var(--fg3)">–</div><div class="sub">기록 중</div></div>`;
+  return `<div class="card"><div class="sc-grid">${cell(stat(buys,"r20"),"매수 · 20일")}${cell(stat(buys,"r60"),"매수 · 60일")}${cell(stat(sells,"r20"),"주의 · 20일")}</div>
+    <p class="note" style="margin:var(--gap-inner) 0 0">오동엔진이 실제로 보낸 알림만 셉니다. 알림 날 종가에서 그 뒤 종가까지의 변화예요. 주의 신호는 이 값이 낮을수록 잘 맞힌 거예요.</p></div>`;
+}
 async function renderAlerts(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">알림</span><div class="side r"></div></div>
-    <div class="title-block" data-anchor><h1 class="big">알림</h1><div class="sub">최근 디스코드로 보낸 100건</div></div>
+    <div class="title-block" data-anchor><h1 class="big">알림</h1><div class="sub">오동엔진이 보낸 알림과 그 뒤 결과</div></div>
     <div id="al"><div class="list">${[0,1,2,3].map(() => `<div class="alert-row"><div class="sk" style="width:24px;height:24px;border-radius:6px"></div><div style="flex:1"><div class="sk" style="width:55%;height:15px"></div><div class="sk" style="width:30%;height:11px;margin-top:8px"></div></div></div>`).join("")}</div></div></div>`;
   try{ if (!S.alerts) S.alerts = await readJSON("상태/알림내역.json", []); }catch(e){ const el = document.getElementById("al"); if (el) el.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
   const el = document.getElementById("al"); if (!el || S.tab !== "alerts" || S.detail) return;
   const st = S.dash?.stocks || {};
-  el.innerHTML = S.alerts.length ? `<div class="list">${S.alerts.map((h,i) => `<button class="alert-row press row" data-i="${i}" ${st[h.symbol] ? "" : "disabled"}><span class="ic">${ICON[h.kind]||"•"}</span><div style="flex:1;min-width:0"><div><b>${esc(h.name)}</b> <span class="sub">${esc(h.title)}</span></div><div class="when">${esc(h.t)}${h.price!=null && h.kind!=="news" ? " · " + esc(num(h.price, (h.symbol||"").match(/\.K[SQ]$/) ? "코스피" : "미국")) : ""}</div></div>${st[h.symbol] ? CHEV : ""}</button>`).join("")}</div>`
-    : `<div class="card empty"><b>아직 보낸 알림이 없습니다</b>구간 도착·진입·이탈 신호가 생기면 여기에도 남습니다.</div>`;
-  el.querySelectorAll("button[data-i]:not([disabled])").forEach(b => b.onclick = () => go("push", () => S.detail = S.alerts[+b.dataset.i].symbol));
+  const all = S.alerts.filter(h => h.kind !== "news" || alertFilter !== "signal");
+  const list = alertFilter === "buy" ? all.filter(h => BUY_K.has(h.kind)) : alertFilter === "sell" ? all.filter(h => SELL_K.has(h.kind)) : alertFilter === "news" ? S.alerts.filter(h => h.kind === "news") : all;
+  const res = h => { const k = h.r60 != null ? "r60" : h.r20 != null ? "r20" : h.r5 != null ? "r5" : null; if (!k || h.kind === "news") return "";
+    return `<span class="res ${h[k]>=0?"up":"down"}">${pct(h[k])}<span class="sub"> ${k.slice(1)}일</span></span>`; };
+  const tabs = [["all","전체"],["buy","매수"],["sell","주의"],["news","뉴스"]];
+  el.innerHTML = (S.alerts.length ? scorecard(S.alerts) : "") +
+    `<div class="seg" role="tablist" style="margin:var(--gap-block) 0 var(--gap-caption)">${tabs.map(([k,t]) => `<button role="tab" data-f="${k}" aria-selected="${alertFilter===k}" class="${alertFilter===k?"on":""}">${t}</button>`).join("")}</div>` +
+    (list.length ? `<div class="list">${list.map((h,i) => `<button class="alert-row press row" data-sym="${esc(h.symbol)}" ${st[h.symbol] ? "" : "disabled"}><span class="ic">${ICON[h.kind]||"•"}</span><div style="flex:1;min-width:0"><div><b>${esc(h.name)}</b> <span class="sub">${esc(h.title)}</span></div><div class="when">${esc(h.t)}${h.price!=null && h.kind!=="news" ? " · " + esc(num(h.price, (h.symbol||"").match(/\.K[SQ]$/) ? "코스피" : "미국")) : ""}</div></div>${res(h)}</button>`).join("")}</div>`
+      : `<div class="card empty"><b>${S.alerts.length ? "이 종류 알림은 아직 없습니다" : "아직 보낸 알림이 없습니다"}</b>구간 도착·진입·이탈 신호가 생기면 여기에 남고, 그 뒤 결과가 채워집니다.</div>`);
+  el.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { alertFilter = b.dataset.f; renderAlerts(); });
+  el.querySelectorAll("button[data-sym]:not([disabled])").forEach(b => b.onclick = () => go("push", () => S.detail = b.dataset.sym));
 }
 
 function renderSettings(){
