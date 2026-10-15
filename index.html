@@ -7,10 +7,10 @@
 <meta name="theme-color" content="#F5F5F7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="타이밍">
+<meta name="apple-mobile-web-app-title" content="rooru.invest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
-<title>타이밍</title>
+<title>rooru.invest</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -262,8 +262,8 @@ function render(){
 
 function renderSetup(msg){
   $app.innerHTML = `<div class="wrap" style="padding-top:40px">
-    <h1 style="font-size:32px;font-weight:800;letter-spacing:-.03em;margin:0 0 8px">타이밍</h1>
-    <p class="sub" style="font-size:16px;margin:0 0 28px">내 종목의 매수 구간을 지켜보고 디스코드로 알려줍니다.</p>
+    <h1 style="font-size:32px;font-weight:800;letter-spacing:-.03em;margin:0 0 8px">rooru.invest</h1>
+    <p class="sub" style="font-size:16px;margin:0 0 28px">오동엔진이 내 종목의 매수 구간을 지켜보고 디스코드로 알려줍니다.</p>
     ${msg ? `<div class="err">${esc(msg)}</div>` : ""}
     <div class="card stack">
       <div class="field"><label>GitHub 토큰</label><input id="tok" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…"></div>
@@ -290,7 +290,7 @@ function renderHome(){
   const d = S.dash, list = stockList();
   const regs = Object.entries(d?.regimes || {});
   $app.innerHTML = `<div class="wrap">
-    <div class="top"><div><h1>타이밍</h1><div class="sub">${d?.updated ? "마지막 점검 " + esc(d.updated) : "불러오는 중…"}</div></div>
+    <div class="top"><div><h1>rooru.invest</h1><div class="sub">${d?.updated ? "오동엔진 마지막 점검 " + esc(d.updated) : "불러오는 중…"}</div></div>
       <button class="pill-btn" id="check" ${S.busy ? "disabled" : ""}>지금 점검</button></div>
     ${S.err ? `<div class="err">${esc(S.err)}</div>` : ""}
     ${regs.length ? `<div class="regimes">${regs.map(([n,g]) => `<div class="regime"><span class="dot" style="background:${REG_DOT[g.label]||"var(--fg3)"}"></span><b>${esc(n)}</b> ${esc(g.label)} <span class="sub">${g.points}/${g.total}</span></div>`).join("")}</div>` : ""}
@@ -492,7 +492,7 @@ async function renderAlerts(){
 function renderSettings(){
   $app.innerHTML = `<div class="wrap"><div class="top"><div><h1>설정</h1></div></div>
     <div class="card stack">
-      <div><div class="sub">저장소</div><b>${esc(S.repo)}</b></div>
+      <div><div class="sub">엔진 저장소 (오동엔진)</div><b>${esc(S.repo)}</b></div>
       <a class="btn ghost" style="text-decoration:none;background:var(--bg)" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener">GitHub 실행 기록 보기</a>
       <button class="btn ghost" style="background:var(--bg)" id="hello">디스코드 연결 확인</button>
       <button class="btn ghost" style="background:var(--bg)" id="recat">기업 검색 목록 새로 받기</button>
