@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-4">
+<meta name="app-version" content="2026-10-16-5">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -137,6 +137,23 @@ body.sheet-open{background:#1D1D1F}
 /* 상세 */
 .hero .bigpx{font-size:var(--t-title);font-weight:700;line-height:1.25;letter-spacing:-.02em;margin-top:var(--gap-inner);display:flex;align-items:baseline;gap:10px}
 .grade{display:flex;align-items:center;gap:14px}
+
+.act .r1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{font-size:var(--t-small);font-weight:700;padding:3px 10px;border-radius:999px}
+.p-buy{background:var(--buy-bg);color:var(--buy)} .p-wait{background:var(--wait-bg);color:var(--wait)} .p-sell{background:var(--sell-bg);color:var(--sell)} .p-hold{background:var(--fill);color:var(--fg)}
+.act .ttl{margin-top:10px}
+.dist{margin-top:14px}
+.dist .track{position:relative;height:8px;border-radius:4px;background:var(--fill)}
+.dist .seg-z{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--buy);opacity:.55}
+.dist .dot{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--fg);box-shadow:0 0 0 3px var(--card)}
+.dist .dl{display:flex;justify-content:space-between;gap:8px;font-size:var(--t-small);color:var(--fg2);margin-top:8px}
+.kv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;padding-top:14px;box-shadow:0 -1px 0 var(--line)}
+.kv div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.kv span{font-size:var(--t-small);color:var(--fg2)} .kv b{font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-i .nh{flex-wrap:wrap}
+.cset{margin-top:var(--gap-inner);padding:0 10px}
+.cset>summary{list-style:none;cursor:pointer;font-size:var(--t-small);color:var(--blue);font-weight:600;padding:6px 0}
+.cset>summary::-webkit-details-marker{display:none}
 .act .cap,.notes .cap{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
 .act .ttl{font-size:var(--t-title);font-weight:700;line-height:1.3;letter-spacing:-.01em}
 .act.a-buy .ttl{color:var(--buy)} .act.a-sell .ttl{color:var(--sell)}
@@ -163,7 +180,7 @@ details.more>summary::-webkit-details-marker{display:none}
 .inds{display:flex;gap:var(--gap-sub);flex-wrap:wrap;padding:0 10px;margin-top:var(--gap-inner)}
 .chip{min-height:36px;padding:0 14px;border-radius:999px;background:var(--fill);font-size:var(--t-small);font-weight:600;color:var(--fg2);transition:background-color .2s,color .2s,transform .16s var(--ease-out)}
 .chip[aria-pressed=true]{background:var(--info-bg);color:var(--info)}
-.chart .readout{display:flex;gap:12px;font-size:var(--t-small);color:var(--fg2);padding:0 10px var(--gap-sub);min-height:calc(3 * 1.45 * var(--t-small) + var(--gap-sub));align-content:flex-start;align-items:baseline;flex-wrap:wrap;row-gap:0}
+.chart .readout{display:flex;gap:12px;font-size:var(--t-small);color:var(--fg2);padding:0 10px var(--gap-sub);min-height:calc(2 * 1.45 * var(--t-small) + var(--gap-sub));align-content:flex-start;align-items:baseline;flex-wrap:wrap;row-gap:0}
 .chart .readout b{color:var(--fg)}
 .chart .draw{animation:fade .5s var(--ease-out) both}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--t-small);color:var(--fg2);margin-top:var(--gap-sub);padding:0 10px}
@@ -610,10 +627,11 @@ function mountChart(box, s){
     <div class="seg" role="tablist" aria-label="기간">${PERIODS.filter(p => p[1] <= N + 10).map(([t,k]) => `<button role="tab" data-k="${Math.min(k,N)}">${t}</button>`).join("")}<span class="thumb"></span></div>
     <div class="readout" aria-live="polite"></div>
     <div class="plot"></div>
-    <div class="inds">${IND_LIST.filter(([k]) => k !== "vol" || hasVol).map(([k,t]) => `<button class="chip press" data-ind="${k}" aria-pressed="${!!IND[k]}">${t}</button>`).join("")}</div>
-    <div class="legend"></div>`;
+    <details class="cset"><summary class="press">선·표시 설정</summary>
+    <div class="inds" style="padding:0">${IND_LIST.filter(([k]) => k !== "vol" || hasVol).map(([k,t]) => `<button class="chip press" data-ind="${k}" aria-pressed="${!!IND[k]}">${t}</button>`).join("")}</div>
+    <div class="legend" style="padding:0"></div></details>`;
   const $plot = box.querySelector(".plot"), $read = box.querySelector(".readout"), $seg = box.querySelector(".seg"), $leg = box.querySelector(".legend");
-  const hint = "▲▼ 있는 날을 길게 누르면 뜻이 나와요";
+  const hint = "▲▼ 길게 눌러 확인";
   let cross = null, geo = null;
 
   const segSync = (animate = true) => {
@@ -652,8 +670,8 @@ function mountChart(box, s){
     const pad = (hi - lo) * 0.07; lo -= pad; hi += pad;
     const y = v => T + (hi - v) / (hi - lo) * (H0 - T - 6);
     let g = `<defs><clipPath id="cp"><rect x="${L}" y="0" width="${W - L - R}" height="${H}"/></clipPath></defs>`;
-    const lastY = y(s.price ?? bars[N-1][4]);
-    for (let k = 0; k <= 3; k++){ const v = lo + (hi - lo) * (k + .5) / 4; if (Math.abs(y(v) - lastY) < 16) continue; g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${COL.grid}" stroke-width=".6"/><text x="${W-R+6}" y="${y(v)+4}" font-size="13" fill="${COL.axis}">${num(v, s.market)}</text>`; }
+    const lastY = y(s.price ?? bars[N-1][4]), zt = (s.zones || []).find(z => z.label !== "지지" && z.state === "above"), ztY = zt ? y(zt.hi) : -999;
+    for (let k = 0; k <= 3; k++){ const v = lo + (hi - lo) * (k + .5) / 4; if (Math.abs(y(v) - lastY) < 16 || Math.abs(y(v) - ztY) < 16) continue; g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${COL.grid}" stroke-width=".6"/><text x="${W-R+6}" y="${y(v)+4}" font-size="13" fill="${COL.axis}">${num(v, s.market)}</text>`; }
     let p = `<g clip-path="url(#cp)">`;
     zones.forEach(z => { if (z.hi >= lo && z.lo <= hi) p += `<rect x="${L}" y="${y(z.hi)}" width="${W-L-R}" height="${Math.max(2, y(z.lo) - y(z.hi))}" fill="#1B8A4A" opacity=".12"/>`; });
     const path = (arr, col, w = 1.5, dash = "") => { let d = ""; for (let i = Math.max(0, i0 - 1); i <= Math.min(N - 1, i1 + 1); i++){ if (arr[i] == null){ continue; } d += (d ? "L" : "M") + x(i).toFixed(1) + " " + y(arr[i]).toFixed(1); } return d ? `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" ${dash ? `stroke-dasharray="${dash}"` : ""}/>` : ""; };
@@ -703,6 +721,8 @@ function mountChart(box, s){
     g += p;
     const last = s.price ?? bars[N-1][4], lc = (s.chg ?? 0) >= 0 ? COL.up : COL.down;
     if (last >= lo && last <= hi) g += `<line x1="${L}" x2="${W-R}" y1="${y(last)}" y2="${y(last)}" stroke="${lc}" stroke-width=".6" opacity=".5"/><rect x="${W-R+2}" y="${y(last)-11}" width="${R-2}" height="22" rx="6" fill="${lc}"/><text x="${W-R+7}" y="${y(last)+5}" font-size="13" font-weight="600" fill="#fff">${num(last, s.market)}</text>`;
+    { const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");   // 다음 살 가격: 오른쪽에 초록 꼬리표
+      if (z && z.hi >= lo && z.hi <= hi && Math.abs(y(z.hi) - y(last)) > 24) g += `<line x1="${L}" x2="${W-R}" y1="${y(z.hi)}" y2="${y(z.hi)}" stroke="#1B8A4A" stroke-width=".8" stroke-dasharray="3 3"/><rect x="${W-R+2}" y="${y(z.hi)-11}" width="${R-2}" height="22" rx="6" fill="#1B8A4A"/><text x="${W-R+7}" y="${y(z.hi)+5}" font-size="13" font-weight="600" fill="#fff">${num(z.hi, s.market)}</text>`; }
     /* 거래량 */
     let yo = H0;
     if (HV){ let vm = 0; for (let i = i0; i <= i1; i++) vm = Math.max(vm, bars[i][7] || 0);
@@ -816,18 +836,9 @@ function renderDetail(sym){
       ${s ? `<div class="bigpx">${num(s.price, mk)} <span class="chg ${s.chg>=0?"up":"down"}" style="font-size:var(--t-body)">${pct(s.chg)}</span></div>` : ""}</div>
     ${s ? `
     <div class="stack">
-      ${s.action ? `<div class="card act a-${esc(s.action.tone)}" role="status"><div class="ttl">${esc(s.action.title)}</div>${s.action.detail ? `<div class="dt">${esc(s.action.detail)}</div>` : ""}</div>`
-        : g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}</div></div></div>` : ""}
+      ${s.action ? actCard(s, pl, mk) : g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}</div></div></div>` : ""}
       <div class="card chart" id="chartBox"></div>
-      <div class="card"><div class="plan">
-        ${pl.mode ? `<div class="mode">${esc(pl.mode)}</div>` : ""}
-        <span class="k">${(pl.mode || "").startsWith("보유") ? "내가 산 1차 가격" : "살 가격"}</span><span class="v">${num(pl.entry, mk)}</span><span class="p"></span>
-        <span class="k">현재가</span><span class="v">${num(s.price, mk)}</span><span class="p">${pr(s.price, pl.entry)}</span>
-        <span class="k">${pl.mode === "보유 · 50일선 관리" ? "50일 평균선 (깨지면 30% 정리)" : "손절가"}</span><span class="v c-sell">${num(pl.stop, mk)}</span><span class="p">${pr(pl.stop, pl.entry)}</span>
-        ${pl.tp1 && pl.tp1 < pl.target * 0.97 ? `<span class="k">절반 팔 가격</span><span class="v c-buy">${num(pl.tp1, mk)}</span><span class="p">${pr(pl.tp1, pl.entry)}</span>` : ""}
-        <span class="k">목표 가격</span><span class="v c-buy">${num(pl.target, mk)}</span><span class="p">${pr(pl.target, pl.entry)}</span>
-        <div class="rr"><span>손익비</span><span>1 : ${pl.rr == null ? "-" : pl.rr.toFixed(1)} · ${esc(strip(pl.grade).replace("👍 ",""))}</span></div></div></div>
-      ${s.notes?.length ? `<div class="card notes"><div class="cap">최근 표시</div>${s.notes.slice(0, 3).map(x => `<div class="note-i"><div class="nh"><span class="tag t-${esc(x.tone === "buy" ? "buy" : x.tone === "sell" ? "sell" : "info")}">${esc(x.label)}</span><span class="sub">${esc(x.date.slice(5).replace("-", "/"))}</span></div><div class="adv">${esc(x.advice)}${Math.abs(x.score) >= 1 ? ` <span class="sub" style="font-weight:400">(검증 ${x.score > 0 ? "+" : "−"}${Math.abs(x.score).toFixed(1)}%p)</span>` : ""}</div></div>`).join("")}</div>` : ""}
+      ${s.notes?.length ? notesCard(s.notes) : ""}
     </div>
     ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)} – ${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
     ${s.cautions?.length ? `<div class="sec-title">주의</div><div class="card" style="padding-block:4px"><div class="items">${s.cautions.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
@@ -1114,6 +1125,29 @@ function renderSettings(){
 }
 
 let toastT;
+
+/* 지금 할 일 카드: 상태 표시 + 한 줄 + (대기면) 거리 막대 + 살 가격·손절가·목표·손익비 */
+function actCard(s, pl, mk){
+  const a = s.action, tone = a.tone, pill = {buy:"매수", wait:"대기", sell:"주의", hold:"보유"}[tone] || "대기";
+  const title = a.title.replace(/^대기 · /, "");
+  const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");
+  let bar = "";
+  if (tone === "wait" && z){
+    const lo = Math.min(z.hi, pl?.stop ?? z.lo) * 0.995, hi = s.price * 1.01, pos = v => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100));
+    bar = `<div class="dist"><div class="track"><span class="seg-z" style="left:${pos(z.lo)}%;width:${pos(z.hi) - pos(z.lo)}%"></span><span class="dot now" style="left:${pos(s.price)}%"></span></div>
+      <div class="dl"><span class="c-buy">${esc(z.label)} ${num(z.hi, mk)}</span><span><b>${pct(z.dist)}</b> 남음</span><span>지금 ${num(s.price, mk)}</span></div></div>`;
+  }
+  const kv = pl ? [["살 가격", num(pl.entry, mk), ""], [(pl.mode || "").startsWith("보유") ? "50일선" : "손절가", num(pl.stop, mk), "c-sell"], ["목표", num(pl.target, mk), "c-buy"], ["손익비", pl.rr == null ? "-" : "1 : " + pl.rr.toFixed(1), ""]] : [];
+  return `<div class="card act a-${esc(tone)}" role="status"><div class="r1"><span class="pill p-${esc(tone)}">${pill}</span>${a.detail && tone !== "wait" ? `<span class="sub">${esc(a.detail)}</span>` : ""}</div>
+    <div class="ttl">${esc(title)}</div>${bar}
+    ${kv.length ? `<div class="kv">${kv.map(([k, v, c]) => `<div><span>${k}</span><b class="${c}">${v}</b></div>`).join("")}</div>` : ""}</div>`;
+}
+/* 최근 표시: 같은 뜻이면 한 줄로 묶음 */
+function notesCard(ns){
+  const g = [];
+  ns.slice(0, 5).forEach(x => { const o = g.find(y => y.advice === x.advice); o ? o.items.push(x) : g.push({advice: x.advice, score: x.score, items: [x]}); });
+  return `<div class="card notes"><div class="cap">최근 차트 표시</div>${g.slice(0, 3).map(o => `<div class="note-i"><div class="nh">${o.items.map(x => `<span class="tag t-${x.tone === "buy" ? "buy" : x.tone === "sell" ? "sell" : "info"}">${esc(x.label)}<span style="font-weight:400;opacity:.75;margin-left:5px">${esc(x.date.slice(5).replace("-", "/"))}</span></span>`).join("")}</div><div class="adv">${esc(o.advice)}${Math.abs(o.score) >= 1 ? ` <span class="sub" style="font-weight:400">(검증 ${o.score > 0 ? "+" : "−"}${Math.abs(o.score).toFixed(1)}%p)</span>` : ""}</div></div>`).join("")}</div>`;
+}
 /* 새 버전이 올라오면 다시 불러오기 (홈 화면에 추가한 앱은 예전 화면을 오래 들고 있음) */
 async function checkVersion(){
   try{
