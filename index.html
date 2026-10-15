@@ -558,8 +558,10 @@ async function removeStock(sym){
 /* ───────── 차트: 기간 · 끌어서 이동 · 벌려서 확대 · 길게 눌러 가격 · 보조지표 ─────────
    bars: [날짜, 시, 고, 저, 종, 50일선, 200일선, 거래량]  (EMA·볼린저·일목·RSI는 여기서 계산) */
 const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2년",500]];
-const IND_LIST = [["ma","이평선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"]];   // 지표견이 쓰는 도구만
-const IND = Object.assign({ma:true, ch:false, ich:false, vol:true}, LS.get("ind", {})); IND.bb = false; IND.rsi = false;
+const AUX = new Set(["TP1","TP2","분할청산 · 14선","최종 청산 @SR","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파"]);
+const isAux = t => AUX.has(t) || t.includes("삼각형") || t.includes("쐐기");
+const IND_LIST = [["ma","이평선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["aux","청산·패턴"]];   // 지표견이 쓰는 도구만
+const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, aux:true}, LS.get("ind", {})); IND.bb = false; IND.rsi = false;
 const COL = {up:"#F04452", down:"#3182F6", e21:"#FF9F0A", s50:"#30B566", s200:"#8E5CF6", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
 
 function calcInd(bars){
@@ -667,10 +669,17 @@ function mountChart(box, s){
       const [bg, fg] = C[tone] || C.info, w = text.length * 13 + 14, hh = 20, cx = Math.max(L + w/2, Math.min(W - R - w/2 - 2, x(i)));
       let by = below ? y(bars[i][3]) + 8 : y(bars[i][2]) - 8 - hh;
       for (let k = 0; k < 8 && hit({x:cx - w/2, y:by, w, h:hh}); k++) by += below ? hh + 4 : -(hh + 4);
-      by = Math.max(2, Math.min(H0 - hh - 2, by)); boxes.push({x:cx - w/2, y:by, w, h:hh});
+      by = Math.max(2, Math.min(H0 - hh - 2, by));
+      if (hit({x:cx - w/2, y:by, w, h:hh})) return;   // 자리가 없으면 겹쳐 그리지 않고 건너뜀
+      boxes.push({x:cx - w/2, y:by, w, h:hh});
       p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="6" fill="${bg}"/><text x="${cx}" y="${by + 14.5}" font-size="13" font-weight="600" fill="${fg}" text-anchor="middle">${esc(text)}</text>`;
     };
-    (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1).slice(-6).forEach(m => chip(idx[m[0]], m[1], m[2], m[3]));
+    {  // 보이는 표시: 핵심 신호 먼저, 청산·패턴(지표견 보조 표시)은 켜져 있을 때 따로 몇 개
+      const vis = (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1);
+      const nCore = Math.max(4, Math.min(8, Math.round((i1 - i0) / 12))), nAux = IND.aux ? Math.max(2, Math.min(5, Math.round((i1 - i0) / 20))) : 0;
+      const core = vis.filter(m => !isAux(m[1])).slice(-nCore), aux = vis.filter(m => isAux(m[1])).slice(-nAux);
+      [...core, ...aux].sort((a, b) => a[0] < b[0] ? 1 : -1).forEach(m => chip(idx[m[0]], m[1], m[2], m[3]));   // 최근 것부터 자리를 잡는다
+    }
     if (s.vcp?.vcp && i1 === N - 1 && !(s.marks || []).some(m => m[1] === "VCP 형성" && idx[m[0]] >= N - 15)) chip(N - 1, "VCP 형성", "info", false);
     p += `</g>`;
     g += p;
@@ -1009,8 +1018,8 @@ async function openSearch(){
   run();
 }
 
-const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", st:"🧪", pull_buy:"🪃", vcp_buy:"🌀", sc:"🌊", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
-const BUY_K = new Set(["entry","pull_buy","vcp_buy","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
+const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", st:"🧪", pull_buy:"🪃", vcp_buy:"🌀", dnend_buy:"🌤️", sc:"🌊", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
+const BUY_K = new Set(["entry","pull_buy","vcp_buy","dnend_buy","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
 const SELL_K = new Set(["breakdown","momentum","fail","final","overheat","trim","entry_weak"]);
 let alertFilter = "all";
 function scorecard(list){
