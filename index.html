@@ -795,7 +795,7 @@ function renderDetail(sym){
         <span class="k">${(pl.mode || "").startsWith("보유") ? "1차 가격" : "진입"}</span><span class="v">${num(pl.entry, mk)}</span><span class="p"></span>
         <span class="k">현재가</span><span class="v">${num(s.price, mk)}</span><span class="p">${pr(s.price, pl.entry)}</span>
         <span class="k">${pl.mode === "보유 · 50일선 관리" ? "50일선" : "손절"}</span><span class="v c-sell">${num(pl.stop, mk)}</span><span class="p">${pr(pl.stop, pl.entry)}</span>
-        ${pl.tp1 && pl.tp1 < pl.target ? `<span class="k">절반 익절 · 3R</span><span class="v c-buy">${num(pl.tp1, mk)}</span><span class="p">${pr(pl.tp1, pl.entry)}</span>` : ""}
+        ${pl.tp1 && pl.tp1 < pl.target * 0.97 ? `<span class="k">절반 익절 · 3R</span><span class="v c-buy">${num(pl.tp1, mk)}</span><span class="p">${pr(pl.tp1, pl.entry)}</span>` : ""}
         <span class="k">목표</span><span class="v c-buy">${num(pl.target, mk)}</span><span class="p">${pr(pl.target, pl.entry)}</span>
         <div class="rr"><span>손익비</span><span>1 : ${pl.rr == null ? "-" : pl.rr.toFixed(1)} · ${esc(strip(pl.grade).replace("👍 ",""))}</span></div></div></div>
     </div>
