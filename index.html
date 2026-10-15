@@ -135,6 +135,18 @@ body.sheet-open{background:#1D1D1F}
 /* 상세 */
 .hero .bigpx{font-size:var(--t-title);font-weight:700;line-height:1.25;letter-spacing:-.02em;margin-top:var(--gap-inner);display:flex;align-items:baseline;gap:10px}
 .grade{display:flex;align-items:center;gap:14px}
+.act .cap,.notes .cap{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
+.act .ttl{font-size:var(--t-heading);font-weight:700;line-height:1.35;margin-top:var(--gap-sub);letter-spacing:-.01em}
+.act.a-buy .ttl{color:var(--buy)} .act.a-sell .ttl{color:var(--sell)}
+.act .dt{font-size:var(--t-body);line-height:1.55;margin-top:var(--gap-sub)}
+.act .meta{font-size:var(--t-small);color:var(--fg2);margin-top:var(--gap-sub)}
+.note-i{padding:12px 0;display:flex;flex-direction:column;gap:4px;font-size:var(--t-body);line-height:1.5}
+.note-i+.note-i{box-shadow:0 -1px 0 var(--line)}
+.note-i .nh{display:flex;gap:8px;align-items:center}
+.note-i .adv{font-weight:600}
+details.more{margin-top:var(--gap-section)}
+details.more>summary{list-style:none;cursor:pointer;padding:14px var(--pad-card);color:var(--blue);font-weight:600;font-size:var(--t-body)}
+details.more>summary::-webkit-details-marker{display:none}
 .grade .badge{flex:none;width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px}
 .grade .lbl{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;line-height:1.25}
 .grade .setup{font-size:var(--t-detail);color:var(--fg2);margin-top:var(--gap-sub)}
@@ -467,7 +479,7 @@ function renderHome(){
       if (!s) return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(x.row["티커"])}</span></div><div class="head sub">계산 대기 · 다음 점검 때 나옵니다</div></div>${CHEV}`);
       const tags = s.p1 ? `<span class="tag t-dark">${esc(s.plan_text)}</span>` : "";
       return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(s.ticker)}</span></div>
-        <div class="head">${gradeTag(s.grade)}<span>${esc(s.head)}</span>${tags}</div></div>
+        <div class="head">${gradeTag(s.grade)}<span>${esc(s.action?.title || s.head)}</span>${tags}</div></div>
         <div class="px">${spark(s.bars, s.chg)}<div><b>${num(s.price, s.market)}</b><span class="chg ${s.chg>=0?"up":"down"}">${pct(s.chg)}</span></div></div>`);
     }).join("")}</div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">줄을 왼쪽으로 밀면 삭제돼요</p>` : `<div class="empty card"><b>지켜볼 기업을 추가하세요</b>추가하면 오동엔진이 매수 구간을 계산하고, 구간에 오면 디스코드로 알려줍니다.</div>`}
@@ -559,6 +571,7 @@ async function removeStock(sym){
    bars: [날짜, 시, 고, 저, 종, 50일선, 200일선, 거래량]  (EMA·볼린저·일목·RSI는 여기서 계산) */
 const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2년",500]];
 const AUX = new Set(["TP1","TP2","분할청산 · 14선","최종 청산 @SR","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파"]);
+const easy = w => String(w).replace(/(\d+)일선/g, "$1일 평균선").replace("돌파 자리", "예전에 뚫고 올라간 가격");
 const isAux = t => AUX.has(t) || t.includes("삼각형") || t.includes("쐐기");
 const IND_LIST = [["ma","이평선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["aux","청산·패턴"]];   // 지표견이 쓰는 도구만
 const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, aux:true}, LS.get("ind", {})); IND.bb = false; IND.rsi = false;
@@ -612,12 +625,12 @@ function mountChart(box, s){
   };
   const legend = () => {
     const it = [];
-    if (IND.ma) it.push(["EMA 21", COL.e21], ["50일선", COL.s50], ["200일선", COL.s200]);
+    if (IND.ma) it.push(["21일 평균선", COL.e21], ["50일 평균선", COL.s50], ["200일 평균선", COL.s200]);
     if (IND.ch) it.push(["20일 채널", COL.bb]);
     if (IND.ich) it.push(["일목 구름", "#30B566"]);
     it.push(["매수 구간", "rgba(27,138,74,.35)"]);
     if (s.sr_line) it.push(["SR 손절선", "#8B5E3C"]);
-    if (s.wall) it.push(["위쪽 벽", "#D22F3C"]);
+    if (s.wall) it.push(["위쪽 벽 (팔 물량 많은 가격)", "#D22F3C"]);
     $leg.innerHTML = it.map(([t,c]) => `<span><i style="background:${c}"></i>${t}</span>`).join("");
   };
   const clamp = () => { V.n = Math.max(15, Math.min(N, V.n)); V.end = Math.max(V.n - 1, Math.min(N - 1, V.end)); };
@@ -797,22 +810,26 @@ function renderDetail(sym){
       ${s ? `<div class="bigpx">${num(s.price, mk)} <span class="chg ${s.chg>=0?"up":"down"}" style="font-size:var(--t-body)">${pct(s.chg)}</span></div>` : ""}</div>
     ${s ? `
     <div class="stack">
-      ${g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}${s.tgrade ? ` · 추세 ${esc(s.tgrade)}` : ""}${s.rs_rank != null ? ` · RS ${Math.round(s.rs_rank)}` : ""}</div></div></div>` : ""}
+      ${s.action ? `<div class="card act a-${esc(s.action.tone)}" role="status"><div class="cap">지금 할 일</div><div class="ttl">${esc(s.action.title)}</div><div class="dt">${esc(s.action.detail)}</div>${g ? `<div class="meta"><span class="c-${esc(g.tone)}">${esc(g.label)}</span> · ${esc(g.setup)}${s.tgrade ? ` · 추세 ${esc(s.tgrade)}` : ""}</div>` : ""}</div>`
+        : g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}</div></div></div>` : ""}
       <div class="card chart" id="chartBox"></div>
       <div class="card"><div class="plan">
         ${pl.mode ? `<div class="mode">${esc(pl.mode)}</div>` : ""}
-        <span class="k">${(pl.mode || "").startsWith("보유") ? "1차 가격" : "진입"}</span><span class="v">${num(pl.entry, mk)}</span><span class="p"></span>
+        <span class="k">${(pl.mode || "").startsWith("보유") ? "내가 산 1차 가격" : "살 가격"}</span><span class="v">${num(pl.entry, mk)}</span><span class="p"></span>
         <span class="k">현재가</span><span class="v">${num(s.price, mk)}</span><span class="p">${pr(s.price, pl.entry)}</span>
-        <span class="k">${pl.mode === "보유 · 50일선 관리" ? "50일선" : "손절"}</span><span class="v c-sell">${num(pl.stop, mk)}</span><span class="p">${pr(pl.stop, pl.entry)}</span>
-        ${pl.tp1 && pl.tp1 < pl.target * 0.97 ? `<span class="k">절반 익절 · 3R</span><span class="v c-buy">${num(pl.tp1, mk)}</span><span class="p">${pr(pl.tp1, pl.entry)}</span>` : ""}
-        <span class="k">목표</span><span class="v c-buy">${num(pl.target, mk)}</span><span class="p">${pr(pl.target, pl.entry)}</span>
-        <div class="rr"><span>손익비</span><span>1 : ${pl.rr == null ? "-" : pl.rr.toFixed(1)} · ${esc(strip(pl.grade).replace("👍 ",""))}</span></div></div></div>
+        <span class="k">${pl.mode === "보유 · 50일선 관리" ? "50일 평균선 (깨지면 30% 정리)" : "이 아래로 끝나면 정리"}</span><span class="v c-sell">${num(pl.stop, mk)}</span><span class="p">${pr(pl.stop, pl.entry)}</span>
+        ${pl.tp1 && pl.tp1 < pl.target * 0.97 ? `<span class="k">절반 팔 가격</span><span class="v c-buy">${num(pl.tp1, mk)}</span><span class="p">${pr(pl.tp1, pl.entry)}</span>` : ""}
+        <span class="k">목표 가격</span><span class="v c-buy">${num(pl.target, mk)}</span><span class="p">${pr(pl.target, pl.entry)}</span>
+        <div class="rr"><span>잃을 폭 1 대비 벌 폭</span><span>${pl.rr == null ? "-" : pl.rr.toFixed(1)}배 · ${esc(strip(pl.grade).replace("👍 ",""))}</span></div></div></div>
+      ${s.notes?.length ? `<div class="card notes"><div class="cap">최근 차트 표시, 쉬운 말로</div>${s.notes.map(x => `<div class="note-i"><div class="nh"><span class="tag t-${esc(x.tone === "buy" ? "buy" : x.tone === "sell" ? "sell" : "info")}">${esc(x.label)}</span><span class="sub">${esc(x.date.slice(5).replace("-", "/"))}</span></div><div>${esc(x.what)}</div><div class="sub">${esc(x.proof)}</div><div class="adv">→ ${esc(x.advice)}</div></div>`).join("")}</div>` : ""}
     </div>
-    ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)} – ${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
+    ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)} – ${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
+    ${s.cautions?.length ? `<div class="sec-title">주의</div><div class="card" style="padding-block:4px"><div class="items">${s.cautions.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
+    <details class="more"><summary class="press">전문가용 자세히 보기</summary>
     ${sepa.length ? `<div class="sec-title"><span>SEPA 5요소</span><span>${nOk}/5 통과</span></div><div class="card" style="padding-block:4px">${itemsHTML(sepa.map(v => v.join(" ")))}</div>` : ""}
     <div class="sec-title"><span>전설 4인</span><span>찬성 ${s.votes[0]} · 중립 ${s.votes[1]} · 반대 ${s.votes[2]}</span></div><div class="card" style="padding-block:4px">${itemsHTML(s.legends)}</div>
     <div class="sec-title">지금 상태</div><div class="card" style="padding-block:4px"><div class="items">${s.state.map(l => { const t=strip(l), m=t.match(/^(\S+)\s+(\S+)\s+(.*)$/); return m ? `<div class="item"><span class="m">${esc(m[1])}</span><div class="t"><b>${esc(m[2])}</b><span class="s">${esc(m[3])}</span></div></div>` : ""; }).join("")}</div></div>
-    ${s.cautions?.length ? `<div class="sec-title">주의</div><div class="card" style="padding-block:4px"><div class="items">${s.cautions.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
+    </details>
     ` : `<div class="card empty"><b>아직 계산 전입니다</b>오동엔진이 다음 점검 때 구간을 계산합니다.</div>`}
 
     <div class="sec-title">내 기록</div>
