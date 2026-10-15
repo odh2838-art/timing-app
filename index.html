@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-6">
+<meta name="app-version" content="2026-10-16-7">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -138,6 +138,22 @@ body.sheet-open{background:#1D1D1F}
 .hero .bigpx{font-size:var(--t-title);font-weight:700;line-height:1.25;letter-spacing:-.02em;margin-top:var(--gap-inner);display:flex;align-items:baseline;gap:10px}
 .grade{display:flex;align-items:center;gap:14px}
 
+
+.mkt{display:flex;flex-direction:column;gap:12px}
+.mtabs{display:flex;gap:18px;font-size:var(--t-heading);font-weight:700}
+.mtabs button{color:var(--fg3);padding:0} .mtabs button.on{color:var(--fg)}
+.mh{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.mv{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.mv .chg{font-size:var(--t-body);font-weight:600}
+.mhl{font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em}
+.mread{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--t-body)}
+.mbar{display:flex;gap:6px} .mbar i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.mbar i.b-good{background:var(--buy)} .mbar i.b-weak{background:var(--sell)}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;box-shadow:0 -1px 0 var(--line)}
+.mrow b{font-size:var(--t-body)} .mval{display:flex;align-items:center;gap:8px;font-weight:700;font-size:var(--t-heading);font-variant-numeric:tabular-nums;white-space:nowrap}
+.badge{font-size:var(--t-small);font-weight:600;padding:3px 9px;border-radius:7px;background:var(--fill);color:var(--fg2)}
+.badge.b-good{background:var(--buy-bg);color:var(--buy)} .badge.b-weak{background:var(--sell-bg);color:var(--sell)}
+.madv{padding-top:4px}
 .act .r1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .pill{font-size:var(--t-small);font-weight:700;padding:3px 10px;border-radius:999px}
 .p-buy{background:var(--buy-bg);color:var(--buy)} .p-wait{background:var(--wait-bg);color:var(--wait)} .p-sell{background:var(--sell-bg);color:var(--sell)} .p-hold{background:var(--fill);color:var(--fg)}
@@ -474,6 +490,28 @@ function stockList(){
   const st = S.dash?.stocks || {};
   return (S.csv?.rows || []).map(r => ({ row:r, sym: symOf(r["시장"], r["티커"]), d: st[symOf(r["시장"], r["티커"])] }));
 }
+
+/* 시장 카드: 한 문장 → 네 칸 막대(좋음 몇 개) → 네 줄(지수 추세·시장 폭·신고가/신저가·변동성) */
+const MKT_TAB = {"S&P 500":"미국", "코스피":"코스피", "코스닥":"코스닥"};
+const BADGE = {"좋음":"b-good", "보통":"b-mid", "약함":"b-weak"};
+function marketCard(regs){
+  regs = regs.filter(([, g]) => g.rows);
+  if (!regs.length) return "";
+  const cur = Math.min(S.mkt || 0, regs.length - 1), [name, g] = regs[cur];
+  const sp = g.spark || [], lo = Math.min(...sp), hi = Math.max(...sp), w = 120, h = 40;
+  const line = sp.length > 1 ? sp.map((v, i) => `${(i / (sp.length - 1) * w).toFixed(1)},${(h - 3 - (v - lo) / ((hi - lo) || 1) * (h - 6)).toFixed(1)}`).join(" ") : "";
+  const upc = sp.length > 1 && sp[sp.length - 1] >= sp[0];
+  return `<div class="sec-title" style="margin-top:var(--gap-section)">시장</div><div class="card mkt">
+    ${regs.length > 1 ? `<div class="mtabs">${regs.map(([n], k) => `<button class="press ${k === cur ? "on" : ""}" data-mkt="${k}">${esc(MKT_TAB[n] || n)}</button>`).join("")}</div>` : ""}
+    <div class="mh"><div><div class="sub">${esc(name)}</div><div class="mv">${g.close != null ? num(g.close, name === "S&P 500" ? "미국" : "코스피") : ""} <span class="chg ${g.chg >= 0 ? "up" : "down"}">${g.chg != null ? pct(g.chg) : ""}</span></div></div>
+      ${line ? `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${line}" fill="none" stroke="${upc ? "var(--up)" : "var(--down)"}" stroke-width="1.8" stroke-linejoin="round"/></svg>` : ""}</div>
+    <div class="mhl">${esc(g.headline || "")}</div>
+    <div class="mread"><b>${g.rows.length}개 중 ${g.good}개 좋음</b><span class="sub">${g.weak ? `약한 것 ${g.weak}개` : "약한 것 없음"}</span></div>
+    <div class="mbar">${g.rows.map(x => `<i class="${BADGE[x.badge] || ""}"></i>`).join("")}</div>
+    ${g.rows.map(x => `<div class="mrow"><div><b>${esc(x.name)}</b><div class="sub">${esc(x.sub)}</div></div><div class="mval"><span>${esc(x.value)}</span><span class="badge ${BADGE[x.badge] || ""}">${esc(x.badge)}</span></div></div>`).join("")}
+    <div class="madv sub">${g.label === "약세" ? "시장 전체가 약해요 · 차수 사이 간격을 넓히세요" : g.label === "보통" ? "보통이에요 · 신호를 조금 더 엄격하게" : "계획대로 진행해도 돼요"}</div>
+  </div>`;
+}
 function spark(bars, chg){
   const c = (bars||[]).slice(-40).map(b => b[4]); if (c.length < 2) return "";
   const lo = Math.min(...c), hi = Math.max(...c), w=56, h=28;
@@ -491,7 +529,7 @@ function renderHome(){
     <div class="navbar"><div class="side">${list.length ? `<button class="text-btn press" id="edit" style="margin-left:-6px;margin-right:0">${S.edit ? "완료" : "편집"}</button>` : ""}</div><span class="mini">rooru.invest</span><div class="side r"><button class="text-btn press" id="check" data-busy ${S.busy ? "disabled" : ""}>지금 점검</button></div></div>
     <div class="title-block" data-anchor><h1 class="big">rooru.invest</h1><div class="sub">${d?.updated ? "오동엔진 마지막 점검 " + esc(d.updated) : "불러오는 중…"}</div></div>
     ${S.err ? `<div class="err" role="alert">${esc(S.err)}</div>` : ""}
-    ${regs.length ? `<div class="regimes">${regs.map(([n,g]) => `<div class="regime"><span class="dot" style="background:${REG_DOT[g.label]||"var(--fg3)"}"></span><b>${esc(n)}</b> ${esc(g.label)} <span class="sub">${g.points}/${g.total}</span></div>`).join("")}</div>` : ""}
+
     ${!S.csv ? skeleton : list.length ? `<div class="list ${S.edit ? "editing" : ""}" id="stocks">${list.map((x,i) => {
       const s = x.d, nm = x.row["이름"] || s?.name || x.row["티커"];
       const wrap = inner => `<div class="swipe ${S.justAdded === x.sym ? "enter" : ""}" data-sym="${esc(x.sym)}"><button class="act" tabindex="-1" aria-label="${esc(nm)} 삭제">삭제</button><div class="row press" role="button" tabindex="0" data-i="${i}"><span class="minus" role="button" aria-label="${esc(nm)} 삭제 버튼 보이기"></span>${inner}</div></div>`;
@@ -504,9 +542,11 @@ function renderHome(){
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">줄을 왼쪽으로 밀면 삭제돼요</p>` : `<div class="empty card"><b>지켜볼 기업을 추가하세요</b>추가하면 오동엔진이 매수 구간을 계산하고, 구간에 오면 디스코드로 알려줍니다.</div>`}
     <div style="margin-top:var(--gap-block)"><button class="btn primary press" id="add"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>기업 추가</button></div>
     ${d?.errors?.length ? `<p class="note" style="margin:14px 4px">받지 못한 종목: ${d.errors.map(esc).join(", ")}</p>` : ""}
+    ${regs.length ? marketCard(regs) : ""}
     <p class="note" style="margin:18px 4px 0;text-align:center">아래로 당기면 새로고침</p>
   </div>`;
   document.getElementById("add").onclick = openSearch;
+  $app.querySelectorAll("[data-mkt]").forEach(b => b.onclick = () => { const y = scrollY; S.mkt = +b.dataset.mkt; renderHome(); scrollTo(0, y); });
   document.getElementById("check").onclick = async () => { try{ const t = await dispatch("앱-갱신"); waitRun(t, "전 종목 점검 중"); }catch(e){ toast(e.message); } };
   S.justAdded = null;
   const ed = $app.querySelector("#edit");
