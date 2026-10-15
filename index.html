@@ -123,7 +123,7 @@ button{cursor:pointer;border:0;background:none;padding:0;-webkit-user-select:non
 .b-buy{background:var(--buy-bg)} .b-wait{background:var(--wait-bg)} .b-sell{background:var(--sell-bg)}
 .chart{padding:var(--pad-card) var(--gap-sub) var(--pad-card)}
 .chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
-.chart .readout{display:flex;gap:12px;font-size:var(--t-small);color:var(--fg2);padding:0 10px var(--gap-sub);min-height:26px;align-items:center;flex-wrap:wrap}
+.chart .readout{display:flex;gap:12px;font-size:var(--t-small);color:var(--fg2);padding:0 10px var(--gap-sub);min-height:calc(2 * 1.45 * var(--t-small) + var(--gap-sub));align-content:flex-start;align-items:baseline;flex-wrap:wrap;row-gap:0}
 .chart .readout b{color:var(--fg)}
 .chart .draw{animation:fade .5s var(--ease-out) both}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:var(--t-small);color:var(--fg2);margin-top:var(--gap-sub);padding:0 10px}
@@ -443,8 +443,8 @@ function chartSVG(s, Wpx){
   const y = v => T + (hi - v) / (hi - lo) * (H - T - B), x = i => L + cw*i + cw/2;
   const idx = {}; bars.forEach((b,i) => idx[b[0]] = i);
   let g = "";
-  zones.filter(z => z.hi >= lo && z.lo <= hi).forEach(z => { g += `<rect x="${L}" y="${y(z.hi)}" width="${W-L-R}" height="${Math.max(2, y(z.lo)-y(z.hi))}" fill="#1B8A4A" opacity=".12"/>
-    <text x="${L+6}" y="${y(z.hi)-4}" font-size="13" font-weight="600" fill="#1B8A4A">${esc(z.label)} 구간</text>`; });
+  const zv = zones.filter(z => z.hi >= lo && z.lo <= hi);
+  zv.forEach(z => { g += `<rect x="${L}" y="${y(z.hi)}" width="${W-L-R}" height="${Math.max(2, y(z.lo)-y(z.hi))}" fill="#1B8A4A" opacity=".12"/>`; });
   for (let k=0;k<=3;k++){ const v = lo + (hi-lo)*k/3; g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#E5E5EA" stroke-width=".6"/><text x="${W-R+6}" y="${y(v)+4}" font-size="13" fill="#8E8E93">${num(v, s.market)}</text>`; }
   if (s.wall?.v && s.wall.v < hi) g += `<line x1="${L}" x2="${W-R}" y1="${y(s.wall.v)}" y2="${y(s.wall.v)}" stroke="#D22F3C" stroke-width=".9" stroke-dasharray="4 3"/>`;
   if (s.vcp?.vcp && s.vcp.pivot) g += `<line x1="${L}" x2="${W-R}" y1="${y(s.vcp.pivot)}" y2="${y(s.vcp.pivot)}" stroke="#1B64DA" stroke-width=".9" stroke-dasharray="2 3"/>`;
@@ -454,14 +454,18 @@ function chartSVG(s, Wpx){
     g += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width=".8"/><rect x="${x(i)-cw*0.36}" y="${top}" width="${cw*0.72}" height="${bh}" fill="${col}"/>`; });
   /* 신호 말풍선: 눌림목·돌파·돌파 실패·모멘텀 SELL */
   const C = {buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"]};
-  const placed = [];
+  zv.forEach(z => { g += `<text x="${L+6}" y="${y(z.lo)+16}" font-size="13" font-weight="600" fill="#1B8A4A" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(z.label)} 구간</text>`; });
+  const boxes = [];   // 이미 놓인 말풍선 (겹치지 않게 위아래로 비켜 놓는다)
+  const hit = (a) => boxes.some(b => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3);
   const chip = (i, text, tone, below) => {
-    const [bg, fg] = C[tone] || C.info, w = text.length * 13 + 14, k = placed.filter(p => Math.abs(p[0]-i) < 14 && p[1] === below).length;
-    placed.push([i, below]);
-    const by = below ? y(bars[i][3]) + 8 + k*24 : y(bars[i][2]) - 28 - k*24;
-    const cx = Math.max(L + w/2, Math.min(W - R - w/2, x(i)));
-    g += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + 20}" stroke="${fg}" stroke-width=".8" opacity=".5"/>
-      <rect x="${cx - w/2}" y="${by}" width="${w}" height="20" rx="6" fill="${bg}"/><text x="${cx}" y="${by + 14.5}" font-size="13" font-weight="600" fill="${fg}" text-anchor="middle">${esc(text)}</text>`;
+    const [bg, fg] = C[tone] || C.info, w = text.length * 13 + 14, h = 20;
+    const cx = Math.max(L + w/2, Math.min(W - R - w/2 - 2, x(i)));
+    let by = below ? y(bars[i][3]) + 8 : y(bars[i][2]) - 8 - h;
+    for (let k = 0; k < 8 && hit({x:cx - w/2, y:by, w, h}); k++) by += below ? h + 4 : -(h + 4);
+    by = Math.max(2, Math.min(H - B - h, by));
+    boxes.push({x:cx - w/2, y:by, w, h});
+    g += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + h}" stroke="${fg}" stroke-width=".8" opacity=".5"/>
+      <rect x="${cx - w/2}" y="${by}" width="${w}" height="${h}" rx="6" fill="${bg}"/><text x="${cx}" y="${by + 14.5}" font-size="13" font-weight="600" fill="${fg}" text-anchor="middle">${esc(text)}</text>`;
   };
   (s.marks || []).filter(m => m[0] in idx).slice(-5).forEach(m => chip(idx[m[0]], m[1], m[2], m[3]));
   if (s.vcp?.vcp) chip(n-1, "VCP 형성", "info", false);
