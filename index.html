@@ -156,6 +156,7 @@ body.sheet-open{background:#1D1D1F}
 .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
 .plan{display:grid;grid-template-columns:1fr auto auto;gap:12px 14px;font-variant-numeric:tabular-nums;align-items:baseline}
 .plan .k{color:var(--fg)} .plan .v{font-weight:600;text-align:right} .plan .p{font-size:var(--t-small);color:var(--fg2);text-align:right;min-width:56px}
+.plan .mode{grid-column:1/-1;font-size:var(--t-small);color:var(--fg2);font-weight:600}
 .plan .rr{grid-column:1/-1;box-shadow:0 -1px 0 var(--line);padding-top:12px;display:flex;justify-content:space-between;font-weight:600}
 .items{display:flex;flex-direction:column}
 .item{display:flex;gap:10px;padding:12px 0;font-size:var(--t-body)}
@@ -461,11 +462,11 @@ function renderHome(){
     ${S.err ? `<div class="err" role="alert">${esc(S.err)}</div>` : ""}
     ${regs.length ? `<div class="regimes">${regs.map(([n,g]) => `<div class="regime"><span class="dot" style="background:${REG_DOT[g.label]||"var(--fg3)"}"></span><b>${esc(n)}</b> ${esc(g.label)} <span class="sub">${g.points}/${g.total}</span></div>`).join("")}</div>` : ""}
     ${!S.csv ? skeleton : list.length ? `<div class="list ${S.edit ? "editing" : ""}" id="stocks">${list.map((x,i) => {
-      const s = x.d, nm = s?.name || x.row["이름"] || x.row["티커"];
+      const s = x.d, nm = x.row["이름"] || s?.name || x.row["티커"];
       const wrap = inner => `<div class="swipe ${S.justAdded === x.sym ? "enter" : ""}" data-sym="${esc(x.sym)}"><button class="act" tabindex="-1" aria-label="${esc(nm)} 삭제">삭제</button><div class="row press" role="button" tabindex="0" data-i="${i}"><span class="minus" role="button" aria-label="${esc(nm)} 삭제 버튼 보이기"></span>${inner}</div></div>`;
       if (!s) return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(x.row["티커"])}</span></div><div class="head sub">계산 대기 · 다음 점검 때 나옵니다</div></div>${CHEV}`);
       const tags = s.p1 ? `<span class="tag t-dark">${esc(s.plan_text)}</span>` : "";
-      return wrap(`<div class="main"><div class="name">${esc(s.name)} <span class="tk">${esc(s.ticker)}</span></div>
+      return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(s.ticker)}</span></div>
         <div class="head">${gradeTag(s.grade)}<span>${esc(s.head)}</span>${tags}</div></div>
         <div class="px">${spark(s.bars, s.chg)}<div><b>${num(s.price, s.market)}</b><span class="chg ${s.chg>=0?"up":"down"}">${pct(s.chg)}</span></div></div>`);
     }).join("")}</div>
@@ -656,7 +657,7 @@ function mountChart(box, s){
     }
     const bw = Math.max(1, cw * 0.7);
     for (let i = i0; i <= i1; i++){ const b = bars[i], col = b[4] >= b[1] ? COL.up : COL.down, top = y(Math.max(b[1], b[4])), bh = Math.max(1, Math.abs(y(b[1]) - y(b[4])));
-      p += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width="${cw > 6 ? 1 : .8}"/><rect x="${x(i) - bw/2}" y="${top}" width="${bw}" height="${bh}" fill="${col}"/>`; }
+      p += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width="${cw > 6 ? 1 : .8}"/><rect x="${x(i) - bw/2}" y="${top}" width="${bw}" height="${bh}" fill="${col}"${s.live && i === N - 1 ? ' opacity=".5"' : ""}/>`; }
     for (let i = i0; i <= i1; i++) if (ind.nh[i]) p += `<circle cx="${x(i)}" cy="${y(bars[i][2]) - 5}" r="1.8" fill="${COL.up}" opacity=".8"/>`;
     zones.forEach(z => { if (z.lo <= hi && z.lo >= lo) p += `<text x="${L+6}" y="${Math.min(H0-8, y(z.lo) + 16)}" font-size="13" font-weight="600" fill="#1B8A4A" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(z.label)} 구간</text>`; });
     /* 신호 말풍선 (보이는 것 중 최근 6개, 겹치지 않게) */
@@ -694,10 +695,10 @@ function mountChart(box, s){
       g += `<line x1="${x(i)}" x2="${x(i)}" y1="${T - 8}" y2="${H - AX}" stroke="#1D1D1F" stroke-width=".7" stroke-dasharray="2 2"/>`;
       if (yy >= 0 && yy <= H0) g += `<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="#1D1D1F" stroke-width=".7" stroke-dasharray="2 2"/><circle cx="${x(i)}" cy="${yy}" r="3.5" fill="#1D1D1F"/><rect x="${W-R+2}" y="${yy-11}" width="${R-2}" height="22" rx="6" fill="#1D1D1F"/><text x="${W-R+7}" y="${yy+5}" font-size="13" font-weight="600" fill="#fff">${num(b[4], s.market)}</text>`;
       const pv = bars[i-1], ch = pv ? (b[4] / pv[4] - 1) * 100 : 0;
-      $read.innerHTML = `<b>${b[0].replace(/-/g, ".")}</b><span>시 ${num(b[1], s.market)}</span><span>고 ${num(b[2], s.market)}</span><span>저 ${num(b[3], s.market)}</span><span>종 <b>${num(b[4], s.market)}</b> <span class="${ch >= 0 ? "up" : "down"}">${pct(ch)}</span></span>${b[7] != null ? `<span>거래량 ${(+b[7]).toLocaleString()}</span>` : ""}${IND.rsi && ind.rsi[i] != null ? `<span>RSI ${ind.rsi[i].toFixed(0)}</span>` : ""}`;
+      $read.innerHTML = `<b>${b[0].replace(/-/g, ".")}${s.live && i === N - 1 ? " · 장중" : ""}</b><span>시 ${num(b[1], s.market)}</span><span>고 ${num(b[2], s.market)}</span><span>저 ${num(b[3], s.market)}</span><span>종 <b>${num(b[4], s.market)}</b> <span class="${ch >= 0 ? "up" : "down"}">${pct(ch)}</span></span>${b[7] != null ? `<span>거래량 ${(+b[7]).toLocaleString()}</span>` : ""}${IND.rsi && ind.rsi[i] != null ? `<span>RSI ${ind.rsi[i].toFixed(0)}</span>` : ""}`;
     } else {
       const a = bars[i0][0], z = bars[i1][0];
-      $read.innerHTML = `<span><b>${a.replace(/-/g, ".")} – ${z.slice(5).replace("-", ".")}</b></span><span>${hint}</span>`;
+      $read.innerHTML = `<span><b>${a.replace(/-/g, ".")} – ${z.slice(5).replace("-", ".")}${s.live && i1 === N - 1 ? " 장중" : ""}</b></span><span>${hint}</span>`;
     }
     $plot.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="일봉 차트" font-family="Pretendard Variable,-apple-system,sans-serif">${g}</svg>`;
     geo = { L, cw, start, W };
@@ -780,7 +781,7 @@ function renderDetail(sym){
   const pr = (v, base) => base ? pct((v/base-1)*100) : "";
   const sepa = s?.sepa || [], nOk = sepa.filter(v => v[0] === "✔").length;
   const g = s?.grade;
-  const name = s?.name || row["이름"] || row["티커"];
+  const name = row["이름"] || s?.name || row["티커"];
   $app.innerHTML = `<div class="wrap">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>종목</span></button></div><span class="mini">${esc(name)}</span><div class="side r"></div></div>
     <div class="title-block hero" data-anchor><h1 class="big">${esc(name)}</h1><div class="sub">${esc(row["티커"])} · ${esc(mk)}${s ? " · " + esc(s.updated) + " 기준" : ""}</div>
@@ -790,9 +791,11 @@ function renderDetail(sym){
       ${g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}${s.tgrade ? ` · 추세 ${esc(s.tgrade)}` : ""}${s.rs_rank != null ? ` · RS ${Math.round(s.rs_rank)}` : ""}</div></div></div>` : ""}
       <div class="card chart" id="chartBox"></div>
       <div class="card"><div class="plan">
-        <span class="k">진입</span><span class="v">${num(pl.entry, mk)}</span><span class="p"></span>
+        ${pl.mode ? `<div class="mode">${esc(pl.mode)}</div>` : ""}
+        <span class="k">${(pl.mode || "").startsWith("보유") ? "1차 가격" : "진입"}</span><span class="v">${num(pl.entry, mk)}</span><span class="p"></span>
         <span class="k">현재가</span><span class="v">${num(s.price, mk)}</span><span class="p">${pr(s.price, pl.entry)}</span>
-        <span class="k">손절</span><span class="v c-sell">${num(pl.stop, mk)}</span><span class="p">${pr(pl.stop, pl.entry)}</span>
+        <span class="k">${pl.mode === "보유 · 50일선 관리" ? "50일선" : "손절"}</span><span class="v c-sell">${num(pl.stop, mk)}</span><span class="p">${pr(pl.stop, pl.entry)}</span>
+        ${pl.tp1 && pl.tp1 < pl.target ? `<span class="k">절반 익절 · 3R</span><span class="v c-buy">${num(pl.tp1, mk)}</span><span class="p">${pr(pl.tp1, pl.entry)}</span>` : ""}
         <span class="k">목표</span><span class="v c-buy">${num(pl.target, mk)}</span><span class="p">${pr(pl.target, pl.entry)}</span>
         <div class="rr"><span>손익비</span><span>1 : ${pl.rr == null ? "-" : pl.rr.toFixed(1)} · ${esc(strip(pl.grade).replace("👍 ",""))}</span></div></div></div>
     </div>
@@ -805,6 +808,7 @@ function renderDetail(sym){
 
     <div class="sec-title">내 기록</div>
     <div class="card"><div class="form" id="form">
+      <div class="field full"><label for="f-이름">표시 이름</label><input id="f-이름" data-k="이름" value="${esc(row["이름"] || "")}" placeholder="${esc(s?.name || row["티커"])}" enterkeyhint="done" autocomplete="off"></div>
       ${fld("1차매수일","1차 매수일","date")}${fld("1차가격","1차 가격","num")}
       ${fld("2차매수일","2차 매수일","date")}${fld("2차가격","2차 가격","num")}
       ${fld("3차매수일","3차 매수일","date")}${fld("3차가격","3차 가격","num")}
@@ -843,7 +847,8 @@ function renderDetail(sym){
       if (!r) throw new Error("종목을 찾지 못했습니다");
       for (const el of form.querySelectorAll("[data-k]")){
         let v = el.value.trim(); if (el.inputMode === "decimal") v = v.replace(/[^\d.]/g, "");
-        r[el.dataset.k] = v;
+        if (el.dataset.k === "이름" && !v) continue;   // 이름을 비우면 원래 이름 유지
+        r[el.dataset.k] = v.replace(/[\r\n]+/g, " ");
       }
       await saveCSV(`앱: ${r["이름"]||r["티커"]} 기록 수정`);
       S.dirty = false; delete S.drafts[sym]; document.getElementById("draftNote").hidden = true; $save.classList.add("done"); $save.textContent = "저장됨 ✓";
