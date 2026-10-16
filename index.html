@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-26">
+<meta name="app-version" content="2026-10-16-27">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -618,10 +618,10 @@ function renderSetup(msg){
 
 function stockList(){
   const st = S.dash?.stocks || {};
-  const ord = {buy:0, sell:1, wait:2, hold:3};
+  const ord = {buy:0, sell:1, wait:2, hold:3, start:4};
   const near = d => { const z = (d?.zones || []).find(z => z.label !== "지지" && z.state === "above"); return z ? Math.abs(z.dist) : 99; };
   return (S.csv?.rows || []).map((r, k) => ({ row:r, k, sym: symOf(r["시장"], r["티커"]), d: st[symOf(r["시장"], r["티커"])] }))
-    .sort((a, b) => ((ord[a.d?.action?.tone] ?? 9) - (ord[b.d?.action?.tone] ?? 9)) || (near(a.d) - near(b.d)) || (a.k - b.k));   // 할 일 있는 종목이 위로
+    .sort((a, b) => ((ord[a.d?.action?.start ? "start" : a.d?.action?.tone] ?? 9) - (ord[b.d?.action?.start ? "start" : b.d?.action?.tone] ?? 9)) || (near(a.d) - near(b.d)) || (a.k - b.k));   // 할 일 있는 종목이 위로
 }
 
 /* 시장 카드: 한 문장 → 네 칸 막대(좋음 몇 개) → 네 줄(지수 추세·시장 폭·신고가/신저가·변동성) */
@@ -704,9 +704,9 @@ function renderHome(){
     <div class="title-block" data-anchor><h1 class="big">rooru.invest</h1><div class="sub">${d?.updated ? esc(d.updated.slice(5).replace("-", "/")) + " 점검" : "불러오는 중…"}</div></div>
     ${S.err ? `<div class="err" role="alert">${esc(S.err)}</div>` : ""}
 
-    ${S.csv && list.length && list.some(x => x.d?.action) ? (() => { const nb = list.filter(x => x.d?.action?.tone === "buy").length, nw = list.filter(x => x.d?.action?.tone === "wait").length, ns = list.filter(x => x.d?.action?.tone === "sell").length;
+    ${S.csv && list.length && list.some(x => x.d?.action) ? (() => { const nb = list.filter(x => x.d?.action?.tone === "buy" && !x.d?.action?.start).length, nst = list.filter(x => x.d?.action?.start).length, nw = list.filter(x => x.d?.action?.tone === "wait").length, ns = list.filter(x => x.d?.action?.tone === "sell").length;
       const nh = list.filter(x => x.d?.action?.tone === "hold").length;
-      return `<div class="today"><div class="eyebrow">오늘</div><div class="big2">${nb ? `살 자리 ${nb}개` : "서둘러 살 종목 없음"}</div><div class="sub">${[nw ? `기다리기 ${nw}` : "", ns ? `주의 ${ns}` : "", nh ? `보유 ${nh}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"}</div></div><div class="sec-cap">내 종목</div>`; })() : ""}
+      return `<div class="today"><div class="eyebrow">오늘</div><div class="big2">${nb ? `살 자리 ${nb}개` : "서둘러 살 종목 없음"}</div><div class="sub">${[nst ? `새로 시작 가능 ${nst}` : "", nw ? `기다리기 ${nw}` : "", ns ? `주의 ${ns}` : "", nh ? `보유 ${nh}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"}</div></div><div class="sec-cap">내 종목</div>`; })() : ""}
     ${!S.csv ? skeleton : list.length ? `<div class="list ${S.edit ? "editing" : ""}" id="stocks">${list.map((x,i) => {
       const s = x.d, nm = x.row["이름"] || s?.name || x.row["티커"];
       const wrap = inner => `<div class="swipe ${S.justAdded === x.sym ? "enter" : ""}" data-sym="${esc(x.sym)}"><button class="act" tabindex="-1" aria-label="${esc(nm)} 삭제">삭제</button><div class="row press" role="button" tabindex="0" data-i="${i}"><span class="minus" role="button" aria-label="${esc(nm)} 삭제 버튼 보이기"></span>${inner}</div></div>`;
