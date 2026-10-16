@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-21">
+<meta name="app-version" content="2026-10-16-22">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -642,8 +642,12 @@ function spark(bars, chg){
   return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${p}" fill="none" stroke="${c[c.length-1]>=c[0]?"#F04452":"#3182F6"}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
 /* 목록용 짧은 할 일: '대기 · 148.18 오면 1차 40% 매수' → '148.18 오면 1차 40% · −2.6%' */
-const shortAct = a => {
+const shortAct = (a, price) => {
   const t = a.title || "", m = t.match(/^대기 · ([\d,.]+) 오면/);
+  if (m && price){   // 거리는 지금(실시간) 가격 기준으로 다시 잰다
+    const v = (+m[1].replace(/,/g, "") / price - 1) * 100;
+    return `${m[1]}까지 ${(v > 0 ? "+" : "") + (Math.abs(v) >= 10 ? Math.round(v) : v.toFixed(1))}%`;
+  }
   if (m) return /^지금보다/.test(a.detail || "") ? `${m[1]}까지 ${a.detail.replace("지금보다 ", "").replace(/^([+-]?\d{2,})\.\d%$/, "$1%")}` : `${m[1]} 오면 매수`;
   const w = t.match(/^이번 주 ([\d,.]+) 위로 끝나면/);
   if (w) return `이번 주 ${w[1]} 위면 매수`;
@@ -678,7 +682,7 @@ function renderHome(){
       if (!s) return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(x.row["티커"])}</span></div><div class="head sub">계산 대기 · 다음 점검 때 나옵니다</div></div>${CHEV}`);
       const tags = s.p1 ? `<span class="tag t-dark">${esc(s.plan_text)}</span>` : "";
       return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(s.ticker)}</span></div>
-        <div class="head">${s.action ? `<span class="pill p-${esc(s.action.tone)}">${esc(s.action.state || "")}</span><span class="act1">${esc(shortAct(s.action))}</span>` : `${gradeTag(s.grade)}<span>${esc(s.head)}</span>`}${tags}</div></div>
+        <div class="head">${s.action ? `<span class="pill p-${esc(s.action.tone)}">${esc(s.action.state || "")}</span><span class="act1">${esc(shortAct(s.action, s.price))}</span>` : `${gradeTag(s.grade)}<span>${esc(s.head)}</span>`}${tags}</div></div>
         <div class="px">${spark(s.bars, s.chg)}<div><b>${num(s.price, s.market)}</b><span class="chg ${s.chg>=0?"up":"down"}">${pct(s.chg)}</span></div></div>`);
     }).join("")}</div>
     ${(LS.get("swipeHint", 0) < 3) ? `<p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">줄을 왼쪽으로 밀면 삭제돼요</p>` : ""}` : `<div class="empty card"><b>지켜볼 기업을 추가하세요</b>추가하면 오동엔진이 매수 구간을 계산하고, 구간에 오면 디스코드로 알려줍니다.</div>`}
