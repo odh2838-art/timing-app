@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-18">
+<meta name="app-version" content="2026-10-16-19">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -1322,6 +1322,17 @@ document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => {
 });
 let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (S.detail && S.chart) S.chart.redraw(); }, 150); });
 addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.token && !S.busy) refresh(); });
+/* 열어 둔 동안 2분마다 새 시세 확인 (엔진이 장중 30분마다 갱신). 바뀐 게 있을 때만, 목록 화면에서만 다시 그린다 —
+   상세 화면에서 차트를 보고 있으면 덮어쓰지 않고 다음에 열 때 반영 */
+setInterval(async () => {
+  if (document.hidden || !S.token || S.busy || S.dirty) return;
+  try{
+    const d = await readJSON("상태/대시보드.json", null);
+    if (!d || d.updated === S.dash?.updated) return;
+    S.dash = d; LS.set("dash", d);
+    if (!S.detail && S.tab === "home") render("none");
+  }catch(e){}
+}, 120000);
 render("none");
 if (S.token) refresh();
 </script>
