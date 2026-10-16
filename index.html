@@ -435,7 +435,7 @@ async function refresh(){
   S.err = "";
   try{
     const [d] = await Promise.all([readJSON("상태/대시보드.json", {stocks:{}, regimes:{}}), loadCSV()]);
-    S.dash = d; S.alerts = null; LS.set("dash", d); applyQuotes();
+    S.dash = d; S.alerts = null; S.find = {}; LS.set("dash", d); applyQuotes();
   }catch(e){ S.err = e.message; }
   S.loading = false;
   if (!S.dirty) render("none");   // 입력 중이면 화면을 덮어쓰지 않는다
