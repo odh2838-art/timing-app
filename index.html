@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-30">
+<meta name="app-version" content="2026-10-16-31">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -440,6 +440,7 @@ async function refresh(){
   S.loading = false;
   if (!S.dirty) render("none");   // 입력 중이면 화면을 덮어쓰지 않는다
   liveTick(true);                 // 열 때 한 번은 장 시간과 상관없이 최신 시세
+  preloadFind();
 }
 /* ───────── 실시간 시세 (설정의 '실시간 시세 주소' = 내 Cloudflare 중계) ─────────
    한국은 네이버 실시간, 미국은 야후 1분봉. 장이 열린 동안 1분마다, 새로고침 버튼으로 즉시. */
@@ -727,12 +728,14 @@ function renderHome(){
         <div class="px">${spark(s.bars, s.chg)}<div><b>${num(s.price, s.market)}</b><span class="chg ${s.chg>=0?"up":"down"}">${pct(s.chg)}</span></div></div>`);
     }).join("")}</div>
     ${(LS.get("swipeHint", 0) < 3) ? `<p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">줄을 왼쪽으로 밀면 삭제돼요</p>` : ""}` : `<div class="empty card"><b>지켜볼 기업을 추가하세요</b>추가하면 오동엔진이 매수 구간을 계산하고, 구간에 오면 디스코드로 알려줍니다.</div>`}
+    ${findRow()}
     <div class="list" style="margin-top:var(--gap-sub)"><button class="row press addrow" id="add"><span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>기업 추가</button></div>
     ${d?.errors?.length ? `<p class="note" style="margin:14px 4px">받지 못한 종목: ${d.errors.map(esc).join(", ")}</p>` : ""}
     ${regs.length ? marketCard(regs) : ""}
     <p class="note" style="margin:18px 4px 0;text-align:center">아래로 당기면 새로고침</p>
   </div>`;
   document.getElementById("add").onclick = openSearch;
+  const gf = document.getElementById("gofind"); if (gf) gf.onclick = () => go("fade", () => { S.tab = "find"; S.detail = null; });
   const a2 = document.getElementById("add2"); if (a2) a2.onclick = openSearch;
   $app.querySelectorAll("[data-mkt]").forEach(b => b.onclick = () => { const y = scrollY; S.mkt = +b.dataset.mkt; renderHome(); scrollTo(0, y); });
   document.getElementById("check").onclick = async () => {
@@ -1327,6 +1330,16 @@ function groupByDay(list){
   const out = [];
   list.forEach(h => { const d = String(h.t).slice(0, 10), last = out[out.length - 1]; if (last && last[2] === d) last[1].push(h); else out.push([lab(d), [h], d]); });
   return out;
+}
+/* 홈의 '오늘 발견' 한 줄 (발견 목록을 미리 읽어 둔 경우) */
+function findRow(){
+  const us = S.find?.["미국"]?.items?.length, kr = S.find?.["한국"]?.items?.length;
+  if (us == null && kr == null) return "";
+  return `<div class="list" style="margin-top:var(--gap-sub)"><button class="row press" id="gofind"><span class="main"><b>오늘 발견</b><div class="sub">매수 자리가 뜬 종목 · 미국 ${us ?? "-"} · 한국 ${kr ?? "-"}</div></span>${CHEV}</button></div>`;
+}
+async function preloadFind(){
+  for (const m of ["미국", "한국"]){ try{ if (!S.find[m]) S.find[m] = await readJSON(`상태/발견_${m}.json`, {items: []}); }catch(e){} }
+  if (S.tab === "home" && !S.detail && !S.dirty) render("none");
 }
 /* 발견: 넓은 종목(한국 300·미국 498) 중 오늘 백테스트를 통과한 매수 자리가 뜬 종목. 종목 고르기는 내가, 자리는 엔진이 */
 S.findMkt = LS.get("findMkt", "미국"); S.find = {};
