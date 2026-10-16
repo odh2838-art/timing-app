@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-1">
+<meta name="app-version" content="2026-10-17-2">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1001,6 +1001,7 @@ async function removeStock(sym){
 /* ───────── 차트: 기간 · 끌어서 이동 · 벌려서 확대 · 길게 눌러 가격 · 보조지표 ─────────
    bars: [날짜, 시, 고, 저, 종, 50일선, 200일선, 거래량]  (EMA·볼린저·일목·RSI는 여기서 계산) */
 const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2년",500]];
+const zsOf = s => s.zone_ok === false ? [] : (s.zones || []);   // 구간은 센 종목만 (엔진 dashboard._zone_ok)
 const AUX = new Set(["TP1","TP2","청산 보류","분할청산 · 14선","분할청산 · 21선","최종 청산 @SR","최종 청산","청산","돌파 청산","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파","갭 발생","모멘텀 BUY","PEG 발생","PEG 되돌림 매수","PEG 재돌파"]);   // 검증에서 평소와 같았던 표시는 기본으로 숨김
 const easy = w => String(w).replace(/(\d+)일 평균선/g, "$1일선").replace("돌파 자리", "돌파선").replace("2차 테스트", "바닥 재확인");
 const isAux = t => AUX.has(t) || t.includes("삼각형") || t.includes("쐐기") || ["급등 후 풀백", "피라미딩", "추세 진입", "셋업 형성 중", "MR Short"].includes(t);
@@ -1091,13 +1092,13 @@ function mountChart(box, s){
     let lo = Infinity, hi = -Infinity;
     for (let i = i0; i <= i1; i++){ lo = Math.min(lo, bars[i][3]); hi = Math.max(hi, bars[i][2]);
       if (IND.bb && ind.bbU[i] != null){ lo = Math.min(lo, ind.bbL[i]); hi = Math.max(hi, ind.bbU[i]); } }
-    const zones = (s.zones || []).filter(z => z.label !== "지지");
+    const zones = zsOf(s).filter(z => z.label !== "지지");
     [s.wall?.v, ...zones.flatMap(z => [z.lo, z.hi])].forEach(v => { if (v != null && v > lo * 0.94 && v < hi * 1.05){ lo = Math.min(lo, v); hi = Math.max(hi, v); } });
     if (!(hi - lo > 1e-9)){ lo = lo * 0.99 || -1; hi = hi * 1.01 || 1; }   // 봉이 모두 같으면 (거래정지)
     const pad = (hi - lo) * 0.07; lo -= pad; hi += pad;
     const y = v => T + (hi - v) / (hi - lo) * (H0 - T - 6);
     let g = `<defs><clipPath id="cp"><rect x="${L}" y="0" width="${W - L - R}" height="${H0}"/></clipPath><clipPath id="cpv"><rect x="${L}" y="${H0}" width="${W - L - R}" height="${H - H0}"/></clipPath></defs>`;   // 가격 선이 거래량 칸으로 넘어가지 않게
-    const lastY = y(s.price ?? bars[N-1][4]), zt = (s.zones || []).find(z => z.label !== "지지" && z.state === "above"), ztY = zt ? y(zt.hi) : -999;
+    const lastY = y(s.price ?? bars[N-1][4]), zt = zsOf(s).find(z => z.label !== "지지" && z.state === "above"), ztY = zt ? y(zt.hi) : -999;
     const raw = (hi - lo) / 6, mag = Math.pow(10, Math.floor(Math.log10(raw))), stp = [1, 2, 2.5, 5, 10].map(m => m * mag).find(v => v >= raw) || raw;   // 눈금은 둥근 값 (3~5개)
     const tickAt = st_ => { const o = []; for (let v = Math.ceil(lo / st_) * st_; v < hi; v += st_){ if (Math.abs(v) < st_ * 1e-6) v = 0; if (v <= 0 || y(v) < T || Math.abs(y(v) - lastY) < 16 || Math.abs(y(v) - ztY) < 16) continue; o.push(v); } return o; };
     const tks = tickAt(stp).length >= 3 ? tickAt(stp) : tickAt(stp / 2);
@@ -1179,7 +1180,7 @@ function mountChart(box, s){
     g += p;
     const last = s.price ?? bars[N-1][4], lc = (s.chg ?? 0) >= 0 ? COL.up : COL.down;
     if (last >= lo && last <= hi) g += `<line x1="${L}" x2="${W-R}" y1="${y(last)}" y2="${y(last)}" stroke="${lc}" stroke-width=".6" opacity=".5"/><rect x="${W-R+2}" y="${y(last)-11}" width="${R-2}" height="22" rx="6" fill="${lc}"/><text x="${W-R+7}" y="${y(last)+5}" font-size="13" font-weight="600" fill="#fff">${num(last, s.market)}</text>`;
-    { const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");   // 다음 살 가격: 오른쪽에 초록 꼬리표
+    { const z = zsOf(s).find(z => z.label !== "지지" && z.state === "above");   // 다음 살 가격: 오른쪽에 초록 꼬리표
       if (z && z.hi >= lo && z.hi <= hi && Math.abs(y(z.hi) - y(last)) > 24) g += `<line x1="${L}" x2="${W-R}" y1="${y(z.hi)}" y2="${y(z.hi)}" stroke="#1B8A4A" stroke-width=".8" stroke-dasharray="3 3"/><rect x="${W-R+2}" y="${y(z.hi)-11}" width="${R-2}" height="22" rx="6" fill="#1B8A4A"/><text x="${W-R+7}" y="${y(z.hi)+5}" font-size="13" font-weight="600" fill="#fff">${num(z.hi, s.market)}</text>`; }
     /* 거래량 */
     let yo = H0;
@@ -1336,7 +1337,7 @@ function renderDetail(sym){
       ${s.sepa_lv ? sepaCard(s.sepa_lv) : ""}
       ${!s.sig_help && s.notes?.length ? notesCard(s.notes) : ""}
     </div>
-    ${(s.zones || []).some(z => z.label !== "지지") && s.timing?.tone !== "buy" && s.timing?.tone === "wait" && (s.timing?.price || s.timing?.title === "마감 확인") ? `<div class="sec-title" role="heading" aria-level="2">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.filter(z => z.label !== "지지").map(z => `<div class="zone"><div><b>${esc(zoneName(s, z))}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
+    ${zsOf(s).some(z => z.label !== "지지") && s.timing?.tone !== "buy" && s.timing?.tone === "wait" && (s.timing?.price || s.timing?.title === "마감 확인") ? `<div class="sec-title" role="heading" aria-level="2">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.filter(z => z.label !== "지지").map(z => `<div class="zone"><div><b>${esc(zoneName(s, z))}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
     ${cz.length ? `<div class="sec-title" role="heading" aria-level="2">주의</div><div class="card" style="padding-block:4px"><div class="items">${cz.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
     <details class="more"><summary class="press">자세히</summary>
     ${sepa.length && !s.sepa_lv ? `<div class="sec-title" role="heading" aria-level="2"><span>SEPA 5요소</span><span>${nOk}/5 통과</span></div><div class="card" style="padding-block:4px">${itemsHTML(sepa.map(v => v.join(" ")))}</div>` : ""}
@@ -1769,7 +1770,7 @@ let toastT;
 const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "추세는 살아 있음 · 신호나 가격 기다리기"], ["관망", "추세 꺾임 · 지금은 사지 않기"], ["덜기", "들고 있다면 일부 팔기 (미국 청산)"], ["팔기", "들고 있다면 전부 팔고 다음 매수로"]];
 function timingCard(s, pl, mk){
   const t = s.timing, tone = t.tone, p = t.price;
-  const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");
+  const z = zsOf(s).find(z => z.label !== "지지" && z.state === "above");
   const chk = t.title === "확인 중" || t.title === "마감 확인";
   let bar = "";
   if (false){   // 거리 막대는 차트 풀이 사다리와 같은 정보라 뺀다
@@ -1797,7 +1798,7 @@ function actCard(s, pl, mk){
   return `<div class="card act tm-sell" role="status"><div class="tmain"><div class="tl"><div class="tword">계산 대기</div><div class="twhy">다음 점검 때 나와요</div></div></div></div>`;
   const a = s.action, tone = a.tone, pill = stName(a.state, !!s.p1) || ({buy:"추가 매수", wait:"관찰", sell:"주의", hold:"보유"}[tone] || "관찰");
   const title = a.title.replace(/^대기 · /, "");
-  const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");
+  const z = zsOf(s).find(z => z.label !== "지지" && z.state === "above");
   let bar = "";
   if (tone === "wait" && z){
     const lo = Math.min(z.hi, pl?.stop ?? z.lo) * 0.995, hi = s.price * 1.01, pos = v => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100));
@@ -1831,7 +1832,7 @@ function actCard(s, pl, mk){
 /* 매수 구간 이름 = 그 구간에서 살 차수 (엔진이 붙임: 아직 안 산 종목은 1차를 지금 사므로 첫 구간이 2차 자리) */
 function zoneName(s, z){
   if (z.label === "지지") return "지지";
-  const k = (s.zones || []).filter(x => x.label !== "지지").indexOf(z);
+  const k = zsOf(s).filter(x => x.label !== "지지").indexOf(z);
   return k === 0 ? "매수 가격대" : "깊은 매수 가격대";
 }
 /* 차트 풀이: 한 문장 + 상태 꼬리표 + 가격 사다리(위·지금·아래) + 조심할 점 — 엔진 규칙으로 만든 글 */
