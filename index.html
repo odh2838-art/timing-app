@@ -2,17 +2,19 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#F5F5F7">
+<meta name="theme-color" content="#F5F5F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="rooru.invest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-48">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<meta name="app-version" content="2026-10-16-49">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
 :root{
   --bg:#F5F5F7; --card:#FFFFFF; --fg:#1D1D1F; --fg2:#6E6E73; --fg3:#AEAEB2; --line:#E5E5EA; --fill:#F2F2F7;
@@ -240,6 +242,8 @@ body.sheet-open{background:#1D1D1F}
   .sheet-bg{align-items:center} .sheet{max-width:560px;height:min(680px,86vh);border-radius:var(--r-card)}
   .navbar.solid{box-shadow:0 0 0 100vmax var(--bar),0 .5px 0 100vmax var(--line);clip-path:inset(0 -100vmax -1px)}
 }
+input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+textarea{resize:none}
 .ameta{margin-top:10px;font-size:var(--t-small);color:var(--fg2)}
 .story .cap{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
 .story .sh{margin-top:6px;font-size:20px;font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
@@ -597,8 +601,10 @@ setInterval(() => liveTick(false), 60000);
 /* 화면 확대 막기 (iOS는 user-scalable=no를 무시하므로 손가락 두 개 확대를 직접 막는다). 차트 안의 확대·축소는 그대로 */
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => { if (!e.target.closest?.(".plot")) e.preventDefault(); }, {passive: false}));
 /* 손가락 두 개: 차트 밖이면 화면 확대를 막고, 차트 안이면 화면이 위아래로 움직이지 않게 막아 차트 확대·축소로 쓴다 */
-document.addEventListener("touchstart", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
-document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
+if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)){
+  document.addEventListener("touchstart", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
+  document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
+}
 async function catalog(){
   const c = LS.get("catalog");
   if (c && Date.now() - c.t < 7*864e5) return c.rows;
@@ -676,7 +682,16 @@ function slidePages(how, ghost, from = 0){
   }
   Promise.all(anims.map(a => a.finished)).then(() => { anims.forEach(a => a.cancel()); ghost.remove(); shade.remove(); $app.classList.remove("over"); });
 }
-function go(how, fn){ if (how === "push") S.listY = scrollY; S.dirty = false; fn(); render(how); }
+function go(how, fn){ if (how === "push"){ S.listY = scrollY; try{ history.pushState({v: "d"}, ""); }catch(e){} } S.dirty = false; fn(); render(how); }
+/* 시스템 '뒤로'(안드로이드 제스처·버튼, 브라우저 뒤로): 시트 → 상세 → 다른 탭 순서로 한 단계씩 닫는다 */
+let skipPop = 0;
+addEventListener("popstate", () => {
+  if (skipPop){ skipPop--; return; }
+  const sh = document.querySelector(".sheet-bg:not(.closing)");
+  if (sh){ sh._close?.(true); return; }
+  if (S.detail){ go("pop", () => S.detail = null); return; }
+  if (S.tab !== "home") go("fade", () => { S.tab = "home"; S.detail = null; });
+});
 
 /* 큰 제목이 지나가면 위쪽 바를 불투명하게 */
 let navObs;
@@ -1343,7 +1358,7 @@ function renderDetail(sym){
     }catch(e){ toast(e.message); del.disabled = false; del.querySelector(".main").textContent = "종목 삭제"; }
   };
 }
-function back(){ go("pop", () => S.detail = null); }  // 입력 중이던 내용은 S.drafts에 남아 있다
+function back(){ if (history.state?.v === "d"){ history.back(); return; } go("pop", () => S.detail = null); }  // 입력 중이던 내용은 S.drafts에 남아 있다
 
 /* 왼쪽 가장자리에서 밀면 뒤로: 손가락을 따라 앞 화면이 밀리고 뒤 화면이 드러남 */
 (() => {
@@ -1356,6 +1371,7 @@ function back(){ go("pop", () => S.detail = null); }  // 입력 중이던 내용
       if (dx < 8) return;
       on = true; sym = S.detail; detailY = scrollY;
       ghost = snapshot(); ghost.classList.add("top");
+      if (history.state?.v === "d"){ skipPop++; history.back(); }   // 손가락으로 넘긴 뒤로도 기록과 맞춘다
       S.listY = S.listY || 0; S.detail = null; render("none"); scrollTo(0, S.listY);
       shade = document.createElement("div"); shade.className = "shade"; document.body.appendChild(shade);
     }
@@ -1402,8 +1418,10 @@ function openSheet(label, inner){
   };
   requestAnimationFrame(() => requestAnimationFrame(() => move(0, 400, "var(--ease)")));
   let closed = false;
-  const close = (v = 0) => {
-    if (closed) return; closed = true;
+  try{ history.pushState({v: "s"}, ""); }catch(e){}
+  const close = (v = 0, fromPop = false) => {
+    if (closed) return; closed = true; bg.classList.add("closing");
+    if (!fromPop && history.state?.v === "s"){ skipPop++; history.back(); }
     const cur = new DOMMatrix(getComputedStyle(sheet).transform).m42, rest = H() - cur;
     const dur = v > 0 ? Math.max(120, Math.min(280, rest / v)) : 280;
     move(H(), dur, "var(--ease)"); document.body.style.overflow = "";
@@ -1411,6 +1429,7 @@ function openSheet(label, inner){
     $app.inert = false; document.getElementById("tabbar").inert = !!S.detail; try{ opener?.focus?.(); }catch(e){}
     setTimeout(() => { bg.remove(); document.body.classList.remove("sheet-open"); $app.style.transition = ""; $app.style.transform = ""; $app.style.borderRadius = ""; $app.style.overflow = ""; }, REDUCED ? 0 : dur);
   };
+  bg._close = fromPop => close(0, fromPop);
   const onKey = e => { if (e.key === "Escape") close(); };
   addEventListener("keydown", onKey);
   scrim.onclick = () => close();
@@ -1759,6 +1778,8 @@ function toast(msg, spin){
 
 document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => {
   if (S.tab === b.dataset.tab && !S.detail){ scrollTo({top:0, behavior: REDUCED ? "auto" : "smooth"}); return; }  // 같은 탭 다시 누르면 맨 위로
+  if (S.detail && history.state?.v === "d"){ skipPop++; history.back(); }
+  if (S.tab === "home" && b.dataset.tab !== "home"){ try{ history.pushState({v: "t"}, ""); }catch(e){} }
   go("fade", () => { S.tab = b.dataset.tab; S.detail = null; });
 });
 let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (S.detail && S.chart) S.chart.redraw(); }, 150); });
