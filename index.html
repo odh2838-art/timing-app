@@ -1186,7 +1186,7 @@ function actCard(s, pl, mk){
     bar = `<div class="dist"><div class="track"><span class="seg-z" style="left:${pos(z.lo)}%;width:${pos(z.hi) - pos(z.lo)}%"></span><span class="dot now" style="left:${pos(s.price)}%"></span></div>
       <div class="dl"><span class="c-buy">${esc(z.label)} ${num(z.hi, mk)}</span><span><b>${pct(z.dist)}</b> 남음</span><span>지금 ${num(s.price, mk)}</span></div></div>`;
   }
-  const kv = pl ? [["살 가격", num(pl.entry, mk), ""], [(pl.mode || "").startsWith("보유") ? "50일선" : "손절가", num(pl.stop, mk), "c-sell"], ["목표", num(pl.target, mk), "c-buy"], ["손익비", pl.rr == null ? "-" : "1 : " + pl.rr.toFixed(1), ""]] : [];
+  const kv = pl ? [["살 가격", num(pl.entry, mk), ""], [(pl.mode || "").startsWith("보유") ? "50일선" : "손절가" + (pl.stop_judge ? ` · ${pl.stop_judge}` : ""), num(pl.stop, mk), "c-sell"], ["목표", num(pl.target, mk), "c-buy"], ["손익비", pl.rr == null ? "-" : "1 : " + pl.rr.toFixed(1), ""]] : [];
   const ex = a.exec, cv = s.conv, kr = /\.K[SQ]$/.test(s.symbol || "") || ["코스피", "코스닥"].includes(s.market);
   const al = cv?.align ? (cv.align.now + (cv.align.prev ? ` (← ${cv.align.prev})` : "")) : "";
   const rsw = s.rs_rank != null ? `힘 상위 ${Math.max(1, Math.round(100 - s.rs_rank))}%` : "";
