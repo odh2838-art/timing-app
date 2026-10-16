@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-16">
+<meta name="app-version" content="2026-10-16-17">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -87,9 +87,9 @@ body.sheet-open{background:#1D1D1F}
 .row+.row{box-shadow:0 -1px 0 var(--line)}
 /* 밀어서 삭제 · 편집 */
 .swipe{position:relative;overflow:hidden;background:var(--card)}
-.swipe+.swipe{box-shadow:0 -1px 0 var(--line)}
+.swipe+.swipe::before{content:"";position:absolute;top:0;left:var(--pad-card,18px);right:0;height:1px;background:var(--line);z-index:2;pointer-events:none}
 .swipe>.row{background:var(--card);position:relative;z-index:1;transition:transform .35s var(--ease);will-change:transform}
-.swipe .act{position:absolute;right:0;top:0;bottom:0;min-width:88px;background:var(--sell);color:#fff;font-weight:600;font-size:var(--t-body);display:flex;align-items:center;justify-content:flex-end;padding-right:22px}
+.swipe .act{visibility:hidden;position:absolute;right:0;top:0;bottom:0;min-width:88px;background:var(--sell);color:#fff;font-weight:600;font-size:var(--t-body);display:flex;align-items:center;justify-content:flex-end;padding-right:22px}
 .swipe.gone{transition:height .3s var(--ease),opacity .3s}
 .minus{width:0;height:24px;flex:none;border-radius:50%;background:var(--sell);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-right:-12px;transform:scale(.4);opacity:0;transition:width .3s var(--ease),margin .3s var(--ease),transform .3s var(--ease),opacity .2s}
 .minus::before{content:"";width:11px;height:2.5px;border-radius:2px;background:#fff}
@@ -571,7 +571,7 @@ function spark(bars, chg){
 /* 목록용 짧은 할 일: '대기 · 148.18 오면 1차 40% 매수' → '148.18 오면 1차 40% · −2.6%' */
 const shortAct = a => {
   const t = a.title || "", m = t.match(/^대기 · ([\d,.]+) 오면/);
-  if (m) return /^지금보다/.test(a.detail || "") ? `${m[1]}까지 ${a.detail.replace("지금보다 ", "")}` : `${m[1]} 오면 매수`;
+  if (m) return /^지금보다/.test(a.detail || "") ? `${m[1]}까지 ${a.detail.replace("지금보다 ", "").replace(/^([+-]?\d{2,})\.\d%$/, "$1%")}` : `${m[1]} 오면 매수`;
   const w = t.match(/^이번 주 ([\d,.]+) 위로 끝나면/);
   if (w) return `이번 주 ${w[1]} 위면 매수`;
   return t.replace(/ 매수/, "").replace(/ \(절반만\)/, " 절반");
@@ -626,12 +626,13 @@ function renderHome(){
 
 /* 종목 줄: 왼쪽으로 밀면 삭제 버튼, 끝까지 밀면 바로 삭제 */
 let openRow = null;
-function closeSwipes(except){ $app.querySelectorAll(".swipe>.row").forEach(r => { if (r !== except){ r.style.transform = ""; r.parentElement.querySelector(".act").style.width = ""; } }); if (!except) openRow = null; }
+function closeSwipes(except){ $app.querySelectorAll(".swipe>.row").forEach(r => { if (r !== except){ r.style.transform = ""; const a = r.parentElement.querySelector(".act"); a.style.width = ""; clearTimeout(a._h); a._h = setTimeout(() => a.style.visibility = "", 360); } }); if (!except) openRow = null; }
 function bindSwipes(list){
   $app.querySelectorAll(".swipe").forEach(sw => {
     const row = sw.querySelector(".row"), act = sw.querySelector(".act"), sym = sw.dataset.sym;
     let x0 = null, y0 = 0, base = 0, dx = 0, dir = null, swiped = 0;
-    const set = (t, anim) => { row.style.transition = anim ? "" : "none"; act.style.transition = anim ? "width .35s var(--ease)" : "none"; row.style.transform = t ? `translateX(${t}px)` : ""; act.style.width = Math.max(88, -t) + "px"; };
+    const set = (t, anim) => { row.style.transition = anim ? "" : "none"; act.style.transition = anim ? "width .35s var(--ease)" : "none"; row.style.transform = t ? `translateX(${t}px)` : ""; act.style.width = Math.max(88, -t) + "px";
+      clearTimeout(act._h); if (t) act.style.visibility = "visible"; else act._h = setTimeout(() => act.style.visibility = "", anim ? 360 : 0); };
     sw.addEventListener("touchstart", e => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; dx = 0; dir = null; base = openRow === row ? -88 : 0; }, {passive:true});
     sw.addEventListener("touchmove", e => {
       if (x0 == null) return; const t = e.touches[0]; dx = t.clientX - x0;
