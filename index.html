@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-29">
+<meta name="app-version" content="2026-10-16-30">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -1336,7 +1336,7 @@ async function renderFind(){
     <div class="title-block" data-anchor><h1 class="big">발견</h1><div class="sub">오늘 매수 자리가 뜬 종목 · 장 마감 기준</div></div>
     <div class="seg" id="fseg" role="tablist">${["미국", "한국"].map(m => `<button role="tab" aria-selected="${m === mk}" class="${m === mk ? "on" : ""}" data-m="${m}">${m}</button>`).join("")}</div>
     <div id="fl" style="margin-top:var(--gap-block)"><div class="list">${[0,1,2].map(() => `<div class="row"><div class="main"><div class="sk" style="width:50%;height:16px"></div><div class="sk" style="width:70%;height:12px;margin-top:8px"></div></div></div>`).join("")}</div></div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">12년 백테스트에서 평소보다 나았던 자리만 골라요. 어떤 기업을 살지는 직접 판단하세요.</p></div>`;
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">${mk === "한국" ? "백테스트에서 평소보다 나았던 자리 중 힘이 중간 이상인 종목만 골라요. 힘이 강할수록 60일 뒤 성적이 좋았어요." : "미국은 '고른 기업을 언제 살까'에 맞춘 신호예요. 기업 고르기는 직접 판단하세요."}</p></div>`;
   document.getElementById("fseg").onclick = e => { const b = e.target.closest("[data-m]"); if (!b) return; S.findMkt = b.dataset.m; LS.set("findMkt", S.findMkt); renderFind(); };
   let d = S.find[mk];
   if (!d){ try{ d = S.find[mk] = await readJSON(`상태/발견_${mk}.json`, {items: []}); }catch(e){ const el = document.getElementById("fl"); if (el) el.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; } }
