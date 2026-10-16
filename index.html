@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-4">
+<meta name="app-version" content="2026-10-17-5">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -236,7 +236,7 @@ body.sheet-open{background:#1D1D1F}
 .wdef>div{display:flex;gap:10px;color:var(--fg3);padding:4px 8px;margin:0 -8px;border-radius:9px} .wdef b{min-width:64px;color:var(--fg3);font-weight:600}
 .wdef .on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.08)} .wdef .on b,.wdef .on span{color:var(--fg);font-weight:700}
 .tm-buy .wdef .on b{color:var(--buy)} .tm-wait .wdef .on b{color:var(--wait)} .tm-check .wdef .on b{color:var(--info)}
-.tm-buy .tword{color:var(--buy)} .tm-wait .tword{color:var(--wait)} .tm-check .tword{color:var(--info)} .tm-sell .tword{color:var(--fg2)} .tm-cut .tword{color:var(--sell)} .tm-cut .wdef .on b{color:var(--sell)}
+.tm-buy .tword{color:var(--buy)} .tm-wait .tword{color:var(--wait)} .tm-check .tword{color:var(--info)} .tm-sell .tword{color:var(--fg2)} .trows{margin-top:14px;display:flex;flex-direction:column;border-top:1px solid var(--line)} .trows>div{display:grid;grid-template-columns:1fr auto;column-gap:12px;padding:10px 0;border-bottom:1px solid var(--line)} .trows>div:last-child{border-bottom:0;padding-bottom:0} .trows span{color:var(--fg2);font-size:var(--t-small)} .trows b{text-align:right;font-weight:600;font-size:var(--t-body)} .trows small{grid-column:1/-1;color:var(--fg2);font-size:var(--t-small);font-variant-numeric:tabular-nums} .trows .up{color:var(--up)} .trows .down{color:var(--down)} .c-sell{color:var(--sell)} .c-trim{color:#B26A00} .tm-cut .tword{color:var(--sell)} .tm-cut .wdef .on b{color:var(--sell)}
 .twhy{margin-top:6px;font-size:var(--t-body);color:var(--fg2);font-weight:600}
 .tpx{text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
 .tpx small{font-size:var(--t-small);color:var(--fg2)} .tpx b{font-size:var(--t-heading);font-weight:700;font-variant-numeric:tabular-nums}
@@ -749,7 +749,7 @@ function renderSetup(msg){
 function stockList(){
   const st = S.dash?.stocks || {};
   const ord = {buy:0, sell:1, wait:2, hold:3, start:4};
-  const TR = {"매수": 0, "소량 매수": 1, "마감 확인": 2, "확인 중": 2, "대기": 3, "관망": 4, "덜기": 1.5, "팔기": 1.5};
+  const TR = {"매수": 0, "소량 매수": 1, "마감 확인": 2, "확인 중": 2, "대기": 3, "관망": 4, "일부 매도": 1.5, "매도": 1.5};
   const rank = d => d?.timing ? (TR[d.timing.title] ?? 5) : 6 + ((ord[d?.action?.start ? "start" : d?.action?.tone] ?? 3));
   const near = d => { const z = (d?.zones || []).find(z => z.label !== "지지" && z.state === "above"); return z ? Math.abs(z.dist) : 99; };
   return (S.csv?.rows || []).map((r, k) => ({ row:r, k, sym: symOf(r["시장"], r["티커"]), d: st[symOf(r["시장"], r["티커"])] }))
@@ -876,14 +876,14 @@ function renderHome(){
         const b = list.filter(x => x.d?.timing?.tone === "buy").map(nmOf), c = list.find(x => ["확인 중", "마감 확인"].includes(x.d?.timing?.title));
         return b.length ? esc(b.slice(0, 3).join(" · ")) + (b.length > 3 ? ` 외 ${b.length - 3}` : "")
           : c ? `${esc(nmOf(c))} · ${esc(c.d.timing.why)}`
-          : [nx ? `팔기·덜기 ${nx}` : "", nw ? `대기 ${nw}` : "", ns ? `관망 ${ns}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"; })()}</div>${(() => {   // 시장 추세가 꺾이면 '추세 진입' 매수 알림을 쉰다 (엔진 events.py): 알림이 없는 이유
+          : [nx ? `매도 ${nx}` : "", nw ? `대기 ${nw}` : "", ns ? `관망 ${ns}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"; })()}</div>${(() => {   // 시장 추세가 꺾이면 '추세 진입' 매수 알림을 쉰다 (엔진 events.py): 알림이 없는 이유
           // 시장 덜기(엔진 trendsig.py): 한국은 코스피 120일선 아래면 보유 절반 덜기 · 미국은 S&P 200일선 아래면 참고만
           const G = d?.gates || {}, TR = d?.trims || {}, has = m => list.some(x => (["코스피", "코스닥"].includes(x.row["시장"]) ? "한국" : "미국") === m);
           const lines = ["한국", "미국"].filter(has).map(m => {
             const t = TR[m], shut = G[m] === false;
-            if (m === "한국" && d?.sonagi?.on) return `<b>한국 보유 절반 덜기</b><br>소나기 · 과열 뒤 코스피 ${pct(d.sonagi.drop)}`;   // 엔진 trendsig.sonagi
-            if (t?.on && t.alert) return `<b>${m} 보유 절반 덜기</b><br>${t.name} ${t.line}일선 아래${shut ? " · 새 매수 쉬기" : ""}`;
-            if (t?.on) return `<b>${m} 참고</b> · ${t.name} ${t.line}일선 아래<br>낙폭 줄이려면 절반 덜기`;
+            if (m === "한국" && d?.sonagi?.on) return `<b>한국 보유 절반 매도</b><br>소나기 · 과열 뒤 코스피 ${pct(d.sonagi.drop)}`;   // 엔진 trendsig.sonagi
+            if (t?.on && t.alert) return `<b>${m} 보유 절반 매도</b><br>${t.name} ${t.line}일선 아래${shut ? " · 새 매수 쉬기" : ""}`;
+            if (t?.on) return `<b>${m} 참고</b> · ${t.name} ${t.line}일선 아래<br>낙폭 줄이려면 절반 매도`;
             return shut ? `<b>${m} 새 매수 쉬기</b> · 시장 추세 꺾임` : "";
           }).filter(Boolean);
           return lines.length ? lines.map(x => `<div class="gate">${x}</div>`).join("") : ""; })()}</div><div class="sec-cap">내 종목</div>`; })()
@@ -1004,12 +1004,13 @@ const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2�
 const zsOf = s => s.zone_ok === false ? [] : (s.zones || []);   // 구간은 센 종목만 (엔진 dashboard._zone_ok)
 const AUX = new Set(["TP1","TP2","청산 보류","분할청산 · 14선","분할청산 · 21선","최종 청산 @SR","최종 청산","청산","돌파 청산","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파","갭 발생","모멘텀 BUY","PEG 발생","PEG 되돌림 매수","PEG 재돌파"]);   // 검증에서 평소와 같았던 표시는 기본으로 숨김
 const easy = w => String(w).replace(/(\d+)일 평균선/g, "$1일선").replace("돌파 자리", "돌파선").replace("2차 테스트", "바닥 재확인");
-const isAux = t => AUX.has(t) || t.includes("삼각형") || t.includes("쐐기") || ["급등 후 풀백", "피라미딩", "추세 진입", "셋업 형성 중", "MR Short"].includes(t);
-const IND_LIST = [["ma","평균선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["pat","청산·패턴"]];   // 지표견이 쓰는 도구만
-const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:true}, LS.get("ind", {}));
-if (!LS.get("patOn2")){ IND.pat = true; LS.set("patOn2", 1); LS.set("ind", IND); }   // 지표견처럼 청산·패턴 표시를 기본으로 켬 (한 번만) IND.bb = false; IND.rsi = false;
+const CORE = new Set(["추세 확인", "신고가 돌파", "재돌파", "변동성 돌파", "고점 돌파", "청산", "돌파 청산", "최종 청산", "200일선 이탈", "진입", "돌파 진입"]);
+const isAux = t => !CORE.has(t);   // 엔진 매수·매도 신호(와 추세 시작)만 기본으로 보이고, 나머지(분할청산·과열·모멘텀·패턴 등)는 '보조 표시'를 켜야 보임
+const IND_LIST = [["ma","평균선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["pat","보조 표시"]];   // 지표견이 쓰는 도구만
+const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:false}, LS.get("ind", {}));
+if (!LS.get("patOff3")){ IND.pat = false; LS.set("patOff3", 1); LS.set("ind", IND); }   // 청산·패턴 보조 표시는 기본으로 끔 — 매수·매도 신호가 묻히지 않게 (차트 설정에서 켤 수 있음)   // 지표견처럼 청산·패턴 표시를 기본으로 켬 (한 번만) IND.bb = false; IND.rsi = false;
 const DARK = () => { try { return matchMedia("(prefers-color-scheme: dark)").matches; } catch(e){ return false; } };
-const COL = {up:"#F04452", down:"#3182F6", e21:"#FF9F0A", s50:"#8E8E93", s200:"#AF52DE", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
+const COL = {up:"#F04452", down:"#3182F6", e14:"#30B0C7", e21:"#FF9F0A", e55:"#8E8E93", s50:"#8E8E93", s200:"#AF52DE", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
 /* 차트 색: 밝은·어두운 화면 (SVG 속성에는 CSS 변수가 안 먹어서 그릴 때 고른다) */
 const CP = () => DARK() ? {grid:"#38383A", ink:"#F5F5F7", inkOn:"#000", halo:"#1C1C1E", zone:"#30D158",
     chip:{buy:["#0F2E1B","#30D158"], sell:["#3A1416","#FF6961"], info:["#132A4A","#64A8FF"], trim:["#3A2A0E","#FFB340"], none:["#2C2C2E","#A1A1A6"]}}
@@ -1033,7 +1034,7 @@ function calcInd(bars){
     else { ag = (ag*13 + g)/14; al = (al*13 + lo)/14; rsi.push(100 - 100/(1 + ag/(al||1e-9))); } });
   const chU = h.map((_,i) => i >= 20 ? Math.max(...h.slice(i-20, i)) : null), chL = l.map((_,i) => i >= 20 ? Math.min(...l.slice(i-20, i)) : null);   // 어제까지 20일 채널
   const nh = h.map((v,i) => i >= 60 && v >= Math.max(...h.slice(i-60, i)));   // 60일 신고가 (지표견 차트의 빨간 점)
-  return { e21: ema(21), s50: bars.map(b => b[5]), s200: bars.map(b => b[6]), m20, bbU, bbL, spanA, spanB, rsi, chU, chL, nh };
+  return { e14: ema(14), e21: ema(21), e55: ema(55), s50: bars.map(b => b[5]), s200: bars.map(b => b[6]), m20, bbU, bbL, spanA, spanB, rsi, chU, chL, nh };
 }
 
 function mountChart(box, s){
@@ -1070,7 +1071,8 @@ function mountChart(box, s){
   };
   const legend = () => {
     const it = [];
-    if (IND.ma) it.push(["21일선", COL.e21], ["50일선", COL.s50], ["200일선", COL.s200]);
+    if (IND.ma) it.push(["14일선", COL.e14], ["21일선", COL.e21], ["55일선", COL.e55], ["200일선", COL.s200]);
+    if (s.trend?.line) it.push(["매도 선", s.trend.act === "sell" ? "#D22F3C" : "#E08600"], ["진입가", "#8E8E93"]);
     if (IND.ch) it.push(["20일 채널", COL.bb]);
     if (IND.ich) it.push(["일목 구름", "#30B566"]);
     it.push(["매수 구간", "rgba(27,138,74,.35)"]);
@@ -1121,7 +1123,12 @@ function mountChart(box, s){
     }
     if (s.wall?.v) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.wall.v)}" y2="${y(s.wall.v)}" stroke="#8E8E93" stroke-width=".9" stroke-dasharray="4 3"/>`;
     if (s.vcp?.vcp && s.vcp.pivot) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.vcp.pivot)}" y2="${y(s.vcp.pivot)}" stroke="#1B64DA" stroke-width=".9" stroke-dasharray="2 3"/>`;
-    if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.s50, COL.s50, 1.6) + path(ind.e21, COL.e21, 1.4);
+    if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.e55, COL.e55, 1.6) + path(ind.e21, COL.e21, 1.4) + path(ind.e14, COL.e14, 1.2);   // 엔진(지표견식 추세)이 보는 선
+    /* 지금 추세가 진행 중이면: 진입가(점선)와 지금 팔게 되는 선(굵게) — 엔진 dashboard._trend_now */
+    const TRN = s.trend || {};
+    if (TRN.line){ const exC = TRN.act === "sell" ? "#D22F3C" : "#E08600", ser = TRN.line === 14 ? ind.e14 : ind.e55, ie = bars.findIndex(b => b[0] >= TRN.date);
+      p += path(ser.map((v, k) => k >= Math.max(ie, 0) ? v : null), exC, 2.8);
+      if (ie >= 0 && TRN.entry >= lo && TRN.entry <= hi) p += `<line x1="${Math.max(L, x(Math.max(ie, i0)))}" x2="${W-R}" y1="${y(TRN.entry)}" y2="${y(TRN.entry)}" stroke="${TP.ink}" stroke-width=".9" stroke-dasharray="4 3" opacity=".55"/>`; }
     if (s.sr_line){   // 트레일링 스탑(SR): 보유 중일 때만, 계단선
       let d = ""; for (let i = i0; i <= i1; i++){ const v = s.sr_line[i]; if (v == null) continue; const X = x(i) - cw/2, Y = y(v); d += (d ? `L${X} ${Y}` : `M${X} ${Y}`) + `L${X + cw} ${Y}`; }
       if (d) p += `<path d="${d}" fill="none" stroke="#8B5E3C" stroke-width="1.3"/>`;
@@ -1232,7 +1239,7 @@ function mountChart(box, s){
     if (key === selKey) return; selKey = key;
     const h = x && (s.sig_help || {})[x.t];
     if (!h){ sel = null; $sigm.hidden = true; $sigm.innerHTML = ""; return; }
-    const [pc, pv] = {buy: ["p-buy", "매수 신호"], trim: ["p-wait", "덜기 신호"]}[h.act] || ["p-hold", "참고"];
+    const [pc, pv] = {buy: ["p-buy", "매수 신호"], trim: ["p-wait", "일부 매도 신호"], sell: ["p-sell", "매도 신호"]}[h.act] || ["p-hold", "참고"];
     $sigm.innerHTML = `<div class="sm-h"><span class="pill ${pc}">${pv}</span><b>${esc(x.t)}</b><span class="d">${+x.d.slice(5,7)}/${+x.d.slice(8)}</span><button class="x press" aria-label="닫기">✕</button></div>
       <div class="sm-w">${esc(h.what)}</div><div class="sm-a"><b>${esc(h.advice)}</b> <span class="sub">· ${esc(h.proof.replace("검증: ", ""))}</span></div>`;
     $sigm.hidden = false;
@@ -1778,7 +1785,7 @@ let toastT;
 /* 지금 할 일 카드: 상태 표시 + 한 줄 + (대기면) 거리 막대 + 살 가격·손절가·목표·손익비 */
 /* 할 일 카드 (타이밍만): 큰 한 단어(매수·소량 매수·대기·확인 중·관망) + 짧은 이유 + 기다릴 가격.
    보유·차수·비중은 보여 주지 않는다 — 언제 사면 좋은지만. */
-const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "추세는 살아 있음 · 신호나 가격 기다리기"], ["관망", "추세 꺾임 · 지금은 사지 않기"], ["덜기", "들고 있다면 일부 팔기 (미국 청산)"], ["팔기", "들고 있다면 전부 팔고 다음 매수로"]];
+const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "추세는 살아 있음 · 신호나 가격 기다리기"], ["관망", "추세 꺾임 · 지금은 사지 않기"], ["일부 매도", "들고 있다면 1/3만 팔기 (미국 청산)"], ["매도", "들고 있다면 전부 팔고 다음 매수로"]];
 function timingCard(s, pl, mk){
   const t = s.timing, tone = t.tone, p = t.price;
   const z = zsOf(s).find(z => z.label !== "지지" && z.state === "above");
@@ -1800,9 +1807,23 @@ function timingCard(s, pl, mk){
     ${bar}
     <div class="wdef" hidden>${WDEF.map(([w, d]) => `<div class="${w === t.title || (w === "마감 확인" && chk) ? "on" : ""}"><b>${w}</b><span>${d}</span></div>`).join("")}</div>
     ${kv.length ? `<div class="kv k3">${kv.map(([k, v, c, sm]) => `<div><span>${k}</span><b class="${c}">${v}</b>${sm ? `<small>${esc(sm)}</small>` : ""}</div>`).join("")}</div>` : ""}
+    ${trendRows(s, mk)}
     ${t.title === "대기" && p ? `<div class="tmiss">60일 안에 닿은 건 10번 중 ${krm ? 6 : 5}번 · 오래 기다리면 놓칠 수 있어요</div>` : ""}
     ${tone === "buy" && (s.cautions || []).length ? `<div class="trisk">! ${esc((s.cautions.find(c => /약세|실적/.test(c)) || s.cautions[0]))}</div>` : ""}
     <div class="tdisc">참고용 · 투자 권유 아님</div></div>`;
+}
+/* 지금 추세와 매도 선 (엔진 dashboard._trend_now): 진행 중이면 며칠째·진입 대비, 어느 선 아래 마감하면 무엇을 하는지 */
+function trendRows(s, mk){
+  const T = s.trend; if (!T) return "";
+  const kr = /\.K[SQ]$/.test(s.symbol || "") || ["코스피", "코스닥"].includes(s.market), rel = v => pct((v / s.price - 1) * 100);
+  const rows = [];
+  if (T.line) {
+    const md = `${+T.date.slice(5,7)}/${+T.date.slice(8)}`;
+    rows.push(`<div><span>추세</span><b>${T.confirmed ? "진행 중" : "시작"} · ${T.held}일째</b><small>${md} 진입 대비 <span class="${T.ret >= 0 ? "up" : "down"}">${pct(T.ret)}</span></small></div>`);
+    rows.push(`<div><span>${T.line}일선 아래 마감</span><b class="${T.act === "sell" ? "c-sell" : "c-trim"}">${T.act === "sell" ? "매도" : "일부 매도 1/3"}</b><small>${num(T.value, mk)} · ${rel(T.value)}</small></div>`);
+  } else rows.push(`<div><span>추세</span><b>없음</b><small>새 추세 시작 기다리기</small></div>`);
+  if (T.s200) rows.push(`<div><span>200일선 아래 마감</span><b class="c-sell">매도</b><small>${num(T.s200, mk)} · ${rel(T.s200)}</small></div>`);
+  return `<div class="trows">${rows.join("")}</div>`;
 }
 function actCard(s, pl, mk){
   if (s.timing) return timingCard(s, pl, mk);
