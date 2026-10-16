@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-53">
+<meta name="app-version" content="2026-10-16-54">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -184,6 +184,13 @@ body.sheet-open{background:#1D1D1F}
 .frow{align-items:flex-start}.fsig{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.fmeta{margin-top:4px}
 .fpx{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;font-variant-numeric:tabular-nums}
 .frow{align-items:center!important;gap:12px}
+.sepa .sp-h{display:flex;align-items:baseline;justify-content:space-between} .sepa .sp-h b{font-size:var(--t-body);font-weight:700}
+.sepa .sp-n{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px} .sepa .sp-n small{font-size:var(--t-body);color:var(--fg3);font-weight:600}
+.sepa .sp-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:10px} .sepa .sp-bar i{height:6px;border-radius:3px;background:var(--fill)} .sepa .sp-bar i.on{background:var(--buy)}
+.sepa .sp-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.sepa .sp-steps>div{display:flex;flex-direction:column;gap:2px;color:var(--fg3);min-width:0} .sepa .sp-steps b{font-size:var(--t-small);font-weight:600} .sepa .sp-steps span:not(.sp-c){font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sepa .sp-steps .ok{color:var(--fg)} .sepa .sp-c{height:14px;color:var(--buy)}
+.sepa .sp-p{margin-top:12px;font-size:var(--t-small);color:var(--fg2)}
 .sheet.fit{height:auto;max-height:min(90dvh,calc(100% - 12px))} .sheet.fit .why{overflow-y:auto;padding-bottom:20px}
 .why .wpx{font-size:var(--t-title3,20px);font-variant-numeric:tabular-nums} .why .wpx .chg{font-size:var(--t-small)} .why .wpx .chg.up{color:var(--up)} .why .wpx .chg.down{color:var(--down)} .why .tk{color:var(--fg3);font-size:var(--t-small)}
 .why .wsig{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px} .why .wwhy{margin:12px 0 0;font-weight:600} .why .wwhat{margin:6px 0 0;color:var(--fg2)} .why .wproof{margin:6px 0 0;color:var(--fg2);font-size:var(--t-small)}
@@ -1274,6 +1281,15 @@ function mountChart(box, s){
 }
 
 const MARK = {"✔":"c-buy","✖":"c-sell","➖":"sub","❔":"sub"};
+/* SEPA 레벨: 추세 → 힘 → 수축 순서로 한 칸씩 */
+function sepaCard(v){
+  const ck = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  return `<div class="card sepa" role="group" aria-label="SEPA 레벨 ${v.lv} / ${v.max}">
+    <div class="sp-h"><b>SEPA 레벨</b><span class="sp-n">${v.lv}<small> / ${v.max}</small></span></div>
+    <div class="sp-bar" aria-hidden="true">${Array.from({length: v.max}, (_, i) => `<i class="${i < v.lv ? "on" : ""}"></i>`).join("")}</div>
+    <div class="sp-steps">${(v.steps || []).map(([k, t, ok]) => `<div class="${ok ? "ok" : ""}"><span class="sp-c">${ok ? ck : ""}</span><b>${esc(k)}</b><span>${esc(t)}</span></div>`).join("")}</div>
+    ${v.proof ? `<div class="sp-p">${esc(v.proof)}</div>` : ""}</div>`;
+}
 function itemsHTML(lines){
   return `<div class="items">${lines.map(l => { const t = strip(l); const m = t.match(/^(\S+)\s+(\S+(?:\s지점)?)\s+(.*)$/);
     return m ? `<div class="item"><span class="m ${MARK[m[1]]||""}">${esc(m[1])}</span><div class="t"><b>${esc(m[2])}</b><span class="s">${esc(m[3])}</span></div></div>` : `<div class="item"><div class="t">${esc(t)}</div></div>`; }).join("")}</div>`;
@@ -1297,12 +1313,13 @@ function renderDetail(sym){
       ${s.action ? actCard(s, pl, mk) : g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}</div></div></div>` : ""}
       <div class="card chart" id="chartBox"></div>
       ${s.story?.levels ? storyCard(s, mk) : ""}
+      ${s.sepa_lv ? sepaCard(s.sepa_lv) : ""}
       ${!s.sig_help && s.notes?.length ? notesCard(s.notes) : ""}
     </div>
     ${s.zones?.length && s.timing?.tone !== "buy" ? `<div class="sec-title" role="heading" aria-level="2">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(zoneName(s, z))}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
     ${cz.length ? `<div class="sec-title" role="heading" aria-level="2">주의</div><div class="card" style="padding-block:4px"><div class="items">${cz.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
     <details class="more"><summary class="press">자세히</summary>
-    ${sepa.length ? `<div class="sec-title" role="heading" aria-level="2"><span>SEPA 5요소</span><span>${nOk}/5 통과</span></div><div class="card" style="padding-block:4px">${itemsHTML(sepa.map(v => v.join(" ")))}</div>` : ""}
+    ${sepa.length && !s.sepa_lv ? `<div class="sec-title" role="heading" aria-level="2"><span>SEPA 5요소</span><span>${nOk}/5 통과</span></div><div class="card" style="padding-block:4px">${itemsHTML(sepa.map(v => v.join(" ")))}</div>` : ""}
     <div class="sec-title" role="heading" aria-level="2"><span>전설 4인</span><span>찬성 ${(s.votes||[0,0,0])[0]} · 중립 ${(s.votes||[0,0,0])[1]} · 반대 ${(s.votes||[0,0,0])[2]}</span></div><div class="card" style="padding-block:4px">${itemsHTML(s.legends || [])}</div>
     <div class="sec-title" role="heading" aria-level="2">지금 상태</div><div class="card" style="padding-block:4px"><div class="items">${(s.state || []).map(l => { const t=strip(l), m=t.match(/^(\S+)\s+(\S+)\s+(.*)$/); return m ? `<div class="item"><span class="m">${esc(m[1])}</span><div class="t"><b>${esc(m[2])}</b><span class="s">${esc(m[3])}</span></div></div>` : ""; }).join("")}</div></div>
     </details>
