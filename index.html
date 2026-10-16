@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-10">
+<meta name="app-version" content="2026-10-16-13">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -86,10 +86,10 @@ body.sheet-open{background:#1D1D1F}
 .row{display:flex;align-items:center;gap:12px;padding:var(--pad-card);width:100%;text-align:left;min-height:44px}
 .row+.row{box-shadow:0 -1px 0 var(--line)}
 /* 밀어서 삭제 · 편집 */
-.swipe{position:relative;overflow:hidden;background:var(--sell)}
+.swipe{position:relative;overflow:hidden;background:var(--card)}
 .swipe+.swipe{box-shadow:0 -1px 0 var(--line)}
 .swipe>.row{background:var(--card);position:relative;z-index:1;transition:transform .35s var(--ease);will-change:transform}
-.swipe .act{position:absolute;right:0;top:0;bottom:0;min-width:88px;color:#fff;font-weight:600;font-size:var(--t-body);display:flex;align-items:center;justify-content:flex-end;padding-right:22px}
+.swipe .act{position:absolute;right:0;top:0;bottom:0;min-width:88px;background:var(--sell);color:#fff;font-weight:600;font-size:var(--t-body);display:flex;align-items:center;justify-content:flex-end;padding-right:22px}
 .swipe.gone{transition:height .3s var(--ease),opacity .3s}
 .minus{width:0;height:24px;flex:none;border-radius:50%;background:var(--sell);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-right:-12px;transform:scale(.4);opacity:0;transition:width .3s var(--ease),margin .3s var(--ease),transform .3s var(--ease),opacity .2s}
 .minus::before{content:"";width:11px;height:2.5px;border-radius:2px;background:#fff}
@@ -98,7 +98,9 @@ body.sheet-open{background:#1D1D1F}
 .enter{animation:rowin .5s var(--ease) both}
 @keyframes rowin{from{opacity:0;transform:translateY(-10px)}}
 .row .main{flex:1;min-width:0}
-.row .name{font-size:var(--t-body);font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.row .name{font-size:var(--t-body);font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .head{flex-wrap:nowrap;min-width:0} .row .head .pill{flex:none} .row .head .act1{font-size:var(--t-detail);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.sumline{font-size:var(--t-heading);font-weight:700;margin:0 4px var(--gap-inner)}
 .row .tk{font-size:var(--t-small);font-weight:400;color:var(--fg2)}
 .row .head{font-size:var(--t-detail);margin-top:var(--gap-text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .row .px{text-align:right;flex:none;display:flex;align-items:center;gap:10px}
@@ -273,6 +275,38 @@ details.more>summary::-webkit-details-marker{display:none}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .spin,.sk{animation:none!important}
 }
+
+/* Apple식 정리: 그룹 목록 · 작은 회색 섹션 제목 · 등락 캡슐 · 아이콘 버튼 */
+.icon-btn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;color:var(--blue);margin-right:-8px}
+.icon-btn[disabled]{opacity:.35}
+.today{background:var(--card);border-radius:var(--r-card);padding:16px var(--pad-card) 18px;margin-bottom:var(--gap-block)}
+.today .eyebrow{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
+.today .big2{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;margin-top:2px}
+.today .sub{margin-top:2px}
+.sec-cap{font-size:13px;font-weight:600;color:var(--fg2);margin:var(--gap-block) var(--pad-card) 6px;letter-spacing:.01em}
+.addrow{color:var(--blue);font-weight:600;gap:12px;min-height:52px;padding-block:12px}
+.addrow .plus{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none}
+#stocks .row .px .chg{display:inline-block;min-width:68px;text-align:center;margin-top:4px;padding:2px 8px;border-radius:7px;color:#fff;font-size:var(--t-small)}
+#stocks .row .px .chg.up{background:var(--up)} #stocks .row .px .chg.down{background:var(--down)}
+.row .head .pill{font-size:12px;padding:2px 8px}
+#stocks .row .head{flex-wrap:nowrap}
+#stocks .spark{width:44px}
+
+/* 내 기록: iOS 설정 화면처럼 '이름 왼쪽 · 값 오른쪽' 줄 목록 */
+#form.form{display:flex;flex-direction:column;gap:0}
+#form .field{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;box-shadow:0 -1px 0 var(--line)}
+#form .field:first-child{box-shadow:none}
+#form .field label{margin:0;flex:none;color:var(--fg)}
+#form .field input,#form .field select{width:58%;min-height:44px;background:transparent;text-align:right;padding:0 2px;border-radius:8px;color:var(--fg)}
+#form .field input::placeholder{color:var(--fg3)}
+#form .field input[type=date]{text-align:right}
+#form .field input[type=date]::-webkit-date-and-time-value{text-align:right}
+#form .field select{background-position:right 2px center;padding-right:22px;direction:rtl}
+#form .field input:focus,#form .field select:focus{box-shadow:none;background:var(--fill)}
+#form .field.full{flex-direction:column;align-items:stretch;padding-block:12px}
+#form .field.full label{margin-bottom:8px}
+#form .field.full input,#form .field.full textarea{width:100%;text-align:left;background:var(--fill);padding:11px 14px}
+#form .step{margin:18px 0 6px;font-size:13px;font-weight:600;color:var(--fg2)}
 </style>
 </head>
 <body>
@@ -492,7 +526,10 @@ function renderSetup(msg){
 
 function stockList(){
   const st = S.dash?.stocks || {};
-  return (S.csv?.rows || []).map(r => ({ row:r, sym: symOf(r["시장"], r["티커"]), d: st[symOf(r["시장"], r["티커"])] }));
+  const ord = {buy:0, sell:1, wait:2, hold:3};
+  const near = d => { const z = (d?.zones || []).find(z => z.label !== "지지" && z.state === "above"); return z ? Math.abs(z.dist) : 99; };
+  return (S.csv?.rows || []).map((r, k) => ({ row:r, k, sym: symOf(r["시장"], r["티커"]), d: st[symOf(r["시장"], r["티커"])] }))
+    .sort((a, b) => ((ord[a.d?.action?.tone] ?? 9) - (ord[b.d?.action?.tone] ?? 9)) || (near(a.d) - near(b.d)) || (a.k - b.k));   // 할 일 있는 종목이 위로
 }
 
 /* 시장 카드: 한 문장 → 네 칸 막대(좋음 몇 개) → 네 줄(지수 추세·시장 폭·신고가/신저가·변동성) */
@@ -505,7 +542,7 @@ function marketCard(regs){
   const sp = g.spark || [], lo = Math.min(...sp), hi = Math.max(...sp), w = 120, h = 40;
   const line = sp.length > 1 ? sp.map((v, i) => `${(i / (sp.length - 1) * w).toFixed(1)},${(h - 3 - (v - lo) / ((hi - lo) || 1) * (h - 6)).toFixed(1)}`).join(" ") : "";
   const upc = sp.length > 1 && sp[sp.length - 1] >= sp[0];
-  return `<div class="sec-title" style="margin-top:var(--gap-section)">시장</div><div class="card mkt">
+  return `<div class="sec-cap">시장</div><div class="card mkt">
     ${regs.length > 1 ? `<div class="mtabs">${regs.map(([n], k) => `<button class="press ${k === cur ? "on" : ""}" data-mkt="${k}">${esc(MKT_TAB[n] || n)}</button>`).join("")}</div>` : ""}
     <div class="mh"><div><div class="sub">${esc(name)}</div><div class="mv">${g.close != null ? num(g.close, name === "S&P 500" ? "미국" : "코스피") : ""} <span class="chg ${g.chg >= 0 ? "up" : "down"}">${g.chg != null ? pct(g.chg) : ""}</span></div></div>
       ${line ? `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${line}" fill="none" stroke="${upc ? "var(--up)" : "var(--down)"}" stroke-width="1.8" stroke-linejoin="round"/></svg>` : ""}</div>
@@ -522,6 +559,14 @@ function spark(bars, chg){
   const p = c.map((v,i) => (i/(c.length-1)*w).toFixed(1) + "," + (h-2-(v-lo)/((hi-lo)||1)*(h-4)).toFixed(1)).join(" ");
   return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${p}" fill="none" stroke="${c[c.length-1]>=c[0]?"#F04452":"#3182F6"}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
+/* 목록용 짧은 할 일: '대기 · 148.18 오면 1차 40% 매수' → '148.18 오면 1차 40% · −2.6%' */
+const shortAct = a => {
+  const t = a.title || "", m = t.match(/^대기 · ([\d,.]+) 오면/);
+  if (m) return /^지금보다/.test(a.detail || "") ? `${m[1]}까지 ${a.detail.replace("지금보다 ", "")}` : `${m[1]} 오면 매수`;
+  const w = t.match(/^이번 주 ([\d,.]+) 위로 끝나면/);
+  if (w) return `이번 주 ${w[1]} 위면 매수`;
+  return t.replace(/ 매수/, "").replace(/ \(절반만\)/, " 절반");
+};
 const gradeTag = g => g ? `<span class="tag t-${esc(g.tone)}">${esc(g.label)}</span>` : "";
 
 function renderHome(){
@@ -530,26 +575,30 @@ function renderHome(){
   const skeleton = `<div class="list">${[0,1,2].map(() => `<div class="row"><div class="main"><div class="sk" style="width:40%;height:18px"></div><div class="sk" style="width:62%;height:14px;margin-top:8px"></div></div><div class="sk" style="width:64px;height:30px"></div></div>`).join("")}</div>`;
   $app.innerHTML = `<div class="wrap">
     <div class="ptr" id="ptr" aria-hidden="true"><span class="spin" style="margin-bottom:10px"></span></div>
-    <div class="navbar"><div class="side">${list.length ? `<button class="text-btn press" id="edit" style="margin-left:-6px;margin-right:0">${S.edit ? "완료" : "편집"}</button>` : ""}</div><span class="mini">rooru.invest</span><div class="side r"><button class="text-btn press" id="check" data-busy ${S.busy ? "disabled" : ""}>지금 점검</button></div></div>
-    <div class="title-block" data-anchor><h1 class="big">rooru.invest</h1><div class="sub">${d?.updated ? "오동엔진 마지막 점검 " + esc(d.updated) : "불러오는 중…"}</div></div>
+    <div class="navbar"><div class="side">${list.length ? `<button class="text-btn press" id="edit" style="margin-left:-6px;margin-right:0">${S.edit ? "완료" : "편집"}</button>` : ""}</div><span class="mini">rooru.invest</span><div class="side r"><button class="icon-btn press" id="check" aria-label="지금 점검" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button><button class="icon-btn press" id="add2" aria-label="기업 추가"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+    <div class="title-block" data-anchor><h1 class="big">rooru.invest</h1><div class="sub">${d?.updated ? esc(d.updated.slice(5).replace("-", "/")) + " 점검" : "불러오는 중…"}</div></div>
     ${S.err ? `<div class="err" role="alert">${esc(S.err)}</div>` : ""}
 
+    ${S.csv && list.length && list.some(x => x.d?.action) ? (() => { const nb = list.filter(x => x.d?.action?.tone === "buy").length, nw = list.filter(x => x.d?.action?.tone === "wait").length, ns = list.filter(x => x.d?.action?.tone === "sell").length;
+      const nh = list.filter(x => x.d?.action?.tone === "hold").length;
+      return `<div class="today"><div class="eyebrow">오늘</div><div class="big2">${nb ? `살 자리 ${nb}개` : "서둘러 살 종목 없음"}</div><div class="sub">${[nw ? `기다리기 ${nw}` : "", ns ? `주의 ${ns}` : "", nh ? `보유 ${nh}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"}</div></div><div class="sec-cap">내 종목</div>`; })() : ""}
     ${!S.csv ? skeleton : list.length ? `<div class="list ${S.edit ? "editing" : ""}" id="stocks">${list.map((x,i) => {
       const s = x.d, nm = x.row["이름"] || s?.name || x.row["티커"];
       const wrap = inner => `<div class="swipe ${S.justAdded === x.sym ? "enter" : ""}" data-sym="${esc(x.sym)}"><button class="act" tabindex="-1" aria-label="${esc(nm)} 삭제">삭제</button><div class="row press" role="button" tabindex="0" data-i="${i}"><span class="minus" role="button" aria-label="${esc(nm)} 삭제 버튼 보이기"></span>${inner}</div></div>`;
       if (!s) return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(x.row["티커"])}</span></div><div class="head sub">계산 대기 · 다음 점검 때 나옵니다</div></div>${CHEV}`);
       const tags = s.p1 ? `<span class="tag t-dark">${esc(s.plan_text)}</span>` : "";
       return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(s.ticker)}</span></div>
-        <div class="head">${gradeTag(s.grade)}<span>${esc(s.action?.title || s.head)}</span>${tags}</div></div>
+        <div class="head">${s.action ? `<span class="pill p-${esc(s.action.tone)}">${esc(s.action.state || "")}</span><span class="act1">${esc(shortAct(s.action))}</span>` : `${gradeTag(s.grade)}<span>${esc(s.head)}</span>`}${tags}</div></div>
         <div class="px">${spark(s.bars, s.chg)}<div><b>${num(s.price, s.market)}</b><span class="chg ${s.chg>=0?"up":"down"}">${pct(s.chg)}</span></div></div>`);
     }).join("")}</div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">줄을 왼쪽으로 밀면 삭제돼요</p>` : `<div class="empty card"><b>지켜볼 기업을 추가하세요</b>추가하면 오동엔진이 매수 구간을 계산하고, 구간에 오면 디스코드로 알려줍니다.</div>`}
-    <div style="margin-top:var(--gap-block)"><button class="btn primary press" id="add"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>기업 추가</button></div>
+    ${(LS.get("swipeHint", 0) < 3) ? `<p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">줄을 왼쪽으로 밀면 삭제돼요</p>` : ""}` : `<div class="empty card"><b>지켜볼 기업을 추가하세요</b>추가하면 오동엔진이 매수 구간을 계산하고, 구간에 오면 디스코드로 알려줍니다.</div>`}
+    <div class="list" style="margin-top:var(--gap-sub)"><button class="row press addrow" id="add"><span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>기업 추가</button></div>
     ${d?.errors?.length ? `<p class="note" style="margin:14px 4px">받지 못한 종목: ${d.errors.map(esc).join(", ")}</p>` : ""}
     ${regs.length ? marketCard(regs) : ""}
     <p class="note" style="margin:18px 4px 0;text-align:center">아래로 당기면 새로고침</p>
   </div>`;
   document.getElementById("add").onclick = openSearch;
+  const a2 = document.getElementById("add2"); if (a2) a2.onclick = openSearch;
   $app.querySelectorAll("[data-mkt]").forEach(b => b.onclick = () => { const y = scrollY; S.mkt = +b.dataset.mkt; renderHome(); scrollTo(0, y); });
   document.getElementById("check").onclick = async () => { try{ const t = await dispatch("앱-갱신"); waitRun(t, "전 종목 점검 중"); }catch(e){ toast(e.message); } };
   S.justAdded = null;
@@ -634,7 +683,7 @@ async function removeStock(sym){
    bars: [날짜, 시, 고, 저, 종, 50일선, 200일선, 거래량]  (EMA·볼린저·일목·RSI는 여기서 계산) */
 const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2년",500]];
 const AUX = new Set(["TP1","TP2","분할청산 · 14선","분할청산 · 21선","최종 청산 @SR","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파","갭 발생","모멘텀 BUY","PEG 발생","PEG 되돌림 매수","PEG 재돌파"]);   // 검증에서 평소와 같았던 표시는 기본으로 숨김
-const easy = w => String(w).replace(/(\d+)일선/g, "$1일 평균선").replace("돌파 자리", "예전에 뚫고 올라간 가격");
+const easy = w => String(w).replace(/(\d+)일선/g, "$1일 평균선").replace("돌파 자리", "돌파선");
 const isAux = t => AUX.has(t) || t.includes("삼각형") || t.includes("쐐기");
 const IND_LIST = [["ma","이평선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["pat","청산·패턴"]];   // 지표견이 쓰는 도구만
 const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:false}, LS.get("ind", {})); IND.bb = false; IND.rsi = false;
@@ -881,7 +930,7 @@ function renderDetail(sym){
   const name = row["이름"] || s?.name || row["티커"];
   $app.innerHTML = `<div class="wrap">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>종목</span></button></div><span class="mini">${esc(name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(name)}</h1><div class="sub">${esc(row["티커"])} · ${esc(mk)}${s ? " · " + esc(s.updated) + " 기준" : ""}</div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(name)}</h1><div class="sub">${esc(row["티커"])} · ${esc(mk)}${s ? " · " + esc(String(s.updated).slice(5).replace("-", "/")) : ""}</div>
       ${s ? `<div class="bigpx">${num(s.price, mk)} <span class="chg ${s.chg>=0?"up":"down"}" style="font-size:var(--t-body)">${pct(s.chg)}</span></div>` : ""}</div>
     ${s ? `
     <div class="stack">
@@ -1111,6 +1160,8 @@ function scorecard(list){
   const buys = list.filter(h => BUY_K.has(h.kind)), sells = list.filter(h => SELL_K.has(h.kind));
   const cell = (st, label) => st ? `<div class="sc-cell"><div class="sub">${label}</div><div class="sc-v ${st.avg>=0?"up":"down"}">${pct(st.avg)}</div><div class="sub">${st.n}건 · 오름 ${Math.round(st.win)}%</div></div>`
                                   : `<div class="sc-cell"><div class="sub">${label}</div><div class="sc-v" style="color:var(--fg3)">–</div><div class="sub">기록 중</div></div>`;
+  if (![stat(buys,"r20"), stat(buys,"r60"), stat(sells,"r20")].some(Boolean))
+    return `<div class="card"><b>알림 성적표</b><p class="note" style="margin:6px 0 0">보낸 알림의 20일 뒤 결과가 쌓이면 여기에 평균과 오른 비율이 나와요.</p></div>`;
   return `<div class="card"><div class="sc-grid">${cell(stat(buys,"r20"),"매수 · 20일")}${cell(stat(buys,"r60"),"매수 · 60일")}${cell(stat(sells,"r20"),"주의 · 20일")}</div>
     <p class="note" style="margin:var(--gap-inner) 0 0">오동엔진이 실제로 보낸 알림만 셉니다. 알림 날 종가에서 그 뒤 종가까지의 변화예요. 주의 신호는 이 값이 낮을수록 잘 맞힌 거예요.</p></div>`;
 }
@@ -1140,10 +1191,11 @@ async function renderAlerts(){
   const tabs = [["all","전체"],["buy","매수"],["sell","주의"],["news","뉴스"]];
   el.innerHTML = (S.alerts.length ? scorecard(S.alerts) : "") +
     `<div class="seg" role="tablist" style="margin:var(--gap-block) 0 var(--gap-caption)">${tabs.map(([k,t]) => `<button role="tab" data-f="${k}" aria-selected="${alertFilter===k}" class="${alertFilter===k?"on":""}">${t}</button>`).join("")}</div>` +
-    (list.length ? `<div class="list">${list.map((h,i) => `<button class="alert-row press row" data-sym="${esc(h.symbol)}" ${st[h.symbol] ? "" : "disabled"}><span class="ic">${ICON[h.kind]||"•"}</span><div style="flex:1;min-width:0"><div><b>${esc(nameOf(h))}</b> <span class="sub">${esc(h.title)}</span></div><div class="when">${esc(h.t)}${h.price!=null && h.kind!=="news" ? " · " + esc(num(h.price, (h.symbol||"").match(/\.K[SQ]$/) ? "코스피" : "미국")) : ""}</div></div>${res(h)}</button>`).join("")}</div>`
+    (list.length ? `<div class="list">${list.map((h,i) => `<button class="alert-row press row" data-sym="${esc(h.symbol)}" ${h.kind === "news" && h.link && !h.n ? `data-link="${esc(h.link)}"` : ""} ${st[h.symbol] || (h.kind === "news" && h.link) ? "" : "disabled"}><span class="ic">${ICON[h.kind]||"•"}</span><div style="flex:1;min-width:0"><div><b>${esc(nameOf(h))}</b> <span class="sub">${esc(h.title)}</span></div><div class="when">${esc(h.t)}${h.price!=null && h.kind!=="news" ? " · " + esc(num(h.price, (h.symbol||"").match(/\.K[SQ]$/) ? "코스피" : "미국")) : ""}</div></div>${res(h)}</button>`).join("")}</div>`
       : `<div class="card empty"><b>${S.alerts.length ? "이 종류 알림은 아직 없습니다" : "아직 보낸 알림이 없습니다"}</b>구간 도착·진입·이탈 신호가 생기면 여기에 남고, 그 뒤 결과가 채워집니다.</div>`);
   el.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { alertFilter = b.dataset.f; renderAlerts(); });
-  el.querySelectorAll("button[data-sym]:not([disabled])").forEach(b => b.onclick = () => go("push", () => S.detail = b.dataset.sym));
+  el.querySelectorAll("button[data-link]").forEach(b => b.onclick = ev => { ev.stopPropagation(); window.open(b.dataset.link, "_blank", "noopener"); });
+  el.querySelectorAll("button[data-sym]:not([disabled]):not([data-link])").forEach(b => b.onclick = () => go("push", () => S.detail = b.dataset.sym));
 }
 
 function renderSettings(){
@@ -1214,6 +1266,7 @@ async function checkVersion(){
 }
 addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
 setTimeout(checkVersion, 1500);
+try{ LS.set("swipeHint", (LS.get("swipeHint", 0) || 0) + 1); }catch(e){}
 function toast(msg, spin){
   document.querySelectorAll(".toast").forEach(t => t.remove());
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); t.setAttribute("aria-live","polite");
