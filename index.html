@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-59">
+<meta name="app-version" content="2026-10-16-60">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -115,7 +115,7 @@ body.sheet-open{background:#1D1D1F}
 @keyframes rowin{from{opacity:0;transform:translateY(-10px)}}
 .row .main{flex:1;min-width:0} a.row{text-decoration:none;color:inherit}
 .row .name{font-size:var(--t-body);font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .head .dist{color:var(--fg2)} .today .gate{margin-top:var(--gap-sub);padding-top:var(--gap-sub);border-top:1px solid var(--line);font-size:var(--t-small);color:var(--fg2)} .row .head{flex-wrap:nowrap;min-width:0} .row .head .pill{flex:none} .row .head .act1{font-size:var(--t-detail);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.row .head .dist{color:var(--fg2);margin-left:6px;font-variant-numeric:tabular-nums} .today .gate{margin-top:var(--gap-sub);padding-top:var(--gap-sub);border-top:1px solid var(--line);font-size:var(--t-small);color:var(--fg2)} .row .head{flex-wrap:nowrap;min-width:0} .row .head .pill{flex:none} .row .head .act1{font-size:var(--t-detail);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .sumline{font-size:var(--t-heading);font-weight:700;margin:0 4px var(--gap-inner)}
 .row .tk{font-size:var(--t-small);font-weight:400;color:var(--fg2)}
 .row .head{font-size:var(--t-detail);margin-top:var(--gap-text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -817,12 +817,12 @@ function spark(bars, chg){
   const p = c.map((v,i) => (i/(c.length-1)*w).toFixed(1) + "," + (h-2-(v-lo)/((hi-lo)||1)*(h-4)).toFixed(1)).join(" ");
   return `<svg class="spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline points="${p}" fill="none" stroke="${(chg ?? (c[c.length-1] - c[0])) >= 0 ? "var(--up)" : "var(--down)"}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
-/* 홈 줄 둘째 줄: 대기는 '232,000에 매수 · 7.6% 아래', 관망은 이유만 ('하락 중'). 가격은 상세 화면에 */
+/* 홈 줄 둘째 줄: 대기는 '232,000에 매수  −7.6%'(거리는 회색), 관망은 이유만 ('하락 중'). 가격은 상세 화면에 */
 const rowLine = s => {
   const t = s.timing, p = t.price;
   if (t.tone === "wait" && p && s.price){
-    const v = (p / s.price - 1) * 100, r = Math.abs(v);
-    return `${esc(num(p, s.market))}에 매수<span class="dist"> · ${r >= 10 ? Math.round(r) : r.toFixed(1)}% ${v < 0 ? "아래" : "위"}</span>`;
+    const v = (p / s.price - 1) * 100;
+    return `${esc(num(p, s.market))}에 매수<span class="dist">${esc(pct(v))}</span>`;
   }
   return esc(t.why || (p ? `${num(p, s.market)} 지켜보기` : ""));
 };
