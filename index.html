@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-27">
+<meta name="app-version" content="2026-10-16-28">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -675,6 +675,10 @@ function spark(bars, chg){
 /* 목록용 짧은 할 일: '대기 · 148.18 오면 1차 40% 매수' → '148.18 오면 1차 40% · −2.6%' */
 const shortAct = (a, price) => {
   const t = a.title || "", m = t.match(/^대기 · ([\d,.]+) 오면/);
+  if (a.start){   // 아직 안 산 종목: '1차 40% · 2차 −10%'
+    const w = (t.match(/1차 (\d+)%/) || [])[1];
+    return `지금 1차 ${w || 40}%`;   // 2차 자리는 상세 화면에
+  }
   if (m && price){   // 거리는 지금(실시간) 가격 기준으로 다시 잰다
     const v = (+m[1].replace(/,/g, "") / price - 1) * 100;
     return `${m[1]}까지 ${(v > 0 ? "+" : "") + (Math.abs(v) >= 10 ? Math.round(v) : v.toFixed(1))}%`;
