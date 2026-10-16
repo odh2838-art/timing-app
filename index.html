@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-55">
+<meta name="app-version" content="2026-10-16-56">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -241,6 +241,7 @@ body.sheet-open{background:#1D1D1F}
 .tpx{text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
 .tpx small{font-size:var(--t-small);color:var(--fg2)} .tpx b{font-size:var(--t-heading);font-weight:700;font-variant-numeric:tabular-nums}
 .kv.k3{grid-template-columns:repeat(2,1fr)}
+.tmiss{margin-top:12px;font-size:var(--t-small);color:var(--fg2)}
 .trisk{margin-top:12px;font-size:var(--t-small);font-weight:600;color:var(--wait)} .tdisc{margin-top:10px;font-size:calc(12rem/17);color:var(--fg3)}
 .adv{margin-top:var(--gap-section)}.adv>summary{list-style:none;cursor:pointer;color:var(--fg2);font-size:var(--t-small);font-weight:600;padding:12px var(--pad-card);min-height:44px}.adv>summary::-webkit-details-marker{display:none}
 .ferr{margin:6px 0 0;color:var(--sell);font-size:var(--t-small)} .tlink{align-self:center;color:var(--blue);font-size:var(--t-small);font-weight:600;padding:10px;min-height:44px;display:inline-flex;align-items:center}
@@ -1768,6 +1769,7 @@ function timingCard(s, pl, mk){
     ${bar}
     <div class="wdef" hidden>${WDEF.map(([w, d]) => `<div class="${w === t.title || (w === "마감 확인" && chk) ? "on" : ""}"><b>${w}</b><span>${d}</span></div>`).join("")}</div>
     ${kv.length ? `<div class="kv k3">${kv.map(([k, v, c, sm]) => `<div><span>${k}</span><b class="${c}">${v}</b>${sm ? `<small>${esc(sm)}</small>` : ""}</div>`).join("")}</div>` : ""}
+    ${t.title === "대기" && p ? `<div class="tmiss">60일 안에 닿은 건 10번 중 ${krm ? 6 : 5}번 · 오래 기다리면 놓칠 수 있어요</div>` : ""}
     ${tone === "buy" && (s.cautions || []).length ? `<div class="trisk">! ${esc((s.cautions.find(c => /약세|실적/.test(c)) || s.cautions[0]))}</div>` : ""}
     <div class="tdisc">참고용 · 투자 권유 아님</div></div>`;
 }
