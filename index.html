@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-5">
+<meta name="app-version" content="2026-10-17-6">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -882,9 +882,9 @@ function renderHome(){
           const lines = ["한국", "미국"].filter(has).map(m => {
             const t = TR[m], shut = G[m] === false;
             if (m === "한국" && d?.sonagi?.on) return `<b>한국 보유 절반 매도</b><br>소나기 · 과열 뒤 코스피 ${pct(d.sonagi.drop)}`;   // 엔진 trendsig.sonagi
-            if (t?.on && t.alert) return `<b>${m} 보유 절반 매도</b><br>${t.name} ${t.line}일선 아래${shut ? " · 새 매수 쉬기" : ""}`;
+            if (t?.on && t.alert) return `<b>${m} 보유 절반 매도</b><br>${t.name} ${t.line}일선 아래${shut ? " · 새로 사지 않기" : ""}`;
             if (t?.on) return `<b>${m} 참고</b> · ${t.name} ${t.line}일선 아래<br>낙폭 줄이려면 절반 매도`;
-            return shut ? `<b>${m} 새 매수 쉬기</b> · 시장 추세 꺾임` : "";
+            return shut ? `<b>${m} 새 매수 멈춤</b> · ${t?.name || (m === "한국" ? "코스피" : "S&P 500")} 단기 추세 약함 (21·55일 평균선)` : "";
           }).filter(Boolean);
           return lines.length ? lines.map(x => `<div class="gate">${x}</div>`).join("") : ""; })()}</div><div class="sec-cap">내 종목</div>`; })()
     : S.csv && list.length && list.some(x => x.d?.action) ? (() => { const nb = list.filter(x => x.d?.action?.tone === "buy" && x.d?.p1).length, nst = list.filter(x => x.d?.action?.tone === "buy" && !x.d?.p1).length, nw = list.filter(x => x.d?.action?.tone === "wait").length, ns = list.filter(x => x.d?.action?.tone === "sell").length;
@@ -1007,8 +1007,8 @@ const easy = w => String(w).replace(/(\d+)일 평균선/g, "$1일선").replace("
 const CORE = new Set(["추세 확인", "신고가 돌파", "재돌파", "변동성 돌파", "고점 돌파", "청산", "돌파 청산", "최종 청산", "200일선 이탈", "진입", "돌파 진입"]);
 const isAux = t => !CORE.has(t);   // 엔진 매수·매도 신호(와 추세 시작)만 기본으로 보이고, 나머지(분할청산·과열·모멘텀·패턴 등)는 '보조 표시'를 켜야 보임
 const IND_LIST = [["ma","평균선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["pat","보조 표시"]];   // 지표견이 쓰는 도구만
-const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:false}, LS.get("ind", {}));
-if (!LS.get("patOff3")){ IND.pat = false; LS.set("patOff3", 1); LS.set("ind", IND); }   // 청산·패턴 보조 표시는 기본으로 끔 — 매수·매도 신호가 묻히지 않게 (차트 설정에서 켤 수 있음)   // 지표견처럼 청산·패턴 표시를 기본으로 켬 (한 번만) IND.bb = false; IND.rsi = false;
+const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:true}, LS.get("ind", {}));
+if (!LS.get("patOn4")){ IND.pat = true; LS.set("patOn4", 1); LS.set("ind", IND); }   // 보조 표시(분할청산·과열·TP 등)는 작은 ▲▼로 보이고, 이름표는 매수·매도 신호 먼저 (1개월은 보조 2개까지)   // 지표견처럼 청산·패턴 표시를 기본으로 켬 (한 번만) IND.bb = false; IND.rsi = false;
 const DARK = () => { try { return matchMedia("(prefers-color-scheme: dark)").matches; } catch(e){ return false; } };
 const COL = {up:"#F04452", down:"#3182F6", e14:"#30B0C7", e21:"#FF9F0A", e55:"#8E8E93", s50:"#8E8E93", s200:"#AF52DE", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
 /* 차트 색: 밝은·어두운 화면 (SVG 속성에는 CSS 변수가 안 먹어서 그릴 때 고른다) */
