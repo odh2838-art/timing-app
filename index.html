@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-44">
+<meta name="app-version" content="2026-10-16-45">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -84,10 +84,10 @@ body.sheet-open{background:#1D1D1F}
 .sub{color:var(--fg2);font-size:var(--t-small)}
 .title-block .sub{display:block;margin-top:var(--gap-sub)}
 .title-block{padding:var(--gap-eyebrow) 0 var(--gap-block)}
-.icon-btn{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:2px;color:var(--blue);font-size:var(--t-body)}
+.icon-btn{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:2px;color:var(--blue);font-size:var(--t-body);white-space:nowrap}
 .text-btn{min-height:44px;display:inline-flex;align-items:center;gap:6px;color:var(--blue);font-size:var(--t-body);font-weight:600;margin-right:-6px;padding:0 6px}
 .text-btn:disabled{opacity:.45}
-.pill-btn{min-height:36px;background:var(--card);border-radius:999px;padding:6px 14px;font-size:var(--t-small);font-weight:600;color:var(--blue);box-shadow:0 0 0 1px var(--line) inset;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.pill-btn{min-height:44px;background:var(--card);border-radius:999px;padding:6px 14px;font-size:var(--t-small);font-weight:600;color:var(--blue);box-shadow:0 0 0 1px var(--line) inset;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
 .pill-btn.primary{background:var(--info-bg);color:var(--blue);box-shadow:none}
 .pill-btn:disabled{opacity:.45}
 
@@ -145,7 +145,7 @@ body.sheet-open{background:#1D1D1F}
 
 .tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--tab);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);box-shadow:0 -.5px 0 var(--line);display:flex;justify-content:center;padding:4px max(16px,env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20;transition:transform .3s var(--ease)}
 .tabbar.away{transform:translateY(110%)}
-.tabbar button{flex:1;max-width:160px;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:var(--fg3);transition:color .15s}
+.tabbar button{flex:1;max-width:160px;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:calc(11rem/17);font-weight:600;color:var(--fg3);transition:color .15s}
 .tabbar button.on{color:var(--blue)}
 .tabbar svg{width:24px;height:24px;transition:transform .2s var(--ease-out)}
 .tabbar button:active svg{transform:scale(.88)}
@@ -174,7 +174,7 @@ body.sheet-open{background:#1D1D1F}
 .dayln{margin-top:12px}.dayln svg{display:block;width:100%;height:92px;margin:6px 0}
 .dlh{display:flex;justify-content:space-between;align-items:center;font-variant-numeric:tabular-nums}
 .live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--buy);margin-right:6px;vertical-align:1px}
-.advr{display:flex;align-items:baseline;gap:8px;margin-top:10px}.advr b{font-size:var(--t-title);font-variant-numeric:tabular-nums}
+.advr{display:flex;align-items:baseline;gap:8px;margin-top:10px;flex-wrap:wrap}.advr b{white-space:nowrap;font-size:var(--t-title);font-variant-numeric:tabular-nums}
 #fseg button.on{background:var(--thumb);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .frow{align-items:flex-start}.fsig{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.fmeta{margin-top:4px}
 .fpx{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;font-variant-numeric:tabular-nums}
@@ -216,6 +216,7 @@ body.sheet-open{background:#1D1D1F}
 .tpx{text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
 .tpx small{font-size:var(--t-small);color:var(--fg2)} .tpx b{font-size:var(--t-heading);font-weight:700;font-variant-numeric:tabular-nums}
 .kv.k3{grid-template-columns:repeat(3,1fr)}
+.adv{margin-top:var(--gap-section)}.adv>summary{list-style:none;cursor:pointer;color:var(--fg2);font-size:var(--t-small);font-weight:600;padding:12px var(--pad-card);min-height:44px}.adv>summary::-webkit-details-marker{display:none}
 .ameta{margin-top:10px;font-size:var(--t-small);color:var(--fg2)}
 .story .cap{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
 .story .sh{margin-top:6px;font-size:20px;font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
@@ -266,10 +267,10 @@ details.more>summary::-webkit-details-marker{display:none}
 .plot:active{cursor:grabbing}
 .plot svg{display:block}
 .seg{position:relative;display:flex;background:var(--fill);border-radius:10px;padding:3px;margin:0 10px var(--gap-inner)}
-.seg button{flex:1;position:relative;z-index:1;min-height:36px;font-size:var(--t-small);font-weight:600;color:var(--fg)}
+.seg button{flex:1;position:relative;z-index:1;min-height:40px;font-size:var(--t-small);font-weight:600;color:var(--fg)}
 .seg .thumb{position:absolute;top:3px;bottom:3px;left:3px;width:0;background:var(--thumb);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:transform .32s var(--ease),width .32s var(--ease),opacity .2s}
 .inds{display:flex;gap:var(--gap-sub);flex-wrap:wrap;padding:0 10px;margin-top:var(--gap-inner)}
-.chip{min-height:36px;padding:0 14px;border-radius:999px;background:var(--fill);font-size:var(--t-small);font-weight:600;color:var(--fg2);transition:background-color .2s,color .2s,transform .16s var(--ease-out)}
+.chip{min-height:44px;padding:0 14px;border-radius:999px;background:var(--fill);font-size:var(--t-small);font-weight:600;color:var(--fg2);transition:background-color .2s,color .2s,transform .16s var(--ease-out)}
 .chip[aria-pressed=true]{background:var(--info-bg);color:var(--info)}
 .chart .readout{display:flex;gap:4px 12px;font-size:var(--t-small);line-height:1.45;color:var(--fg2);padding:0 10px var(--gap-sub);height:calc(2 * 1.45 * var(--t-small) + var(--gap-sub));overflow:hidden;align-content:flex-start;align-items:baseline;flex-wrap:wrap;row-gap:0}
 .chart .readout b{color:var(--fg)}
@@ -360,6 +361,8 @@ details.more>summary::-webkit-details-marker{display:none}
 .row .head .pill{font-size:12px;padding:2px 8px}
 #stocks .row .head{flex-wrap:nowrap}
 #stocks .spark{width:44px}
+@media (max-width:400px){#stocks .spark{display:none}}   /* 좁은 화면·큰 글씨: 기다릴 가격이 잘리지 않게 작은 선 그래프를 뺀다 */
+#stocks .row .head .act1{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 
 /* 내 기록: iOS 설정 화면처럼 '이름 왼쪽 · 값 오른쪽' 줄 목록 */
 #form.form{display:flex;flex-direction:column;gap:0}
@@ -583,7 +586,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const isKR = m => m === "코스피" || m === "코스닥";
 const tick = v => v < 2000 ? 1 : v < 5000 ? 5 : v < 20000 ? 10 : v < 50000 ? 50 : v < 200000 ? 100 : v < 500000 ? 500 : 1000;   // 한국 호가 단위 (2023~)
 const num = (v, mk) => v == null || isNaN(v) ? "-" : (isKR(mk) ? (Math.round(v / tick(v)) * tick(v)).toLocaleString("ko-KR") : (+v).toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}));
-const pct = v => v == null || isNaN(v) ? "-" : (v > 0 ? "+" : "") + v.toFixed(1) + "%";
+const pct = v => v == null || isNaN(v) ? "-" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%";
 const strip = s => String(s).replace(/\*\*/g, "");
 const TONE_DOT = {buy:"var(--buy)", sell:"var(--sell)", wait:"var(--wait)", hold:"var(--fg3)"};
 const REG_DOT = {"양호":"var(--buy)", "보통":"var(--wait)", "약세":"var(--sell)"};
@@ -723,7 +726,7 @@ function marketCard(regs){
     ${g.adv ? `<div class="advr"><span class="sub">오늘 오른 종목</span><b>${Math.round(g.adv.pct)}%</b><span class="sub">${g.adv.up + g.adv.down}개 중 ${g.adv.up}개</span></div>` : ""}
     <div class="sub" style="margin-top:16px">최근 몇 주 흐름 <span style="color:var(--fg3)">· 오늘 하루와 다를 수 있어요</span></div>
     <div class="mhl" style="margin-top:2px">${esc(g.headline || "")}</div>
-    ${g.washout ? `<div class="wash"><b>🧯 시장 투매 바닥</b><span>12년 동안 이런 날 뒤 60일은 대체로 올랐어요. 남은 2·3차를 한 차수씩 나눠 사요.</span></div>` : ""}
+    ${g.washout ? `<div class="wash"><b>🧯 시장 투매 바닥</b><span>12년 동안 이런 날 뒤 60일은 대체로 올랐어요. 나눠서 사기 좋은 때예요.</span></div>` : ""}
     <div class="mread"><b>${g.rows.length}개 중 ${g.good}개 좋음</b><span class="sub">${g.weak ? `약한 것 ${g.weak}개` : "약한 것 없음"}</span></div>
     <div class="mbar">${g.rows.map(x => `<i class="${BADGE[x.badge] || ""}"></i>`).join("")}</div>
     ${g.rows.map(x => `<div class="mrow"><div><b>${esc(x.name)}</b><div class="sub">${esc(x.sub)}</div></div><div class="mval"><span>${esc(x.value)}</span><span class="badge ${BADGE[x.badge] || ""}">${esc(x.badge)}</span></div></div>`).join("")}
@@ -782,8 +785,8 @@ function renderHome(){
     <div class="title-block" data-anchor><h1 class="big">rooru.invest</h1><div class="sub">${d?.updated ? esc(d.updated.slice(5).replace("-", "/")) + " 점검" : S.err ? "" : "불러오는 중…"}</div></div>
     ${S.err && S.csv ? `<div class="err" role="alert">불러오지 못한 것이 있어요 · 아래로 당겨 다시 시도</div>` : ""}
 
-    ${S.csv && list.length && list.some(x => x.d?.timing) ? (() => { const T = k => list.filter(x => x.d?.timing?.tone === k).length, nc = list.filter(x => x.d?.timing?.title === "확인 중").length, nb = T("buy"), nw = T("wait") - nc, ns = T("sell");
-      return `<div class="today"><div class="eyebrow">오늘</div><div class="big2">${nb ? `매수 ${nb}종목` : "매수할 종목 없음"}</div><div class="sub">${[nc ? `확인 중 ${nc}` : "", nw ? `대기 ${nw}` : "", ns ? `관망 ${ns}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"}</div></div><div class="sec-cap">내 종목</div>`; })()
+    ${S.csv && list.length && list.some(x => x.d?.timing) ? (() => { const T = k => list.filter(x => x.d?.timing?.tone === k).length, nc = list.filter(x => ["확인 중", "마감 확인"].includes(x.d?.timing?.title)).length, nb = T("buy"), nw = T("wait") - nc, ns = T("sell");
+      return `<div class="today"><div class="eyebrow">오늘</div><div class="big2">${nb ? `매수 ${nb}종목` : "매수할 종목 없음"}</div><div class="sub">${[nc ? `마감 확인 ${nc}` : "", nw ? `대기 ${nw}` : "", ns ? `관망 ${ns}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"}</div></div><div class="sec-cap">내 종목</div>`; })()
     : S.csv && list.length && list.some(x => x.d?.action) ? (() => { const nb = list.filter(x => x.d?.action?.tone === "buy" && x.d?.p1).length, nst = list.filter(x => x.d?.action?.tone === "buy" && !x.d?.p1).length, nw = list.filter(x => x.d?.action?.tone === "wait").length, ns = list.filter(x => x.d?.action?.tone === "sell").length;
       const nh = list.filter(x => x.d?.action?.tone === "hold").length;
       return `<div class="today"><div class="eyebrow">오늘</div><div class="big2">${nb ? `추가 매수 자리 ${nb}개` : nst ? `첫 매수 가능 ${nst}개` : "서둘러 살 종목 없음"}</div><div class="sub">${[nb && nst ? `첫 매수 가능 ${nst}` : "", nw ? `기다리기 ${nw}` : "", ns ? `주의 ${ns}` : "", nh ? `보유 ${nh}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"}</div></div><div class="sec-cap">내 종목</div>`; })() : ""}
@@ -793,7 +796,7 @@ function renderHome(){
       if (!s) return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(x.row["티커"])}</span></div><div class="head sub">계산 대기 · 다음 점검 때 나옵니다</div></div>${CHEV}`);
       const tags = s.p1 && !s.timing ? `<span class="tag t-dark">${esc(s.plan_text)}</span>` : "";
       return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(s.ticker)}</span></div>
-        <div class="head">${s.timing ? `<span class="pill p-${s.timing.title === "확인 중" ? "info" : s.timing.tone === "sell" ? "hold" : esc(s.timing.tone)}">${esc(s.timing.title)}</span><span class="act1">${esc(s.timing.price && s.timing.tone !== "buy" ? `${num(s.timing.price, s.market)}까지 ${(v => (v > 0 ? "+" : "") + (Math.abs(v) >= 10 ? Math.round(v) : v.toFixed(1)) + "%")((s.timing.price / s.price - 1) * 100)}` : s.timing.why || "")}</span>` : s.action ? `<span class="pill p-${esc(s.action.tone)}">${esc(stName(s.action.state, !!s.p1))}</span><span class="act1">${esc(shortAct(s.action, s.price))}</span>` : `${gradeTag(s.grade)}<span>${esc(s.head)}</span>`}${tags}</div></div>
+        <div class="head">${s.timing ? `<span class="pill p-${["확인 중", "마감 확인"].includes(s.timing.title) ? "info" : s.timing.tone === "sell" ? "hold" : esc(s.timing.tone)}">${esc(s.timing.title)}</span><span class="act1">${esc(s.timing.price && s.timing.tone !== "buy" ? `${num(s.timing.price, s.market)}까지 ${pct((s.timing.price / s.price - 1) * 100)}` : s.timing.why || "")}</span>` : s.action ? `<span class="pill p-${esc(s.action.tone)}">${esc(stName(s.action.state, !!s.p1))}</span><span class="act1">${esc(shortAct(s.action, s.price))}</span>` : `${gradeTag(s.grade)}<span>${esc(s.head)}</span>`}${tags}</div></div>
         <div class="px">${spark(s.bars, s.chg)}<div><b>${num(s.price, s.market)}</b><span class="chg ${s.chg>=0?"up":"down"}">${pct(s.chg)}</span></div></div>`);
     }).join("")}</div>
     ${(LS.get("swipeHint", 0) < 3) ? `<p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">줄을 왼쪽으로 밀면 삭제돼요</p>` : ""}` : `<div class="empty card"><b>지켜볼 기업을 추가하세요</b>추가하면 오동엔진이 매수 구간을 계산하고, 구간에 오면 디스코드로 알려줍니다.</div>`}
@@ -968,7 +971,7 @@ function mountChart(box, s){
     if (IND.ch) it.push(["20일 채널", COL.bb]);
     if (IND.ich) it.push(["일목 구름", "#30B566"]);
     it.push(["매수 구간", "rgba(27,138,74,.35)"]);
-    if (s.sig_help) it.push(["매수 신호", "#1B8A4A"], ["익절 신호", "#B26A00"], ["참고", "#7C7C82"]);
+    if (s.sig_help) it.push(["매수 신호", "#1B8A4A"], ["덜기 신호", "#B26A00"], ["참고", "#7C7C82"]);
     if (s.sr_line) it.push(["SR 손절선", "#8B5E3C"]);
     if (s.wall) it.push(["위쪽 벽", "#D22F3C"]);
     $leg.innerHTML = it.map(([t,c]) => `<span><i style="background:${c}"></i>${t}</span>`).join("");
@@ -992,8 +995,8 @@ function mountChart(box, s){
     const y = v => T + (hi - v) / (hi - lo) * (H0 - T - 6);
     let g = `<defs><clipPath id="cp"><rect x="${L}" y="0" width="${W - L - R}" height="${H0}"/></clipPath><clipPath id="cpv"><rect x="${L}" y="${H0}" width="${W - L - R}" height="${H - H0}"/></clipPath></defs>`;   // 가격 선이 거래량 칸으로 넘어가지 않게
     const lastY = y(s.price ?? bars[N-1][4]), zt = (s.zones || []).find(z => z.label !== "지지" && z.state === "above"), ztY = zt ? y(zt.hi) : -999;
-    const raw = (hi - lo) / 4, mag = Math.pow(10, Math.floor(Math.log10(raw))), stp = [1, 2, 2.5, 5, 10].map(m => m * mag).find(v => v >= raw) || raw;   // 눈금은 둥근 값
-    for (let v = Math.ceil(lo / stp) * stp; v < hi; v += stp){ if (y(v) < T || Math.abs(y(v) - lastY) < 16 || Math.abs(y(v) - ztY) < 16) continue; g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${TP.grid}" stroke-width=".6"/><text x="${W-R+6}" y="${y(v)+4}" font-size="13" fill="${COL.axis}">${num(v, s.market)}</text>`; }
+    const raw = (hi - lo) / 6, mag = Math.pow(10, Math.floor(Math.log10(raw))), stp = [1, 2, 2.5, 5, 10].map(m => m * mag).find(v => v >= raw) || raw;   // 눈금은 둥근 값 (3~5개)
+    for (let v = Math.ceil(lo / stp) * stp; v < hi; v += stp){ if (Math.abs(v) < stp * 1e-6) v = 0; if (v <= 0 || y(v) < T || Math.abs(y(v) - lastY) < 16 || Math.abs(y(v) - ztY) < 16) continue; g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${TP.grid}" stroke-width=".6"/><text x="${W-R+6}" y="${y(v)+4}" font-size="13" fill="${COL.axis}">${num(v, s.market)}</text>`; }
     let p = `<g clip-path="url(#cp)">`;
     zones.forEach(z => { if (z.hi >= lo && z.lo <= hi) p += `<rect x="${L}" y="${y(z.hi)}" width="${W-L-R}" height="${Math.max(2, y(z.lo) - y(z.hi))}" fill="#1B8A4A" opacity=".12"/>`; });
     const path = (arr, col, w = 1.5, dash = "") => { let d = ""; for (let i = Math.max(0, i0 - 1); i <= Math.min(N - 1, i1 + 1); i++){ if (arr[i] == null){ continue; } d += (d ? "L" : "M") + x(i).toFixed(1) + " " + y(arr[i]).toFixed(1); } return d ? `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" ${dash ? `stroke-dasharray="${dash}"` : ""}/>` : ""; };
@@ -1021,7 +1024,7 @@ function mountChart(box, s){
     for (let i = i0; i <= i1; i++){ const b = bars[i], col = b[4] >= b[1] ? COL.up : COL.down, top = y(Math.max(b[1], b[4])), bh = Math.max(1, Math.abs(y(b[1]) - y(b[4])));
       p += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width="${cw > 6 ? 1 : .8}"/><rect x="${x(i) - bw/2}" y="${top}" width="${bw}" height="${bh}" fill="${col}"${s.live && i === N - 1 ? ' opacity=".5"' : ""}/>`; }
     for (let i = i0; i <= i1; i++) if (ind.nh[i]) p += `<circle cx="${x(i)}" cy="${y(bars[i][2]) - 5}" r="1.8" fill="${COL.up}" opacity=".8"/>`;
-    zones.forEach(z => { if (z.lo <= hi && z.lo >= lo) p += `<text x="${L+6}" y="${Math.min(H0-8, y(z.lo) + 16)}" font-size="13" font-weight="600" fill="${TP.zone}" stroke="${TP.halo}" stroke-width="3" paint-order="stroke">${esc(zoneName(s, z))}</text>`; });
+    /* 구간 이름 글자는 차트에 쓰지 않는다: 초록 띠 + 오른쪽 초록 가격표가 같은 뜻 (봉을 가리지 않게) */
     /* 신호 말풍선 (보이는 것 중 최근 6개, 겹치지 않게) */
     const C = TP.chip, boxes = [];
     const hit = a => boxes.some(b => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3);
@@ -1045,7 +1048,9 @@ function mountChart(box, s){
       boxes.push({x:cx - w/2, y:by, w, h:hh, t:text, i}); const on = sel && sel.t === text && sel.i === i;
       p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="5" fill="${on ? fg : bg}" opacity=".95"/><text x="${cx}" y="${by + 12.5}" font-size="10.5" font-weight="600" fill="${on ? "#fff" : fg}" text-anchor="middle">${esc(text)}</text>`;
     };
-    const SH = s.sig_help, col_ = m => SH ? (SH[m[1]]?.act || m[2]) : m[2];   // 색 = 할 일: 초록 사는 신호 · 주황 조절분 덜기 · 회색 참고만
+    // 매수 신호 뒤 종가가 12% 넘게 더 빠졌으면 실패한 신호 → 회색으로 (지난 초록 표시가 지금 판정과 엇갈리지 않게)
+    const failed = m => { const i = idx[m[0]]; if (i == null) return false; const c0 = bars[i][4]; for (let k = i + 1; k < N; k++) if (bars[k][4] < c0 * 0.88) return true; return false; };
+    const SH = s.sig_help, col_ = m => { const a = SH ? (SH[m[1]]?.act || m[2]) : m[2]; return a === "buy" && failed(m) ? "none" : a; };   // 색 = 할 일: 초록 사는 신호 · 주황 조절분 덜기 · 회색 참고만
     if (IND.sig !== false) {  // 차트를 가리지 않게: 표시는 봉 위아래 작은 점(▲ 매수 쪽, ▼ 주의 쪽), 글자는 가장 최근 2개만. 날짜를 짚으면 그날 표시가 위에 나옴
       const vis = (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1 && (IND.pat || !isAux(m[1])) && (i1 - i0 <= 130 || !SH || ["buy", "trim"].includes(col_(m))));
       if (sel && !(idx[sel.d] >= i0 && idx[sel.d] <= i1)) showSig(null);
@@ -1057,7 +1062,8 @@ function mountChart(box, s){
       const rk = m => ({buy:0, trim:1}[col_(m)] ?? 2);   // 자리가 모자라면 사는 신호·덜기 신호 먼저
       const span = i1 - i0, byPri = [...vis].sort((a, b) => (rk(a) - rk(b)) || (isAux(a[1]) - isAux(b[1])) || (idx[b[0]] - idx[a[0]]));
       if (sel && idx[sel.d] != null) { const m = vis.find(m => m[1] === sel.t && m[0] === sel.d); if (m) chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"); }   // 고른 신호는 꼭 보이게
-      if (span <= 32) byPri.forEach(m => chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"));                  // 1개월쯤: 모든 표시에 이름표
+      let ng = 0;
+      if (span <= 32) byPri.forEach(m => { if (SH && !["buy", "trim"].includes(col_(m)) && ++ng > 2) return; chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"); });                  // 1개월쯤: 모든 표시에 이름표
       else if (span <= 70) byPri.filter(m => !isAux(m[1])).forEach(m => chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"));   // 3개월: 매수·주의 신호만
       else byPri.slice(0, 1).forEach(m => chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"));
     }
@@ -1087,7 +1093,7 @@ function mountChart(box, s){
       g += `<line x1="${x(i)}" x2="${x(i)}" y1="${T - 8}" y2="${H - AX}" stroke="${TP.ink}" stroke-width=".7" stroke-dasharray="2 2"/>`;
       if (yy >= 0 && yy <= H0) g += `<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="${TP.ink}" stroke-width=".7" stroke-dasharray="2 2"/><circle cx="${x(i)}" cy="${yy}" r="3.5" fill="${TP.ink}"/><rect x="${W-R+2}" y="${yy-11}" width="${R-2}" height="22" rx="6" fill="${TP.ink}"/><text x="${W-R+7}" y="${yy+5}" font-size="13" font-weight="600" fill="${TP.inkOn}">${num(b[4], s.market)}</text>`;
       const pv = bars[i-1], ch = pv ? (b[4] / pv[4] - 1) * 100 : 0;
-      $read.innerHTML = `<b>${b[0].slice(2).replace(/-/g, ".")}${s.live && i === N - 1 ? " 장중" : ""}</b><span><b>${num(b[4], s.market)}</b> <span class="${ch >= 0 ? "up" : "down"}">${pct(ch)}</span></span><span>고 ${num(b[2], s.market)} · 저 ${num(b[3], s.market)}</span>${IND.rsi && ind.rsi[i] != null ? `<span>RSI ${ind.rsi[i].toFixed(0)}</span>` : ""}`;
+      $read.innerHTML = `<b>${b[0].slice(5).replace(/-/g, ".")}${s.live && i === N - 1 ? " 장중" : ""}</b><span><b>${num(b[4], s.market)}</b> <span class="${ch >= 0 ? "up" : "down"}">${pct(ch)}</span></span><span>고 ${num(b[2], s.market)} · 저 ${num(b[3], s.market)}</span>${IND.rsi && ind.rsi[i] != null ? `<span>RSI ${ind.rsi[i].toFixed(0)}</span>` : ""}`;
       { const dm = (s.marks || []).filter(m => m[0] === b[0]); if (dm.length) $read.innerHTML += dm.map(m => { const a = (s.sig_help || {})[m[1]]?.act; return `<span class="mk c-${a ? ({buy:"buy", trim:"wait"}[a] || "sub") : m[2] === "buy" ? "buy" : m[2] === "sell" ? "sell" : "info"}">${esc(m[1])}</span>`; }).join(""); }
     } else {
       const a = bars[i0][0], z = bars[i1][0];
@@ -1107,7 +1113,7 @@ function mountChart(box, s){
     if (key === selKey) return; selKey = key;
     const h = x && (s.sig_help || {})[x.t];
     if (!h){ sel = null; $sigm.hidden = true; $sigm.innerHTML = ""; return; }
-    const [pc, pv] = {buy: ["p-buy", "매수 신호"], trim: ["p-wait", "익절 신호"]}[h.act] || ["p-hold", "참고"];
+    const [pc, pv] = {buy: ["p-buy", "매수 신호"], trim: ["p-wait", "덜기 신호"]}[h.act] || ["p-hold", "참고"];
     $sigm.innerHTML = `<div class="sm-h"><span class="pill ${pc}">${pv}</span><b>${esc(x.t)}</b><span class="d">${+x.d.slice(5,7)}/${+x.d.slice(8)}</span><button class="x press" aria-label="닫기">✕</button></div>
       <div class="sm-w">${esc(h.what)}</div><div class="sm-a"><b>${esc(h.advice)}</b> <span class="sub">· ${esc(h.proof.replace("검증: ", ""))}</span></div>`;
     $sigm.hidden = false;
@@ -1445,7 +1451,7 @@ function scorecard(list){
   if (![stat(buys,"r20"), stat(buys,"r60"), stat(sells,"r20")].some(Boolean))
     return `<div class="card"><b>알림 성적표</b><p class="note" style="margin:6px 0 0">보낸 알림의 20일 뒤 결과가 쌓이면 여기에 평균과 오른 비율이 나와요.</p></div>`;
   return `<div class="card"><div class="sc-grid">${cell(stat(buys,"r20"),"매수 · 20일")}${cell(stat(buys,"r60"),"매수 · 60일")}${cell(stat(sells,"r20"),"주의 · 20일")}</div>
-    <p class="note" style="margin:var(--gap-inner) 0 0">오동엔진이 실제로 보낸 알림만 셉니다. 알림 날 종가에서 그 뒤 종가까지의 변화예요. 주의 신호는 이 값이 낮을수록 잘 맞힌 거예요.</p></div>`;
+    <p class="note" style="margin:var(--gap-inner) 0 0">보낸 알림 날 종가부터 그 뒤 종가까지의 변화예요.</p></div>`;
 }
 
 /* 알림을 날짜별로: 오늘 · 어제 · 10월 14일 (목) */
@@ -1488,10 +1494,10 @@ async function renderFind(){
     (items.length ? `<div class="list">${items.map((it, i) => { const on = have.has(symOf(mkOf(it), code(it)));
       return `<div class="row frow"><div class="main"><div class="name">${esc(nice(it))} <span class="tk">${esc(code(it))}</span></div>
         <div class="fsig">${it.signals.map(x => `<span class="tag t-buy">${esc(x)}</span>`).join("")}<span class="sub">${esc(it.why || "")}</span></div>
-        <div class="sub fmeta">${[it.rs != null ? `힘 상위 ${Math.max(1, 100 - it.rs)}%` : "", it.hi52 != null ? `고점 ${pct(it.hi52)}` : "", it.trend === "정배열" ? "추세 좋음" : it.trend === "역배열" ? "추세 나쁨" : "", it.grade ? "확신 " + it.grade : ""].filter(Boolean).join(" · ")}</div></div>
+        <div class="sub fmeta">${[it.rs != null ? `힘 상위 ${Math.max(1, 100 - it.rs)}%` : "", it.hi52 != null ? `고점 ${pct(it.hi52)}` : "", it.pe ? `PER ${it.pe}` : ""].filter(Boolean).join(" · ")}</div></div>
         <div class="fpx"><b>${num(it.price, mkOf(it))}</b><span class="chg ${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span>
         <button class="pill-btn ${on ? "" : "primary"} press" data-i="${i}" ${on ? "disabled" : ""}>${on ? "등록됨" : "추가"}</button></div></div>`; }).join("")}</div>`
-      : `<div class="empty card"><b>오늘은 매수 자리가 뜬 종목이 없어요</b>${mk === "한국" ? "한국은 투매·2차 테스트·깊은 눌림처럼 드문 자리만 골라서 빈 날이 많아요." : "장 마감 뒤 다시 확인해 주세요."}</div>`);
+      : `<div class="empty card"><b>오늘은 매수 자리가 뜬 종목이 없어요</b>${mk === "한국" ? "한국은 드문 자리만 골라요." : "장 마감 뒤 다시 확인해 주세요."}</div>`);
   el.querySelectorAll(".pill-btn[data-i]:not([disabled])").forEach(b => b.onclick = async () => {
     const it = items[+b.dataset.i]; b.disabled = true; b.innerHTML = `<span class="spin"></span>`;
     try{ await addStock(mkOf(it), code(it), it.name); b.textContent = "등록됨"; b.classList.remove("primary"); }
@@ -1522,7 +1528,7 @@ async function renderAlerts(){
   const res = h => { const k = h.r60 != null ? "r60" : h.r20 != null ? "r20" : h.r5 != null ? "r5" : null; if (!k || h.kind === "news") return "";
     return `<span class="res ${h[k]>=0?"up":"down"}">${pct(h[k])}<span class="sub"> ${k.slice(1)}일</span></span>`; };
   const nm = {}; (S.csv?.rows || []).forEach(r => nm[symOf(r["시장"], r["티커"])] = r["이름"]);
-  const nameOf = h => nm[h.symbol] || shortName(h.name, h.symbol, /\.K[SQ]$/.test(h.symbol || "") ? "코스피" : "미국");
+  const nameOf = h => shortName(nm[h.symbol] || h.name, h.symbol, /\.K[SQ]$/.test(h.symbol || "") ? "코스피" : "미국");
   const clean = t => String(t).replace(/\d차 (매수 )?구간/g, "매수 구간").replace(/\d차 /g, "");
   const tabs = [["all","전체"],["buy","매수"],["sell","주의"],["news","뉴스"]];
   el.innerHTML = (S.alerts.length ? scorecard(S.alerts) : "") +
@@ -1538,31 +1544,35 @@ function renderSettings(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">설정</span><div class="side r"></div></div>
     <div class="title-block" data-anchor><h1 class="big">설정</h1></div>
     <div class="list">
-      <div class="row"><div class="main"><div class="sub">엔진 저장소</div><b>${esc(S.repo)}</b></div></div>
-      <a class="row press" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener"><span class="main" style="color:var(--blue)">실행 기록 보기</span><svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg></a>
       <button class="row press" id="hello"><span class="main" style="color:var(--blue)">디스코드 연결 확인</span></button>
       <button class="row press" id="recat"><span class="main" style="color:var(--blue)">기업 검색 목록 새로 받기</span></button>
     </div>
-    <div class="sec-title">실시간 시세</div>
-    <div class="list">
-      <div class="row"><div class="main"><label class="sub" for="qurl">중계 주소 (Cloudflare Worker)</label>
-        <input id="qurl" class="qurl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://....workers.dev" value="${esc(LS.get("qurl", ""))}"></div></div>
-      <button class="row press" id="qsave"><span class="main" style="color:var(--blue)">저장하고 시험하기</span></button>
-    </div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">연결하면 장중 1분마다 시세가 바뀌어요. 한국은 네이버, 미국은 야후 기준. 비우면 엔진이 30분마다 갱신해요.</p>
     <div class="sec-title">자동 점검 (한국 시간)</div>
     <div class="list">
       <div class="row"><div class="main"><b>한국장</b><div class="sub">10:30 · 13:00 · 14:50 · 마감 후 15:50</div></div></div>
       <div class="row"><div class="main"><b>미국장</b><div class="sub">23:50 · 01:50 · 03:50 · 마감 후 07:10</div></div></div>
       <div class="row"><div class="main"><b>주간 요약</b><div class="sub">토요일 09:00</div></div></div>
     </div>
-    <div class="list" style="margin-top:var(--gap-section)">
+    <details class="adv"><summary class="press">고급</summary>
+    <div class="list" style="margin-top:var(--gap-sub)">
+      <div class="row"><div class="main"><div class="sub">엔진 저장소</div><b>${esc(S.repo)}</b></div></div>
+      <a class="row press" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener"><span class="main" style="color:var(--blue)">실행 기록 보기</span><svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg></a>
+    </div>
+    <div class="sec-title">실시간 시세</div>
+    <div class="list">
+      <div class="row"><div class="main"><label class="sub" for="qurl">시세 중계 주소</label>
+        <input id="qurl" class="qurl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://....workers.dev" value="${esc(LS.get("qurl", ""))}"></div></div>
+      <button class="row press" id="qsave"><span class="main" style="color:var(--blue)">저장하고 시험하기</span></button>
+    </div>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">연결하면 장중 1분마다 시세가 바뀌어요. 한국은 네이버, 미국은 야후 기준. 비우면 엔진이 30분마다 갱신해요.</p>
+    <div class="list" style="margin-top:var(--gap-block)">
       <button class="row press" id="out"><span class="main" style="color:var(--sell)">토큰 지우기</span></button>
     </div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">토큰은 이 기기에만 저장돼요. 지워도 다시 넣으면 그대로 돌아와요.</p>
+    </details>
     <p class="note" style="margin:18px 4px">모든 내용은 미리 정한 규칙을 기계적으로 적용한 참고 자료이며 투자 자문이 아닙니다. 매수 이유와 최종 결정은 직접 합니다.</p>
   </div>`;
-  document.getElementById("hello").onclick = async () => { try{ await dispatch("hello"); toast("1–2분 뒤 디스코드에 오동엔진 인사가 오면 연결된 것입니다"); }catch(e){ toast(e.message); } };
+  document.getElementById("hello").onclick = async () => { try{ await dispatch("hello"); toast("1–2분 안에 디스코드로 인사가 오면 연결된 거예요"); }catch(e){ toast(e.message); } };
   document.getElementById("recat").onclick = async (ev) => { const b = ev.currentTarget; b.disabled = true; LS.del("catalog"); try{ const r = await catalog(); toast(r.length.toLocaleString() + "개 기업을 받았습니다"); }catch(e){ toast(e.message); } b.disabled = false; };
   document.getElementById("qsave").onclick = async () => {
     const v = document.getElementById("qurl").value.trim();
@@ -1586,7 +1596,7 @@ let toastT;
 function timingCard(s, pl, mk){
   const t = s.timing, tone = t.tone, p = t.price;
   const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");
-  const chk = t.title === "확인 중";
+  const chk = t.title === "확인 중" || t.title === "마감 확인";
   let bar = "";
   if (tone !== "buy" && !chk && z){
     const lo = Math.min(z.lo, z.hi) * 0.99, hi = Math.max(s.price, z.hi) * 1.01, pos = v => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100));
@@ -1596,7 +1606,7 @@ function timingCard(s, pl, mk){
   const rel = v => v ? pct((v / s.price - 1) * 100) : "";
   const krm = /\.K[SQ]$/.test(s.symbol || "") || ["코스피", "코스닥"].includes(s.market);
   const rrw = pl?.rr == null ? "" : pl.rr >= 2 ? "좋음" : pl.rr >= 1 ? "보통" : krm ? "낮음" : "낮음 · 미국은 영향 적음";
-  const kv = tone === "buy" && pl ? [["손절가", num(pl.stop, mk), "c-sell", rel(pl.stop)], ["목표", num(pl.target, mk), "c-buy", rel(pl.target)],
+  const kv = tone === "buy" && pl ? [["살 가격", num(s.price, mk), "", "지금"], ["손절가", num(pl.stop, mk), "c-sell", rel(pl.stop)],
     ["손익비", pl.rr == null ? "-" : "1 : " + pl.rr.toFixed(1), "", rrw]] : [];
   return `<div class="card act tm-${chk ? "check" : esc(tone)}" role="status">
     <div class="tmain"><div class="tl"><div class="tword">${esc(t.title)}</div>${t.why ? `<div class="twhy">${esc(t.why)}</div>` : ""}</div>
