@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-38">
+<meta name="app-version" content="2026-10-16-39">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -973,12 +973,12 @@ function mountChart(box, s){
     for (let i = i0; i <= i1; i++){ const b = bars[i], col = b[4] >= b[1] ? COL.up : COL.down, top = y(Math.max(b[1], b[4])), bh = Math.max(1, Math.abs(y(b[1]) - y(b[4])));
       p += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width="${cw > 6 ? 1 : .8}"/><rect x="${x(i) - bw/2}" y="${top}" width="${bw}" height="${bh}" fill="${col}"${s.live && i === N - 1 ? ' opacity=".5"' : ""}/>`; }
     for (let i = i0; i <= i1; i++) if (ind.nh[i]) p += `<circle cx="${x(i)}" cy="${y(bars[i][2]) - 5}" r="1.8" fill="${COL.up}" opacity=".8"/>`;
-    zones.forEach(z => { if (z.lo <= hi && z.lo >= lo) p += `<text x="${L+6}" y="${Math.min(H0-8, y(z.lo) + 16)}" font-size="13" font-weight="600" fill="#1B8A4A" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(z.label)} 구간</text>`; });
+    zones.forEach(z => { if (z.lo <= hi && z.lo >= lo) p += `<text x="${L+6}" y="${Math.min(H0-8, y(z.lo) + 16)}" font-size="13" font-weight="600" fill="#1B8A4A" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(zoneName(s, z))}</text>`; });
     /* 신호 말풍선 (보이는 것 중 최근 6개, 겹치지 않게) */
     const C = {buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"], trim:["#FFF1DC","#B26A00"], none:["#EFEFF2","#7C7C82"]}, boxes = [];
     const hit = a => boxes.some(b => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3);
     const candle = []; for (let k = i0; k <= i1; k++) candle.push({x:x(k) - Math.max(bw/2, 2) - 1, y:y(bars[k][2]) - 2, w:Math.max(bw, 4) + 2, h:y(bars[k][3]) - y(bars[k][2]) + 4});
-    zones.forEach(z => { if (z.lo <= hi && z.lo >= lo){ const yy = Math.min(H0 - 8, y(z.lo) + 16); candle.push({x:L + 2, y:yy - 14, w:z.label.length * 13 + 40, h:19}); } });   // 구간 이름도 가리지 않게
+    zones.forEach(z => { if (z.lo <= hi && z.lo >= lo){ const yy = Math.min(H0 - 8, y(z.lo) + 16); candle.push({x:L + 2, y:yy - 14, w:zoneName(s, z).length * 13 + 14, h:19}); } });   // 구간 이름도 가리지 않게
     const onCandle = a => candle.some(b => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h);
     const tw = t => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? 10.6 : ch === " " ? 3.2 : 6.3), 0);
     const chip = (i, text, tone, below) => {   // 이름표는 봉을 가리지 않는 빈자리에만. 가까운 빈자리가 없으면 표시(▲▼)만 남김
@@ -1163,7 +1163,7 @@ function renderDetail(sym){
       ${s.story?.levels ? storyCard(s, mk) : ""}
       ${!s.sig_help && s.notes?.length ? notesCard(s.notes) : ""}
     </div>
-    ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
+    ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(zoneName(s, z))}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
     ${s.cautions?.length ? `<div class="sec-title">주의</div><div class="card" style="padding-block:4px"><div class="items">${s.cautions.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
     <details class="more"><summary class="press">전문가용 자세히 보기</summary>
     ${sepa.length ? `<div class="sec-title"><span>SEPA 5요소</span><span>${nOk}/5 통과</span></div><div class="card" style="padding-block:4px">${itemsHTML(sepa.map(v => v.join(" ")))}</div>` : ""}
@@ -1541,7 +1541,7 @@ function actCard(s, pl, mk){
   if (tone === "wait" && z){
     const lo = Math.min(z.hi, pl?.stop ?? z.lo) * 0.995, hi = s.price * 1.01, pos = v => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100));
     bar = `<div class="dist"><div class="track"><span class="seg-z" style="left:${pos(z.lo)}%;width:${pos(z.hi) - pos(z.lo)}%"></span><span class="dot now" style="left:${pos(s.price)}%"></span></div>
-      <div class="dl"><span class="c-buy">${esc(z.label)} ${num(z.hi, mk)}</span><span><b>${pct(z.dist)}</b> 남음</span><span>지금 ${num(s.price, mk)}</span></div></div>`;
+      <div class="dl"><span class="c-buy">${esc(zoneName(s, z))} ${num(z.hi, mk)}</span><span><b>${pct(z.dist)}</b> 남음</span><span>지금 ${num(s.price, mk)}</span></div></div>`;
   }
   const rel = v => pl && pl.entry && v ? pct((v / pl.entry - 1) * 100) : "";
   const rrw = pl?.rr == null ? "" : pl.rr >= 2 ? "좋음" : pl.rr >= 1 ? "보통" : "낮음";
@@ -1564,6 +1564,8 @@ function actCard(s, pl, mk){
     ${a.next && !s.story?.levels ? `<div class="nxt"><span class="sub">다음 확인</span>${esc(a.next)}</div>` : ""}
     ${kv.length ? `<div class="kv">${kv.map(([k, v, c, sm]) => `<div><span>${k}</span><b class="${c}">${v}</b>${sm ? `<small>${esc(sm)}</small>` : ""}</div>`).join("")}</div>` : ""}</div>`;
 }
+/* 매수 구간 이름 = 그 구간에서 살 차수 (엔진이 붙임: 아직 안 산 종목은 1차를 지금 사므로 첫 구간이 2차 자리) */
+function zoneName(s, z){ return z.label === "지지" ? "지지" : `${z.label} 자리`; }
 /* 차트 풀이: 한 문장 + 상태 꼬리표 + 가격 사다리(위·지금·아래) + 조심할 점 — 엔진 규칙으로 만든 글 */
 function storyCard(s, mk){
   const st = s.story, now = st.levels.find(l => l[1] === "now")?.[0] || s.price;
