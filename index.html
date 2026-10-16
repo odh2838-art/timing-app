@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-23">
+<meta name="app-version" content="2026-10-16-24">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -400,10 +400,10 @@ async function dispatch(cmd, symbol){
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function waitRun(since, label){
-  S.busy = label; toast(label + " · 보통 2–3분", true); syncBusy();
+  S.busy = label; toast(label + " · 1분 정도", true); syncBusy();
   let id = null;
   for (let i=0;i<60;i++){
-    await sleep(i < 3 ? 4000 : 8000);
+    await sleep(i < 6 ? 3000 : 5000);
     try{
       const j = await gh("/actions/runs?event=workflow_dispatch&per_page=5");
       const run = id ? j.workflow_runs.find(r => r.id === id) : j.workflow_runs.find(r => Date.parse(r.created_at) >= since);
@@ -411,7 +411,7 @@ async function waitRun(since, label){
       id = run.id;
       if (run.status === "completed"){
         S.busy = null; syncBusy();
-        if (run.conclusion === "success"){ await refresh(); toast("점검을 마쳤습니다"); }
+        if (run.conclusion === "success"){ await refresh(); toast("다시 계산했어요"); }
         else toast("점검이 실패했습니다. 설정 → GitHub 실행 기록에서 확인해 주세요.");
         return;
       }
@@ -701,8 +701,10 @@ function renderHome(){
   $app.querySelectorAll("[data-mkt]").forEach(b => b.onclick = () => { const y = scrollY; S.mkt = +b.dataset.mkt; renderHome(); scrollTo(0, y); });
   document.getElementById("check").onclick = async () => {
     // 실시간 시세가 연결돼 있으면 가격은 바로, 엔진 계산(구간·신호)은 뒤에서 다시
-    if ((LS.get("qurl", "") || "").trim()) liveTick(true);
-    try{ const t = await dispatch("앱-갱신"); waitRun(t, "전 종목 점검 중"); }catch(e){ toast(e.message); } };
+    if (S.busy) return;                       // 이미 돌고 있으면 또 보내지 않는다
+    S.busy = "내 종목 다시 계산 중"; syncBusy();
+    if ((LS.get("qurl", "") || "").trim()) liveTick(true);   // 시세는 바로
+    try{ const t = await dispatch("앱-갱신"); waitRun(t, "내 종목 다시 계산 중"); }catch(e){ S.busy = null; syncBusy(); toast(e.message); } };
   S.justAdded = null;
   const ed = $app.querySelector("#edit");
   if (ed) ed.onclick = () => { S.edit = !S.edit; ed.textContent = S.edit ? "완료" : "편집"; $app.querySelector("#stocks")?.classList.toggle("editing", S.edit); closeSwipes(); };
@@ -1083,7 +1085,7 @@ function renderDetail(sym){
     const b = ev.currentTarget; b.disabled = true; b.classList.add("spinning");
     try{
       if ((LS.get("qurl", "") || "").trim()){ await pullQuotes([sym]); showQuotes(); toast("시세를 새로 받았어요"); }
-      else { const t = await dispatch("앱-갱신"); waitRun(t, "시세 다시 받는 중"); }
+      else if (!S.busy){ S.busy = "내 종목 다시 계산 중"; syncBusy(); const t = await dispatch("앱-갱신"); waitRun(t, "내 종목 다시 계산 중"); }
     }catch(e){ toast(e.message); }
     b.disabled = false; b.classList.remove("spinning");
   };
