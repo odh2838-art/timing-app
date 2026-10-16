@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#F5F5F7">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-22">
+<meta name="app-version" content="2026-10-16-23">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -33,7 +33,9 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{font-size:17px;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior-y:none}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:var(--t-body);line-height:1.45;word-break:keep-all;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}   /* 두 번 탭 확대 막기 */
 button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+input,select,textarea{font-size:max(16px,1em)}   /* 16px보다 작으면 iOS가 입력할 때 화면을 확대한다 */
 b,strong{font-weight:600}
 button{cursor:pointer;border:0;background:none;padding:0;-webkit-user-select:none;user-select:none}
 :focus{outline:none} :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:10px}
@@ -500,6 +502,9 @@ async function liveTick(force){
   try{ if (await pullQuotes(syms)) showQuotes(); }catch(e){ if (force) toast(e.message); }
 }
 setInterval(() => liveTick(false), 60000);
+/* 화면 확대 막기 (iOS는 user-scalable=no를 무시하므로 손가락 두 개 확대를 직접 막는다). 차트 안의 확대·축소는 그대로 */
+["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => { if (!e.target.closest?.(".plot")) e.preventDefault(); }, {passive: false}));
+document.addEventListener("touchmove", e => { if (e.touches.length > 1 && !e.target.closest?.(".plot")) e.preventDefault(); }, {passive: false});
 async function catalog(){
   const c = LS.get("catalog");
   if (c && Date.now() - c.t < 7*864e5) return c.rows;
