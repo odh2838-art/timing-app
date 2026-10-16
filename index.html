@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-24">
+<meta name="app-version" content="2026-10-16-25">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -158,6 +158,10 @@ body.sheet-open{background:#1D1D1F}
 .fgends{display:flex;justify-content:space-between;font-size:12px;color:var(--fg2);margin-top:6px}
 .qurl{width:100%;margin-top:6px;padding:10px 12px;border-radius:10px;border:0;background:var(--fill);color:var(--fg);font-size:var(--t-body)}
 .icon-btn.spinning svg{animation:spin .8s linear infinite} @keyframes spin{to{transform:rotate(360deg)}}
+.dayln{margin-top:12px}.dayln svg{display:block;width:100%;height:92px;margin:6px 0}
+.dlh{display:flex;justify-content:space-between;align-items:center;font-variant-numeric:tabular-nums}
+.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--buy);margin-right:6px;vertical-align:1px}
+.advr{display:flex;align-items:baseline;gap:8px;margin-top:10px}.advr b{font-size:var(--t-title);font-variant-numeric:tabular-nums}
 .wash span{color:var(--fg);font-size:var(--t-sub, 13px);line-height:1.45;opacity:.85}
 .mread{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--t-body)}
 .mbar{display:flex;gap:6px} .mbar i{flex:1;height:6px;border-radius:3px;background:var(--line)}
@@ -471,6 +475,7 @@ function applyQuotes(){
     const prev = q.prev ?? (g.close && g.chg != null ? g.close / (1 + g.chg / 100) : null);
     if (prev) g.chg = (q.p / prev - 1) * 100;
     g.close = q.p; if (Array.isArray(g.spark) && g.spark.length) g.spark[g.spark.length - 1] = q.p;
+    if (q.day && q.day.pts?.length) g.day = q.day; g.qt = q.t;
   }
 }
 const hhmm = t => { try{ return new Date(t).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false}); }catch(e){ return ""; } };
@@ -620,6 +625,22 @@ function stockList(){
 /* 시장 카드: 한 문장 → 네 칸 막대(좋음 몇 개) → 네 줄(지수 추세·시장 폭·신고가/신저가·변동성) */
 const MKT_TAB = {"S&P 500":"미국", "코스피":"코스피", "코스닥":"코스닥"};
 const BADGE = {"좋음":"b-good", "보통":"b-mid", "약함":"b-weak"};
+/* 오늘 지수 흐름: 장 시작~마감(390분)을 가로 전체로, 전일 종가는 점선. 마지막 점은 실시간 가격 */
+function dayLine(g){
+  const d = g.day; if (!d || !d.pts?.length || !d.prev) return "";
+  const pts = d.pts.slice(); const now = (Date.now() - Date.parse(d.start)) / 60000;
+  if (g.close && now > (pts[pts.length - 1][0] || 0)) pts.push([Math.min(390, Math.round(now)), g.close]);
+  const vs = pts.map(p => p[1]).concat([d.prev]), lo = Math.min(...vs), hi = Math.max(...vs), W = 300, H = 92, pad = 4;
+  const X = m => (Math.min(390, Math.max(0, m)) / 390 * W).toFixed(1), Y = v => (H - pad - (v - lo) / ((hi - lo) || 1) * (H - pad * 2)).toFixed(1);
+  const up = g.close >= d.prev, col = up ? "var(--up)" : "var(--down)";
+  const path = pts.map(p => `${X(p[0])},${Y(p[1])}`).join(" ");
+  const open = g.qt && Date.now() - Date.parse(g.qt) < 20 * 60000 && now < 395;
+  return `<div class="dayln"><div class="dlh"><span class="sub">오늘</span><span class="sub">${open ? `<i class="live"></i>장중 · ${hhmm(g.qt)} 기준` : "마감"}</span></div>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="오늘 지수 흐름"><line x1="0" x2="${W}" y1="${Y(d.prev)}" y2="${Y(d.prev)}" stroke="var(--fg3)" stroke-dasharray="3 4" stroke-width="1" vector-effect="non-scaling-stroke"/>
+    <polygon points="0,${Y(d.prev)} ${path} ${X(pts[pts.length - 1][0])},${Y(d.prev)}" fill="${col}" opacity=".08"/>
+    <polyline points="${path}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
+    <div class="dlh"><span class="sub">시작</span><span class="sub">전일 종가 ${num(d.prev, "미국")}</span><span class="sub">마감</span></div></div>`;
+}
 function marketCard(regs){
   regs = regs.filter(([, g]) => g.rows);
   if (!regs.length) return "";
@@ -630,8 +651,11 @@ function marketCard(regs){
   return `<div class="sec-cap">시장</div><div class="card mkt">
     ${regs.length > 1 ? `<div class="mtabs">${regs.map(([n], k) => `<button class="press ${k === cur ? "on" : ""}" data-mkt="${k}">${esc(MKT_TAB[n] || n)}</button>`).join("")}</div>` : ""}
     <div class="mh"><div><div class="sub">${esc(name)}</div><div class="mv">${g.close != null ? num(g.close, name === "S&P 500" ? "미국" : "코스피") : ""} <span class="chg ${g.chg >= 0 ? "up" : "down"}">${g.chg != null ? pct(g.chg) : ""}</span></div></div>
-      ${line ? `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${line}" fill="none" stroke="${upc ? "var(--up)" : "var(--down)"}" stroke-width="1.8" stroke-linejoin="round"/></svg>` : ""}</div>
-    <div class="mhl">${esc(g.headline || "")}</div>
+      ${line && !(g.day && g.day.pts?.length) ? `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${line}" fill="none" stroke="${upc ? "var(--up)" : "var(--down)"}" stroke-width="1.8" stroke-linejoin="round"/></svg>` : ""}</div>
+    ${dayLine(g)}
+    ${g.adv ? `<div class="advr"><span class="sub">오늘 오른 종목</span><b>${Math.round(g.adv.pct)}%</b><span class="sub">${g.adv.up + g.adv.down}개 중 ${g.adv.up}개</span></div>` : ""}
+    <div class="sub" style="margin-top:16px">최근 흐름</div>
+    <div class="mhl" style="margin-top:2px">${esc(g.headline || "")}</div>
     ${g.washout ? `<div class="wash"><b>🧯 시장 투매 바닥</b><span>12년 동안 이런 날 뒤 60일은 대체로 올랐어요. 남은 2·3차를 한 차수씩 나눠 사요.</span></div>` : ""}
     <div class="mread"><b>${g.rows.length}개 중 ${g.good}개 좋음</b><span class="sub">${g.weak ? `약한 것 ${g.weak}개` : "약한 것 없음"}</span></div>
     <div class="mbar">${g.rows.map(x => `<i class="${BADGE[x.badge] || ""}"></i>`).join("")}</div>
