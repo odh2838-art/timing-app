@@ -36,6 +36,16 @@ async function yahoo(sym) {
            d: when.toLocaleDateString("en-CA", { timeZone: tz }), t: when.toISOString() };
 }
 
+// 지수의 오늘 흐름 (5분 간격): 시장 카드의 장중 선. [장 시작 뒤 몇 분, 값]
+async function intraday(sym) {
+  const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=5m&range=1d`, { headers: { "User-Agent": UA } });
+  const res = (await r.json())?.chart?.result?.[0];
+  if (!res || !res.timestamp) return null;
+  const c = res.indicators?.quote?.[0]?.close || [], t0 = res.timestamp[0];
+  const pts = res.timestamp.map((t, i) => [Math.round((t - t0) / 60), c[i]]).filter(p => p[1] != null).map(p => [p[0], +p[1].toFixed(2)]);
+  return { pts, prev: res.meta?.chartPreviousClose ?? null, start: new Date(t0 * 1000).toISOString() };
+}
+
 export default {
   async fetch(req) {
     const cors = { "Access-Control-Allow-Origin": APP_ORIGIN, "Vary": "Origin", "Cache-Control": "no-store",
@@ -46,8 +56,10 @@ export default {
       .filter(s => /^\^?[A-Z0-9.-]{1,15}$/.test(s)).slice(0, 40);
     const out = {};
     await Promise.all(syms.map(async s => {
-      try { out[s] = (/\.(KS|KQ)$/.test(s) || KR_INDEX[s]) ? await naver(s) : await yahoo(s); }
-      catch (e) { out[s] = null; }
+      try {
+        out[s] = (/\.(KS|KQ)$/.test(s) || KR_INDEX[s]) ? await naver(s) : await yahoo(s);
+        if (out[s] && s.startsWith("^")) { try { out[s].day = await intraday(s); } catch (e) {} }
+      } catch (e) { out[s] = null; }
     }));
     return new Response(JSON.stringify(out), { headers: cors });
   },
