@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-35">
+<meta name="app-version" content="2026-10-16-36">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -957,13 +957,23 @@ function mountChart(box, s){
     /* 신호 말풍선 (보이는 것 중 최근 6개, 겹치지 않게) */
     const C = {buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"], trim:["#FFF1DC","#B26A00"], none:["#EFEFF2","#7C7C82"]}, boxes = [];
     const hit = a => boxes.some(b => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3);
-    const chip = (i, text, tone, below) => {
-      if (boxes.some(b => b.t === text && b.i === i)) return;
-      const [bg, fg] = C[tone] || C.info, w = text.length * 10.5 + 10, hh = 17, cx = Math.max(L + w/2, Math.min(W - R - w/2 - 2, x(i)));
-      let by = below ? y(bars[i][3]) + 10 : y(bars[i][2]) - 10 - hh;
-      for (let k = 0; k < 3 && hit({x:cx - w/2, y:by, w, h:hh}); k++) by += below ? hh + 3 : -(hh + 3);   // 봉에서 멀리 떨어지지 않게 3칸까지만
-      by = Math.max(2, Math.min(H0 - hh - 2, by));
-      if (hit({x:cx - w/2, y:by, w, h:hh})) return;   // 자리가 없으면 겹쳐 그리지 않고 건너뜀
+    const candle = []; for (let k = i0; k <= i1; k++) candle.push({x:x(k) - Math.max(bw/2, 2) - 1, y:y(bars[k][2]) - 2, w:Math.max(bw, 4) + 2, h:y(bars[k][3]) - y(bars[k][2]) + 4});
+    zones.forEach(z => { if (z.lo <= hi && z.lo >= lo){ const yy = Math.min(H0 - 8, y(z.lo) + 16); candle.push({x:L + 2, y:yy - 14, w:z.label.length * 13 + 40, h:19}); } });   // 구간 이름도 가리지 않게
+    const onCandle = a => candle.some(b => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h);
+    const tw = t => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? 10.6 : ch === " " ? 3.2 : 6.3), 0);
+    const chip = (i, text, tone, below) => {   // 이름표는 봉을 가리지 않는 빈자리에만. 가까운 빈자리가 없으면 표시(▲▼)만 남김
+      if (boxes.some(b => b.t === text && b.i === i) || boxes.filter(b => b.t).length >= 6) return;
+      const [bg, fg] = C[tone] || C.info, w = Math.round(tw(text)) + 12, hh = 17, cx = Math.max(L + w/2, Math.min(W - R - w/2 - 2, x(i)));
+      let by = null;
+      for (const side of [below, !below]){
+        for (let k = 0; k < 4 && by == null; k++){
+          const yy = side ? y(bars[i][3]) + 9 + k * (hh + 3) : y(bars[i][2]) - 9 - hh - k * (hh + 3), a = {x:cx - w/2, y:yy, w, h:hh};
+          if (yy < 2 || yy > H0 - hh - 2) break;
+          if (!hit(a) && !onCandle(a)) { by = yy; below = side; }
+        }
+        if (by != null) break;
+      }
+      if (by == null) return;
       boxes.push({x:cx - w/2, y:by, w, h:hh, t:text, i}); const on = sel && sel.t === text && sel.i === i;
       p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="5" fill="${on ? fg : bg}" opacity=".95"/><text x="${cx}" y="${by + 12.5}" font-size="10.5" font-weight="600" fill="${on ? "#fff" : fg}" text-anchor="middle">${esc(text)}</text>`;
     };
