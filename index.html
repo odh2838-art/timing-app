@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-52">
+<meta name="app-version" content="2026-10-16-53">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -248,7 +248,7 @@ body.sheet-open{background:#1D1D1F}
 /* 아이패드: 조금 넓은 가운데 칸, 시트는 가운데 폼 시트, 위쪽 바 바탕은 화면 끝까지 */
 @media (min-width:1024px){ .wrap{max-width:760px} }
 @media (min-width:768px){
-  .sheet-bg{align-items:center} .sheet{max-width:560px;height:min(680px,86vh);border-radius:var(--r-card)}
+  .sheet-bg{align-items:center} .sheet{max-width:560px;height:min(680px,86vh);border-radius:var(--r-card)} .sheet::after{display:none}
   .navbar.solid{box-shadow:0 0 0 100vmax var(--bar),0 .5px 0 100vmax var(--line);clip-path:inset(0 -100vmax -1px)}
 }
 input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
@@ -351,6 +351,7 @@ details.more>summary::-webkit-details-marker{display:none}
 /* 검색 시트 */
 .sheet-bg{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .scrim{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0}
+.sheet::after{content:"";position:absolute;left:0;right:0;top:calc(100% - 1px);height:100vh;background:var(--sheet);pointer-events:none}
 .sheet{position:relative;background:var(--sheet);width:100%;max-width:640px;height:90vh;height:min(90dvh,calc(100% - 12px));border-radius:var(--r-card) var(--r-card) 0 0;display:flex;flex-direction:column;padding:var(--gap-sub) max(var(--gutter),env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(var(--gutter),env(safe-area-inset-left,0px));transform:translateY(100%);box-shadow:0 -10px 40px rgba(0,0,0,.08);will-change:transform}
 .grab{display:none}
 @media (pointer:coarse){ .grab{width:100%;height:20px;display:flex;align-items:center;justify-content:center} .grab::before{content:"";width:36px;height:5px;border-radius:2.5px;background:var(--fg3)} }
@@ -1498,7 +1499,7 @@ async function openSearch(){
   const have = new Set(stockList().map(v => v.sym));
   const run = () => {
     if (!rows.length){ $r.innerHTML = `<div class="empty"><b>종목 목록이 아직 없어요</b>잠시 뒤 다시 열어 주세요</div>`; return; }
-    const q = $q.value.trim(); if (!q){ $r.innerHTML = `<div class="empty">이름이나 코드로 찾으세요<br><span class="note">한글 이름으로 미국 주식도 찾을 수 있어요 · 예: 엔비디아, 애플</span></div>`; return; }
+    const q = $q.value.trim(); if (!q){ $r.innerHTML = `<div class="empty">이름이나 코드로 찾으세요<br><span class="note">미국 주식도 한글로 찾아요 · 엔비디아, 애플</span></div>`; return; }
     const qk = q.replace(/\s/g,""), ql = qk.toLowerCase();
     const aliases = new Set(Object.entries(ALIAS).filter(([k]) => k.startsWith(qk)).map(([,v]) => v));
     const scored = [];
