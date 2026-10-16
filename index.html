@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-60">
+<meta name="app-version" content="2026-10-16-61">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -181,7 +181,7 @@ body.sheet-open{background:#1D1D1F}
 .live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--buy);margin-right:6px;vertical-align:1px}
 .advr{display:flex;align-items:baseline;gap:8px;margin-top:10px;flex-wrap:wrap}.advr b{white-space:nowrap;font-size:var(--t-title);font-variant-numeric:tabular-nums}
 #fseg button.on{background:var(--thumb);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
-.frow{align-items:flex-start}.fsig{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.fmeta{margin-top:4px}
+.frow{align-items:flex-start}.fsig{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.fmeta{margin-top:4px;display:flex;flex-wrap:wrap;column-gap:10px;row-gap:2px}.fmeta>span{white-space:nowrap}.fmeta .sig{color:var(--fg);font-weight:500}.frow .name .nm{overflow:hidden;text-overflow:ellipsis;min-width:0}.frow .name .tk{flex:none}
 .fpx{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;font-variant-numeric:tabular-nums}
 .frow{align-items:center!important;gap:12px}
 .sepa .sp-h{display:flex;align-items:baseline;justify-content:space-between} .sepa .sp-h b{font-size:var(--t-body);font-weight:700}
@@ -1619,8 +1619,8 @@ async function renderFind(){
     it.name.replace(/\s+/g, " ").replace(/,?\s+(Inc\.?|Incorporated|Corporation|Corp\.?|Ltd\.?|Limited|Holdings?|plc|PLC|N\.V\.|Co\.?|Company|& Co\.?)$/i, "").replace(/,?\s+(Inc\.?|Corporation|Holdings?|plc|PLC)$/i, "").trim());
   el.innerHTML = `<div class="fhead sub">${d.date ? esc(d.date.slice(5).replace("-", "/")) + " 마감 · " : ""}${d.n ? d.n + "종목 중 " : ""}${items.length}개</div>` +
     (items.length ? `<div class="list">${items.map((it, i) => { const on = have.has(symOf(mkOf(it), code(it)));
-      return `<div class="row frow press" data-why="${i}" role="button" tabindex="0" aria-label="${esc(nice(it) || it.sym || "")} 신호 이유"><div class="main"><div class="name">${esc(nice(it) || it.sym || "")} <span class="tk">${esc(code(it))}</span></div>
-        <div class="sub fmeta">${[(it.signals || []).map(easy).join(" · "), it.hi52 != null ? `고점 ${pct(it.hi52)}` : "", it.pe ? `PER\u00a0${it.pe}` : ""].filter(Boolean).map(esc).join(" · ")}</div></div>
+      return `<div class="row frow press" data-why="${i}" role="button" tabindex="0" aria-label="${esc(nice(it) || it.sym || "")} 신호 이유"><div class="main"><div class="name"><span class="nm">${esc(nice(it) || it.sym || "")}</span><span class="tk">${esc(code(it))}</span></div>
+        <div class="sub fmeta">${(it.signals || []).length ? `<span class="sig">${esc((it.signals || []).map(easy).join(" · "))}</span>` : ""}${[it.hi52 != null ? `고점 ${pct(it.hi52)}` : "", it.pe ? `PER ${it.pe}` : ""].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("")}</div></div>
         <div class="fpx"><b>${num(it.price, mkOf(it))}</b><span class="chg ${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span></div>
         <button class="fadd press ${on ? "on" : ""}" data-i="${i}" ${on ? "disabled" : ""} aria-label="${esc(nice(it) || it.sym || "")} ${on ? "추가됨" : "내 종목에 추가"}">${on ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'}</button></div>`; }).join("")}</div>`
       : `<div class="empty card"><b>오늘은 매수 신호가 없어요</b>${esc(emptyWhy(d, mk))}</div>`);
