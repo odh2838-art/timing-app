@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-7">
+<meta name="app-version" content="2026-10-17-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -236,7 +236,7 @@ body.sheet-open{background:#1D1D1F}
 .wdef>div{display:flex;gap:10px;color:var(--fg3);padding:4px 8px;margin:0 -8px;border-radius:9px} .wdef b{min-width:64px;color:var(--fg3);font-weight:600}
 .wdef .on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.08)} .wdef .on b,.wdef .on span{color:var(--fg);font-weight:700}
 .tm-buy .wdef .on b{color:var(--buy)} .tm-wait .wdef .on b{color:var(--wait)} .tm-check .wdef .on b{color:var(--info)}
-.tm-buy .tword{color:var(--buy)} .tm-wait .tword{color:var(--wait)} .tm-check .tword{color:var(--info)} .tm-sell .tword{color:var(--fg2)} .slist{display:flex;flex-wrap:wrap;gap:6px;padding:4px 10px 0} .slist .tag{font-size:var(--t-small);font-variant-numeric:tabular-nums} .t-trim{background:#FFF1DC;color:#B26A00} .t-none{background:var(--fill);color:var(--fg2)} .trows{margin-top:14px;display:flex;flex-direction:column;border-top:1px solid var(--line)} .trows>div{display:grid;grid-template-columns:1fr auto;column-gap:12px;padding:10px 0;border-bottom:1px solid var(--line)} .trows>div:last-child{border-bottom:0;padding-bottom:0} .trows span{color:var(--fg2);font-size:var(--t-small)} .trows b{text-align:right;font-weight:600;font-size:var(--t-body)} .trows small{grid-column:1/-1;color:var(--fg2);font-size:var(--t-small);font-variant-numeric:tabular-nums} .trows .up{color:var(--up)} .trows .down{color:var(--down)} .c-sell{color:var(--sell)} .c-trim{color:#B26A00} .tm-cut .tword{color:var(--sell)} .tm-cut .wdef .on b{color:var(--sell)}
+.tm-buy .tword{color:var(--buy)} .tm-wait .tword{color:var(--wait)} .tm-check .tword{color:var(--info)} .tm-sell .tword{color:var(--fg2)} .slist{display:flex;flex-wrap:wrap;gap:6px;padding:4px 10px 0} .slist .tag{font-size:var(--t-small);font-variant-numeric:tabular-nums} .skey{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--fg2)} .skey span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;background:var(--fg3);vertical-align:0} .skey .k-buy::before{background:var(--buy)} .skey .k-sell::before{background:var(--sell)} .skey .k-trim::before{background:#E08600} .t-trim{background:#FFF1DC;color:#B26A00} .t-none{background:var(--fill);color:var(--fg2)} .trows{margin-top:14px;display:flex;flex-direction:column;border-top:1px solid var(--line)} .trows>div{display:grid;grid-template-columns:1fr auto;column-gap:12px;padding:10px 0;border-bottom:1px solid var(--line)} .trows>div:last-child{border-bottom:0;padding-bottom:0} .trows span{color:var(--fg2);font-size:var(--t-small)} .trows b{text-align:right;font-weight:600;font-size:var(--t-body)} .trows small{grid-column:1/-1;color:var(--fg2);font-size:var(--t-small);font-variant-numeric:tabular-nums} .trows .up{color:var(--up)} .trows .down{color:var(--down)} .c-sell{color:var(--sell)} .c-trim{color:#B26A00} .tm-cut .tword{color:var(--sell)} .tm-cut .wdef .on b{color:var(--sell)}
 .twhy{margin-top:6px;font-size:var(--t-body);color:var(--fg2);font-weight:600}
 .tpx{text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
 .tpx small{font-size:var(--t-small);color:var(--fg2)} .tpx b{font-size:var(--t-heading);font-weight:700;font-variant-numeric:tabular-nums}
@@ -1171,7 +1171,7 @@ function mountChart(box, s){
       const vis = (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1 && (IND.pat || !isAux(m[1])) && (i1 - i0 <= 130 || !SH || ["buy", "trim", "sell"].includes(col_(m))));
       if (sel && !(idx[sel.d] >= i0 && idx[sel.d] <= i1)) showSig(null);
       { const L6 = [...vis].sort((a, b) => (b[0] > a[0]) - (b[0] < a[0])).slice(0, 6), CC = {buy: "t-buy", sell: "t-sell", trim: "t-trim"};   // 차트 아래: 이 기간 신호를 날짜와 함께 (최근 것부터)
-        const html = L6.map(m => `<button class="tag press ${CC[col_(m)] || "t-none"}" data-d="${m[0]}" data-t="${esc(m[1])}">${+m[0].slice(5,7)}/${+m[0].slice(8)} ${esc(m[1])}</button>`).join("");
+        const html = (L6.length ? `<div class="skey"><span class="k-buy">초록 매수</span><span class="k-sell">빨강 매도</span><span class="k-trim">주황 일부 매도</span><span>회색 참고</span></div>` : "") + L6.map(m => `<button class="tag press ${CC[col_(m)] || "t-none"}" data-d="${m[0]}" data-t="${esc(m[1])}">${+m[0].slice(5,7)}/${+m[0].slice(8)} ${esc(m[1])}</button>`).join("");
         if ($slist.dataset.h !== html){ $slist.dataset.h = html; $slist.innerHTML = html;
           $slist.querySelectorAll("button").forEach(b => b.onclick = () => { selKey = ""; showSig({t: b.dataset.t, d: b.dataset.d, i: idx[b.dataset.d]}); draw(); }); } }
       const stack = {};
