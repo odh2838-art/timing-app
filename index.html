@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-63">
+<meta name="app-version" content="2026-10-16-64">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -236,7 +236,7 @@ body.sheet-open{background:#1D1D1F}
 .wdef>div{display:flex;gap:10px;color:var(--fg3);padding:4px 8px;margin:0 -8px;border-radius:9px} .wdef b{min-width:64px;color:var(--fg3);font-weight:600}
 .wdef .on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.08)} .wdef .on b,.wdef .on span{color:var(--fg);font-weight:700}
 .tm-buy .wdef .on b{color:var(--buy)} .tm-wait .wdef .on b{color:var(--wait)} .tm-check .wdef .on b{color:var(--info)}
-.tm-buy .tword{color:var(--buy)} .tm-wait .tword{color:var(--wait)} .tm-check .tword{color:var(--info)} .tm-sell .tword{color:var(--fg2)}
+.tm-buy .tword{color:var(--buy)} .tm-wait .tword{color:var(--wait)} .tm-check .tword{color:var(--info)} .tm-sell .tword{color:var(--fg2)} .tm-cut .tword{color:var(--sell)} .tm-cut .wdef .on b{color:var(--sell)}
 .twhy{margin-top:6px;font-size:var(--t-body);color:var(--fg2);font-weight:600}
 .tpx{text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
 .tpx small{font-size:var(--t-small);color:var(--fg2)} .tpx b{font-size:var(--t-heading);font-weight:700;font-variant-numeric:tabular-nums}
@@ -749,7 +749,7 @@ function renderSetup(msg){
 function stockList(){
   const st = S.dash?.stocks || {};
   const ord = {buy:0, sell:1, wait:2, hold:3, start:4};
-  const TR = {"매수": 0, "소량 매수": 1, "마감 확인": 2, "확인 중": 2, "대기": 3, "관망": 4};
+  const TR = {"매수": 0, "소량 매수": 1, "마감 확인": 2, "확인 중": 2, "대기": 3, "관망": 4, "덜기": 1.5, "팔기": 1.5};
   const rank = d => d?.timing ? (TR[d.timing.title] ?? 5) : 6 + ((ord[d?.action?.start ? "start" : d?.action?.tone] ?? 3));
   const near = d => { const z = (d?.zones || []).find(z => z.label !== "지지" && z.state === "above"); return z ? Math.abs(z.dist) : 99; };
   return (S.csv?.rows || []).map((r, k) => ({ row:r, k, sym: symOf(r["시장"], r["티커"]), d: st[symOf(r["시장"], r["티커"])] }))
@@ -871,12 +871,12 @@ function renderHome(){
     <div class="title-block" data-anchor><h1 class="big">rooru.invest</h1><div class="sub">${d?.updated ? esc(d.updated.slice(5).replace("-", "/")) + " 점검" : S.err ? "" : "불러오는 중…"}</div></div>
     ${S.err && S.csv ? `<div class="err" role="alert">불러오지 못한 것이 있어요 · 아래로 당겨 다시 시도</div>` : ""}
 
-    ${S.csv && list.length && list.some(x => x.d?.timing) ? (() => { const T = k => list.filter(x => x.d?.timing?.tone === k).length, nc = list.filter(x => ["확인 중", "마감 확인"].includes(x.d?.timing?.title)).length, nb = T("buy"), nw = T("wait") - nc, ns = T("sell");
+    ${S.csv && list.length && list.some(x => x.d?.timing) ? (() => { const T = k => list.filter(x => x.d?.timing?.tone === k).length, nc = list.filter(x => ["확인 중", "마감 확인"].includes(x.d?.timing?.title)).length, nb = T("buy"), nw = T("wait") - nc, nx = list.filter(x => x.d?.timing?.cut).length, ns = T("sell") - nx;
       return `<div class="today"><div class="eyebrow">오늘</div><div class="big2">${nb ? `매수 ${nb}종목` : "매수 없음"}</div><div class="sub">${(() => { const nmOf = x => shortName(x.row["이름"] || x.d?.name, x.sym, x.row["시장"]) || x.row["티커"];
         const b = list.filter(x => x.d?.timing?.tone === "buy").map(nmOf), c = list.find(x => ["확인 중", "마감 확인"].includes(x.d?.timing?.title));
         return b.length ? esc(b.slice(0, 3).join(" · ")) + (b.length > 3 ? ` 외 ${b.length - 3}` : "")
           : c ? `${esc(nmOf(c))} · ${esc(c.d.timing.why)}`
-          : [nw ? `대기 ${nw}` : "", ns ? `관망 ${ns}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"; })()}</div>${(() => {   // 시장 추세가 꺾이면 '추세 진입' 매수 알림을 쉰다 (엔진 events.py): 알림이 없는 이유
+          : [nx ? `팔기·덜기 ${nx}` : "", nw ? `대기 ${nw}` : "", ns ? `관망 ${ns}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"; })()}</div>${(() => {   // 시장 추세가 꺾이면 '추세 진입' 매수 알림을 쉰다 (엔진 events.py): 알림이 없는 이유
           // 시장 덜기(엔진 trendsig.py): 한국은 코스피 120일선 아래면 보유 절반 덜기 · 미국은 S&P 200일선 아래면 참고만
           const G = d?.gates || {}, TR = d?.trims || {}, has = m => list.some(x => (["코스피", "코스닥"].includes(x.row["시장"]) ? "한국" : "미국") === m);
           const lines = ["한국", "미국"].filter(has).map(m => {
@@ -895,7 +895,7 @@ function renderHome(){
       if (!s) return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(x.row["티커"])}</span></div><div class="head sub">다음 점검 때 계산돼요</div></div>${CHEV}`);
       const tags = s.p1 && !s.timing ? `<span class="tag t-dark">${esc(s.plan_text)}</span>` : "";
       return wrap(`<div class="main"><div class="name">${esc(nm)} <span class="tk">${esc(s.ticker)}</span></div>
-        <div class="head">${!s.timing ? `<span class="sub">계산 대기 · 다음 점검 때 나와요</span>` : s.timing ? `<span class="pill p-${["확인 중", "마감 확인"].includes(s.timing.title) ? "info" : s.timing.tone === "sell" ? "hold" : esc(s.timing.tone)}">${esc(s.timing.title)}</span><span class="act1">${rowLine(s)}</span>` : s.action ? `<span class="pill p-${esc(s.action.tone)}">${esc(stName(s.action.state, !!s.p1))}</span><span class="act1">${esc(shortAct(s.action, s.price))}</span>` : `${gradeTag(s.grade)}<span>${esc(s.head)}</span>`}${tags}</div></div>
+        <div class="head">${!s.timing ? `<span class="sub">계산 대기 · 다음 점검 때 나와요</span>` : s.timing ? `<span class="pill p-${["확인 중", "마감 확인"].includes(s.timing.title) ? "info" : s.timing.cut ? "sell" : s.timing.tone === "sell" ? "hold" : esc(s.timing.tone)}">${esc(s.timing.title)}</span><span class="act1">${rowLine(s)}</span>` : s.action ? `<span class="pill p-${esc(s.action.tone)}">${esc(stName(s.action.state, !!s.p1))}</span><span class="act1">${esc(shortAct(s.action, s.price))}</span>` : `${gradeTag(s.grade)}<span>${esc(s.head)}</span>`}${tags}</div></div>
         <div class="px">${spark(s.bars, s.chg)}<div><b>${num(s.price, s.market)}</b><span class="chg ${s.chg > 0 ? "up" : s.chg < 0 ? "down" : ""}">${pct(s.chg)}</span></div></div>`);
     }).join("")}</div>
     ${(LS.get("swipeHint", 0) < 3) ? `<p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">줄을 왼쪽으로 밀면 삭제돼요</p>` : ""}` : `<div class="empty card"><b>지켜볼 종목을 추가하세요</b>사기 좋은 때를 알려 드려요<div style="margin-top:14px"><button class="btn primary press" id="add0">종목 추가</button></div>`}
@@ -1765,7 +1765,7 @@ let toastT;
 /* 지금 할 일 카드: 상태 표시 + 한 줄 + (대기면) 거리 막대 + 살 가격·손절가·목표·손익비 */
 /* 할 일 카드 (타이밍만): 큰 한 단어(매수·소량 매수·대기·확인 중·관망) + 짧은 이유 + 기다릴 가격.
    보유·차수·비중은 보여 주지 않는다 — 언제 사면 좋은지만. */
-const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "추세는 살아 있음 · 신호나 가격 기다리기"], ["관망", "추세 꺾임 · 지금은 사지 않기"]];
+const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "추세는 살아 있음 · 신호나 가격 기다리기"], ["관망", "추세 꺾임 · 지금은 사지 않기"], ["덜기", "들고 있다면 일부 팔기 (미국 청산)"], ["팔기", "들고 있다면 전부 팔고 다음 매수로"]];
 function timingCard(s, pl, mk){
   const t = s.timing, tone = t.tone, p = t.price;
   const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");
@@ -1781,7 +1781,7 @@ function timingCard(s, pl, mk){
   const rrw = pl?.rr == null ? "" : pl.rr >= 2 ? "좋음" : pl.rr >= 1 ? "보통" : krm ? "낮음" : "낮음 · 미국은 영향 적음";
   const kv = tone === "buy" && pl ? [["손절가", num(pl.stop, mk), "", rel(pl.stop)],
     ["손익비", pl.rr == null ? "-" : "1 : " + pl.rr.toFixed(1), "", rrw]] : [];
-  return `<div class="card act tm-${chk ? "check" : esc(tone)}" role="status">
+  return `<div class="card act tm-${chk ? "check" : t.cut ? "cut" : esc(tone)}" role="status">
     <div class="tmain"><div class="tl"><button class="tword press" data-wdef aria-expanded="false">${esc(t.title)}<span class="ti" aria-hidden="true">i</span></button>${t.why ? `<div class="twhy">${esc(t.why)}</div>` : ""}</div>
       ${p && tone !== "buy" ? `<div class="tpx"><small>${tone === "sell" ? "지켜볼 가격" : "매수 가격"}</small><b>${num(p, mk)}</b><small>${rel(p)}</small></div>` : ""}</div>
     ${bar}
