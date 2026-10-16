@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-25">
+<meta name="app-version" content="2026-10-16-26">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -509,7 +509,9 @@ async function liveTick(force){
 setInterval(() => liveTick(false), 60000);
 /* 화면 확대 막기 (iOS는 user-scalable=no를 무시하므로 손가락 두 개 확대를 직접 막는다). 차트 안의 확대·축소는 그대로 */
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => { if (!e.target.closest?.(".plot")) e.preventDefault(); }, {passive: false}));
-document.addEventListener("touchmove", e => { if (e.touches.length > 1 && !e.target.closest?.(".plot")) e.preventDefault(); }, {passive: false});
+/* 손가락 두 개: 차트 밖이면 화면 확대를 막고, 차트 안이면 화면이 위아래로 움직이지 않게 막아 차트 확대·축소로 쓴다 */
+document.addEventListener("touchstart", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
+document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
 async function catalog(){
   const c = LS.get("catalog");
   if (c && Date.now() - c.t < 7*864e5) return c.rows;
@@ -998,7 +1000,7 @@ function mountChart(box, s){
       if (e.pointerType !== "mouse") hold = setTimeout(() => { if (!drag?.moved){ drag.cross = true; cross = idxAt(e.clientX); draw(); } }, 280);
     } else if (pts.size === 2){
       clearTimeout(hold); cross = null; const [a, b] = [...pts.values()];
-      const mid = (a.x + b.x) / 2; pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y), n0: V.n, c: geo.start + (((mid - $plot.getBoundingClientRect().left) * geo.W / $plot.getBoundingClientRect().width) - geo.L) / geo.cw, mid };
+      const mid = (a.x + b.x) / 2; pinch = { latest: V.end >= N - 1.5, d0: Math.hypot(a.x - b.x, a.y - b.y), n0: V.n, c: geo.start + (((mid - $plot.getBoundingClientRect().left) * geo.W / $plot.getBoundingClientRect().width) - geo.L) / geo.cw, mid };
       drag = null;
     }
   });
@@ -1009,7 +1011,8 @@ function mountChart(box, s){
       const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), r = $plot.getBoundingClientRect();
       V.n = pinch.n0 * pinch.d0 / Math.max(20, d); clamp();
       const cw = (geo.W - geo.L - (isKR(s.market) ? 76 : 62)) / V.n, mx = ((a.x + b.x) / 2 - r.left) * geo.W / r.width;
-      V.end = pinch.c - (mx - geo.L) / cw + V.n - 1; redraw(); return;
+      V.end = pinch.latest ? N - 1 : pinch.c - (mx - geo.L) / cw + V.n - 1;   // 최근 봉을 보고 있었으면 오른쪽 끝은 오늘에 고정
+      redraw(); return;
     }
     if (!drag) return;
     if (drag.cross || (e.pointerType === "mouse" && !e.buttons)){ cross = idxAt(e.clientX); redraw(); return; }
