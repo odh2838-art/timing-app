@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-37">
+<meta name="app-version" content="2026-10-16-38">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -197,9 +197,26 @@ body.sheet-open{background:#1D1D1F}
 .nxt{margin-top:12px;font-size:var(--t-body);line-height:1.45;display:flex;flex-direction:column;gap:2px} .nxt .sub{font-size:var(--t-small)}
 .act .exec{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
 .ameta{margin-top:10px;font-size:var(--t-small);color:var(--fg2)}
-.story{margin-top:12px;display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:5px;font-size:var(--t-body);line-height:1.45}
-.story .k{font-size:var(--t-small);font-weight:600;color:var(--fg2);padding-top:2px;white-space:nowrap}
-.story .k.u{color:var(--buy)} .story .k.d{color:var(--sell)} .story>span{min-width:0}
+.story .cap{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
+.story .sh{margin-top:6px;font-size:20px;font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
+.stags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.stags span{font-size:var(--t-small);font-weight:600;padding:3px 9px;border-radius:999px}
+.stags .good{background:var(--buy-bg);color:var(--buy)} .stags .bad{background:var(--sell-bg);color:var(--sell)} .stags .mid{background:var(--fill);color:var(--fg2)}
+.ladder{position:relative;margin-top:16px;display:flex;flex-direction:column}
+.ladder::before{content:"";position:absolute;left:6px;top:14px;bottom:14px;width:2px;border-radius:1px;background:var(--line)}
+.lv{position:relative;display:grid;grid-template-columns:14px 1fr auto;align-items:center;column-gap:12px;padding:9px 0}
+.lv i{width:14px;height:14px;border-radius:50%;background:var(--card,#fff);border:3px solid currentColor;box-sizing:border-box;z-index:1}
+.lv .t{font-size:var(--t-body);line-height:1.35;min-width:0}
+.lv .p{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;font-size:var(--t-body);line-height:1.2}
+.lv .p small{display:block;font-weight:500;font-size:var(--t-small);color:var(--fg2)}
+.lv.up{color:var(--buy)} .lv.buy{color:var(--buy)} .lv.stop{color:var(--sell)} .lv.trim{color:var(--wait)}
+.lv .t,.lv .p{color:var(--fg)}
+.lv .t b{font-weight:600;display:block} .lv .t small{display:block;font-size:var(--t-small);color:var(--fg2);margin-top:1px}
+.lv.now{margin-inline:-10px;padding-inline:10px;border-radius:12px;background:var(--info-bg);color:var(--info)}
+.lv.now i{background:currentColor}
+.lv.now .t,.lv.now .p{color:var(--info);font-weight:700}
+.scare{margin-top:12px;display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--wait-bg);color:var(--wait);font-size:var(--t-small);line-height:1.45;font-weight:600}
+.scare b{flex:none}
 .kv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;padding-top:14px;box-shadow:0 -1px 0 var(--line)}
 .kv div{display:flex;flex-direction:column;gap:3px;min-width:0}
 .kv span{font-size:var(--t-small);color:var(--fg2);white-space:nowrap} .kv small{font-size:12px;color:var(--fg2);white-space:nowrap;font-variant-numeric:tabular-nums} .kv b{font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1143,6 +1160,7 @@ function renderDetail(sym){
     <div class="stack">
       ${s.action ? actCard(s, pl, mk) : g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}</div></div></div>` : ""}
       <div class="card chart" id="chartBox"></div>
+      ${s.story?.levels ? storyCard(s, mk) : ""}
       ${!s.sig_help && s.notes?.length ? notesCard(s.notes) : ""}
     </div>
     ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
@@ -1543,9 +1561,18 @@ function actCard(s, pl, mk){
   return `<div class="card act a-${esc(tone)}" role="status"><div class="r1"><span class="pill p-${esc(tone)}">${pill}</span>${ex ? `<span class="exec">${esc(ex[0])}${ex[1] ? ` · ${esc(ex[1])}` : ""}</span>` : ""}</div>
     <div class="ttl">${esc(title)}</div>${a.detail && tone !== "wait" ? `<div class="dt">${esc(a.detail)}</div>` : ""}${bar}
     ${meta ? `<div class="ameta">${esc(meta)}</div>` : ""}
-    ${s.story ? `<div class="story" aria-label="차트 풀이"><span class="k">지금</span><span>${esc(s.story.now)}</span>${s.story.care ? `<span class="k">조심</span><span>${esc(s.story.care)}</span>` : ""}<span class="k u" aria-label="좋아지면">▲</span><span>${esc(s.story.up)}</span>${(s.story.down || a.next) ? `<span class="k d" aria-label="확인할 가격">▼</span><span>${esc(s.story.down || a.next)}</span>` : ""}</div>`
-      : a.next ? `<div class="nxt"><span class="sub">다음 확인</span>${esc(a.next)}</div>` : ""}
+    ${a.next && !s.story?.levels ? `<div class="nxt"><span class="sub">다음 확인</span>${esc(a.next)}</div>` : ""}
     ${kv.length ? `<div class="kv">${kv.map(([k, v, c, sm]) => `<div><span>${k}</span><b class="${c}">${v}</b>${sm ? `<small>${esc(sm)}</small>` : ""}</div>`).join("")}</div>` : ""}</div>`;
+}
+/* 차트 풀이: 한 문장 + 상태 꼬리표 + 가격 사다리(위·지금·아래) + 조심할 점 — 엔진 규칙으로 만든 글 */
+function storyCard(s, mk){
+  const st = s.story, now = st.levels.find(l => l[1] === "now")?.[0] || s.price;
+  const row = ([p, k, t]) => { const [a, ...b] = t.split(" · ");
+    return `<div class="lv ${k}"><i></i><span class="t"><b>${esc(a)}</b>${b.length ? `<small>${esc(b.join(" · "))}</small>` : ""}</span><span class="p">${num(p, mk)}${k === "now" ? "" : `<small>${pct((p / now - 1) * 100)}</small>`}</span></div>`; };
+  return `<div class="card story" aria-label="차트 풀이"><div class="cap">차트 풀이</div><div class="sh">${esc(st.head)}</div>
+    <div class="stags">${(st.tags || []).map(([t, c]) => `<span class="${c}">${esc(t)}</span>`).join("")}</div>
+    <div class="ladder">${st.levels.map(row).join("")}</div>
+    ${st.care ? `<div class="scare"><b>!</b><span>${esc(st.care)}</span></div>` : ""}</div>`;
 }
 /* 최근 표시: 같은 뜻이면 한 줄로 묶음 */
 function notesCard(ns){
