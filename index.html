@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-17">
+<meta name="app-version" content="2026-10-16-18">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -97,7 +97,7 @@ body.sheet-open{background:#1D1D1F}
 .editing .px .spark{display:none}
 .enter{animation:rowin .5s var(--ease) both}
 @keyframes rowin{from{opacity:0;transform:translateY(-10px)}}
-.row .main{flex:1;min-width:0}
+.row .main{flex:1;min-width:0} a.row{text-decoration:none;color:inherit}
 .row .name{font-size:var(--t-body);font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .head{flex-wrap:nowrap;min-width:0} .row .head .pill{flex:none} .row .head .act1{font-size:var(--t-detail);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .sumline{font-size:var(--t-heading);font-weight:700;margin:0 4px var(--gap-inner)}
@@ -1230,20 +1230,22 @@ async function renderAlerts(){
 function renderSettings(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">설정</span><div class="side r"></div></div>
     <div class="title-block" data-anchor><h1 class="big">설정</h1></div>
-    <div class="card stack">
-      <div><div class="sub">엔진 저장소 (오동엔진)</div><b>${esc(S.repo)}</b></div>
-      <a class="btn soft press" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener">GitHub 실행 기록 보기</a>
-      <button class="btn soft press" id="hello">디스코드 연결 확인</button>
-      <button class="btn soft press" id="recat">기업 검색 목록 새로 받기</button>
+    <div class="list">
+      <div class="row"><div class="main"><div class="sub">엔진 저장소</div><b>${esc(S.repo)}</b></div></div>
+      <a class="row press" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener"><span class="main" style="color:var(--blue)">실행 기록 보기</span><svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg></a>
+      <button class="row press" id="hello"><span class="main" style="color:var(--blue)">디스코드 연결 확인</span></button>
+      <button class="row press" id="recat"><span class="main" style="color:var(--blue)">기업 검색 목록 새로 받기</span></button>
     </div>
-    <div class="sec-title">자동 점검 시간 (한국 시간)</div>
-    <div class="card" style="padding-block:4px"><div class="items">
-      <div class="item"><div class="t"><b>한국장</b><span class="s">10:30 · 13:00 · 14:50 · 마감 후 15:50</span></div></div>
-      <div class="item"><div class="t"><b>미국장</b><span class="s">23:50 · 01:50 · 03:50 · 마감 후 07:10</span></div></div>
-      <div class="item"><div class="t"><b>주간 요약</b><span class="s">토요일 09:00</span></div></div></div></div>
-    <div class="sec-title">토큰</div>
-    <div class="card stack"><p class="note" style="margin:0">이 기기에만 저장돼 있습니다. 만료되면 앱이 알려주고, 새 토큰을 넣으면 됩니다. 지워도 토큰을 다시 넣으면 그대로 돌아옵니다.</p>
-      <button class="btn danger press" style="background:var(--fill)" id="out">토큰 지우기</button></div>
+    <div class="sec-title">자동 점검 (한국 시간)</div>
+    <div class="list">
+      <div class="row"><div class="main"><b>한국장</b><div class="sub">10:30 · 13:00 · 14:50 · 마감 후 15:50</div></div></div>
+      <div class="row"><div class="main"><b>미국장</b><div class="sub">23:50 · 01:50 · 03:50 · 마감 후 07:10</div></div></div>
+      <div class="row"><div class="main"><b>주간 요약</b><div class="sub">토요일 09:00</div></div></div>
+    </div>
+    <div class="list" style="margin-top:var(--gap-section)">
+      <button class="row press" id="out"><span class="main" style="color:var(--sell)">토큰 지우기</span></button>
+    </div>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">토큰은 이 기기에만 저장돼요. 지워도 다시 넣으면 그대로 돌아와요.</p>
     <p class="note" style="margin:18px 4px">모든 내용은 미리 정한 규칙을 기계적으로 적용한 참고 자료이며 투자 자문이 아닙니다. 매수 이유와 최종 결정은 직접 합니다.</p>
   </div>`;
   document.getElementById("hello").onclick = async () => { try{ await dispatch("hello"); toast("1–2분 뒤 디스코드에 오동엔진 인사가 오면 연결된 것입니다"); }catch(e){ toast(e.message); } };
