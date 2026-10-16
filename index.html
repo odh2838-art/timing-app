@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-47">
+<meta name="app-version" content="2026-10-16-48">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -190,7 +190,7 @@ body.sheet-open{background:#1D1D1F}
 .sigm{margin:var(--gap-inner) 10px 0;padding:12px 14px;border-radius:14px;background:var(--fill);display:flex;flex-direction:column;gap:3px;font-size:var(--t-body);line-height:1.45;animation:smIn .18s var(--ease-out)}
 .sigm[hidden]{display:none}
 @keyframes smIn{from{opacity:0;transform:translateY(-4px)}}
-.sm-h{display:flex;align-items:center;gap:8px}.sm-h b{font-weight:700}.sm-h .pill{padding:1px 8px}.sm-h .d{color:var(--fg2);font-size:var(--t-small)}
+.sm-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.sm-h .pill,.sm-h .d{white-space:nowrap}.sm-h b{font-weight:700}.sm-h .pill{padding:1px 8px}.sm-h .d{color:var(--fg2);font-size:var(--t-small)}
 .sm-h .x{margin-left:auto;width:28px;height:28px;margin-block:-4px;margin-right:-6px;border-radius:50%;color:var(--fg2);font-size:17px;line-height:28px;text-align:center}
 .sm-w{color:var(--fg2);font-size:var(--t-small)}.sm-a b{font-weight:600}.sm-a .sub{font-size:var(--t-small)}
 @media (prefers-reduced-motion:reduce){.sigm{animation:none}}
@@ -215,7 +215,10 @@ body.sheet-open{background:#1D1D1F}
 .nxt{margin-top:12px;font-size:var(--t-body);line-height:1.45;display:flex;flex-direction:column;gap:2px} .nxt .sub{font-size:var(--t-small)}
 .act .exec{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
 .tmain{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.tword{font-size:var(--t-display);font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.tword{font-size:var(--t-display);font-weight:700;line-height:1.1;letter-spacing:-.02em;display:inline-flex;align-items:center;gap:8px;color:inherit;padding:0;text-align:left}
+.tword .ti{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;font-size:12px;font-weight:700;font-style:normal;display:inline-flex;align-items:center;justify-content:center;opacity:.55;letter-spacing:0}
+.wdef{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--fill);display:grid;gap:6px;font-size:var(--t-small);line-height:1.4}
+.wdef>div{display:flex;gap:10px;color:var(--fg2)} .wdef b{min-width:64px;color:var(--fg2);font-weight:600} .wdef .on b,.wdef .on span{color:var(--fg)} .wdef .on b{font-weight:700}
 .tm-buy .tword{color:var(--buy)} .tm-wait .tword{color:var(--wait)} .tm-check .tword{color:var(--info)} .tm-sell .tword{color:var(--fg2)}
 .twhy{margin-top:6px;font-size:var(--t-body);color:var(--fg2);font-weight:600}
 .tpx{text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
@@ -761,7 +764,7 @@ function marketCard(regs){
     ${g.adv ? `<div class="advr"><span class="sub">오늘 오른 종목</span><b>${Math.round(g.adv.pct)}%</b><span class="sub">${g.adv.up + g.adv.down}개 중 ${g.adv.up}개</span></div>` : ""}
     <div class="sub" style="margin-top:16px">최근 흐름</div>
     <div class="mhl" style="margin-top:2px">${esc(g.headline || "")}</div>
-    <div class="madv sub" style="margin-top:4px">${g.label === "약세" ? "서두르지 않기" : g.label === "보통" ? "신호를 조금 더 엄격하게" : "매수 신호 따라도 돼요"}</div>
+    <div class="madv sub" style="margin-top:4px">${g.label === "약세" ? "서두르지 않기" : g.label === "보통" ? "신호를 조금 더 엄격하게" : "시장 분위기 양호"}</div>
     ${g.washout ? `<div class="wash"><b>🧯 시장 투매 바닥</b><span>12년 동안 이런 날 뒤 60일은 대체로 올랐어요. 나눠서 사기 좋은 때예요.</span></div>` : ""}
     <details class="mdet"><summary class="press">자세히</summary>
     <div class="mread"><b>${g.rows.length}개 중 ${g.good}개 좋음</b><span class="sub">${g.weak ? `약한 것 ${g.weak}개` : "약한 것 없음"}</span></div>
@@ -1249,7 +1252,7 @@ function renderDetail(sym){
   const x = stockList().find(v => v.sym === sym);
   if (!x){ S.detail = null; return renderHome(); }
   const s = x.d, row = x.row, mk = row["시장"], pl = s?.plan;
-  const cz = s ? [...new Set([s.story?.care, ...(s.cautions || [])].filter(Boolean))].slice(0, 3) : [];   // 경고는 한 곳에
+  const cz = s ? [...new Set([...(s.cautions || []).filter(c => /약세|실적/.test(c)), s.story?.care, ...(s.cautions || [])].filter(Boolean))].slice(0, 3) : [];   // 경고는 한 곳에 (시장 약세·실적 먼저)
   const pr = (v, base) => base ? pct((v/base-1)*100) : "";
   const sepa = s?.sepa || [], nOk = sepa.filter(v => v[0] === "✔").length;
   const g = s?.grade;
@@ -1296,6 +1299,7 @@ function renderDetail(sym){
     return `<div class="field"><label for="${id}">${label}</label><input id="${id}" data-k="${k}" value="${esc(v)}" ${type==="date"?'type="date"':'inputmode="decimal" placeholder="숫자만" enterkeyhint="done"'}></div>`;
   }
   if (s) S.chart = mountChart($app.querySelector("#chartBox"), s);
+  const wd = $app.querySelector("[data-wdef]"); if (wd) wd.onclick = () => { const p = $app.querySelector(".wdef"); p.hidden = !p.hidden; wd.setAttribute("aria-expanded", !p.hidden); };
   document.getElementById("drefresh").onclick = async (ev) => {
     const b = ev.currentTarget; b.disabled = true; b.classList.add("spinning");
     try{
@@ -1647,6 +1651,7 @@ let toastT;
 /* 지금 할 일 카드: 상태 표시 + 한 줄 + (대기면) 거리 막대 + 살 가격·손절가·목표·손익비 */
 /* 할 일 카드 (타이밍만): 큰 한 단어(매수·소량 매수·대기·확인 중·관망) + 짧은 이유 + 기다릴 가격.
    보유·차수·비중은 보여 주지 않는다 — 언제 사면 좋은지만. */
+const WDEF = [["매수", "지금 사기 좋은 때"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "매수 가격까지 기다리기"], ["관망", "떨어지는 중 · 지금은 사지 않기"]];
 function timingCard(s, pl, mk){
   const t = s.timing, tone = t.tone, p = t.price;
   const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");
@@ -1663,9 +1668,10 @@ function timingCard(s, pl, mk){
   const kv = tone === "buy" && pl ? [["손절가", num(pl.stop, mk), "", rel(pl.stop)],
     ["손익비", pl.rr == null ? "-" : "1 : " + pl.rr.toFixed(1), "", rrw]] : [];
   return `<div class="card act tm-${chk ? "check" : esc(tone)}" role="status">
-    <div class="tmain"><div class="tl"><div class="tword">${esc(t.title)}</div>${t.why ? `<div class="twhy">${esc(t.why)}</div>` : ""}</div>
+    <div class="tmain"><div class="tl"><button class="tword press" data-wdef aria-expanded="false">${esc(t.title)}<span class="ti" aria-hidden="true">i</span></button>${t.why ? `<div class="twhy">${esc(t.why)}</div>` : ""}</div>
       ${p && tone !== "buy" ? `<div class="tpx"><small>${tone === "sell" ? "지켜볼 가격" : "매수 가격"}</small><b>${num(p, mk)}</b><small>${rel(p)}</small></div>` : ""}</div>
     ${bar}
+    <div class="wdef" hidden>${WDEF.map(([w, d]) => `<div class="${w === t.title || (w === "마감 확인" && chk) ? "on" : ""}"><b>${w}</b><span>${d}</span></div>`).join("")}</div>
     ${kv.length ? `<div class="kv k3">${kv.map(([k, v, c, sm]) => `<div><span>${k}</span><b class="${c}">${v}</b>${sm ? `<small>${esc(sm)}</small>` : ""}</div>`).join("")}</div>` : ""}</div>`;
 }
 function actCard(s, pl, mk){
@@ -1716,6 +1722,7 @@ function storyCard(s, mk){
   // 판정과 사다리가 어긋나지 않게: 매수면 아래 매수 가격 줄을 빼고, 매수가 아니면 손절가 줄을 빼고 기다릴 가격을 넣는다
   let lv = st.levels.filter(l => t.tone === "buy" ? l[1] !== "buy" : l[1] !== "stop");
   if (t.tone !== "buy" && t.price && !lv.some(l => l[1] === "buy" && Math.abs(l[0] / t.price - 1) < 0.002)) lv.push([t.price, "buy", "매수 가격"]);
+  if (t.tone === "sell") lv = lv.map(l => l[1] === "buy" ? [l[0], l[1], "지켜볼 가격"] : l);
   st.levels = lv.sort((a, b) => b[0] - a[0]);
   const row = ([p, k, t]) => { const [a, ...b] = t.split(" · ");
     return `<div class="lv ${k}"><i></i><span class="t"><b>${esc(a)}</b>${b.length ? `<small>${esc(b.join(" · "))}</small>` : ""}</span><span class="p">${num(p, mk)}${k === "now" ? "" : `<small>${pct((p / now - 1) * 100)}</small>`}</span></div>`; };
