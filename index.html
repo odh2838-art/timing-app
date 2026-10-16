@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-8">
+<meta name="app-version" content="2026-10-17-10">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -189,7 +189,7 @@ body.sheet-open{background:#1D1D1F}
 .sepa .sp-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:10px} .sepa .sp-bar i{height:6px;border-radius:3px;background:var(--fill)} .sepa .sp-bar i.on{background:var(--buy)}
 .sepa .sp-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
 .sepa .sp-steps>div{display:flex;flex-direction:column;gap:2px;color:var(--fg3);min-width:0} .sepa .sp-steps b{font-size:var(--t-small);font-weight:600} .sepa .sp-steps span:not(.sp-c){font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sepa .sp-steps .ok{color:var(--fg)} .sepa .sp-c{height:14px;color:var(--buy)}
+.sepa .sp-steps .ok{color:var(--fg)} .sepa .sp-f{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto;column-gap:12px} .sepa .sp-f span{color:var(--fg2);font-size:var(--t-small)} .sepa .sp-f b{font-weight:600} .sepa .sp-f small{grid-column:1/-1;color:var(--fg2);font-size:var(--t-small);font-variant-numeric:tabular-nums} .c-buy{color:var(--buy)} .sepa .sp-c{height:14px;color:var(--buy)}
 .sepa .sp-p{margin-top:12px;font-size:var(--t-small);color:var(--fg2)}
 .sheet.fit{height:auto;max-height:min(90dvh,calc(100% - 12px))} .sheet.fit .why{overflow-y:auto;padding-bottom:20px}
 .why .wpx{font-size:var(--t-title3,20px);font-variant-numeric:tabular-nums} .why .wpx .chg{font-size:var(--t-small)} .why .wpx .chg.up{color:var(--up)} .why .wpx .chg.down{color:var(--down)} .why .tk{color:var(--fg3);font-size:var(--t-small)}
@@ -1004,7 +1004,7 @@ const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2�
 const zsOf = s => s.zone_ok === false ? [] : (s.zones || []);   // 구간은 센 종목만 (엔진 dashboard._zone_ok)
 const AUX = new Set(["TP1","TP2","청산 보류","분할청산 · 14선","분할청산 · 21선","최종 청산 @SR","최종 청산","청산","돌파 청산","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파","갭 발생","모멘텀 BUY","PEG 발생","PEG 되돌림 매수","PEG 재돌파"]);   // 검증에서 평소와 같았던 표시는 기본으로 숨김
 const easy = w => String(w).replace(/(\d+)일 평균선/g, "$1일선").replace("돌파 자리", "돌파선").replace("2차 테스트", "바닥 재확인");
-const CORE = new Set(["추세 확인", "신고가 돌파", "재돌파", "변동성 돌파", "고점 돌파", "청산", "돌파 청산", "최종 청산", "200일선 이탈", "진입", "돌파 진입"]);
+const CORE = new Set(["추세 확인", "추세 시작", "신고가 돌파", "재돌파", "변동성 돌파", "고점 돌파", "청산", "돌파 청산", "최종 청산", "200일선 이탈", "진입", "돌파 진입"]);
 const isAux = t => !CORE.has(t);   // 엔진 매수·매도 신호(와 추세 시작)만 기본으로 보이고, 나머지(분할청산·과열·모멘텀·패턴 등)는 '보조 표시'를 켜야 보임
 const IND_LIST = [["ma","평균선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["pat","보조 표시"]];   // 지표견이 쓰는 도구만
 const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:true}, LS.get("ind", {}));
@@ -1127,7 +1127,7 @@ function mountChart(box, s){
     if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.e55, COL.e55, 1.6) + path(ind.e21, COL.e21, 1.4) + path(ind.e14, COL.e14, 1.2);   // 엔진(지표견식 추세)이 보는 선
     /* 지금 추세가 진행 중이면: 진입가(점선)와 지금 팔게 되는 선(굵게) — 엔진 dashboard._trend_now */
     const TRN = s.trend || {};
-    if (TRN.line){ const exC = TRN.act === "sell" ? "#D22F3C" : "#E08600", ser = TRN.line === 14 ? ind.e14 : ind.e55, ie = bars.findIndex(b => b[0] >= TRN.date);
+    if (TRN.line){ const exC = TRN.act === "sell" ? "#D22F3C" : TRN.act === "trim" ? "#E08600" : "#8E8E93", ser = TRN.line === 14 ? ind.e14 : ind.e55, ie = bars.findIndex(b => b[0] >= TRN.date);
       p += path(ser.map((v, k) => k >= Math.max(ie, 0) ? v : null), exC, 2.8);
       if (ie >= 0 && TRN.entry >= lo && TRN.entry <= hi) p += `<line x1="${Math.max(L, x(Math.max(ie, i0)))}" x2="${W-R}" y1="${y(TRN.entry)}" y2="${y(TRN.entry)}" stroke="${TP.ink}" stroke-width=".9" stroke-dasharray="4 3" opacity=".55"/>`; }
     if (s.sr_line){   // 트레일링 스탑(SR): 보유 중일 때만, 계단선
@@ -1326,13 +1326,16 @@ function mountChart(box, s){
 
 const MARK = {"✔":"c-buy","✖":"c-sell","➖":"sub","❔":"sub"};
 /* SEPA 레벨: 추세 → 힘 → 수축 순서로 한 칸씩 */
-function sepaCard(v){
+function sepaCard(v, s){
   const ck = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
   return `<div class="card sepa" role="group" aria-label="SEPA 레벨 ${v.lv} / ${v.max}">
     <div class="sp-h"><b>SEPA 레벨</b><span class="sp-n">${v.lv}<small> / ${v.max}</small></span></div>
     <div class="sp-bar" aria-hidden="true">${Array.from({length: v.max}, (_, i) => `<i class="${i < v.lv ? "on" : ""}"></i>`).join("")}</div>
     <div class="sp-steps">${(v.steps || []).map(([k, t, ok]) => `<div class="${ok ? "ok" : ""}"><span class="sp-c">${ok ? ck : ""}</span><b>${esc(k)}</b><span>${esc(t)}</span></div>`).join("")}</div>
-    ${v.proof ? `<div class="sp-p">${esc(v.proof)}</div>` : ""}</div>`;
+    ${v.proof ? `<div class="sp-p">${esc(v.proof)}</div>` : ""}
+    ${(() => { const f = (s?.sepa || []).find(x => x[1] === "펀더멘털"); if (!f) return "";   // 실적은 참고 (좋은 회사 고르기는 사용자 몫) — 엔진 tc/fundamentals.py
+      const [w, c] = {"✔": ["성장", "c-buy"], "➖": ["보통", ""], "✖": ["역성장", "c-sell"]}[f[0]] || ["자료 없음", ""];
+      return `<div class="sp-f"><span>실적</span><b class="${c}">${w}</b><small>${esc(f[2].replace(/ \((분기 YoY|연간)\)/, ""))}</small></div>`; })()}</div>`;
 }
 function itemsHTML(lines){
   return `<div class="items">${lines.map(l => { const t = strip(l); const m = t.match(/^(\S+)\s+(\S+(?:\s지점)?)\s+(.*)$/);
@@ -1357,7 +1360,7 @@ function renderDetail(sym){
       ${s.action ? actCard(s, pl, mk) : g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}</div></div></div>` : ""}
       <div class="card chart" id="chartBox"></div>
       ${s.story?.levels ? storyCard(s, mk) : ""}
-      ${s.sepa_lv ? sepaCard(s.sepa_lv) : ""}
+      ${s.sepa_lv ? sepaCard(s.sepa_lv, s) : ""}
       ${!s.sig_help && s.notes?.length ? notesCard(s.notes) : ""}
     </div>
     ${zsOf(s).some(z => z.label !== "지지") && s.timing?.tone !== "buy" && s.timing?.tone === "wait" && (s.timing?.price || s.timing?.title === "마감 확인") ? `<div class="sec-title" role="heading" aria-level="2">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.filter(z => z.label !== "지지").map(z => `<div class="zone"><div><b>${esc(zoneName(s, z))}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
@@ -1652,7 +1655,7 @@ async function renderFind(){
   el.innerHTML = `<div class="fhead sub">${d.date ? esc(d.date.slice(5).replace("-", "/")) + " 마감 · " : ""}${d.n ? d.n + "종목 중 " : ""}${items.length}개</div>` +
     (items.length ? `<div class="list">${items.map((it, i) => { const on = have.has(symOf(mkOf(it), code(it)));
       return `<div class="row frow press" data-why="${i}" role="button" tabindex="0" aria-label="${esc(nice(it) || it.sym || "")} 신호 이유"><div class="main"><div class="name"><span class="nm">${esc(nice(it) || it.sym || "")}</span><span class="tk">${esc(code(it))}</span></div>
-        <div class="sub fmeta">${(it.signals || []).length ? `<span class="sig">${esc((it.signals || []).map(easy).join(" · "))}</span>` : ""}${[it.hi52 != null ? `고점 ${pct(it.hi52)}` : "", it.pe ? `PER ${it.pe}` : ""].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("")}</div></div>
+        <div class="sub fmeta">${(it.signals || []).length ? `<span class="sig">${esc((it.signals || []).map(easy).join(" · "))}</span>` : ""}${[it.hi52 != null ? `고점 ${pct(it.hi52)}` : "", it.fund?.m === "✔" ? "실적 성장" : ""].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("")}</div></div>
         <div class="fpx"><b>${num(it.price, mkOf(it))}</b><span class="chg ${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span></div>
         <button class="fadd press ${on ? "on" : ""}" data-i="${i}" ${on ? "disabled" : ""} aria-label="${esc(nice(it) || it.sym || "")} ${on ? "추가됨" : "내 종목에 추가"}">${on ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'}</button></div>`; }).join("")}</div>`
       : `<div class="empty card"><b>오늘은 매수 신호가 없어요</b>${esc(emptyWhy(d, mk))}</div>`);
@@ -1666,7 +1669,7 @@ async function renderFind(){
 }
 /* 발견 목록이 비었을 때: 왜 비었는지 한 줄 */
 function emptyWhy(d, mk){
-  const st = d.stats || {}, n = st["신호"] || 0, weak = st["힘 약함"] || 0, per = st["PER 높음"] || 0;
+  const st = d.stats || {}, n = st["신호"] || 0, weak = st["힘 약함"] || 0, per = 0;
   const wk = st["약한 신호"] || 0;
   if (n && wk >= n) return `신호 ${n}개가 떴지만 모두 단독으론 평소와 비슷한 신호라 뺐어요.`;
   if (n && weak >= n) return `신호 ${n}개가 떴지만 모두 힘이 약해 뺐어요. 힘 약한 종목은 신호 뒤에도 평소보다 못했어요.`;
@@ -1680,13 +1683,14 @@ function whySheet(it, o){
   const sym = symOf(o.mk, o.code), on = o.have.has(sym), px = it.price;
   const gap = v => v ? pct((px / v - 1) * 100) : "-";
   const kv = [["고점 대비", it.hi52 != null ? pct(it.hi52) : "-"], ["50일선", gap(it.ma?.["50"])], ["200일선", gap(it.ma?.["200"])],
-    it.pe ? ["PER", String(it.pe)] : it.rs != null ? ["힘 순위", `상위 ${Math.max(1, 100 - it.rs)}%`] : null].filter(Boolean);
+    it.rs != null ? ["힘 순위", `상위 ${Math.max(1, 100 - it.rs)}%`] : null].filter(Boolean);
   const sigs = it.signals || [];
   const { sheet, close } = openSheet(o.name || it.sym, `<div class="why">
     <div class="wpx"><b>${num(px, o.mk)}</b> <span class="chg ${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span> <span class="tk">${esc(o.code)}</span></div>
     <div class="wsig">${sigs.map(t => `<span class="pill p-buy">${esc(easy(t))}</span>`).join("")}</div>
     ${it.why || it.what ? `<p class="wwhy">${esc(it.why || it.what)}</p>` : ""}
     ${it.proof ? `<p class="wproof">${esc(it.proof)}</p>` : ""}
+    ${it.fund?.t ? `<p class="wproof"><b>실적</b> ${esc(it.fund.t)}</p>` : ""}
     <div class="kv">${kv.map(([k, v]) => `<div><span>${k}</span><b>${esc(v)}</b></div>`).join("")}</div>
     <button class="btn primary press" id="wgo" style="margin-top:20px">${on ? "종목 보기" : "내 종목에 추가"}</button>
     <p class="note" style="margin:10px 0 0;text-align:center">참고용 · 투자 권유 아님</p></div>`);
@@ -1790,7 +1794,7 @@ let toastT;
 /* 지금 할 일 카드: 상태 표시 + 한 줄 + (대기면) 거리 막대 + 살 가격·손절가·목표·손익비 */
 /* 할 일 카드 (타이밍만): 큰 한 단어(매수·소량 매수·대기·확인 중·관망) + 짧은 이유 + 기다릴 가격.
    보유·차수·비중은 보여 주지 않는다 — 언제 사면 좋은지만. */
-const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "추세는 살아 있음 · 신호나 가격 기다리기"], ["관망", "추세 꺾임 · 지금은 사지 않기"], ["일부 매도", "들고 있다면 1/3만 팔기 (미국 청산)"], ["매도", "들고 있다면 전부 팔고 다음 매수로"]];
+const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "추세는 살아 있음 · 신호나 가격 기다리기"], ["관망", "추세 꺾임 · 지금은 사지 않기"], ["일부 매도", "들고 있다면 1/3만 팔고 다음 매수 신호에 다시 사기"], ["매도", "들고 있다면 전부 팔고 다음 매수로"]];
 function timingCard(s, pl, mk){
   const t = s.timing, tone = t.tone, p = t.price;
   const z = zsOf(s).find(z => z.label !== "지지" && z.state === "above");
@@ -1825,9 +1829,9 @@ function trendRows(s, mk){
   if (T.line) {
     const md = `${+T.date.slice(5,7)}/${+T.date.slice(8)}`;
     rows.push(`<div><span>추세</span><b>${T.confirmed ? "진행 중" : "시작"} · ${T.held}일째</b><small>${md} 진입 대비 <span class="${T.ret >= 0 ? "up" : "down"}">${pct(T.ret)}</span></small></div>`);
-    rows.push(`<div><span>${T.line}일선 아래 마감</span><b class="${T.act === "sell" ? "c-sell" : "c-trim"}">${T.act === "sell" ? "매도" : "일부 매도 1/3"}</b><small>${num(T.value, mk)} · ${rel(T.value)}</small></div>`);
+    rows.push(`<div><span>${T.line}일선 아래 마감</span><b class="${T.act === "sell" ? "c-sell" : T.act === "trim" ? "c-trim" : ""}">${esc(T.word || (T.act === "sell" ? "매도" : "일부 매도 1/3"))}</b><small>${num(T.value, mk)} · ${rel(T.value)}</small></div>`);
   } else rows.push(`<div><span>추세</span><b>없음</b><small>새 추세 시작 기다리기</small></div>`);
-  if (T.s200) rows.push(`<div><span>200일선 아래 마감</span><b class="c-sell">매도</b><small>${num(T.s200, mk)} · ${rel(T.s200)}</small></div>`);
+  if (T.s200) rows.push(`<div><span>200일선 아래 마감</span><b class="${T.act200 === "sell" ? "c-sell" : T.act200 === "trim" ? "c-trim" : ""}">${esc(T.word200 || "매도")}</b><small>${num(T.s200, mk)} · ${rel(T.s200)}</small></div>`);
   return `<div class="trows">${rows.join("")}</div>`;
 }
 function actCard(s, pl, mk){
