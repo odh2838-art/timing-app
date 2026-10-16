@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-61">
+<meta name="app-version" content="2026-10-16-62">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -115,7 +115,7 @@ body.sheet-open{background:#1D1D1F}
 @keyframes rowin{from{opacity:0;transform:translateY(-10px)}}
 .row .main{flex:1;min-width:0} a.row{text-decoration:none;color:inherit}
 .row .name{font-size:var(--t-body);font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .head .dist{color:var(--fg2);margin-left:6px;font-variant-numeric:tabular-nums} .today .gate{margin-top:var(--gap-sub);padding-top:var(--gap-sub);border-top:1px solid var(--line);font-size:var(--t-small);color:var(--fg2)} .row .head{flex-wrap:nowrap;min-width:0} .row .head .pill{flex:none} .row .head .act1{font-size:var(--t-detail);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.row .head .dist{color:var(--fg2);margin-left:6px;font-variant-numeric:tabular-nums} .today .gate{margin-top:var(--gap-sub);padding-top:var(--gap-sub);border-top:1px solid var(--line);font-size:var(--t-small);color:var(--fg2);line-height:1.5} .today .gate b{color:var(--fg);font-weight:600} .row .head{flex-wrap:nowrap;min-width:0} .row .head .pill{flex:none} .row .head .act1{font-size:var(--t-detail);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .sumline{font-size:var(--t-heading);font-weight:700;margin:0 4px var(--gap-inner)}
 .row .tk{font-size:var(--t-small);font-weight:400;color:var(--fg2)}
 .row .head{font-size:var(--t-detail);margin-top:var(--gap-text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -877,8 +877,15 @@ function renderHome(){
         return b.length ? esc(b.slice(0, 3).join(" · ")) + (b.length > 3 ? ` 외 ${b.length - 3}` : "")
           : c ? `${esc(nmOf(c))} · ${esc(c.d.timing.why)}`
           : [nw ? `대기 ${nw}` : "", ns ? `관망 ${ns}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"; })()}</div>${(() => {   // 시장 추세가 꺾이면 '추세 진입' 매수 알림을 쉰다 (엔진 events.py): 알림이 없는 이유
-          const G = d?.gates || {}, off = ["한국", "미국"].filter(m => G[m] === false && list.some(x => (["코스피", "코스닥"].includes(x.row["시장"]) ? "한국" : "미국") === m));
-          return off.length ? `<div class="gate">${esc(off.join(" · "))} 시장 추세 꺾임 · 추세 매수 쉬는 중</div>` : ""; })()}</div><div class="sec-cap">내 종목</div>`; })()
+          // 시장 덜기(엔진 trendsig.py): 한국은 코스피 120일선 아래면 보유 절반 덜기 · 미국은 S&P 200일선 아래면 참고만
+          const G = d?.gates || {}, TR = d?.trims || {}, has = m => list.some(x => (["코스피", "코스닥"].includes(x.row["시장"]) ? "한국" : "미국") === m);
+          const lines = ["한국", "미국"].filter(has).map(m => {
+            const t = TR[m], shut = G[m] === false;
+            if (t?.on && t.alert) return `<b>${m} 보유 절반 덜기</b><br>${t.name} ${t.line}일선 아래${shut ? " · 새 매수 쉬기" : ""}`;
+            if (t?.on) return `<b>${m} 참고</b> · ${t.name} ${t.line}일선 아래<br>낙폭 줄이려면 절반 덜기`;
+            return shut ? `<b>${m} 새 매수 쉬기</b> · 시장 추세 꺾임` : "";
+          }).filter(Boolean);
+          return lines.length ? lines.map(x => `<div class="gate">${x}</div>`).join("") : ""; })()}</div><div class="sec-cap">내 종목</div>`; })()
     : S.csv && list.length && list.some(x => x.d?.action) ? (() => { const nb = list.filter(x => x.d?.action?.tone === "buy" && x.d?.p1).length, nst = list.filter(x => x.d?.action?.tone === "buy" && !x.d?.p1).length, nw = list.filter(x => x.d?.action?.tone === "wait").length, ns = list.filter(x => x.d?.action?.tone === "sell").length;
       const nh = list.filter(x => x.d?.action?.tone === "hold").length;
       return `<div class="today"><div class="eyebrow">오늘</div><div class="big2">${nb ? `추가 매수 자리 ${nb}개` : nst ? `첫 매수 가능 ${nst}개` : "서둘러 살 종목 없음"}</div><div class="sub">${[nb && nst ? `첫 매수 가능 ${nst}` : "", nw ? `기다리기 ${nw}` : "", ns ? `주의 ${ns}` : "", nh ? `보유 ${nh}` : ""].filter(Boolean).join(" · ") || "모두 확인했어요"}</div></div><div class="sec-cap">내 종목</div>`; })() : ""}
