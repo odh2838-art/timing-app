@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-19">
+<meta name="app-version" content="2026-10-16-20">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -948,7 +948,7 @@ function renderDetail(sym){
   const name = row["이름"] || s?.name || row["티커"];
   $app.innerHTML = `<div class="wrap">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>종목</span></button></div><span class="mini">${esc(name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(name)}</h1><div class="sub">${esc(row["티커"])} · ${esc(mk)}${s ? " · " + esc(String(s.updated).slice(5).replace("-", "/")) : ""}</div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(name)}</h1><div class="sub">${esc(row["티커"])} · ${esc(mk)}${s ? " · " + (s.src?.src === "네이버 실시간" ? `실시간 ${esc(s.src.at)}` : esc(String(s.updated).slice(5).replace("-", "/")) + (s.src?.src?.includes("지연") ? " · 15~20분 지연" : "")) : ""}</div>
       ${s ? `<div class="bigpx">${num(s.price, mk)} <span class="chg ${s.chg>=0?"up":"down"}" style="font-size:var(--t-body)">${pct(s.chg)}</span></div>` : ""}</div>
     ${s ? `
     <div class="stack">
