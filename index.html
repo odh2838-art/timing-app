@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-62">
+<meta name="app-version" content="2026-10-16-63">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1335,7 +1335,7 @@ function renderDetail(sym){
       ${s.sepa_lv ? sepaCard(s.sepa_lv) : ""}
       ${!s.sig_help && s.notes?.length ? notesCard(s.notes) : ""}
     </div>
-    ${(s.zones || []).some(z => z.label !== "지지") && s.timing?.tone !== "buy" ? `<div class="sec-title" role="heading" aria-level="2">${s.timing?.title === "관망" ? "지켜볼 가격" : "매수 구간"}</div><div class="card" style="padding-block:6px">${s.zones.filter(z => z.label !== "지지").map(z => `<div class="zone"><div><b>${esc(zoneName(s, z))}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
+    ${(s.zones || []).some(z => z.label !== "지지") && s.timing?.tone !== "buy" && s.timing?.tone === "wait" && (s.timing?.price || s.timing?.title === "마감 확인") ? `<div class="sec-title" role="heading" aria-level="2">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.filter(z => z.label !== "지지").map(z => `<div class="zone"><div><b>${esc(zoneName(s, z))}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
     ${cz.length ? `<div class="sec-title" role="heading" aria-level="2">주의</div><div class="card" style="padding-block:4px"><div class="items">${cz.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
     <details class="more"><summary class="press">자세히</summary>
     ${sepa.length && !s.sepa_lv ? `<div class="sec-title" role="heading" aria-level="2"><span>SEPA 5요소</span><span>${nOk}/5 통과</span></div><div class="card" style="padding-block:4px">${itemsHTML(sepa.map(v => v.join(" ")))}</div>` : ""}
@@ -1765,7 +1765,7 @@ let toastT;
 /* 지금 할 일 카드: 상태 표시 + 한 줄 + (대기면) 거리 막대 + 살 가격·손절가·목표·손익비 */
 /* 할 일 카드 (타이밍만): 큰 한 단어(매수·소량 매수·대기·확인 중·관망) + 짧은 이유 + 기다릴 가격.
    보유·차수·비중은 보여 주지 않는다 — 언제 사면 좋은지만. */
-const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "매수 가격까지 기다리기"], ["관망", "지금은 사지 않기"]];
+const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "추세는 살아 있음 · 신호나 가격 기다리기"], ["관망", "추세 꺾임 · 지금은 사지 않기"]];
 function timingCard(s, pl, mk){
   const t = s.timing, tone = t.tone, p = t.price;
   const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");
