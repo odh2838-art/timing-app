@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-64">
+<meta name="app-version" content="2026-10-17-1">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -881,6 +881,7 @@ function renderHome(){
           const G = d?.gates || {}, TR = d?.trims || {}, has = m => list.some(x => (["코스피", "코스닥"].includes(x.row["시장"]) ? "한국" : "미국") === m);
           const lines = ["한국", "미국"].filter(has).map(m => {
             const t = TR[m], shut = G[m] === false;
+            if (m === "한국" && d?.sonagi?.on) return `<b>한국 보유 절반 덜기</b><br>소나기 · 과열 뒤 코스피 ${pct(d.sonagi.drop)}`;   // 엔진 trendsig.sonagi
             if (t?.on && t.alert) return `<b>${m} 보유 절반 덜기</b><br>${t.name} ${t.line}일선 아래${shut ? " · 새 매수 쉬기" : ""}`;
             if (t?.on) return `<b>${m} 참고</b> · ${t.name} ${t.line}일선 아래<br>낙폭 줄이려면 절반 덜기`;
             return shut ? `<b>${m} 새 매수 쉬기</b> · 시장 추세 꺾임` : "";
