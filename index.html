@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-13">
+<meta name="app-version" content="2026-10-16-14">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -1165,6 +1165,15 @@ function scorecard(list){
   return `<div class="card"><div class="sc-grid">${cell(stat(buys,"r20"),"매수 · 20일")}${cell(stat(buys,"r60"),"매수 · 60일")}${cell(stat(sells,"r20"),"주의 · 20일")}</div>
     <p class="note" style="margin:var(--gap-inner) 0 0">오동엔진이 실제로 보낸 알림만 셉니다. 알림 날 종가에서 그 뒤 종가까지의 변화예요. 주의 신호는 이 값이 낮을수록 잘 맞힌 거예요.</p></div>`;
 }
+
+/* 알림을 날짜별로: 오늘 · 어제 · 10월 14일 (목) */
+function groupByDay(list){
+  const kst = new Date(Date.now() + 9 * 3600e3), today = kst.toISOString().slice(0, 10), y = new Date(kst - 864e5).toISOString().slice(0, 10);
+  const lab = d => d === today ? "오늘" : d === y ? "어제" : (() => { const t = new Date(d + "T00:00:00"); return `${t.getMonth() + 1}월 ${t.getDate()}일 (${"일월화수목금토"[t.getDay()]})`; })();
+  const out = [];
+  list.forEach(h => { const d = String(h.t).slice(0, 10), last = out[out.length - 1]; if (last && last[2] === d) last[1].push(h); else out.push([lab(d), [h], d]); });
+  return out;
+}
 async function renderAlerts(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">알림</span><div class="side r"></div></div>
     <div class="title-block" data-anchor><h1 class="big">알림</h1><div class="sub">오동엔진이 보낸 알림과 그 뒤 결과</div></div>
@@ -1172,6 +1181,8 @@ async function renderAlerts(){
   try{ if (!S.alerts) S.alerts = await readJSON("상태/알림내역.json", []); }catch(e){ const el = document.getElementById("al"); if (el) el.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
   const el = document.getElementById("al"); if (!el || S.tab !== "alerts" || S.detail) return;
   const st = S.dash?.stocks || {};
+  const junk = h => h.kind === "news" && ((String(h.title).match(/\|/g) || []).length >= 2 || /Chg%|가격\s*:/.test(h.title));   // 시세 자동 기사
+  S.alerts = S.alerts.filter(h => !junk(h));
   const all = S.alerts.filter(h => h.kind !== "news" || alertFilter !== "signal");
   let list = alertFilter === "buy" ? all.filter(h => BUY_K.has(h.kind)) : alertFilter === "sell" ? all.filter(h => SELL_K.has(h.kind)) : alertFilter === "news" ? S.alerts.filter(h => h.kind === "news") : all;
   if (alertFilter === "all"){   // 전체 보기에선 같은 종목·같은 시각대 뉴스를 한 줄로 묶어 신호 알림이 묻히지 않게
@@ -1191,7 +1202,7 @@ async function renderAlerts(){
   const tabs = [["all","전체"],["buy","매수"],["sell","주의"],["news","뉴스"]];
   el.innerHTML = (S.alerts.length ? scorecard(S.alerts) : "") +
     `<div class="seg" role="tablist" style="margin:var(--gap-block) 0 var(--gap-caption)">${tabs.map(([k,t]) => `<button role="tab" data-f="${k}" aria-selected="${alertFilter===k}" class="${alertFilter===k?"on":""}">${t}</button>`).join("")}</div>` +
-    (list.length ? `<div class="list">${list.map((h,i) => `<button class="alert-row press row" data-sym="${esc(h.symbol)}" ${h.kind === "news" && h.link && !h.n ? `data-link="${esc(h.link)}"` : ""} ${st[h.symbol] || (h.kind === "news" && h.link) ? "" : "disabled"}><span class="ic">${ICON[h.kind]||"•"}</span><div style="flex:1;min-width:0"><div><b>${esc(nameOf(h))}</b> <span class="sub">${esc(h.title)}</span></div><div class="when">${esc(h.t)}${h.price!=null && h.kind!=="news" ? " · " + esc(num(h.price, (h.symbol||"").match(/\.K[SQ]$/) ? "코스피" : "미국")) : ""}</div></div>${res(h)}</button>`).join("")}</div>`
+    (list.length ? groupByDay(list).map(([day, items]) => `<div class="sec-cap">${esc(day)}</div><div class="list">${items.map((h,i) => `<button class="alert-row press row" data-sym="${esc(h.symbol)}" ${h.kind === "news" && h.link && !h.n ? `data-link="${esc(h.link)}"` : ""} ${st[h.symbol] || (h.kind === "news" && h.link) ? "" : "disabled"}><span class="ic">${ICON[h.kind]||"•"}</span><div style="flex:1;min-width:0"><div><b>${esc(nameOf(h))}</b> <span class="sub">${esc(h.title)}</span></div><div class="when">${esc(String(h.t).slice(11))}${h.price!=null && h.kind!=="news" ? " · " + esc(num(h.price, (h.symbol||"").match(/\.K[SQ]$/) ? "코스피" : "미국")) : ""}</div></div>${res(h)}</button>`).join("")}</div>`).join("")
       : `<div class="card empty"><b>${S.alerts.length ? "이 종류 알림은 아직 없습니다" : "아직 보낸 알림이 없습니다"}</b>구간 도착·진입·이탈 신호가 생기면 여기에 남고, 그 뒤 결과가 채워집니다.</div>`);
   el.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { alertFilter = b.dataset.f; renderAlerts(); });
   el.querySelectorAll("button[data-link]").forEach(b => b.onclick = ev => { ev.stopPropagation(); window.open(b.dataset.link, "_blank", "noopener"); });
