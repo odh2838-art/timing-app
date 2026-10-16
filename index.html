@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-28">
+<meta name="app-version" content="2026-10-16-29">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -162,6 +162,10 @@ body.sheet-open{background:#1D1D1F}
 .dlh{display:flex;justify-content:space-between;align-items:center;font-variant-numeric:tabular-nums}
 .live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--buy);margin-right:6px;vertical-align:1px}
 .advr{display:flex;align-items:baseline;gap:8px;margin-top:10px}.advr b{font-size:var(--t-title);font-variant-numeric:tabular-nums}
+#fseg button.on{background:var(--card);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.frow{align-items:flex-start}.fsig{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.fmeta{margin-top:4px}
+.fpx{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;font-variant-numeric:tabular-nums}
+.fpx .chg{font-size:var(--t-small)}.fpx .chg.up{color:var(--up)}.fpx .chg.down{color:var(--down)}.fhead{margin:0 var(--pad-card) var(--gap-caption)}
 .wash span{color:var(--fg);font-size:var(--t-sub, 13px);line-height:1.45;opacity:.85}
 .mread{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--t-body)}
 .mbar{display:flex;gap:6px} .mbar i{flex:1;height:6px;border-radius:3px;background:var(--line)}
@@ -328,6 +332,7 @@ details.more>summary::-webkit-details-marker{display:none}
 <div id="app"></div>
 <nav class="tabbar" id="tabbar" hidden aria-label="탭">
   <button data-tab="home" aria-label="종목"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>종목</button>
+  <button data-tab="find" aria-label="발견"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>발견</button>
   <button data-tab="alerts" aria-label="알림"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>알림</button>
   <button data-tab="settings" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
 </nav>
@@ -545,6 +550,7 @@ function render(how = "fade"){
   const ghost = slide ? snapshot() : null;
   if (!S.token) renderSetup();
   else if (S.detail) renderDetail(S.detail);
+  else if (S.tab === "find") renderFind();
   else if (S.tab === "alerts") renderAlerts();
   else if (S.tab === "settings") renderSettings();
   else renderHome();
@@ -1245,6 +1251,21 @@ function openSheet(label, inner){
   return { bg, sheet, close };
 }
 
+/* 내 종목에 추가 (검색·발견 공용): 종목.csv에 한 줄 더하고 그 종목만 바로 계산 */
+async function addStock(m, c, n0){
+  const krName = Object.entries(ALIAS).find(([k,v]) => v === c && m === "미국")?.[0];
+  const name = m === "미국" ? (krName || n0.replace(/,?\s+(Inc\.?|Corporation|Corp\.?|Ltd\.?|Holdings?|plc|N\.V\.|Co\.?)$/i, "").replace(/\s+Class [A-Z].*$/i,"").replace(/\s+/g, " ").trim()) : n0;
+  await loadCSV();
+  if (S.csv.rows.some(v => symOf(v["시장"], v["티커"]) === symOf(m, c))) throw new Error("이미 등록된 종목입니다");
+  const bin = LS.get("removed", {}), old = bin[symOf(m, c)];
+  S.csv.rows.push(old ? Object.fromEntries(S.csv.head.map(h => [h, old[h] ?? ""])) : Object.fromEntries(S.csv.head.map(h => [h, h==="시장"?m : h==="티커"?c : h==="이름"?name : ""])));
+  await saveCSV(`앱: ${name} 추가`);
+  if (old){ delete bin[symOf(m, c)]; LS.set("removed", bin); toast("예전 매수 기록도 되살렸습니다"); }
+  S.justAdded = symOf(m, c);
+  render("none");
+  const t = await dispatch("status", symOf(m, c));
+  waitRun(t, name + " 계산 중 · 카드가 디스코드로 갑니다");
+}
 async function openSearch(){
   const { bg } = openSheet("기업 추가", `<div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="삼성전자, 엔비디아, NVDA, 005930" autocomplete="off" enterkeyhint="search" aria-label="기업 검색"></div>
     <div class="results" id="res"><div class="list">${[0,1,2,3].map(() => `<div class="row"><div class="main"><div class="sk" style="width:45%;height:16px"></div><div class="sk" style="width:30%;height:12px;margin-top:8px"></div></div></div>`).join("")}</div></div>`);
@@ -1276,21 +1297,8 @@ async function openSearch(){
   const add = async (r, b) => {
     const pill = b.querySelector(".pill-btn");
     b.disabled = true; pill.innerHTML = `<span class="spin"></span>`;
-    const [m, c, n0] = r;
-    const krName = Object.entries(ALIAS).find(([k,v]) => v === c && m === "미국")?.[0];
-    const name = m === "미국" ? (krName || n0.replace(/,?\s+(Inc\.?|Corporation|Corp\.?|Ltd\.?|Holdings?|plc|N\.V\.|Co\.?)$/i, "").replace(/\s+Class [A-Z].*$/i,"")) : n0;
-    try{
-      await loadCSV();
-      if (S.csv.rows.some(v => symOf(v["시장"], v["티커"]) === symOf(m, c))) throw new Error("이미 등록된 종목입니다");
-      const bin = LS.get("removed", {}), old = bin[symOf(m, c)];
-      S.csv.rows.push(old ? Object.fromEntries(S.csv.head.map(h => [h, old[h] ?? ""])) : Object.fromEntries(S.csv.head.map(h => [h, h==="시장"?m : h==="티커"?c : h==="이름"?name : ""])));
-      await saveCSV(`앱: ${name} 추가`);
-      if (old){ delete bin[symOf(m, c)]; LS.set("removed", bin); toast("예전 매수 기록도 되살렸습니다"); }
-      have.add(symOf(m, c)); pill.textContent = "등록됨 ✓"; pill.classList.remove("primary"); S.justAdded = symOf(m, c);
-      render("none");
-      const t = await dispatch("status", symOf(m, c));
-      waitRun(t, name + " 계산 중 · 카드가 디스코드로 갑니다");
-    }catch(e){ toast(e.message); b.disabled = false; pill.textContent = "추가"; }
+    try{ await addStock(r[0], r[1], r[2]); have.add(symOf(r[0], r[1])); pill.textContent = "등록됨 ✓"; pill.classList.remove("primary"); }
+    catch(e){ toast(e.message); b.disabled = false; pill.textContent = "추가"; }
   };
   let tm; $q.oninput = () => { clearTimeout(tm); tm = setTimeout(run, 120); };
   run();
@@ -1319,6 +1327,38 @@ function groupByDay(list){
   const out = [];
   list.forEach(h => { const d = String(h.t).slice(0, 10), last = out[out.length - 1]; if (last && last[2] === d) last[1].push(h); else out.push([lab(d), [h], d]); });
   return out;
+}
+/* 발견: 넓은 종목(한국 300·미국 498) 중 오늘 백테스트를 통과한 매수 자리가 뜬 종목. 종목 고르기는 내가, 자리는 엔진이 */
+S.findMkt = LS.get("findMkt", "미국"); S.find = {};
+async function renderFind(){
+  const mk = S.findMkt;
+  $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">발견</span><div class="side r"></div></div>
+    <div class="title-block" data-anchor><h1 class="big">발견</h1><div class="sub">오늘 매수 자리가 뜬 종목 · 장 마감 기준</div></div>
+    <div class="seg" id="fseg" role="tablist">${["미국", "한국"].map(m => `<button role="tab" aria-selected="${m === mk}" class="${m === mk ? "on" : ""}" data-m="${m}">${m}</button>`).join("")}</div>
+    <div id="fl" style="margin-top:var(--gap-block)"><div class="list">${[0,1,2].map(() => `<div class="row"><div class="main"><div class="sk" style="width:50%;height:16px"></div><div class="sk" style="width:70%;height:12px;margin-top:8px"></div></div></div>`).join("")}</div></div>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">12년 백테스트에서 평소보다 나았던 자리만 골라요. 어떤 기업을 살지는 직접 판단하세요.</p></div>`;
+  document.getElementById("fseg").onclick = e => { const b = e.target.closest("[data-m]"); if (!b) return; S.findMkt = b.dataset.m; LS.set("findMkt", S.findMkt); renderFind(); };
+  let d = S.find[mk];
+  if (!d){ try{ d = S.find[mk] = await readJSON(`상태/발견_${mk}.json`, {items: []}); }catch(e){ const el = document.getElementById("fl"); if (el) el.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; } }
+  const el = document.getElementById("fl"); if (!el || S.tab !== "find" || S.detail || S.findMkt !== mk) return;
+  const have = new Set(stockList().map(v => v.sym)), items = d.items || [];
+  const mkOf = it => it.market || (/\.KQ$/.test(it.sym) ? "코스닥" : /\.KS$/.test(it.sym) ? "코스피" : "미국");
+  const code = it => it.sym.replace(/\.K[SQ]$/, "");
+  const nice = it => mkOf(it) !== "미국" ? it.name : (Object.entries(ALIAS).find(([, v]) => v === it.sym)?.[0] ||
+    it.name.replace(/\s+/g, " ").replace(/,?\s+(Inc\.?|Incorporated|Corporation|Corp\.?|Ltd\.?|Limited|Holdings?|plc|PLC|N\.V\.|Co\.?|Company|& Co\.?)$/i, "").replace(/,?\s+(Inc\.?|Corporation|Holdings?|plc|PLC)$/i, "").trim());
+  el.innerHTML = `<div class="fhead sub">${d.date ? esc(d.date.slice(5).replace("-", "/")) + " 마감 · " : ""}${d.n ? d.n + "종목 중 " : ""}${items.length}개</div>` +
+    (items.length ? `<div class="list">${items.map((it, i) => { const on = have.has(symOf(mkOf(it), code(it)));
+      return `<div class="row frow"><div class="main"><div class="name">${esc(nice(it))} <span class="tk">${esc(code(it))}</span></div>
+        <div class="fsig">${it.signals.map(x => `<span class="tag t-buy">${esc(x)}</span>`).join("")}<span class="sub">${esc(it.why || "")}</span></div>
+        <div class="sub fmeta">${[it.rs != null ? `힘 상위 ${Math.max(1, 100 - it.rs)}%` : "", it.hi52 != null ? `고점 ${pct(it.hi52)}` : "", it.trend === "정배열" ? "추세 좋음" : it.trend === "역배열" ? "추세 나쁨" : "", it.grade ? "확신 " + it.grade : ""].filter(Boolean).join(" · ")}</div></div>
+        <div class="fpx"><b>${num(it.price, mkOf(it))}</b><span class="chg ${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span>
+        <button class="pill-btn ${on ? "" : "primary"} press" data-i="${i}" ${on ? "disabled" : ""}>${on ? "등록됨" : "추가"}</button></div></div>`; }).join("")}</div>`
+      : `<div class="empty card"><b>오늘은 매수 자리가 뜬 종목이 없어요</b>${mk === "한국" ? "한국은 투매·2차 테스트·깊은 눌림처럼 드문 자리만 골라서 빈 날이 많아요." : "장 마감 뒤 다시 확인해 주세요."}</div>`);
+  el.querySelectorAll(".pill-btn[data-i]:not([disabled])").forEach(b => b.onclick = async () => {
+    const it = items[+b.dataset.i]; b.disabled = true; b.innerHTML = `<span class="spin"></span>`;
+    try{ await addStock(mkOf(it), code(it), it.name); b.textContent = "등록됨"; b.classList.remove("primary"); }
+    catch(e){ toast(e.message); b.disabled = false; b.textContent = "추가"; }
+  });
 }
 async function renderAlerts(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">알림</span><div class="side r"></div></div>
