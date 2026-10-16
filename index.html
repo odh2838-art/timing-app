@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-56">
+<meta name="app-version" content="2026-10-16-57">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -982,7 +982,7 @@ async function removeStock(sym){
 /* ───────── 차트: 기간 · 끌어서 이동 · 벌려서 확대 · 길게 눌러 가격 · 보조지표 ─────────
    bars: [날짜, 시, 고, 저, 종, 50일선, 200일선, 거래량]  (EMA·볼린저·일목·RSI는 여기서 계산) */
 const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2년",500]];
-const AUX = new Set(["TP1","TP2","분할청산 · 14선","분할청산 · 21선","최종 청산 @SR","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파","갭 발생","모멘텀 BUY","PEG 발생","PEG 되돌림 매수","PEG 재돌파"]);   // 검증에서 평소와 같았던 표시는 기본으로 숨김
+const AUX = new Set(["TP1","TP2","분할청산 · 14선","분할청산 · 21선","최종 청산 @SR","최종 청산","청산","돌파 청산","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파","갭 발생","모멘텀 BUY","PEG 발생","PEG 되돌림 매수","PEG 재돌파"]);   // 검증에서 평소와 같았던 표시는 기본으로 숨김
 const easy = w => String(w).replace(/(\d+)일 평균선/g, "$1일선").replace("돌파 자리", "돌파선").replace("2차 테스트", "바닥 재확인");
 const isAux = t => AUX.has(t) || t.includes("삼각형") || t.includes("쐐기") || ["급등 후 풀백", "피라미딩", "추세 진입", "셋업 형성 중", "MR Short"].includes(t);
 const IND_LIST = [["ma","평균선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["pat","청산·패턴"]];   // 지표견이 쓰는 도구만
@@ -1552,8 +1552,8 @@ async function openSearch(){
   run();
 }
 
-const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"📰", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", leader:"👑", st:"🧪", pull_buy:"🪃", vcp_buy:"🌀", dnend_buy:"🌤️", mr_buy:"🔂", sc:"🌊", wash:"🧯", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
-const BUY_K = new Set(["entry_weak","entry","leader","wash","mr_buy","pull_buy","vcp_buy","dnend_buy","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
+const ICON = {jl:"📈", entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"📰", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", leader:"👑", st:"🧪", pull_buy:"🪃", vcp_buy:"🌀", dnend_buy:"🌤️", mr_buy:"🔂", sc:"🌊", wash:"🧯", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
+const BUY_K = new Set(["jl","entry_weak","entry","leader","wash","mr_buy","pull_buy","vcp_buy","dnend_buy","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
 const SELL_K = new Set(["breakdown","momentum","fail","final","overheat","trim"]);
 let alertFilter = "all";
 function scorecard(list){
