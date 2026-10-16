@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-50">
+<meta name="app-version" content="2026-10-16-52">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -30,7 +30,7 @@
   --ease:cubic-bezier(.32,.72,0,1);      /* 시트·화면 전환 곡선 (튕기지 않음) */
   --ease-back:cubic-bezier(.34,1.4,.64,1); /* 끌다 놓아 제자리로 돌아올 때만 살짝 튕김 */
   --ease-out:cubic-bezier(.2,.8,.2,1);
-  --bar:rgba(245,245,247,.92); --tab:rgba(255,255,255,.94); --thumb:#FFFFFF; --sheet:var(--bg); --toast:rgba(29,29,31,.94);
+  --bar:rgba(245,245,247,.92); --tab:rgba(255,255,255,.94); --thumb:#FFFFFF; --sheet:#FFFFFF; --field:rgba(118,118,128,.12); --toast:rgba(29,29,31,.94);
   color-scheme:light;
 }
 /* 다크 모드: 아이폰 설정을 따라감 (애플 다크 팔레트) */
@@ -40,7 +40,7 @@
     --blue:#0A84FF; --up:#FF5A66; --down:#4C9AFF;
     --buy:#30D158; --buy-bg:#0F2E1B; --sell:#FF6961; --sell-bg:#3A1416;
     --wait:#FFB340; --wait-bg:#3A2A0E; --info:#64A8FF; --info-bg:#132A4A;
-    --bar:rgba(22,22,24,.92); --tab:rgba(28,28,30,.94); --thumb:#636366; --sheet:#1C1C1E; --toast:rgba(58,58,60,.96);
+    --bar:rgba(22,22,24,.92); --tab:rgba(28,28,30,.94); --thumb:#636366; --sheet:#1C1C1E; --field:rgba(118,118,128,.24); --toast:rgba(58,58,60,.96);
     color-scheme:dark;
   }
 }
@@ -160,6 +160,9 @@ body.sheet-open{background:#1D1D1F}
 .mkt{display:flex;flex-direction:column;gap:12px}
 .mtabs{display:flex;gap:18px;font-size:var(--t-heading);font-weight:700}
 .mtabs button{color:var(--fg3);padding:6px 0;min-height:44px;display:inline-flex;align-items:center;gap:6px} .mtabs button.on{color:var(--fg)}
+.mseg{display:flex;gap:2px;background:var(--field,var(--fill));border-radius:9px;padding:2px;margin:6px 0 4px}
+.mseg button{flex:1;min-height:32px;padding:0 12px;border-radius:7px;font-size:var(--t-small);font-weight:600;color:var(--fg2)}
+.mseg button[aria-selected="true"]{background:var(--thumb);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .mdot{width:7px;height:7px;border-radius:50%;background:var(--fg3)} .mdot.good{background:var(--buy)} .mdot.weak{background:var(--wait)}
 .mh{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
 .mv{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
@@ -181,6 +184,9 @@ body.sheet-open{background:#1D1D1F}
 .frow{align-items:flex-start}.fsig{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.fmeta{margin-top:4px}
 .fpx{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;font-variant-numeric:tabular-nums}
 .frow{align-items:center!important;gap:12px}
+.sheet.fit{height:auto;max-height:min(90dvh,calc(100% - 12px))} .sheet.fit .why{overflow-y:auto;padding-bottom:20px}
+.why .wpx{font-size:var(--t-title3,20px);font-variant-numeric:tabular-nums} .why .wpx .chg{font-size:var(--t-small)} .why .wpx .chg.up{color:var(--up)} .why .wpx .chg.down{color:var(--down)} .why .tk{color:var(--fg3);font-size:var(--t-small)}
+.why .wsig{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px} .why .wwhy{margin:12px 0 0;font-weight:600} .why .wwhat{margin:6px 0 0;color:var(--fg2)} .why .wproof{margin:6px 0 0;color:var(--fg2);font-size:var(--t-small)}
 .fadd{flex:none;width:44px;height:44px;margin-right:-8px;display:flex;align-items:center;justify-content:center;color:var(--blue)}
 .fadd::before{content:"";position:absolute}.fadd svg{width:28px;height:28px;padding:6px;border-radius:50%;background:var(--info-bg);box-sizing:border-box}
 .fadd.on{color:var(--fg3)}.fadd.on svg{background:var(--fill)}
@@ -219,8 +225,10 @@ body.sheet-open{background:#1D1D1F}
 .tmain{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .tword{font-size:var(--t-display);font-weight:700;line-height:1.1;letter-spacing:-.02em;display:inline-flex;align-items:center;gap:8px;color:inherit;padding:0;text-align:left}
 .tword .ti{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;font-size:12px;font-weight:700;font-style:normal;display:inline-flex;align-items:center;justify-content:center;opacity:.55;letter-spacing:0}
-.wdef{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--fill);display:grid;gap:6px;font-size:var(--t-small);line-height:1.4}
-.wdef>div{display:flex;gap:10px;color:var(--fg2)} .wdef b{min-width:64px;color:var(--fg2);font-weight:600} .wdef .on b,.wdef .on span{color:var(--fg)} .wdef .on b{font-weight:700}
+.wdef{margin-top:14px;padding:10px 14px;border-radius:14px;background:var(--fill);display:grid;gap:2px;font-size:var(--t-small);line-height:1.4}
+.wdef>div{display:flex;gap:10px;color:var(--fg3);padding:4px 8px;margin:0 -8px;border-radius:9px} .wdef b{min-width:64px;color:var(--fg3);font-weight:600}
+.wdef .on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.08)} .wdef .on b,.wdef .on span{color:var(--fg);font-weight:700}
+.tm-buy .wdef .on b{color:var(--buy)} .tm-wait .wdef .on b{color:var(--wait)} .tm-check .wdef .on b{color:var(--info)}
 .tm-buy .tword{color:var(--buy)} .tm-wait .tword{color:var(--wait)} .tm-check .tword{color:var(--info)} .tm-sell .tword{color:var(--fg2)}
 .twhy{margin-top:6px;font-size:var(--t-body);color:var(--fg2);font-weight:600}
 .tpx{text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
@@ -343,14 +351,14 @@ details.more>summary::-webkit-details-marker{display:none}
 /* 검색 시트 */
 .sheet-bg{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center}
 .scrim{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0}
-.sheet{position:relative;background:var(--sheet);width:100%;max-width:640px;height:90vh;height:90dvh;border-radius:var(--r-card) var(--r-card) 0 0;display:flex;flex-direction:column;padding:var(--gap-sub) max(var(--gutter),env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(var(--gutter),env(safe-area-inset-left,0px));transform:translateY(100%);box-shadow:0 -10px 40px rgba(0,0,0,.08);will-change:transform}
+.sheet{position:relative;background:var(--sheet);width:100%;max-width:640px;height:90vh;height:min(90dvh,calc(100% - 12px));border-radius:var(--r-card) var(--r-card) 0 0;display:flex;flex-direction:column;padding:var(--gap-sub) max(var(--gutter),env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(var(--gutter),env(safe-area-inset-left,0px));transform:translateY(100%);box-shadow:0 -10px 40px rgba(0,0,0,.08);will-change:transform}
 .grab{display:none}
 @media (pointer:coarse){ .grab{width:100%;height:20px;display:flex;align-items:center;justify-content:center} .grab::before{content:"";width:36px;height:5px;border-radius:2.5px;background:var(--fg3)} }
 .sheet-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--gap-caption);min-height:44px}
 .sheet-top h2{margin:0;font-size:var(--t-heading);font-weight:600;line-height:1.3}
-.search{display:flex;align-items:center;gap:8px;background:var(--fill);border-radius:var(--r-control);padding:0 var(--pad-card);min-height:48px}
+.search{display:flex;align-items:center;gap:8px;background:var(--field);border-radius:var(--r-control);padding:0 var(--pad-card);min-height:48px}
 .search input{flex:1;border:0;background:none;outline:none;font-size:var(--t-body);min-width:0;padding:10px 0}
-.results{flex:1;overflow:auto;margin-top:12px;-webkit-overflow-scrolling:touch;padding-bottom:16px}
+.results{flex:1;overflow:auto;margin-top:12px;-webkit-overflow-scrolling:touch;padding-bottom:16px;overscroll-behavior:contain}
 
 .toast{position:fixed;left:0;right:0;margin:0 auto;width:fit-content;bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--toast);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 0 0 .5px rgba(255,255,255,.08),0 6px 20px rgba(0,0,0,.18);color:#fff;padding:12px 18px;border-radius:var(--r-control);font-size:var(--t-detail);z-index:40;max-width:calc(100% - 2 * var(--gutter));display:flex;gap:10px;align-items:center;animation:tin .35s var(--ease) both}
 .toast.out{animation:tout .25s var(--ease-out) both}
@@ -529,7 +537,7 @@ async function refresh(){
 /* ───────── 실시간 시세 (설정의 '실시간 시세 주소' = 내 Cloudflare 중계) ─────────
    한국은 네이버 실시간, 미국은 야후 1분봉. 장이 열린 동안 1분마다, 새로고침 버튼으로 즉시. */
 S.q = {};
-const IDX_SYM = {"코스피": "^KS11", "코스닥": "^KQ11", "S&P 500": "^GSPC"};
+const IDX_SYM = {"코스피": "^KS11", "코스닥": "^KQ11", "S&P 500": "^GSPC", "나스닥": "^IXIC"};
 const isKRsym = sym => /\.K[SQ]$/.test(sym) || sym === "^KS11" || sym === "^KQ11";
 function marketOpenNow(kr){
   const tz = kr ? "Asia/Seoul" : "America/New_York";
@@ -766,14 +774,18 @@ function marketCard(regs){
     const krOpen = wd >= 1 && wd <= 5 && hm >= 540 && hm < 930, usOpen = (wd >= 1 && wd <= 5 && hm >= 1350) || (wd >= 2 && wd <= 6 && hm < 360);
     const cnt = {}; (stockList() || []).forEach(x => { const m = x.row["시장"] === "미국" ? "S&P 500" : x.row["시장"]; cnt[m] = (cnt[m] || 0) + 1; });
     const want = krOpen ? Object.keys(cnt).filter(m => m !== "S&P 500").sort((a, b) => cnt[b] - cnt[a])[0] || "코스피" : usOpen ? "S&P 500" : Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
-    const k = regs.findIndex(([n]) => n === want); S.mkt = k >= 0 ? k : 0;
+    S.mkN = regs.some(([n]) => n === want) ? want : regs[0][0]; S.mkt = 0;
   }
-  const cur = Math.min(S.mkt || 0, regs.length - 1), [name, g] = regs[cur];
+  const CTRY = n => (n === "S&P 500" || n === "나스닥") ? "미국" : "한국";
+  if (!regs.some(([n]) => n === S.mkN)) S.mkN = regs[0][0];
+  const [name, g] = regs.find(([n]) => n === S.mkN), ctry = CTRY(name);
+  const ctrys = [...new Set(regs.map(([n]) => CTRY(n)))], sibs = regs.filter(([n]) => CTRY(n) === ctry);
   const sp = g.spark || [], lo = Math.min(...sp), hi = Math.max(...sp), w = 120, h = 40;
   const line = sp.length > 1 ? sp.map((v, i) => `${(i / (sp.length - 1) * w).toFixed(1)},${(h - 3 - (v - lo) / ((hi - lo) || 1) * (h - 6)).toFixed(1)}`).join(" ") : "";
   const upc = sp.length > 1 && sp[sp.length - 1] >= sp[0];
   return `<div class="sec-cap">시장</div><div class="card mkt">
-    ${regs.length > 1 ? `<div class="mtabs">${regs.map(([n], k) => `<button class="press ${k === cur ? "on" : ""}" data-mkt="${k}">${esc(MKT_TAB[n] || n)}<i class="mdot ${regs[k][1].label === "약세" ? "weak" : regs[k][1].label === "양호" ? "good" : ""}" aria-label="${esc(regs[k][1].label || "")}"></i></button>`).join("")}</div>` : ""}
+    ${ctrys.length > 1 ? `<div class="mtabs">${ctrys.map(c => { const g0 = regs.find(([n]) => CTRY(n) === c)[1]; return `<button class="press ${c === ctry ? "on" : ""}" data-mkc="${c}">${c}<i class="mdot ${g0.label === "약세" ? "weak" : g0.label === "양호" ? "good" : ""}" aria-label="${esc(g0.label || "")}"></i></button>`; }).join("")}</div>` : ""}
+    ${sibs.length > 1 ? `<div class="mseg" role="tablist">${sibs.map(([n]) => `<button role="tab" class="press" aria-selected="${n === name}" data-mkn="${esc(n)}">${esc(n)}</button>`).join("")}</div>` : ""}
     <div class="mh"><div><div class="sub">${esc(name)}</div><div class="mv">${g.close != null ? num(g.close, name === "S&P 500" ? "미국" : "코스피") : ""} <span class="chg ${g.chg >= 0 ? "up" : "down"}">${g.chg != null ? pct(g.chg) : ""}</span></div></div>
       ${line && !(g.day && g.day.pts?.length) ? `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${line}" fill="none" stroke="${upc ? "var(--up)" : "var(--down)"}" stroke-width="1.8" stroke-linejoin="round"/></svg>` : ""}</div>
     ${dayLine(g)}
@@ -869,7 +881,9 @@ function renderHome(){
   const gf = document.getElementById("gofind"); if (gf) gf.onclick = () => go("fade", () => { S.tab = "find"; S.detail = null; });
   const a2 = document.getElementById("add2"); if (a2) a2.onclick = openSearch;
   const a0 = document.getElementById("add0"); if (a0) a0.onclick = openSearch;
-  $app.querySelectorAll("[data-mkt]").forEach(b => b.onclick = () => { const y = scrollY; S.mkt = +b.dataset.mkt; renderHome(); bindNavbar(); scrollTo(0, y); });
+  const mkGo = n => { const y = scrollY; S.mkN = n; renderHome(); bindNavbar(); scrollTo(0, y); };
+  $app.querySelectorAll("[data-mkn]").forEach(b => b.onclick = () => mkGo(b.dataset.mkn));
+  $app.querySelectorAll("[data-mkc]").forEach(b => b.onclick = () => { const r = Object.keys(S.dash?.regimes || {}); mkGo(b.dataset.mkc === "미국" ? (r.includes("S&P 500") ? "S&P 500" : "나스닥") : (r.includes("코스피") ? "코스피" : "코스닥")); });
   const rt = document.getElementById("retry"); if (rt) rt.onclick = () => { rt.disabled = true; refresh(); };
   document.getElementById("check").onclick = async () => {
     // 실시간 시세가 연결돼 있으면 가격은 바로, 엔진 계산(구간·신호)은 뒤에서 다시
@@ -1509,7 +1523,13 @@ async function openSearch(){
     try{ await addStock(r[0], r[1], r[2]); have.add(symOf(r[0], r[1])); pill.textContent = "추가됨"; pill.classList.remove("primary"); }
     catch(e){ toast(e.message); b.disabled = false; pill.textContent = "추가"; }
   };
-  let tm; $q.oninput = () => { clearTimeout(tm); tm = setTimeout(run, 120); };
+  let tm; $q.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { run(); $r.scrollTop = 0; }, 120); };
+  $q.onfocus = () => { $r.scrollTop = 0; requestAnimationFrame(() => $q.scrollIntoView({block: "nearest"})); };
+  $r.addEventListener("touchmove", () => { if (document.activeElement === $q) $q.blur(); }, {passive: true});   // 결과를 넘기면 키보드를 내린다
+  const vv = window.visualViewport;
+  if (vv){ const fit = () => { bg.style.height = vv.height + "px"; bg.style.top = vv.offsetTop + "px"; bg.style.bottom = "auto"; };
+    vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); fit();
+    const stop = new MutationObserver(() => { if (!bg.isConnected){ vv.removeEventListener("resize", fit); vv.removeEventListener("scroll", fit); stop.disconnect(); } }); stop.observe(document.body, {childList: true}); }
   run();
 }
 
@@ -1569,17 +1589,51 @@ async function renderFind(){
     it.name.replace(/\s+/g, " ").replace(/,?\s+(Inc\.?|Incorporated|Corporation|Corp\.?|Ltd\.?|Limited|Holdings?|plc|PLC|N\.V\.|Co\.?|Company|& Co\.?)$/i, "").replace(/,?\s+(Inc\.?|Corporation|Holdings?|plc|PLC)$/i, "").trim());
   el.innerHTML = `<div class="fhead sub">${d.date ? esc(d.date.slice(5).replace("-", "/")) + " 마감 · " : ""}${d.n ? d.n + "종목 중 " : ""}${items.length}개</div>` +
     (items.length ? `<div class="list">${items.map((it, i) => { const on = have.has(symOf(mkOf(it), code(it)));
-      return `<div class="row frow ${on ? "press" : ""}" ${on ? `data-go="${esc(symOf(mkOf(it), code(it)))}"` : ""}><div class="main"><div class="name">${esc(nice(it) || it.sym || "")} <span class="tk">${esc(code(it))}</span></div>
+      return `<div class="row frow press" data-why="${i}" role="button" tabindex="0" aria-label="${esc(nice(it) || it.sym || "")} 신호 이유"><div class="main"><div class="name">${esc(nice(it) || it.sym || "")} <span class="tk">${esc(code(it))}</span></div>
         <div class="sub fmeta">${[(it.signals || []).map(easy).join(" · "), it.hi52 != null ? `고점 ${pct(it.hi52)}` : "", it.pe ? `PER\u00a0${it.pe}` : ""].filter(Boolean).map(esc).join(" · ")}</div></div>
         <div class="fpx"><b>${num(it.price, mkOf(it))}</b><span class="chg ${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span></div>
         <button class="fadd press ${on ? "on" : ""}" data-i="${i}" ${on ? "disabled" : ""} aria-label="${esc(nice(it) || it.sym || "")} ${on ? "추가됨" : "내 종목에 추가"}">${on ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'}</button></div>`; }).join("")}</div>`
-      : `<div class="empty card"><b>오늘은 매수 신호가 없어요</b>${mk === "한국" ? "한국은 드문 자리만 골라요." : "장 마감 뒤 다시 확인해 주세요."}</div>`);
+      : `<div class="empty card"><b>오늘은 매수 신호가 없어요</b>${esc(emptyWhy(d, mk))}</div>`);
   el.querySelectorAll(".fadd[data-i]:not([disabled])").forEach(b => b.onclick = async ev => {
     ev.stopPropagation(); const it = items[+b.dataset.i]; b.disabled = true; b.innerHTML = `<span class="spin"></span>`;
-    try{ await addStock(mkOf(it), code(it), it.name); const row = b.closest(".frow"); row.classList.add("press"); row.onclick = () => go("push", () => S.detail = symOf(mkOf(it), code(it))); b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'; b.classList.add("on"); }
+    try{ await addStock(mkOf(it), code(it), it.name); have.add(symOf(mkOf(it), code(it))); b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'; b.classList.add("on"); }
     catch(e){ toast(e.message); b.disabled = false; b.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'; }
   });
-  el.querySelectorAll("[data-go]").forEach(r => r.onclick = () => go("push", () => S.detail = r.dataset.go));
+  el.querySelectorAll("[data-why]").forEach(r => { const open = () => whySheet(items[+r.dataset.why], { mk: mkOf(items[+r.dataset.why]), code: code(items[+r.dataset.why]), name: nice(items[+r.dataset.why]), have, onAdd: () => renderFind() });
+    r.onclick = open; r.onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); } }; });
+}
+/* 발견 목록이 비었을 때: 왜 비었는지 한 줄 */
+function emptyWhy(d, mk){
+  const st = d.stats || {}, n = st["신호"] || 0, weak = st["힘 약함"] || 0, per = st["PER 높음"] || 0;
+  if (n && weak >= n) return `신호 ${n}개가 떴지만 모두 힘이 약해 뺐어요. 힘 약한 종목은 신호 뒤에도 평소보다 못했어요.`;
+  if (n && per >= n) return `신호 ${n}개가 떴지만 모두 PER 30 이상이라 뺐어요.`;
+  if (n) return `신호 ${n}개 중 ${[weak && `힘 약함 ${weak}개`, per && `PER 높음 ${per}개`].filter(Boolean).join(" · ")}를 뺐어요.`;
+  if (st["시장"] === "약세") return `${d.n ? d.n + "종목 중 " : ""}오늘 신호가 뜬 곳이 없어요. 시장이 약할 땐 신호가 드물어요.`;
+  return `${d.n ? d.n + "종목 중 " : ""}오늘 신호가 뜬 곳이 없어요. 장 마감 뒤 다시 확인해 주세요.`;
+}
+/* 발견 종목을 누르면: 왜 떴는지 · 검증 · 위치 */
+function whySheet(it, o){
+  const sym = symOf(o.mk, o.code), on = o.have.has(sym), px = it.price;
+  const gap = v => v ? pct((px / v - 1) * 100) : "-";
+  const kv = [["고점 대비", it.hi52 != null ? pct(it.hi52) : "-"], ["50일선", gap(it.ma?.["50"])], ["200일선", gap(it.ma?.["200"])],
+    it.pe ? ["PER", String(it.pe)] : it.rs != null ? ["힘 순위", `상위 ${Math.max(1, 100 - it.rs)}%`] : null].filter(Boolean);
+  const sigs = it.signals || [];
+  const { sheet, close } = openSheet(o.name || it.sym, `<div class="why">
+    <div class="wpx"><b>${num(px, o.mk)}</b> <span class="chg ${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span> <span class="tk">${esc(o.code)}</span></div>
+    <div class="wsig">${sigs.map(t => `<span class="pill p-buy">${esc(easy(t))}</span>`).join("")}</div>
+    ${it.why || it.what ? `<p class="wwhy">${esc(it.why || it.what)}</p>` : ""}
+    ${it.proof ? `<p class="wproof">${esc(it.proof)}</p>` : ""}
+    <div class="kv">${kv.map(([k, v]) => `<div><span>${k}</span><b>${esc(v)}</b></div>`).join("")}</div>
+    <button class="btn primary press" id="wgo" style="margin-top:20px">${on ? "종목 보기" : "내 종목에 추가"}</button>
+    <p class="note" style="margin:10px 0 0;text-align:center">신호일 뿐 추천 아님 · 종목은 직접 판단해 주세요</p></div>`);
+  sheet.classList.add("fit");
+  const b = sheet.querySelector("#wgo");
+  b.onclick = async () => {
+    if (o.have.has(sym)){ close(); setTimeout(() => go("push", () => S.detail = sym), 300); return; }
+    b.disabled = true; b.innerHTML = `<span class="spin"></span>`;
+    try{ await addStock(o.mk, o.code, it.name); o.have.add(sym); b.disabled = false; b.textContent = "종목 보기"; o.onAdd?.(); }
+    catch(e){ toast(e.message); b.disabled = false; b.textContent = "내 종목에 추가"; }
+  };
 }
 async function renderAlerts(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">알림</span><div class="side r"></div></div>
