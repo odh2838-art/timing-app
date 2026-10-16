@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-14">
+<meta name="app-version" content="2026-10-16-15">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -148,6 +148,13 @@ body.sheet-open{background:#1D1D1F}
 .mv{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
 .mv .chg{font-size:var(--t-body);font-weight:600}
 .mhl{font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em}
+.wash{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--buy-bg);color:var(--buy);display:flex;flex-direction:column;gap:3px}
+.fgx{padding:0 0 2px}
+.fgx .fgw{background:var(--fill);color:var(--fg)}
+.fgbar{position:relative;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--down),var(--line) 50%,var(--up));margin-top:2px}
+.fgbar i{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--card);border:3px solid var(--fg);box-sizing:border-box}
+.fgends{display:flex;justify-content:space-between;font-size:12px;color:var(--fg2);margin-top:6px}
+.wash span{color:var(--fg);font-size:var(--t-sub, 13px);line-height:1.45;opacity:.85}
 .mread{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--t-body)}
 .mbar{display:flex;gap:6px} .mbar i{flex:1;height:6px;border-radius:3px;background:var(--line)}
 .mbar i.b-good{background:var(--buy)} .mbar i.b-weak{background:var(--sell)}
@@ -547,9 +554,11 @@ function marketCard(regs){
     <div class="mh"><div><div class="sub">${esc(name)}</div><div class="mv">${g.close != null ? num(g.close, name === "S&P 500" ? "미국" : "코스피") : ""} <span class="chg ${g.chg >= 0 ? "up" : "down"}">${g.chg != null ? pct(g.chg) : ""}</span></div></div>
       ${line ? `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${line}" fill="none" stroke="${upc ? "var(--up)" : "var(--down)"}" stroke-width="1.8" stroke-linejoin="round"/></svg>` : ""}</div>
     <div class="mhl">${esc(g.headline || "")}</div>
+    ${g.washout ? `<div class="wash"><b>🧯 시장 투매 바닥</b><span>12년 동안 이런 날 뒤 60일은 대체로 올랐어요. 남은 2·3차를 한 차수씩 나눠 사요.</span></div>` : ""}
     <div class="mread"><b>${g.rows.length}개 중 ${g.good}개 좋음</b><span class="sub">${g.weak ? `약한 것 ${g.weak}개` : "약한 것 없음"}</span></div>
     <div class="mbar">${g.rows.map(x => `<i class="${BADGE[x.badge] || ""}"></i>`).join("")}</div>
     ${g.rows.map(x => `<div class="mrow"><div><b>${esc(x.name)}</b><div class="sub">${esc(x.sub)}</div></div><div class="mval"><span>${esc(x.value)}</span><span class="badge ${BADGE[x.badge] || ""}">${esc(x.badge)}</span></div></div>`).join("")}
+    ${g.fg ? fgRow(g.fg) : ""}
     <div class="madv sub">${g.label === "약세" ? "시장 전체가 약해요 · 차수 사이 간격을 넓히세요" : g.label === "보통" ? "보통이에요 · 신호를 조금 더 엄격하게" : "계획대로 진행해도 돼요"}</div>
   </div>`;
 }
@@ -567,6 +576,14 @@ const shortAct = a => {
   if (w) return `이번 주 ${w[1]} 위면 매수`;
   return t.replace(/ 매수/, "").replace(/ \(절반만\)/, " 절반");
 };
+function fgRow(f){
+  const v = Math.max(0, Math.min(100, +f.score || 0));
+  const pw = f.prev_week != null ? ` · 1주 전 ${f.prev_week}` : "";
+  return `<div class="fgx"><div class="mrow" style="padding-bottom:8px"><div><b>공포 · 탐욕</b><div class="sub">${esc(f.src || "")}${pw} · 참고용</div></div>
+    <div class="mval"><span>${v}</span><span class="badge fgw">${esc(f.word || "")}</span></div></div>
+    <div class="fgbar" role="img" aria-label="공포 탐욕 ${v}점, ${esc(f.word || "")}"><i style="left:${v}%"></i></div>
+    <div class="fgends"><span>공포</span><span>탐욕</span></div></div>`;
+}
 const gradeTag = g => g ? `<span class="tag t-${esc(g.tone)}">${esc(g.label)}</span>` : "";
 
 function renderHome(){
@@ -1150,8 +1167,8 @@ async function openSearch(){
   run();
 }
 
-const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", leader:"👑", st:"🧪", pull_buy:"🪃", vcp_buy:"🌀", dnend_buy:"🌤️", sc:"🌊", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
-const BUY_K = new Set(["entry","leader","pull_buy","vcp_buy","dnend_buy","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
+const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", leader:"👑", st:"🧪", pull_buy:"🪃", vcp_buy:"🌀", dnend_buy:"🌤️", sc:"🌊", wash:"🧯", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
+const BUY_K = new Set(["entry","leader","wash","pull_buy","vcp_buy","dnend_buy","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
 const SELL_K = new Set(["breakdown","momentum","fail","final","overheat","trim","entry_weak"]);
 let alertFilter = "all";
 function scorecard(list){
