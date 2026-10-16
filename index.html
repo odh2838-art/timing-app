@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-36">
+<meta name="app-version" content="2026-10-16-37">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -197,6 +197,9 @@ body.sheet-open{background:#1D1D1F}
 .nxt{margin-top:12px;font-size:var(--t-body);line-height:1.45;display:flex;flex-direction:column;gap:2px} .nxt .sub{font-size:var(--t-small)}
 .act .exec{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
 .ameta{margin-top:10px;font-size:var(--t-small);color:var(--fg2)}
+.story{margin-top:12px;display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:5px;font-size:var(--t-body);line-height:1.45}
+.story .k{font-size:var(--t-small);font-weight:600;color:var(--fg2);padding-top:2px;white-space:nowrap}
+.story .k.u{color:var(--buy)} .story .k.d{color:var(--sell)} .story>span{min-width:0}
 .kv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;padding-top:14px;box-shadow:0 -1px 0 var(--line)}
 .kv div{display:flex;flex-direction:column;gap:3px;min-width:0}
 .kv span{font-size:var(--t-small);color:var(--fg2);white-space:nowrap} .kv small{font-size:12px;color:var(--fg2);white-space:nowrap;font-variant-numeric:tabular-nums} .kv b{font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1540,7 +1543,8 @@ function actCard(s, pl, mk){
   return `<div class="card act a-${esc(tone)}" role="status"><div class="r1"><span class="pill p-${esc(tone)}">${pill}</span>${ex ? `<span class="exec">${esc(ex[0])}${ex[1] ? ` · ${esc(ex[1])}` : ""}</span>` : ""}</div>
     <div class="ttl">${esc(title)}</div>${a.detail && tone !== "wait" ? `<div class="dt">${esc(a.detail)}</div>` : ""}${bar}
     ${meta ? `<div class="ameta">${esc(meta)}</div>` : ""}
-    ${a.next ? `<div class="nxt"><span class="sub">다음 확인</span>${esc(a.next)}</div>` : ""}
+    ${s.story ? `<div class="story" aria-label="차트 풀이"><span class="k">지금</span><span>${esc(s.story.now)}</span>${s.story.care ? `<span class="k">조심</span><span>${esc(s.story.care)}</span>` : ""}<span class="k u" aria-label="좋아지면">▲</span><span>${esc(s.story.up)}</span>${(s.story.down || a.next) ? `<span class="k d" aria-label="확인할 가격">▼</span><span>${esc(s.story.down || a.next)}</span>` : ""}</div>`
+      : a.next ? `<div class="nxt"><span class="sub">다음 확인</span>${esc(a.next)}</div>` : ""}
     ${kv.length ? `<div class="kv">${kv.map(([k, v, c, sm]) => `<div><span>${k}</span><b class="${c}">${v}</b>${sm ? `<small>${esc(sm)}</small>` : ""}</div>`).join("")}</div>` : ""}</div>`;
 }
 /* 최근 표시: 같은 뜻이면 한 줄로 묶음 */
