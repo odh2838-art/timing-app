@@ -1,0 +1,54 @@
+// rooru.invest 실시간 시세 중계 (Cloudflare Worker, 무료)
+// 한국: 네이버 증권 실시간 · 미국: 야후 파이낸스 1분봉
+// 정해진 두 곳만 대신 불러오고, rooru.invest 앱 주소에서만 읽을 수 있다 (아무 주소나 대신 여는 중계가 아님).
+// 개인 정보는 오가지 않는다: 앱이 보내는 것은 종목 코드뿐.
+
+const APP_ORIGIN = "https://odh2838-art.github.io";
+const UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148";
+const KR_INDEX = { "^KS11": "KOSPI", "^KQ11": "KOSDAQ" };
+
+const num = v => { const x = Number(String(v ?? "").replace(/,/g, "")); return Number.isFinite(x) && x !== 0 ? x : null; };
+
+async function naver(sym) {
+  const idx = KR_INDEX[sym];
+  const url = idx ? `https://polling.finance.naver.com/api/realtime/domestic/index/${idx}`
+                  : `https://polling.finance.naver.com/api/realtime/domestic/stock/${sym.split(".")[0]}`;
+  const r = await fetch(url, { headers: { "User-Agent": UA, "Referer": "https://m.stock.naver.com/" } });
+  const x = ((await r.json()).datas || [])[0];
+  if (!x) return null;
+  const p = num(x.closePrice);
+  if (!p) return null;
+  const t = x.localTradedAt || new Date().toISOString();
+  return { p, o: num(x.openPrice), h: num(x.highPrice), l: num(x.lowPrice), v: num(x.accumulatedTradingVolume),
+           d: t.slice(0, 10), t, st: x.marketStatus || "" };
+}
+
+async function yahoo(sym) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1m&range=1d`;
+  const r = await fetch(url, { headers: { "User-Agent": UA } });
+  const res = (await r.json())?.chart?.result?.[0];
+  if (!res) return null;
+  const m = res.meta, q = res.indicators?.quote?.[0] || {};
+  const tz = m.exchangeTimezoneName || "America/New_York";
+  const when = new Date((m.regularMarketTime || Date.now() / 1000) * 1000);
+  return { p: m.regularMarketPrice, o: (q.open || []).find(v => v != null) ?? null, h: m.regularMarketDayHigh ?? null,
+           l: m.regularMarketDayLow ?? null, v: m.regularMarketVolume ?? null, prev: m.chartPreviousClose ?? m.previousClose ?? null,
+           d: when.toLocaleDateString("en-CA", { timeZone: tz }), t: when.toISOString() };
+}
+
+export default {
+  async fetch(req) {
+    const cors = { "Access-Control-Allow-Origin": APP_ORIGIN, "Vary": "Origin", "Cache-Control": "no-store",
+                   "Content-Type": "application/json; charset=utf-8" };
+    if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+    const u = new URL(req.url);
+    const syms = (u.searchParams.get("s") || "").split(",").map(s => s.trim().toUpperCase())
+      .filter(s => /^\^?[A-Z0-9.-]{1,15}$/.test(s)).slice(0, 40);
+    const out = {};
+    await Promise.all(syms.map(async s => {
+      try { out[s] = (/\.(KS|KQ)$/.test(s) || KR_INDEX[s]) ? await naver(s) : await yahoo(s); }
+      catch (e) { out[s] = null; }
+    }));
+    return new Response(JSON.stringify(out), { headers: cors });
+  },
+};
