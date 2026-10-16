@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-31">
+<meta name="app-version" content="2026-10-16-33">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -828,9 +828,10 @@ async function removeStock(sym){
 const PERIODS = [["1개월",22],["3개월",66],["6개월",130],["1년",250],["2년",500]];
 const AUX = new Set(["TP1","TP2","분할청산 · 14선","분할청산 · 21선","최종 청산 @SR","상승 모멘텀 종료","하락 모멘텀 종료","W 바닥 돌파","갭 발생","모멘텀 BUY","PEG 발생","PEG 되돌림 매수","PEG 재돌파"]);   // 검증에서 평소와 같았던 표시는 기본으로 숨김
 const easy = w => String(w).replace(/(\d+)일선/g, "$1일 평균선").replace("돌파 자리", "돌파선");
-const isAux = t => AUX.has(t) || t.includes("삼각형") || t.includes("쐐기");
+const isAux = t => AUX.has(t) || t.includes("삼각형") || t.includes("쐐기") || ["급등 후 풀백", "피라미딩", "추세 진입", "셋업 형성 중", "MR Short"].includes(t);
 const IND_LIST = [["ma","이평선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["pat","청산·패턴"]];   // 지표견이 쓰는 도구만
-const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:false}, LS.get("ind", {})); IND.bb = false; IND.rsi = false;
+const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:true}, LS.get("ind", {}));
+if (!LS.get("patOn2")){ IND.pat = true; LS.set("patOn2", 1); LS.set("ind", IND); }   // 지표견처럼 청산·패턴 표시를 기본으로 켬 (한 번만) IND.bb = false; IND.rsi = false;
 const COL = {up:"#F04452", down:"#3182F6", e21:"#FF9F0A", s50:"#30B566", s200:"#8E5CF6", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
 
 function calcInd(bars){
@@ -942,13 +943,13 @@ function mountChart(box, s){
     const C = {buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"]}, boxes = [];
     const hit = a => boxes.some(b => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3);
     const chip = (i, text, tone, below) => {
-      const [bg, fg] = C[tone] || C.info, w = text.length * 12 + 12, hh = 20, cx = Math.max(L + w/2, Math.min(W - R - w/2 - 2, x(i)));
-      let by = below ? y(bars[i][3]) + 16 : y(bars[i][2]) - 16 - hh;
-      for (let k = 0; k < 8 && hit({x:cx - w/2, y:by, w, h:hh}); k++) by += below ? hh + 4 : -(hh + 4);
+      const [bg, fg] = C[tone] || C.info, w = text.length * 10.5 + 10, hh = 17, cx = Math.max(L + w/2, Math.min(W - R - w/2 - 2, x(i)));
+      let by = below ? y(bars[i][3]) + 10 : y(bars[i][2]) - 10 - hh;
+      for (let k = 0; k < 3 && hit({x:cx - w/2, y:by, w, h:hh}); k++) by += below ? hh + 3 : -(hh + 3);   // 봉에서 멀리 떨어지지 않게 3칸까지만
       by = Math.max(2, Math.min(H0 - hh - 2, by));
       if (hit({x:cx - w/2, y:by, w, h:hh})) return;   // 자리가 없으면 겹쳐 그리지 않고 건너뜀
       boxes.push({x:cx - w/2, y:by, w, h:hh});
-      p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="6" fill="${bg}"/><text x="${cx}" y="${by + 14.5}" font-size="12" font-weight="600" fill="${fg}" text-anchor="middle">${esc(text)}</text>`;
+      p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="5" fill="${bg}" opacity=".95"/><text x="${cx}" y="${by + 12.5}" font-size="10.5" font-weight="600" fill="${fg}" text-anchor="middle">${esc(text)}</text>`;
     };
     {  // 차트를 가리지 않게: 표시는 봉 위아래 작은 점(▲ 매수 쪽, ▼ 주의 쪽), 글자는 가장 최근 2개만. 날짜를 짚으면 그날 표시가 위에 나옴
       const vis = (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1 && (IND.pat || !isAux(m[1])));
@@ -956,7 +957,11 @@ function mountChart(box, s){
       vis.forEach(m => { const i = idx[m[0]], [, fg] = C[m[2]] || C.info, up = m[2] === "sell", k = i + (up ? "u" : "d"), o = (stack[k] = (stack[k] || 0) + 1) - 1;
         const yy = up ? y(bars[i][2]) - 7 - o * 8 : y(bars[i][3]) + 7 + o * 8, r_ = Math.max(2.4, Math.min(4, cw * 0.35));
         p += up ? `<path d="M${x(i) - r_} ${yy - r_} L${x(i) + r_} ${yy - r_} L${x(i)} ${yy + r_ * .6}Z" fill="${fg}"/>` : `<path d="M${x(i) - r_} ${yy + r_} L${x(i) + r_} ${yy + r_} L${x(i)} ${yy - r_ * .6}Z" fill="${fg}"/>`; });
-      vis.slice(-1).forEach(m => chip(idx[m[0]], m[1], m[2], m[2] !== "sell"));   // 글자는 가장 최근 1개만
+      // 3개월 이하로 볼 때는 지표견처럼 표시마다 이름표 (매수·주의 신호 먼저, 최근 것부터 · 자리가 없으면 건너뜀). 더 넓게 보면 최근 1개만
+      const span = i1 - i0, byPri = [...vis].sort((a, b) => (isAux(a[1]) - isAux(b[1])) || (idx[b[0]] - idx[a[0]]));
+      if (span <= 32) byPri.forEach(m => chip(idx[m[0]], m[1], m[2], m[2] !== "sell"));                  // 1개월쯤: 모든 표시에 이름표
+      else if (span <= 70) byPri.filter(m => !isAux(m[1])).forEach(m => chip(idx[m[0]], m[1], m[2], m[2] !== "sell"));   // 3개월: 매수·주의 신호만
+      else vis.slice(-1).forEach(m => chip(idx[m[0]], m[1], m[2], m[2] !== "sell"));
     }
     if (s.vcp?.vcp && i1 === N - 1 && !(s.marks || []).some(m => m[1] === "VCP 형성" && idx[m[0]] >= N - 15)) chip(N - 1, "VCP 형성", "info", false);
     p += `</g>`;
