@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-2">
+<meta name="app-version" content="2026-10-17-3">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1841,6 +1841,7 @@ function storyCard(s, mk){
   // 판정과 사다리가 어긋나지 않게: 매수면 아래 매수 가격 줄을 빼고, 매수가 아니면 손절가 줄을 빼고 기다릴 가격을 넣는다
   let lv = st.levels.filter(l => t.tone === "buy" ? l[1] !== "buy" : l[1] !== "stop");
   if (t.tone !== "buy" && t.price && !lv.some(l => l[1] === "buy" && Math.abs(l[0] / t.price - 1) < 0.002)) lv.push([t.price, "buy", "매수 가격"]);
+  if (s.zone_ok === false) lv = lv.filter(l => l[1] !== "buy");   // 센 종목이 아니면 매수·지켜볼 가격을 보여 주지 않는다 (엔진 구간 검증)
   if (t.tone === "sell") lv = lv.map(l => l[1] === "buy" ? [l[0], l[1], "지켜볼 가격"] : l);
   st.levels = lv.sort((a, b) => b[0] - a[0]);
   const row = ([p, k, t]) => { const [a, ...b] = t.split(" · ");
