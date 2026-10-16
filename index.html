@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-33">
+<meta name="app-version" content="2026-10-16-35">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -166,6 +166,16 @@ body.sheet-open{background:#1D1D1F}
 .frow{align-items:flex-start}.fsig{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}.fmeta{margin-top:4px}
 .fpx{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;font-variant-numeric:tabular-nums}
 .fpx .chg{font-size:var(--t-small)}.fpx .chg.up{color:var(--up)}.fpx .chg.down{color:var(--down)}.fhead{margin:0 var(--pad-card) var(--gap-caption)}
+.rorow{display:flex;align-items:center;gap:8px}.rorow .readout{flex:1;min-width:0}
+.sigtg{flex:none;font-size:var(--t-small);font-weight:600;padding:5px 12px;border-radius:999px;background:var(--fill);color:var(--fg2)}
+.sigtg[aria-pressed="true"]{background:var(--blue);color:#fff}
+.sigm{margin:var(--gap-inner) 10px 0;padding:12px 14px;border-radius:14px;background:var(--fill);display:flex;flex-direction:column;gap:3px;font-size:var(--t-body);line-height:1.45;animation:smIn .18s var(--ease-out)}
+.sigm[hidden]{display:none}
+@keyframes smIn{from{opacity:0;transform:translateY(-4px)}}
+.sm-h{display:flex;align-items:center;gap:8px}.sm-h b{font-weight:700}.sm-h .pill{padding:1px 8px}.sm-h .d{color:var(--fg2);font-size:var(--t-small)}
+.sm-h .x{margin-left:auto;width:28px;height:28px;margin-block:-4px;margin-right:-6px;border-radius:50%;color:var(--fg2);font-size:17px;line-height:28px;text-align:center}
+.sm-w{color:var(--fg2);font-size:var(--t-small)}.sm-a b{font-weight:600}.sm-a .sub{font-size:var(--t-small)}
+@media (prefers-reduced-motion:reduce){.sigm{animation:none}}
 .wash span{color:var(--fg);font-size:var(--t-sub, 13px);line-height:1.45;opacity:.85}
 .mread{display:flex;justify-content:space-between;align-items:baseline;font-size:var(--t-body)}
 .mbar{display:flex;gap:6px} .mbar i{flex:1;height:6px;border-radius:3px;background:var(--line)}
@@ -863,14 +873,18 @@ function mountChart(box, s){
   const V = { n: pdef, end: N - 1 };
   box.innerHTML = `
     <div class="seg" role="tablist" aria-label="기간">${PERIODS.filter(p => p[1] <= N + 10).map(([t,k]) => `<button role="tab" data-k="${Math.min(k,N)}">${t}</button>`).join("")}<span class="thumb"></span></div>
-    <div class="readout" aria-live="polite"></div>
+    <div class="rorow"><div class="readout" aria-live="polite"></div><button class="sigtg press" aria-pressed="${IND.sig !== false}" aria-label="신호 표시 켜기·끄기">신호</button></div>
     <div class="plot"></div>
+    <div class="sigm" aria-live="polite" hidden></div>
     ${s.pattern ? `<div class="patn"><b>${esc(s.pattern.lines[0].replace("모양 · ", ""))}</b> <span class="sub">${s.pattern.grade === "정식" ? "" : "· 참고(" + esc(s.pattern.reasons.join(", ")) + ")"}</span><div class="sub">패턴 돌파는 10번 중 6번 다시 안으로 → 참고만</div></div>` : ""}
     <details class="cset"><summary class="press">선·표시 설정</summary>
     <div class="inds" style="padding:0">${IND_LIST.filter(([k]) => k !== "vol" || hasVol).map(([k,t]) => `<button class="chip press" data-ind="${k}" aria-pressed="${!!IND[k]}">${t}</button>`).join("")}</div>
     <div class="legend" style="padding:0"></div></details>`;
-  const $plot = box.querySelector(".plot"), $read = box.querySelector(".readout"), $seg = box.querySelector(".seg"), $leg = box.querySelector(".legend");
-  const hint = "▲▼ 길게 눌러 확인";
+  const $plot = box.querySelector(".plot"), $sigm = box.querySelector(".sigm"), $read = box.querySelector(".readout"), $seg = box.querySelector(".seg"), $leg = box.querySelector(".legend");
+  box.querySelector(".sigtg").onclick = e => {   // 신호 이름표·표시를 한 번에 끄고 켜기 (캔들이 가릴 때)
+    IND.sig = IND.sig === false; LS.set("ind", IND); e.currentTarget.setAttribute("aria-pressed", IND.sig); if (IND.sig === false) showSig(null); draw();
+  };
+  const hint = "신호를 누르면 뜻 · 길게 눌러 날짜";
   let cross = null, geo = null;
 
   const segSync = (animate = true) => {
@@ -888,6 +902,7 @@ function mountChart(box, s){
     if (IND.ch) it.push(["20일 채널", COL.bb]);
     if (IND.ich) it.push(["일목 구름", "#30B566"]);
     it.push(["매수 구간", "rgba(27,138,74,.35)"]);
+    if (s.sig_help) it.push(["사는 신호", "#1B8A4A"], ["조절분 덜기", "#B26A00"], ["참고만", "#7C7C82"]);
     if (s.sr_line) it.push(["SR 손절선", "#8B5E3C"]);
     if (s.wall) it.push(["위쪽 벽", "#D22F3C"]);
     $leg.innerHTML = it.map(([t,c]) => `<span><i style="background:${c}"></i>${t}</span>`).join("");
@@ -940,30 +955,34 @@ function mountChart(box, s){
     for (let i = i0; i <= i1; i++) if (ind.nh[i]) p += `<circle cx="${x(i)}" cy="${y(bars[i][2]) - 5}" r="1.8" fill="${COL.up}" opacity=".8"/>`;
     zones.forEach(z => { if (z.lo <= hi && z.lo >= lo) p += `<text x="${L+6}" y="${Math.min(H0-8, y(z.lo) + 16)}" font-size="13" font-weight="600" fill="#1B8A4A" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(z.label)} 구간</text>`; });
     /* 신호 말풍선 (보이는 것 중 최근 6개, 겹치지 않게) */
-    const C = {buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"]}, boxes = [];
+    const C = {buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"], trim:["#FFF1DC","#B26A00"], none:["#EFEFF2","#7C7C82"]}, boxes = [];
     const hit = a => boxes.some(b => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3);
     const chip = (i, text, tone, below) => {
+      if (boxes.some(b => b.t === text && b.i === i)) return;
       const [bg, fg] = C[tone] || C.info, w = text.length * 10.5 + 10, hh = 17, cx = Math.max(L + w/2, Math.min(W - R - w/2 - 2, x(i)));
       let by = below ? y(bars[i][3]) + 10 : y(bars[i][2]) - 10 - hh;
       for (let k = 0; k < 3 && hit({x:cx - w/2, y:by, w, h:hh}); k++) by += below ? hh + 3 : -(hh + 3);   // 봉에서 멀리 떨어지지 않게 3칸까지만
       by = Math.max(2, Math.min(H0 - hh - 2, by));
       if (hit({x:cx - w/2, y:by, w, h:hh})) return;   // 자리가 없으면 겹쳐 그리지 않고 건너뜀
-      boxes.push({x:cx - w/2, y:by, w, h:hh});
-      p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="5" fill="${bg}" opacity=".95"/><text x="${cx}" y="${by + 12.5}" font-size="10.5" font-weight="600" fill="${fg}" text-anchor="middle">${esc(text)}</text>`;
+      boxes.push({x:cx - w/2, y:by, w, h:hh, t:text, i}); const on = sel && sel.t === text && sel.i === i;
+      p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="5" fill="${on ? fg : bg}" opacity=".95"/><text x="${cx}" y="${by + 12.5}" font-size="10.5" font-weight="600" fill="${on ? "#fff" : fg}" text-anchor="middle">${esc(text)}</text>`;
     };
-    {  // 차트를 가리지 않게: 표시는 봉 위아래 작은 점(▲ 매수 쪽, ▼ 주의 쪽), 글자는 가장 최근 2개만. 날짜를 짚으면 그날 표시가 위에 나옴
+    const SH = s.sig_help, col_ = m => SH ? (SH[m[1]]?.act || m[2]) : m[2];   // 색 = 할 일: 초록 사는 신호 · 주황 조절분 덜기 · 회색 참고만
+    if (IND.sig !== false) {  // 차트를 가리지 않게: 표시는 봉 위아래 작은 점(▲ 매수 쪽, ▼ 주의 쪽), 글자는 가장 최근 2개만. 날짜를 짚으면 그날 표시가 위에 나옴
       const vis = (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1 && (IND.pat || !isAux(m[1])));
       const stack = {};
-      vis.forEach(m => { const i = idx[m[0]], [, fg] = C[m[2]] || C.info, up = m[2] === "sell", k = i + (up ? "u" : "d"), o = (stack[k] = (stack[k] || 0) + 1) - 1;
+      vis.forEach(m => { const i = idx[m[0]], [, fg] = C[col_(m)] || C.info, up = m[2] === "sell", k = i + (up ? "u" : "d"), o = (stack[k] = (stack[k] || 0) + 1) - 1;
         const yy = up ? y(bars[i][2]) - 7 - o * 8 : y(bars[i][3]) + 7 + o * 8, r_ = Math.max(2.4, Math.min(4, cw * 0.35));
         p += up ? `<path d="M${x(i) - r_} ${yy - r_} L${x(i) + r_} ${yy - r_} L${x(i)} ${yy + r_ * .6}Z" fill="${fg}"/>` : `<path d="M${x(i) - r_} ${yy + r_} L${x(i) + r_} ${yy + r_} L${x(i)} ${yy - r_ * .6}Z" fill="${fg}"/>`; });
       // 3개월 이하로 볼 때는 지표견처럼 표시마다 이름표 (매수·주의 신호 먼저, 최근 것부터 · 자리가 없으면 건너뜀). 더 넓게 보면 최근 1개만
-      const span = i1 - i0, byPri = [...vis].sort((a, b) => (isAux(a[1]) - isAux(b[1])) || (idx[b[0]] - idx[a[0]]));
-      if (span <= 32) byPri.forEach(m => chip(idx[m[0]], m[1], m[2], m[2] !== "sell"));                  // 1개월쯤: 모든 표시에 이름표
-      else if (span <= 70) byPri.filter(m => !isAux(m[1])).forEach(m => chip(idx[m[0]], m[1], m[2], m[2] !== "sell"));   // 3개월: 매수·주의 신호만
-      else vis.slice(-1).forEach(m => chip(idx[m[0]], m[1], m[2], m[2] !== "sell"));
+      const rk = m => ({buy:0, trim:1}[col_(m)] ?? 2);   // 자리가 모자라면 사는 신호·덜기 신호 먼저
+      const span = i1 - i0, byPri = [...vis].sort((a, b) => (rk(a) - rk(b)) || (isAux(a[1]) - isAux(b[1])) || (idx[b[0]] - idx[a[0]]));
+      if (sel && idx[sel.d] != null) { const m = vis.find(m => m[1] === sel.t && m[0] === sel.d); if (m) chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"); }   // 고른 신호는 꼭 보이게
+      if (span <= 32) byPri.forEach(m => chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"));                  // 1개월쯤: 모든 표시에 이름표
+      else if (span <= 70) byPri.filter(m => !isAux(m[1])).forEach(m => chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"));   // 3개월: 매수·주의 신호만
+      else byPri.slice(0, 1).forEach(m => chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"));
     }
-    if (s.vcp?.vcp && i1 === N - 1 && !(s.marks || []).some(m => m[1] === "VCP 형성" && idx[m[0]] >= N - 15)) chip(N - 1, "VCP 형성", "info", false);
+    if (IND.sig !== false && s.vcp?.vcp && i1 === N - 1 && !(s.marks || []).some(m => m[1] === "VCP 형성" && idx[m[0]] >= N - 15)) chip(N - 1, "VCP 형성", "info", false);
     p += `</g>`;
     g += p;
     const last = s.price ?? bars[N-1][4], lc = (s.chg ?? 0) >= 0 ? COL.up : COL.down;
@@ -996,8 +1015,29 @@ function mountChart(box, s){
       $read.innerHTML = `<span><b>${a.replace(/-/g, ".")} – ${z.slice(5).replace("-", ".")}${s.live && i1 === N - 1 ? " 장중" : ""}</b></span><span>${hint}</span>`;
     }
     $plot.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="일봉 차트" font-family="Pretendard Variable,-apple-system,sans-serif">${g}</svg>`;
-    geo = { L, cw, start, W };
+    geo = { L, cw, start, W, H, boxes };
+    if (cross != null && drag?.cross && IND.sig !== false){   // 손가락으로 길게 눌러 짚은 날에 신호가 있으면 그 뜻을 (없으면 그대로 두어 화면이 들썩이지 않게)
+      const d = bars[Math.max(i0, Math.min(i1, cross))][0], m = (s.marks || []).find(m => m[0] === d && (s.sig_help || {})[m[1]]);
+      if (m) showSig({t: m[1], d, i: idx[d]});
+    }
   }
+  /* 신호 뜻: 이름표를 누르면 그 신호 하나만 — 사라는 건지, 덜라는 건지, 참고만인지 (다시 누르거나 ✕로 닫음) */
+  let sel = null, selKey = "";
+  function showSig(x){
+    sel = x; const key = x ? x.t + x.d : "";
+    if (key === selKey) return; selKey = key;
+    const h = x && (s.sig_help || {})[x.t];
+    if (!h){ sel = null; $sigm.hidden = true; $sigm.innerHTML = ""; return; }
+    const [pc, pv] = {buy: ["p-buy", "사는 신호"], trim: ["p-wait", "조절분 덜기"]}[h.act] || ["p-hold", "참고만"];
+    $sigm.innerHTML = `<div class="sm-h"><span class="pill ${pc}">${pv}</span><b>${esc(x.t)}</b><span class="d">${+x.d.slice(5,7)}/${+x.d.slice(8)}</span><button class="x press" aria-label="닫기">✕</button></div>
+      <div class="sm-w">${esc(h.what)}</div><div class="sm-a"><b>${esc(h.advice)}</b> <span class="sub">· ${esc(h.proof.replace("검증: ", ""))}</span></div>`;
+    $sigm.hidden = false;
+    $sigm.querySelector(".x").onclick = () => { showSig(null); draw(); };
+  }
+  const chipAt = (cx, cy) => {   // 누른 자리의 이름표 (손가락 크기만큼 여유)
+    const r = $plot.getBoundingClientRect(), k = geo.W / r.width, px = (cx - r.left) * k, py = (cy - r.top) * k;
+    return geo.boxes.find(b => px > b.x - 6 && px < b.x + b.w + 6 && py > b.y - 8 && py < b.y + b.h + 8);
+  };
   let raf = 0; const redraw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); segSync(false); }); };
   const tween = (n1, e1) => {   // 기간 버튼·두 번 탭: 부드럽게 옮겨 간다
     if (REDUCED){ V.n = n1; V.end = e1; draw(); segSync(); return; }
@@ -1048,8 +1088,10 @@ function mountChart(box, s){
         let v = -((b[0] - a[0]) / Math.max(1, b[1] - a[1])) / geo.cw * (geo.W / r.width); let t = performance.now();
         if (!REDUCED && Math.abs(v) > 0.002){ const step = now => { const dt = now - t; t = now; V.end += v * dt; v *= Math.pow(0.94, dt / 16); const e0 = V.end; clamp(); draw(); if (Math.abs(v) > 0.0008 && V.end === e0) inertia = requestAnimationFrame(step); else segSync(); }; inertia = requestAnimationFrame(step); }
         else segSync();
-      } else {   // 두 번 탭하면 원래 기간으로
-        const now = performance.now(); if (now - lastTap < 300){ tween(pdef, N - 1); lastTap = 0; } else lastTap = now;
+      } else {   // 이름표를 누르면 뜻 · 빈 곳을 두 번 탭하면 원래 기간으로
+        const b = IND.sig !== false && chipAt(e.clientX, e.clientY);
+        if (b){ const d = bars[b.i][0]; showSig(sel && sel.t === b.t && sel.d === d ? null : {t: b.t, d, i: b.i}); draw(); lastTap = 0; }
+        else { const now = performance.now(); if (now - lastTap < 300){ tween(pdef, N - 1); lastTap = 0; } else lastTap = now; }
       }
       drag = null;
     }
@@ -1088,7 +1130,7 @@ function renderDetail(sym){
     <div class="stack">
       ${s.action ? actCard(s, pl, mk) : g ? `<div class="card grade"><div><div class="lbl c-${esc(g.tone)}">${esc(g.label)}</div><div class="setup">${esc(g.setup)}</div></div></div>` : ""}
       <div class="card chart" id="chartBox"></div>
-      ${s.notes?.length ? notesCard(s.notes) : ""}
+      ${!s.sig_help && s.notes?.length ? notesCard(s.notes) : ""}
     </div>
     ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
     ${s.cautions?.length ? `<div class="sec-title">주의</div><div class="card" style="padding-block:4px"><div class="items">${s.cautions.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
