@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-15">
+<meta name="app-version" content="2026-10-16-16">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -172,12 +172,12 @@ body.sheet-open{background:#1D1D1F}
 .dist .seg-z{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--buy);opacity:.55}
 .dist .dot{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--fg);box-shadow:0 0 0 3px var(--card)}
 .dist .dl{display:flex;justify-content:space-between;gap:8px;font-size:var(--t-small);color:var(--fg2);margin-top:8px}
-.nxt{margin-top:12px;font-size:var(--t-body);line-height:1.45} .nxt .sub{font-size:var(--t-small);margin-right:6px}
+.nxt{margin-top:12px;font-size:var(--t-body);line-height:1.45;display:flex;flex-direction:column;gap:2px} .nxt .sub{font-size:var(--t-small)}
 .act .exec{font-size:var(--t-small);font-weight:600;color:var(--fg2)}
 .ameta{margin-top:10px;font-size:var(--t-small);color:var(--fg2)}
 .kv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;padding-top:14px;box-shadow:0 -1px 0 var(--line)}
 .kv div{display:flex;flex-direction:column;gap:3px;min-width:0}
-.kv span{font-size:var(--t-small);color:var(--fg2)} .kv b{font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv span{font-size:var(--t-small);color:var(--fg2);white-space:nowrap} .kv small{font-size:12px;color:var(--fg2);white-space:nowrap;font-variant-numeric:tabular-nums} .kv b{font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .note-i .nh{flex-wrap:wrap}
 .patn{padding:0 10px;margin-top:var(--gap-inner);font-size:var(--t-small);line-height:1.5}
 .cset{margin-top:var(--gap-inner);padding:0 10px}
@@ -227,7 +227,7 @@ details.more>summary::-webkit-details-marker{display:none}
 .item .s{color:var(--fg)}
 .zone{display:flex;justify-content:space-between;gap:12px;padding:12px 0}
 .zone+.zone{box-shadow:0 -1px 0 var(--line)}
-.zone .rng{font-weight:600}
+.zone .rng{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums} .zone>div:first-child{min-width:0}
 .zone .why{font-size:var(--t-small);color:var(--fg2);margin-top:var(--gap-text)}
 .form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-inner) 12px}
 .form .full{grid-column:1/-1}
@@ -955,7 +955,7 @@ function renderDetail(sym){
       <div class="card chart" id="chartBox"></div>
       ${s.notes?.length ? notesCard(s.notes) : ""}
     </div>
-    ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)} – ${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
+    ${s.zones?.length ? `<div class="sec-title">매수 구간</div><div class="card" style="padding-block:6px">${s.zones.map(z => `<div class="zone"><div><b>${esc(z.label)}</b><div class="why">${esc((z.why||[]).map(easy).join(", "))}</div></div><div style="text-align:right"><div class="rng">${num(z.lo, mk)}~${num(z.hi, mk)}</div><div class="why">${z.state === "in" ? "도착" : pct(z.dist)}</div></div></div>`).join("")}</div>` : ""}
     ${s.cautions?.length ? `<div class="sec-title">주의</div><div class="card" style="padding-block:4px"><div class="items">${s.cautions.map(c => `<div class="item"><span class="m c-wait">!</span><div class="t">${esc(c)}</div></div>`).join("")}</div></div>` : ""}
     <details class="more"><summary class="press">전문가용 자세히 보기</summary>
     ${sepa.length ? `<div class="sec-title"><span>SEPA 5요소</span><span>${nOk}/5 통과</span></div><div class="card" style="padding-block:4px">${itemsHTML(sepa.map(v => v.join(" ")))}</div>` : ""}
@@ -1266,16 +1266,26 @@ function actCard(s, pl, mk){
     bar = `<div class="dist"><div class="track"><span class="seg-z" style="left:${pos(z.lo)}%;width:${pos(z.hi) - pos(z.lo)}%"></span><span class="dot now" style="left:${pos(s.price)}%"></span></div>
       <div class="dl"><span class="c-buy">${esc(z.label)} ${num(z.hi, mk)}</span><span><b>${pct(z.dist)}</b> 남음</span><span>지금 ${num(s.price, mk)}</span></div></div>`;
   }
-  const kv = pl ? [["살 가격", num(pl.entry, mk), ""], [(pl.mode || "").startsWith("보유") ? "50일선" : "손절가" + (pl.stop_judge ? ` · ${pl.stop_judge}` : ""), num(pl.stop, mk), "c-sell"], ["목표", num(pl.target, mk), "c-buy"], ["손익비", pl.rr == null ? "-" : "1 : " + pl.rr.toFixed(1), ""]] : [];
+  const rel = v => pl && pl.entry && v ? pct((v / pl.entry - 1) * 100) : "";
+  const rrw = pl?.rr == null ? "" : pl.rr >= 2 ? "좋음" : pl.rr >= 1 ? "보통" : "낮음";
+  const kv = pl ? [["살 가격", num(pl.entry, mk), "", Math.abs(pl.entry / s.price - 1) < 0.002 ? "지금 가격" : pct((pl.entry / s.price - 1) * 100)],
+    [(pl.mode || "").startsWith("보유") ? "50일선" : "손절가", num(pl.stop, mk), "c-sell", [rel(pl.stop), pl.stop_judge].filter(Boolean).join(" · ")],
+    ["목표", num(pl.target, mk), "c-buy", rel(pl.target)],
+    ["손익비", pl.rr == null ? "-" : "1 : " + pl.rr.toFixed(1), "", rrw]] : [];
   const ex = a.exec, cv = s.conv, kr = /\.K[SQ]$/.test(s.symbol || "") || ["코스피", "코스닥"].includes(s.market);
-  const al = cv?.align ? (cv.align.now + (cv.align.prev ? ` (← ${cv.align.prev})` : "")) : "";
+  // 이평선 배열을 쉬운 말로 (정배열 = 추세 좋음, 역배열 = 추세 나쁨, 꼬임 = 방향 정하는 중)
+  const AL = {"정배열": "추세 좋음", "역배열": "추세 나쁨", "꼬임": "방향 정하는 중"};
+  const al = !cv?.align ? "" : cv.align.prev === "꼬임" && cv.align.now === "정배열" ? "추세 막 좋아짐"
+    : cv.align.prev === "정배열" && cv.align.now === "꼬임" ? "추세 약해지는 중"
+    : cv.align.prev === "꼬임" && cv.align.now === "역배열" ? "추세 막 나빠짐"
+    : cv.align.prev === "역배열" && cv.align.now === "꼬임" ? "추세 나아지는 중" : (AL[cv.align.now] || "");
   const rsw = s.rs_rank != null ? `힘 상위 ${Math.max(1, Math.round(100 - s.rs_rank))}%` : "";
   const meta = [kr && cv ? `확신 ${cv.grade}${cv.reasons?.length ? " (" + cv.reasons.join("·") + ")" : ""}` : "", al, rsw, s.leader ? "👑 하락장 주도주" : ""].filter(Boolean).join(" · ");
   return `<div class="card act a-${esc(tone)}" role="status"><div class="r1"><span class="pill p-${esc(tone)}">${pill}</span>${ex ? `<span class="exec">${esc(ex[0])}${ex[1] ? ` · ${esc(ex[1])}` : ""}</span>` : ""}</div>
     <div class="ttl">${esc(title)}</div>${a.detail && tone !== "wait" ? `<div class="dt">${esc(a.detail)}</div>` : ""}${bar}
     ${meta ? `<div class="ameta">${esc(meta)}</div>` : ""}
-    ${a.next ? `<div class="nxt"><span class="sub">다음 확인</span> ${esc(a.next)}</div>` : ""}
-    ${kv.length ? `<div class="kv">${kv.map(([k, v, c]) => `<div><span>${k}</span><b class="${c}">${v}</b></div>`).join("")}</div>` : ""}</div>`;
+    ${a.next ? `<div class="nxt"><span class="sub">다음 확인</span>${esc(a.next)}</div>` : ""}
+    ${kv.length ? `<div class="kv">${kv.map(([k, v, c, sm]) => `<div><span>${k}</span><b class="${c}">${v}</b>${sm ? `<small>${esc(sm)}</small>` : ""}</div>`).join("")}</div>` : ""}</div>`;
 }
 /* 최근 표시: 같은 뜻이면 한 줄로 묶음 */
 function notesCard(ns){
