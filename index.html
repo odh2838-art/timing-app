@@ -1292,8 +1292,8 @@ async function openSearch(){
   run();
 }
 
-const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", leader:"👑", st:"🧪", pull_buy:"🪃", vcp_buy:"🌀", dnend_buy:"🌤️", sc:"🌊", wash:"🧯", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
-const BUY_K = new Set(["entry","leader","wash","pull_buy","vcp_buy","dnend_buy","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
+const ICON = {entry:"✅", breakout:"🚀", arrive:"📍", breakdown:"🚫", trim:"✂️", rebuy:"🔁", momentum:"📉", fail:"↩️", news:"⚡", entry_hold:"⏸️", trim14:"✂️", trim21:"✂️", final:"🛑", overheat:"🔥", reclaim21:"🔁", arrive_deep:"🎯", leader:"👑", st:"🧪", pull_buy:"🪃", vcp_buy:"🌀", dnend_buy:"🌤️", mr_buy:"🔂", sc:"🌊", wash:"🧯", reclaim:"🔓", wallbreak:"🧱", reclaim50:"🔁", entry_weak:"⚠️"};
+const BUY_K = new Set(["entry","leader","wash","mr_buy","pull_buy","vcp_buy","dnend_buy","arrive_deep","breakout","st","sc","arrive","reclaim","wallbreak","reclaim50"]);
 const SELL_K = new Set(["breakdown","momentum","fail","final","overheat","trim","entry_weak"]);
 let alertFilter = "all";
 function scorecard(list){
