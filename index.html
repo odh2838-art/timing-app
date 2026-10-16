@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-16-49">
+<meta name="app-version" content="2026-10-16-50">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -226,6 +226,7 @@ body.sheet-open{background:#1D1D1F}
 .tpx{text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}
 .tpx small{font-size:var(--t-small);color:var(--fg2)} .tpx b{font-size:var(--t-heading);font-weight:700;font-variant-numeric:tabular-nums}
 .kv.k3{grid-template-columns:repeat(2,1fr)}
+.trisk{margin-top:12px;font-size:var(--t-small);font-weight:600;color:var(--wait)} .tdisc{margin-top:10px;font-size:calc(12rem/17);color:var(--fg3)}
 .adv{margin-top:var(--gap-section)}.adv>summary{list-style:none;cursor:pointer;color:var(--fg2);font-size:var(--t-small);font-weight:600;padding:12px var(--pad-card);min-height:44px}.adv>summary::-webkit-details-marker{display:none}
 .ferr{margin:6px 0 0;color:var(--sell);font-size:var(--t-small)} .tlink{align-self:center;color:var(--blue);font-size:var(--t-small);font-weight:600;padding:10px;min-height:44px;display:inline-flex;align-items:center}
 .tabbar[hidden]{display:none}
@@ -1523,6 +1524,7 @@ function scorecard(list){
   const cell = (st, label) => st ? `<div class="sc-cell"><div class="sub">${label}</div><div class="sc-v ${st.avg>=0?"up":"down"}">${pct(st.avg)}</div><div class="sub">${st.n}건 · 오름 ${Math.round(st.win)}%</div></div>`
                                   : `<div class="sc-cell"><div class="sub">${label}</div><div class="sc-v" style="color:var(--fg3)">–</div><div class="sub">기록 중</div></div>`;
   if (![stat(buys,"r20"), stat(buys,"r60"), stat(sells,"r20")].some(Boolean)) return "";   // 쌓이기 전엔 숨김
+  if ((stat(buys,"r20")?.n || 0) < 30) return `<div class="card"><b>알림 성적</b><p class="note" style="margin:6px 0 0">아직 판단하기 일러요 · 30건이 쌓이면 보여 드려요</p></div>`;
   if (false)
     return `<div class="card"><b>알림 성적표</b><p class="note" style="margin:6px 0 0">보낸 알림의 20일 뒤 결과가 쌓이면 여기에 평균과 오른 비율이 나와요.</p></div>`;
   return `<div class="card"><div class="sc-grid">${cell(stat(buys,"r20"),"매수 · 20일")}${cell(stat(buys,"r60"),"매수 · 60일")}${cell(stat(sells,"r20"),"주의 · 20일")}</div>
@@ -1552,10 +1554,10 @@ S.findMkt = LS.get("findMkt", "미국"); S.find = {};
 async function renderFind(){
   const mk = S.findMkt;
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">발견</span><div class="side r"></div></div>
-    <div class="title-block" data-anchor><h1 class="big">발견</h1><div class="sub">오늘 매수 신호가 뜬 종목</div></div>
+    <div class="title-block" data-anchor><h1 class="big">발견</h1><div class="sub">오늘 신호가 뜬 종목 · 추천 아님</div></div>
     <div class="seg" id="fseg" role="tablist">${["미국", "한국"].map(m => `<button role="tab" aria-selected="${m === mk}" class="${m === mk ? "on" : ""}" data-m="${m}">${m}</button>`).join("")}</div>
     <div id="fl" style="margin-top:var(--gap-block)"><div class="list">${[0,1,2].map(() => `<div class="row"><div class="main"><div class="sk" style="width:50%;height:16px"></div><div class="sk" style="width:70%;height:12px;margin-top:8px"></div></div></div>`).join("")}</div></div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">${mk === "한국" ? "백테스트에서 평소보다 나았던 자리 중 힘이 중간 이상인 종목만 골라요. 힘이 강할수록 60일 뒤 성적이 좋았어요." : "매수 시점만 알려 드려요. 종목 선택은 직접 해 주세요."}</p></div>`;
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">${mk === "한국" ? "힘이 중간 이상인 종목만 골라요. 종목은 직접 판단해 주세요." : "PER 30 이상은 뺐어요. 종목은 직접 판단해 주세요."}</p></div>`;
   document.getElementById("fseg").onclick = e => { const b = e.target.closest("[data-m]"); if (!b) return; S.findMkt = b.dataset.m; LS.set("findMkt", S.findMkt); renderFind(); };
   let d = S.find[mk];
   if (!d){ try{ d = S.find[mk] = await readJSON(`상태/발견_${mk}.json`, {items: []}); }catch(e){ const el = document.getElementById("fl"); if (el) el.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; } }
@@ -1670,7 +1672,7 @@ let toastT;
 /* 지금 할 일 카드: 상태 표시 + 한 줄 + (대기면) 거리 막대 + 살 가격·손절가·목표·손익비 */
 /* 할 일 카드 (타이밍만): 큰 한 단어(매수·소량 매수·대기·확인 중·관망) + 짧은 이유 + 기다릴 가격.
    보유·차수·비중은 보여 주지 않는다 — 언제 사면 좋은지만. */
-const WDEF = [["매수", "지금 사기 좋은 때"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "매수 가격까지 기다리기"], ["관망", "떨어지는 중 · 지금은 사지 않기"]];
+const WDEF = [["매수", "규칙상 사는 자리"], ["소량 매수", "사도 되지만 평소보다 적게"], ["마감 확인", "금요일 종가가 기준 위면 매수"], ["대기", "매수 가격까지 기다리기"], ["관망", "지금은 사지 않기"]];
 function timingCard(s, pl, mk){
   const t = s.timing, tone = t.tone, p = t.price;
   const z = (s.zones || []).find(z => z.label !== "지지" && z.state === "above");
@@ -1691,7 +1693,9 @@ function timingCard(s, pl, mk){
       ${p && tone !== "buy" ? `<div class="tpx"><small>${tone === "sell" ? "지켜볼 가격" : "매수 가격"}</small><b>${num(p, mk)}</b><small>${rel(p)}</small></div>` : ""}</div>
     ${bar}
     <div class="wdef" hidden>${WDEF.map(([w, d]) => `<div class="${w === t.title || (w === "마감 확인" && chk) ? "on" : ""}"><b>${w}</b><span>${d}</span></div>`).join("")}</div>
-    ${kv.length ? `<div class="kv k3">${kv.map(([k, v, c, sm]) => `<div><span>${k}</span><b class="${c}">${v}</b>${sm ? `<small>${esc(sm)}</small>` : ""}</div>`).join("")}</div>` : ""}</div>`;
+    ${kv.length ? `<div class="kv k3">${kv.map(([k, v, c, sm]) => `<div><span>${k}</span><b class="${c}">${v}</b>${sm ? `<small>${esc(sm)}</small>` : ""}</div>`).join("")}</div>` : ""}
+    ${tone === "buy" && (s.cautions || []).length ? `<div class="trisk">! ${esc((s.cautions.find(c => /약세|실적/.test(c)) || s.cautions[0]))}</div>` : ""}
+    <div class="tdisc">규칙 계산 결과 · 투자 권유 아님</div></div>`;
 }
 function actCard(s, pl, mk){
   if (s.timing) return timingCard(s, pl, mk);
