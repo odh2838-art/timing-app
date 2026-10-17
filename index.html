@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-18-46">
+<meta name="app-version" content="2026-10-18-47">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -626,7 +626,7 @@ function applyOne(s, q, prevKey){
 function applyQuotes(){
   for (const [sym, s] of Object.entries(S.lt?.stocks || {})){
     const q = S.q[sym]; if (!q || !q.p) continue;
-    const prev = q.d > s.date ? (q.prev ?? s.price) : (q.prev ?? null);
+    const prev = q.d > s.date ? (q.prev ?? s.price) : (q.prev ?? (s.chg != null ? s.price / (1 + s.chg / 100) : null));   // 같은 날이면 엔진의 전날 종가
     s.live = { p: q.p, chg: prev ? (q.p / prev - 1) * 100 : null, t: q.t, d: q.d };
   }
 }
@@ -744,15 +744,16 @@ function slidePages(how, ghost, from = 0){
 }
 function go(how, fn){ if (how === "push"){ S.listY = scrollY; try{ history.pushState({v: "d"}, ""); }catch(e){} } S.dirty = false; fn(); render(how); }
 /* 시스템 '뒤로'(안드로이드 제스처·버튼, 브라우저 뒤로): 시트 → 상세 → 다른 탭 순서로 한 단계씩 닫는다 */
-let skipPop = 0;
+let skipPop = 0, BACK_ANIM = false;
 addEventListener("popstate", () => {
   if (skipPop){ skipPop--; return; }
   if (SWIPING) return;
   document.querySelectorAll(".ghost").forEach(g => { if (!g.getAnimations().length) g.remove(); });   // 전환이 끝났는데 남은 화면 조각 (터치가 막히는 원인)
   const sh = document.querySelector(".sheet-bg:not(.closing)");
   if (sh){ sh._close?.(true); return; }
-  if (S.odd){ go("pop", () => S.odd = null); return; }
-  if (S.ltd){ go("pop", () => S.ltd = null); return; }
+  const how = BACK_ANIM ? "pop" : "none"; BACK_ANIM = false;   // 앱의 뒤로 버튼이면 밀리는 전환, 시스템 제스처면 그대로 (두 번 밀리지 않게)
+  if (S.odd){ go(how, () => S.odd = null); return; }
+  if (S.ltd){ go(how, () => S.ltd = null); return; }
   if (S.tab !== HOME) go("fade", () => { S.tab = HOME; });
 });
 
@@ -1213,7 +1214,7 @@ function mountChart(box, s, opt = {}){
    아이폰(홈 화면 앱엔 시스템 뒤로가 없음)에서만. 안드로이드는 시스템 뒤로 제스처가 같은 자리를 써서 둘이 부딪히면 화면이 멈춘다 */
 const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 let SWIPING = false;
-if (IOS) (() => {
+if (false) (() => {   // 10/18: 꺼 둠 — 아이폰 시스템 뒤로 제스처가 같은 자리를 써서 화면이 겹치고 멈췄음
   let x0 = null, y0 = 0, on = false, ghost = null, shade = null, last = [], detailY = 0, sym = null, cur = 0;
   addEventListener("touchstart", e => { const t = e.touches[0]; x0 = ((S.odd || S.ltd) && t.clientX < 24 && !document.querySelector(".sheet-bg") && !REDUCED) ? t.clientX : null; y0 = t.clientY; on = false; last = [[t.clientX, e.timeStamp]]; }, {passive:true});
   addEventListener("touchmove", e => {
@@ -1504,7 +1505,7 @@ async function renderLT(){
     <h2 class="sec-title">종목</h2>
     ${st.length || pending.length ? `<div class="list">${st.map(s => { const c = CALL(s);
         const ln = (c.line || "") + (c.buy_pct && c.tone === "buy" ? ` · 자산의 ${c.buy_pct}%` : "");
-        return `<button class="row press lt-srow" data-sym="${esc(s.sym)}"><div class="main"><div class="lt-n">${esc(s.name)}${tag(s)}</div>${ln ? `<div class="lt-s">${esc(ln)}</div>` : ""}</div>${s.live ? `<div class="lt-px" style="gap:4px"><b class="lt-chip ${esc(c.tone)}">${esc(c.word)}</b><span>${num(s.live.p, s.market)} <span class="${s.live.chg > 0 ? "up" : s.live.chg < 0 ? "down" : ""}">${pct(s.live.chg)}</span></span></div>` : `<b class="lt-chip ${esc(c.tone)}">${esc(c.word)}</b>`}${CHEV}</button>`; }).join("")}
+        return `<button class="row press lt-srow" data-sym="${esc(s.sym)}"><div class="main"><div class="lt-n">${esc(s.name)}${tag(s)}</div>${ln ? `<div class="lt-s">${esc(ln)}</div>` : ""}</div>${s.live ? `<div class="lt-px" style="gap:4px"><b class="lt-chip ${esc(c.tone)}">${esc(c.word)}</b><span>${num(s.live.p, s.market)} ${s.live.chg != null ? `<span class="${s.live.chg > 0 ? "up" : s.live.chg < 0 ? "down" : ""}">${pct(s.live.chg)}</span>` : ""}</span></div>` : `<b class="lt-chip ${esc(c.tone)}">${esc(c.word)}</b>`}${CHEV}</button>`; }).join("")}
       ${pending.map(r => `<button class="row press lt-srow" data-pend="${esc(symOf(r["시장"], r["티커"]))}"><div class="main"><div class="lt-n">${esc(r["이름"] || r["티커"])}</div><div class="lt-s">${S.busy ? "계산 중 · 1분 정도" : "아직 계산 전"}</div></div>${CHEV}</button>`).join("")}</div>
       <p class="note lt-foot">${st[0]?.date ? md(st[0].date) + " 종가 기준" : ""}</p>`
       : `<div class="card empty"><b>종목 추가</b>종목별 매수·매도 신호를 계산해요<div style="margin-top:14px"><button class="btn primary press" id="ltadd0">종목 추가</button></div></div>`}
@@ -1589,7 +1590,7 @@ function renderLTMarket(){
       ${ctx.wti != null ? `<div class="row lt-srow"><div class="main"><div class="lt-n">WTI 유가</div><div class="lt-s">20일 ${pct(ctx.wti20)}</div></div><b>$${ctx.wti.toFixed(1)}</b></div>` : ""}</div>
       <p class="note lt-foot">${ctx.warn ? "지수는 오르는데 금리·유가가 안 내려와요 → 이런 상승은 믿지 않기" : "금리·유가가 안 내려오는데 오르는 증시는 믿지 않기"}</p>` : ""}
   </div>`;
-  document.getElementById("back").onclick = () => history.back(); bindNavbar();
+  document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
   $app.querySelectorAll("[data-ind]").forEach(b => b.onclick = () => { const x = IND[+b.dataset.ind]; ltManual({ ...x.any, _cond: x.cond, state: x.word[0] }, mk.bofa_hist); });
 }
 function ltEmpty(head){
@@ -1660,7 +1661,7 @@ function renderLTDetail(sym){
   const prow = (k, v, st, cls) => `<div class="row lt-srow"><div class="main"><div class="lt-n">${k}</div></div><div class="lt-px"><b>${v}</b><span class="${cls || ""}">${st}</span></div></div>`;
   $app.innerHTML = `<div class="wrap">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>신호</span></button></div><span class="mini">${esc(s.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(s.name)}</h1><div class="sub">${s.live ? `지금 ${num(s.live.p, s.market)} <span class="${s.live.chg >= 0 ? "up" : "down"}">${pct(s.live.chg)}</span> · 실시간 ${hhmm(s.live.t)}` : `${md(s.date)} 종가 ${num(s.price, s.market)} <span class="${s.chg >= 0 ? "up" : "down"}">${pct(s.chg)}</span>`}</div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(s.name)}</h1><div class="sub">${s.live ? `지금 ${num(s.live.p, s.market)} ${s.live.chg != null ? `<span class="${s.live.chg >= 0 ? "up" : "down"}">${pct(s.live.chg)}</span>` : ""} · 실시간 ${hhmm(s.live.t)}` : `${md(s.date)} 종가 ${num(s.price, s.market)} <span class="${s.chg >= 0 ? "up" : "down"}">${pct(s.chg)}</span>`}</div></div>
     <section class="card lt-vd">
       <div class="w ${esc(C.tone)}">${esc(C.word)}</div>
       ${say ? `<p class="l">${esc(say)}</p>` : ""}
@@ -1689,7 +1690,7 @@ function renderLTDetail(sym){
   </div>`;
   document.getElementById("ltwhy").onclick = () => { const o = openSheet("이유", `<div class="why"><div class="list">${(C.why || []).map(x => `<div class="row lt-r"><div class="main"><div class="lt-n" style="font-weight:400">${esc(x)}</div></div></div>`).join("")}
     <div class="row lt-r"><div class="main"><div class="lt-n" style="font-weight:400">시장: ${esc(mkLine)}</div></div></div></div></div>`); o.sheet.classList.add("fit"); };
-  document.getElementById("back").onclick = () => history.back(); bindNavbar();
+  document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
   document.getElementById("ltod").onclick = () => go("push", () => S.odd = sym);
   const edit = async (fn, msg, after) => { try{ await loadLT(); const r = S.ltcsv.rows.find(x => symOf(x["시장"], x["티커"]) === sym); if (!r) throw new Error("목록에 없어요"); fn(r); await saveLTcsv(msg); after?.(); ltRecalc(); }catch(e){ toast(e.message); } };
   document.querySelectorAll("#ltrole [data-r]").forEach(b => b.onclick = () => { if (b.dataset.r === s.role) return; s.role = b.dataset.r; renderLTDetail(sym); edit(r => r["구분"] = b.dataset.r, `앱: 종목 ${s.name} ${b.dataset.r}`); });
@@ -1755,7 +1756,7 @@ function odLevels(s){
 }
 function odPrice(){
   const s = S.lt?.stocks?.[S.odd], el = document.getElementById("odpx"); if (!s || !el) return;
-  if (s.live) el.innerHTML = `지금 ${num(s.live.p, s.market)} <span class="${s.live.chg >= 0 ? "up" : "down"}">${pct(s.live.chg)}</span> · 실시간 ${hhmm(s.live.t)}`;
+  if (s.live) el.innerHTML = `지금 ${num(s.live.p, s.market)}${s.live.chg != null ? ` ${s.live.chg != null ? `<span class="${s.live.chg >= 0 ? "up" : "down"}">${pct(s.live.chg)}</span>` : ""}` : ""} · 실시간 ${hhmm(s.live.t)}`;
 }
 function renderODDetail(sym){
   if (!S.lt){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div><div class="sk" style="width:70%;height:12px;margin-top:14px"></div></div></div>`;
@@ -1772,7 +1773,7 @@ function renderODDetail(sym){
   const BX = {"SC(박스 하단)": "SC", "AR(박스 하단)": "AR", "AR(박스 상단)": "AR", "BC(박스 상단)": "BC", "강한 수요": "강한 수요", "스프링": "스프링", "스프링 후보": "스프링 후보", "SOS(돌파)": "돌파(SOS)", "BU/LPS(되돌림 지지)": "되돌림 지지"};
   $app.innerHTML = `<div class="wrap">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>${S.ltd ? "신호" : "오동엔진"}</span></button></div><span class="mini">${esc(s.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(s.name)}</h1><div class="sub" id="odpx">${s.live ? `지금 ${P(s.live.p)} <span class="${s.live.chg >= 0 ? "up" : "down"}">${pct(s.live.chg)}</span> · 실시간 ${hhmm(s.live.t)}` : `${esc(yy(s.date))} 종가 ${P(s.price)} <span class="${s.chg >= 0 ? "up" : "down"}">${pct(s.chg)}</span>`}</div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(s.name)}</h1><div class="sub" id="odpx">${s.live ? `지금 ${P(s.live.p)}${s.live.chg != null ? ` ${s.live.chg != null ? `<span class="${s.live.chg >= 0 ? "up" : "down"}">${pct(s.live.chg)}</span>` : ""}` : ""} · 실시간 ${hhmm(s.live.t)}` : `${esc(yy(s.date))} 종가 ${P(s.price)} <span class="${s.chg >= 0 ? "up" : "down"}">${pct(s.chg)}</span>`}</div></div>
     ${o.error || !o.head ? `<div class="card empty"><b>아직 계산 전이에요</b>다시 계산하면 나와요</div>` : `
     <section class="card lt-vd">
       <div class="w ${h.tone === "buy" ? "buy" : "wait"}">${esc(h.word)}</div>
@@ -1797,7 +1798,7 @@ function renderODDetail(sym){
     </div>`}
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">차트 근거로 계산한 자리예요. 투자 판단은 직접 하세요.</p>
   </div>`;
-  document.getElementById("back").onclick = () => history.back(); bindNavbar();
+  document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
   const box = $app.querySelector("#chartBox");
   if (box) S.chart = mountChart(box, { ...s, marks: [], sig_help: null, pattern: null, price: s.live?.p ?? s.price, chg: s.live?.chg ?? s.chg }, { od: true, levels: odLevels(s) });
 }
