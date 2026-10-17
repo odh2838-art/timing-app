@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-43">
+<meta name="app-version" content="2026-10-17-44">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -489,6 +489,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .lt-vd .l{margin:6px 0 0;font-size:var(--t-body);line-height:1.45}
 .od-st{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)} .od-st b{font-size:var(--t-heading)} .od-st span{font-size:var(--t-small);color:var(--fg2)}
 .odleg{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 2px 2px;font-size:var(--t-small)}
+.odleg em{font-style:normal;color:var(--fg3);font-size:calc(13rem/17);margin-left:4px}
 .odleg>div{display:flex;align-items:center;gap:10px;min-width:0} .odleg span{flex:1;color:var(--fg2);min-width:0} .odleg b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .odleg .sw{flex:none;width:22px;height:0;border-top:2px solid} .odleg .sw.dash{border-top-style:dashed} .odleg .sw.dot{border:0;height:2px;background:repeating-linear-gradient(90deg,currentColor 0 3px,transparent 3px 6px)}
 .odleg .sw.band{height:10px;border:0;border-radius:3px;background:var(--buy);opacity:.35} .odleg .sw.boxi{height:10px;border:1.2px dashed var(--fg3);border-radius:2px}
@@ -883,8 +884,10 @@ function mountChart(box, s, opt = {}){
       const P = v => num(v, s.market), rows = (opt.levels || []).filter(v => v.label && IND[v.g] !== false).map(v => {
         const k = v.kind === "trendline" ? `<i class="sw ln dash" style="border-color:${v.col}"></i>` : sw[v.kind] || "";
         const val = v.kind === "zone" || v.kind === "box" ? `${P(v.lo)}${v.hi / v.lo - 1 > 0.001 ? " ~ " + P(v.hi) : ""}` : P(v.kind === "trendline" ? v.now : v.v);
-        return `<div>${k}<span>${esc(v.label)}</span><b>${val}</b></div>`; });
-      box.querySelector(".odleg").innerHTML = rows.join(""); return;
+        const at = v.kind === "trendline" ? v.now : v.kind === "zone" || v.kind === "box" ? null : v.v, px = s.price;
+        const note = at == null || !V.lo ? "" : at < V.lo ? "차트 아래" : at > V.hi ? "차트 위" : v.kind === "fib" && at > px ? "지금 가격 위" : "";
+        return `<div>${k}<span>${esc(v.label)}${note ? ` <em>${note}</em>` : ""}</span><b>${val}</b></div>`; });
+      const el = box.querySelector(".odleg"), h = rows.join(""); if (el.dataset.h !== h){ el.dataset.h = h; el.innerHTML = h; } return;
     }
     if (false){
       const has = k => (opt.levels || []).some(v => v.kind === k && IND[v.g] !== false);
@@ -932,7 +935,7 @@ function mountChart(box, s, opt = {}){
     LV.forEach(v => (OD && !v.fit) || [v.lo ?? v.v, v.hi ?? v.v].forEach(q => { if (q >= lo * 0.75 && q <= hi * 1.1){ lo = Math.min(lo, q); hi = Math.max(hi, q); } }));   // 살 가격·지지선이 조금 멀어도 보이게
     [s.wall?.v, ...zones.flatMap(z => [z.lo, z.hi])].forEach(v => { if (v != null && v > lo * 0.94 && v < hi * 1.05){ lo = Math.min(lo, v); hi = Math.max(hi, v); } });
     if (!(hi - lo > 1e-9)){ lo = lo * 0.99 || -1; hi = hi * 1.01 || 1; }   // 봉이 모두 같으면 (거래정지)
-    const pad = (hi - lo) * 0.07; lo -= pad; hi += pad;
+    const pad = (hi - lo) * 0.07; lo -= pad; hi += pad; V.lo = lo; V.hi = hi;
     const y = v => T + (hi - v) / (hi - lo) * (H0 - T - 6);
     let g = `<defs><clipPath id="cp"><rect x="${L}" y="0" width="${W - L - R}" height="${H0}"/></clipPath><clipPath id="cpv"><rect x="${L}" y="${H0}" width="${W - L - R}" height="${H - H0}"/></clipPath></defs>`;   // 가격 선이 거래량 칸으로 넘어가지 않게
     const lastY = y(s.price ?? bars[N-1][4]), zt = LT ? null : zsOf(s).find(z => z.label !== "지지" && z.state === "above"), ztY = zt ? y(zt.hi) : -999;
@@ -1111,6 +1114,7 @@ function mountChart(box, s, opt = {}){
     }
     $plot.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(`일봉 차트, ${PERIODS.find(p => p[1] === Math.round(V.n))?.[0] || ""}, 지금 ${num(s.price, s.market)}` + (s.timing?.price ? `, 매수 가격 ${num(s.timing.price, s.market)}` : ""))}" font-family="Pretendard Variable,-apple-system,sans-serif">${g}</svg>`;
     geo = { L, cw, start, W, H, boxes };
+    if (OD) legend();   // 설명줄: 지금 보이는 범위 밖의 선은 '차트 아래·위'로
     if (cross != null && drag?.cross && IND.sig !== false){   // 손가락으로 길게 눌러 짚은 날에 신호가 있으면 그 뜻을 (없으면 그대로 두어 화면이 들썩이지 않게)
       const d = bars[Math.max(i0, Math.min(i1, cross))][0], m = (s.marks || []).find(m => m[0] === d && (s.sig_help || {})[m[1]]);
       if (m) showSig({t: m[1], d, i: idx[d]});
