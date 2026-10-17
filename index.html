@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-38">
+<meta name="app-version" content="2026-10-17-39">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1159,6 +1159,7 @@ function mountChart(box, s, opt = {}){
       if ((opt.levels || []).some(v => v.kind === "tr")) it.push(["살 가격", "#1B64DA"]);
       if ((opt.levels || []).some(v => v.kind === "ok")) it.push(["이미 닿은 가격", "#1B8A4A"]);
       if ((opt.levels || []).some(v => v.kind === "sp")) it.push(["지지선", "rgba(27,138,74,.35)"]);
+      if ((opt.levels || []).some(v => v.kind === "trendline")) it.push(["상승 추세선", "#1B8A4A"]);
       $leg.innerHTML = it.map(([t,c]) => `<span><i style="background:${c}"></i>${t}</span>`).join(""); return;
     }
     if (IND.ma) it.push(["14일선", COL.e14], ["21일선", COL.e21], ["55일선", COL.e55], ["200일선", COL.s200]);
@@ -1226,6 +1227,10 @@ function mountChart(box, s, opt = {}){
     if (LT){   // 지지선 띠 · 살 가격 선 (그 아래 봉)
       LV.filter(v => v.kind === "sp" && v.hi >= lo && v.lo <= hi).forEach(v => { p += `<rect x="${L}" y="${y(v.hi)}" width="${W-L-R}" height="${Math.max(3, y(v.lo) - y(v.hi))}" fill="#1B8A4A" opacity=".13"/>`; });
       LV.filter(v => v.kind !== "sp" && v.v >= lo && v.v <= hi).forEach(v => { p += `<line x1="${L}" x2="${W-R}" y1="${y(v.v)}" y2="${y(v.v)}" stroke="${v.kind === "ok" ? "#1B8A4A" : "#1B64DA"}" stroke-width="1.1" stroke-dasharray="5 4" opacity=".85"/>`; });
+      LV.filter(v => v.kind === "trendline" && v.pts?.length === 2).forEach(v => {   // 상승 추세선: 높아지는 눌림 저점 두 개를 이은 선
+        const [[d0, v0], [d1, v1]] = v.pts, a = idx[d0], b = idx[d1]; if (a == null || b == null || b <= a) return;
+        const k = (v1 - v0) / (b - a), xa = Math.max(a, i0 - 1), xb = Math.min(b, i1 + 1); if (xb <= xa) return;
+        p += `<line x1="${x(xa)}" y1="${y(v0 + k * (xa - a))}" x2="${x(xb)}" y2="${y(v0 + k * (xb - a))}" stroke="#1B8A4A" stroke-width="1.2" stroke-dasharray="6 4" opacity=".8"/>`; });
       if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.s50, COL.e14, 1.5);
     }
     else if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.e55, COL.e55, 1.6) + path(ind.e21, COL.e21, 1.4) + path(ind.e14, COL.e14, 1.2);   // 엔진(지표견식 추세)이 보는 선
@@ -2159,6 +2164,7 @@ function ltChart(s, n){
 function ltLevels(s){
   const o = (s.tranches || []).filter(t => t.price != null).map(t => ({ v: t.price, label: `${t.order}차`, kind: t.reached ? "ok" : "tr" }));
   if (s.support) o.push({ lo: s.support.lo, hi: s.support.hi, label: "지지선", kind: "sp" });
+  if (s.support?.trend) o.push({ pts: s.support.trend, label: "추세선", kind: "trendline" });
   return o;
 }
 function ltHelp(s){
