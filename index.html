@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-45">
+<meta name="app-version" content="2026-10-18-46">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1749,7 +1749,7 @@ function odLevels(s){
   if (hz) out.push({ v: hz.stop, kind: "stop", g: "main", label: "나갈 자리", fit: true });
   const r0 = (o.above || [])[0]; if (r0) out.push({ v: r0.v, kind: "res", g: "main", label: "위 저항", fit: true });
   const f = o.fib?.levels?.["0.618"]; if (f != null && !(hz && f >= hz.lo * 0.995 && f <= hz.hi * 1.005)) out.push({ v: f, kind: "fib", g: "fib", label: "피보 0.618" });
-  (o.trendlines || []).forEach(t => out.push({ pts: t.pts, kind: "trendline", g: "tl", col: t.kind === "up" ? "#1B8A4A" : "#1B64DA", label: t.kind === "up" ? "상승 추세선" : "빗각", now: t.v }));
+  (o.trendlines || []).forEach(t => out.push({ pts: t.pts, kind: "trendline", g: "tl", col: t.kind === "up" ? "#1B8A4A" : "#1B64DA", label: t.kind === "up" ? "상승 추세선" : "빗각 (참고)", now: t.v }));
   if (o.box) out.push({ d0: o.box.from, d1: o.box.to, lo: o.box.bot, hi: o.box.top, kind: "box", g: "box", label: "박스" });
   return out;
 }
@@ -1766,8 +1766,8 @@ function renderODDetail(sym){
   const yy = t => { const x = String(t || ""); return x.slice(0, 4) === String(o.date || "").slice(0, 4) ? x.slice(5).replace("-", "/") : x.slice(2).replace(/-/g, "."); };
   const res = (o.above || [])[0];
   const stat = (k, v, cls) => `<div><b class="${cls || ""}">${v}</b><span>${k}</span></div>`;
-  const rowZ = q => { const [w, c] = OD_ST[q.state] || [q.state, ""];
-    return `<div class="row lt-srow"><div class="main"><div class="lt-n">${P(q.lo)}${q.hi / q.lo - 1 > 0.002 ? ` ~ ${P(q.hi)}` : ""}</div><div class="lt-s">${q.why.map(x => esc(odWhy(x))).join(" · ")}</div></div><div class="lt-px"><b class="${c === "buy" ? "ok" : c === "sell" ? "down" : ""}">${esc(w)}</b><span>${pct(q.dist)}</span></div></div>`; };
+  const rowZ = q => { const [w, c] = q.ref ? ["참고", ""] : OD_ST[q.state] || [q.state, ""];
+    return `<div class="row lt-srow"><div class="main"><div class="lt-n">${P(q.lo)}${q.hi / q.lo - 1 > 0.002 ? ` ~ ${P(q.hi)}` : ""}</div><div class="lt-s">${q.why.map(x => esc(odWhy(x))).join(" · ")}${q.ref ? " · 빗각만으로는 매매 안 함" : ""}</div></div><div class="lt-px"><b class="${c === "buy" ? "ok" : c === "sell" ? "down" : q.ref ? "lt-dim" : ""}">${esc(w)}</b><span>${pct(q.dist)}</span></div></div>`; };
   const fb = o.fib, tl = o.trendlines || [], bx = o.box;
   const BX = {"SC(박스 하단)": "SC", "AR(박스 하단)": "AR", "AR(박스 상단)": "AR", "BC(박스 상단)": "BC", "강한 수요": "강한 수요", "스프링": "스프링", "스프링 후보": "스프링 후보", "SOS(돌파)": "돌파(SOS)", "BU/LPS(되돌림 지지)": "되돌림 지지"};
   $app.innerHTML = `<div class="wrap">
@@ -1791,7 +1791,7 @@ function renderODDetail(sym){
     <h2 class="sec-title">근거</h2>
     <div class="list">
       ${fb ? `<div class="row lt-srow"><div class="main"><div class="lt-n">피보나치</div><div class="lt-s">${P(fb.low)} (${esc(fb.low_t)}) → ${P(fb.high)} (${esc(fb.high_t)})</div><div class="lt-s">0.5 ${P(fb.levels["0.5"])} · 0.618 ${P(fb.levels["0.618"])} · 0.786 ${P(fb.levels["0.786"])}</div></div></div>` : ""}
-      ${tl.map(t => `<div class="row lt-srow"><div class="main"><div class="lt-n">${t.kind === "up" ? "상승 추세선" : "빗각"}</div><div class="lt-s">${t.kind === "up" ? "저점" : "고점"} ${esc(ym(t.from[0]))} → ${esc(ym(t.to[0]))}을 이은 선</div></div><div class="lt-px"><b>${P(t.v)}</b><span>지금 값</span></div></div>`).join("")}
+      ${tl.map(t => `<div class="row lt-srow"><div class="main"><div class="lt-n">${t.kind === "up" ? "상승 추세선" : "빗각"}</div><div class="lt-s">${t.kind === "up" ? "저점" : "고점"} ${esc(ym(t.from[0]))} → ${esc(ym(t.to[0]))}을 이은 선${t.kind === "up" ? "" : `${t.touch ? ` · ${t.touch}번 닿음` : ""} · 참고`}</div></div><div class="lt-px"><b>${P(t.v)}</b><span>지금 값</span></div></div>`).join("")}
       ${bx ? `<div class="row lt-srow"><div class="main"><div class="lt-n">박스 ${P(bx.bot)} ~ ${P(bx.top)}</div><div class="lt-s">${esc(yy(bx.from))} ~ ${esc(yy(bx.to))} · 지금 ${esc(bx.where)}</div>${(bx.events || []).length ? `<div class="lt-s">${bx.events.map(e => `${esc(yy(e.t))} ${esc(BX[e.k] || e.k)}`).join(" · ")}</div>` : ""}</div></div>` : ""}
       ${!fb && !tl.length && !bx ? `<div class="row"><div class="main sub">근거 없음</div></div>` : ""}
     </div>`}
