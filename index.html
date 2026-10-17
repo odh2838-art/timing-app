@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-37">
+<meta name="app-version" content="2026-10-17-38">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1087,6 +1087,8 @@ const CORE = new Set(["추세 확인", "추세 시작", "신고가 돌파", "재
 const isAux = t => !CORE.has(t);   // 엔진 매수·매도 신호(와 추세 시작)만 기본으로 보이고, 나머지(분할청산·과열·모멘텀·패턴 등)는 '보조 표시'를 켜야 보임
 const IND_LIST = [["ma","평균선"],["ch","20일 채널"],["ich","일목"],["vol","거래량"],["pat","보조 표시"]];   // 지표견이 쓰는 도구만
 const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:true}, LS.get("ind", {}));
+const IND_G = IND, LT_CI = Object.assign({ma:true, vol:true, rsi:true}, LS.get("ltind", {}), {pat:true});   // 장투엔진 차트는 설정을 따로 (50·200일선 · 거래량 · RSI)
+const LT_IND_LIST = [["ma","평균선"],["vol","거래량"],["rsi","RSI"]];
 if (!LS.get("patOn4")){ IND.pat = true; LS.set("patOn4", 1); LS.set("ind", IND); }   // 보조 표시(분할청산·과열·TP 등)는 작은 ▲▼로 보이고, 이름표는 매수·매도 신호 먼저 (1개월은 보조 2개까지)   // 지표견처럼 청산·패턴 표시를 기본으로 켬 (한 번만) IND.bb = false; IND.rsi = false;
 const DARK = () => { try { return matchMedia("(prefers-color-scheme: dark)").matches; } catch(e){ return false; } };
 const COL = {up:"#F04452", down:"#3182F6", e14:"#30B0C7", e21:"#FF9F0A", e55:"#8E8E93", s50:"#8E8E93", s200:"#AF52DE", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
@@ -1116,7 +1118,8 @@ function calcInd(bars){
   return { e14: ema(14), e21: ema(21), e55: ema(55), s50: bars.map(b => b[5]), s200: bars.map(b => b[6]), m20, bbU, bbL, spanA, spanB, rsi, chU, chL, nh };
 }
 
-function mountChart(box, s){
+function mountChart(box, s, opt = {}){
+  const LT = !!opt.lt, IND = LT ? LT_CI : IND_G, INDK = LT ? "ltind" : "ind", aux = t => !LT && isAux(t);   // LT: 장투엔진 차트 (살 가격·지지선 선, 50·200일선, RSI 70·80)
   const bars = s.bars || [], N = bars.length;
   if (N < 10){ box.innerHTML = `<div class="empty">차트 데이터가 부족해요</div>`; return; }
   const hasVol = bars.some(b => b[7] != null);
@@ -1131,11 +1134,11 @@ function mountChart(box, s){
     <div class="slist" aria-label="이 기간 신호"></div>
     ${s.pattern ? `<div class="patn"><b>${esc(s.pattern.lines[0].replace("모양 · ", ""))}</b> <span class="sub">${s.pattern.grade === "정식" ? "" : "· 참고(" + esc(s.pattern.reasons.join(", ")) + ")"}</span><div class="sub">패턴 돌파는 10번 중 6번 실패해요</div></div>` : ""}
     <details class="cset"><summary class="press">차트 설정</summary>
-    <div class="inds" style="padding:0">${IND_LIST.filter(([k]) => k !== "vol" || hasVol).map(([k,t]) => `<button class="chip press" data-ind="${k}" aria-pressed="${!!IND[k]}">${t}</button>`).join("")}</div>
+    <div class="inds" style="padding:0">${(LT ? LT_IND_LIST : IND_LIST).filter(([k]) => k !== "vol" || hasVol).map(([k,t]) => `<button class="chip press" data-ind="${k}" aria-pressed="${!!IND[k]}">${t}</button>`).join("")}</div>
     <div class="legend" style="padding:0"></div></details>`;
   const $plot = box.querySelector(".plot"), $sigm = box.querySelector(".sigm"), $read = box.querySelector(".readout"), $seg = box.querySelector(".seg"), $leg = box.querySelector(".legend"), $slist = box.querySelector(".slist");
   box.querySelector(".sigtg").onclick = e => {   // 신호 이름표·표시를 한 번에 끄고 켜기 (캔들이 가릴 때)
-    IND.sig = IND.sig === false; LS.set("ind", IND); e.currentTarget.setAttribute("aria-pressed", IND.sig); if (IND.sig === false) showSig(null); draw();
+    IND.sig = IND.sig === false; LS.set(INDK, IND); e.currentTarget.setAttribute("aria-pressed", IND.sig); if (IND.sig === false) showSig(null); draw();
   };
   const hint = "신호를 누르면 설명, 길게 누르면 가격";
   let cross = null, geo = null;
@@ -1151,6 +1154,13 @@ function mountChart(box, s){
   };
   const legend = () => {
     const it = [];
+    if (LT){
+      if (IND.ma) it.push(["50일선", COL.e14], ["200일선", COL.s200]);
+      if ((opt.levels || []).some(v => v.kind === "tr")) it.push(["살 가격", "#1B64DA"]);
+      if ((opt.levels || []).some(v => v.kind === "ok")) it.push(["이미 닿은 가격", "#1B8A4A"]);
+      if ((opt.levels || []).some(v => v.kind === "sp")) it.push(["지지선", "rgba(27,138,74,.35)"]);
+      $leg.innerHTML = it.map(([t,c]) => `<span><i style="background:${c}"></i>${t}</span>`).join(""); return;
+    }
     if (IND.ma) it.push(["14일선", COL.e14], ["21일선", COL.e21], ["55일선", COL.e55], ["200일선", COL.s200]);
     if (s.trend?.line) it.push(["매도 선", s.trend.act === "sell" ? "#D22F3C" : "#E08600"], ["진입가", "#8E8E93"]);
     if (IND.ch) it.push(["20일 채널", COL.bb]);
@@ -1174,13 +1184,23 @@ function mountChart(box, s){
     let lo = Infinity, hi = -Infinity;
     for (let i = i0; i <= i1; i++){ lo = Math.min(lo, bars[i][3]); hi = Math.max(hi, bars[i][2]);
       if (IND.bb && ind.bbU[i] != null){ lo = Math.min(lo, ind.bbL[i]); hi = Math.max(hi, ind.bbU[i]); } }
-    const zones = zsOf(s).filter(z => z.label !== "지지");
+    const zones = LT ? [] : zsOf(s).filter(z => z.label !== "지지");
+    const LV = LT ? (opt.levels || []) : [];
+    LV.forEach(v => [v.lo ?? v.v, v.hi ?? v.v].forEach(q => { if (q >= lo * 0.75 && q <= hi * 1.1){ lo = Math.min(lo, q); hi = Math.max(hi, q); } }));   // 살 가격·지지선이 조금 멀어도 보이게
     [s.wall?.v, ...zones.flatMap(z => [z.lo, z.hi])].forEach(v => { if (v != null && v > lo * 0.94 && v < hi * 1.05){ lo = Math.min(lo, v); hi = Math.max(hi, v); } });
     if (!(hi - lo > 1e-9)){ lo = lo * 0.99 || -1; hi = hi * 1.01 || 1; }   // 봉이 모두 같으면 (거래정지)
     const pad = (hi - lo) * 0.07; lo -= pad; hi += pad;
     const y = v => T + (hi - v) / (hi - lo) * (H0 - T - 6);
     let g = `<defs><clipPath id="cp"><rect x="${L}" y="0" width="${W - L - R}" height="${H0}"/></clipPath><clipPath id="cpv"><rect x="${L}" y="${H0}" width="${W - L - R}" height="${H - H0}"/></clipPath></defs>`;   // 가격 선이 거래량 칸으로 넘어가지 않게
-    const lastY = y(s.price ?? bars[N-1][4]), zt = zsOf(s).find(z => z.label !== "지지" && z.state === "above"), ztY = zt ? y(zt.hi) : -999;
+    const lastY = y(s.price ?? bars[N-1][4]), zt = LT ? null : zsOf(s).find(z => z.label !== "지지" && z.state === "above"), ztY = zt ? y(zt.hi) : -999;
+    const LVN = [];   // 장투: 살 가격·지지선 이름 자리 (가격표 바로 왼쪽) — 신호 이름표가 피해 가게 먼저 잡아 둔다
+    if (LT){ const left = [];
+      [...LV].sort((a, b) => (b.hi ?? b.v) - (a.hi ?? a.v)).forEach(v => {
+        const val = v.kind === "sp" ? v.lo : v.v; if (!(val >= lo && val <= hi)) return;
+        let ty = (v.kind === "sp" ? (y(v.hi) + y(v.lo)) / 2 : y(val)) + 4;
+        while (left.some(u => Math.abs(u - ty) < 13)) ty += 13;
+        ty = Math.max(T + 10, Math.min(H0 - 4, ty)); left.push(ty);
+        LVN.push({ v, val, ty, w: [...v.label].length * 12 + 6 }); }); }
     const raw = (hi - lo) / 6, mag = Math.pow(10, Math.floor(Math.log10(raw))), stp = [1, 2, 2.5, 5, 10].map(m => m * mag).find(v => v >= raw) || raw;   // 눈금은 둥근 값 (3~5개)
     const tickAt = st_ => { const o = []; for (let v = Math.ceil(lo / st_) * st_; v < hi; v += st_){ if (Math.abs(v) < st_ * 1e-6) v = 0; if (v <= 0 || y(v) < T || Math.abs(y(v) - lastY) < 16 || Math.abs(y(v) - ztY) < 16) continue; o.push(v); } return o; };
     const tks = tickAt(stp).length >= 3 ? tickAt(stp) : tickAt(stp / 2);
@@ -1203,7 +1223,12 @@ function mountChart(box, s){
     }
     if (s.wall?.v) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.wall.v)}" y2="${y(s.wall.v)}" stroke="#8E8E93" stroke-width=".9" stroke-dasharray="4 3"/>`;
     if (s.vcp?.vcp && s.vcp.pivot) p += `<line x1="${L}" x2="${W-R}" y1="${y(s.vcp.pivot)}" y2="${y(s.vcp.pivot)}" stroke="#1B64DA" stroke-width=".9" stroke-dasharray="2 3"/>`;
-    if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.e55, COL.e55, 1.6) + path(ind.e21, COL.e21, 1.4) + path(ind.e14, COL.e14, 1.2);   // 엔진(지표견식 추세)이 보는 선
+    if (LT){   // 지지선 띠 · 살 가격 선 (그 아래 봉)
+      LV.filter(v => v.kind === "sp" && v.hi >= lo && v.lo <= hi).forEach(v => { p += `<rect x="${L}" y="${y(v.hi)}" width="${W-L-R}" height="${Math.max(3, y(v.lo) - y(v.hi))}" fill="#1B8A4A" opacity=".13"/>`; });
+      LV.filter(v => v.kind !== "sp" && v.v >= lo && v.v <= hi).forEach(v => { p += `<line x1="${L}" x2="${W-R}" y1="${y(v.v)}" y2="${y(v.v)}" stroke="${v.kind === "ok" ? "#1B8A4A" : "#1B64DA"}" stroke-width="1.1" stroke-dasharray="5 4" opacity=".85"/>`; });
+      if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.s50, COL.e14, 1.5);
+    }
+    else if (IND.ma) p += path(ind.s200, COL.s200, 2) + path(ind.e55, COL.e55, 1.6) + path(ind.e21, COL.e21, 1.4) + path(ind.e14, COL.e14, 1.2);   // 엔진(지표견식 추세)이 보는 선
     /* 지금 추세가 진행 중이면: 진입가(점선)와 지금 팔게 되는 선(굵게) — 엔진 dashboard._trend_now */
     const TRN = s.trend || {};
     if (TRN.line){ const exC = TRN.act === "sell" ? "#D22F3C" : TRN.act === "trim" ? "#E08600" : "#8E8E93", ser = TRN.line === 14 ? ind.e14 : ind.e55, ie = bars.findIndex(b => b[0] >= TRN.date);
@@ -1224,6 +1249,7 @@ function mountChart(box, s){
     const C = TP.chip, boxes = [];
     const hit = a => boxes.some(b => a.x < b.x + b.w + 4 && b.x < a.x + a.w + 4 && a.y < b.y + b.h + 3 && b.y < a.y + a.h + 3);
     const candle = []; for (let k = i0; k <= i1; k++) candle.push({x:x(k) - Math.max(bw/2, 2) - 1, y:y(bars[k][2]) - 2, w:Math.max(bw, 4) + 2, h:y(bars[k][3]) - y(bars[k][2]) + 4});
+    LVN.forEach(n => candle.push({x: W - R - 4 - n.w, y: n.ty - 13, w: n.w + 2, h: 17}));
     zones.forEach(z => { if (z.lo <= hi && z.lo >= lo){ const yy = Math.min(H0 - 8, y(z.lo) + 16); candle.push({x:L + 2, y:yy - 14, w:zoneName(s, z).length * 13 + 14, h:19}); } });   // 구간 이름도 가리지 않게
     const onCandle = a => candle.some(b => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h);
     const tw = t => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? 10.6 : ch === " " ? 3.2 : 6.3), 0);
@@ -1244,10 +1270,10 @@ function mountChart(box, s){
       p += `<line x1="${x(i)}" x2="${x(i)}" y1="${below ? y(bars[i][3]) + 1 : y(bars[i][2]) - 1}" y2="${below ? by : by + hh}" stroke="${fg}" stroke-width=".8" opacity=".5"/><rect x="${cx - w/2}" y="${by}" width="${w}" height="${hh}" rx="5" fill="${on ? fg : bg}" opacity=".95"/><text x="${cx}" y="${by + 12.5}" font-size="10.5" font-weight="600" fill="${on ? "#fff" : fg}" text-anchor="middle">${esc(text)}</text>`;
     };
     // 매수 신호 뒤 종가가 12% 넘게 더 빠졌으면 실패한 신호 → 회색으로 (지난 초록 표시가 지금 판정과 엇갈리지 않게)
-    const failed = m => { const i = idx[m[0]]; if (i == null) return false; const c0 = bars[i][4]; for (let k = i + 1; k < N; k++) if (bars[k][4] < c0 * 0.88) return true; return false; };
+    const failed = m => { if (LT) return false; const i = idx[m[0]]; if (i == null) return false; const c0 = bars[i][4]; for (let k = i + 1; k < N; k++) if (bars[k][4] < c0 * 0.88) return true; return false; };
     const SH = s.sig_help, col_ = m => { const a = SH ? (SH[m[1]]?.act || m[2]) : m[2]; return a === "buy" && failed(m) ? "none" : a; };   // 색 = 할 일: 초록 사는 신호 · 빨강 전부 팔기 · 주황 덜기 · 회색 참고만
     if (IND.sig !== false) {  // 차트를 가리지 않게: 표시는 봉 위아래 작은 점(▲ 매수 쪽, ▼ 주의 쪽), 글자는 가장 최근 2개만. 날짜를 짚으면 그날 표시가 위에 나옴
-      const vis = (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1 && (IND.pat || !isAux(m[1])) && (i1 - i0 <= 130 || !SH || ["buy", "trim", "sell"].includes(col_(m))));
+      const vis = (s.marks || []).filter(m => m[0] in idx && idx[m[0]] >= i0 && idx[m[0]] <= i1 && (IND.pat || !aux(m[1])) && (i1 - i0 <= 130 || !SH || ["buy", "trim", "sell"].includes(col_(m))));
       if (sel && !(idx[sel.d] >= i0 && idx[sel.d] <= i1)) showSig(null);
       { const L6 = [...vis].sort((a, b) => (b[0] > a[0]) - (b[0] < a[0])).slice(0, 6), CC = {buy: "t-buy", sell: "t-sell", trim: "t-trim"};   // 차트 아래: 이 기간 신호를 날짜와 함께 (최근 것부터)
         const html = (L6.length ? `<div class="skey"><span class="k-buy">초록 매수</span><span class="k-sell">빨강 매도</span><span class="k-trim">주황 일부 매도</span><span>회색 참고</span></div>` : "") + L6.map(m => `<button class="tag press ${CC[col_(m)] || "t-none"}" data-d="${m[0]}" data-t="${esc(m[1])}">${+m[0].slice(5,7)}/${+m[0].slice(8)} ${esc(m[1])}</button>`).join("");
@@ -1259,11 +1285,11 @@ function mountChart(box, s){
         p += up ? `<path d="M${x(i) - r_} ${yy - r_} L${x(i) + r_} ${yy - r_} L${x(i)} ${yy + r_ * .6}Z" fill="${fg}"/>` : `<path d="M${x(i) - r_} ${yy + r_} L${x(i) + r_} ${yy + r_} L${x(i)} ${yy - r_ * .6}Z" fill="${fg}"/>`; });
       // 3개월 이하로 볼 때는 지표견처럼 표시마다 이름표 (매수·주의 신호 먼저, 최근 것부터 · 자리가 없으면 건너뜀). 더 넓게 보면 최근 1개만
       const rk = m => ({buy:0, sell:1, trim:1}[col_(m)] ?? 2);   // 자리가 모자라면 사는 신호·덜기 신호 먼저
-      const span = i1 - i0, byPri = [...vis].sort((a, b) => (rk(a) - rk(b)) || (isAux(a[1]) - isAux(b[1])) || (idx[b[0]] - idx[a[0]]));
+      const span = i1 - i0, byPri = [...vis].sort((a, b) => (rk(a) - rk(b)) || (aux(a[1]) - aux(b[1])) || (idx[b[0]] - idx[a[0]]));
       if (sel && idx[sel.d] != null) { const m = vis.find(m => m[1] === sel.t && m[0] === sel.d); if (m) chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"); }   // 고른 신호는 꼭 보이게
       let ng = 0;
       if (span <= 32) byPri.forEach(m => { if (SH && !["buy", "trim", "sell"].includes(col_(m)) && ++ng > 2) return; chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"); });                  // 1개월쯤: 모든 표시에 이름표
-      else if (span <= 70) byPri.filter(m => !isAux(m[1])).forEach(m => chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"));   // 3개월: 매수·주의 신호만
+      else if (span <= 70) byPri.filter(m => !aux(m[1])).forEach(m => chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"));   // 3개월: 매수·주의 신호만
       else byPri.slice(0, 1).forEach(m => chip(idx[m[0]], m[1], col_(m), m[2] !== "sell"));
     }
     if (IND.sig !== false && s.vcp?.vcp && i1 === N - 1 && !(s.marks || []).some(m => m[1] === "VCP 형성" && idx[m[0]] >= N - 15)) chip(N - 1, "VCP 형성", "info", false);
@@ -1271,7 +1297,16 @@ function mountChart(box, s){
     g += p;
     const last = s.price ?? bars[N-1][4], lc = (s.chg ?? 0) >= 0 ? COL.up : COL.down;
     if (last >= lo && last <= hi) g += `<line x1="${L}" x2="${W-R}" y1="${y(last)}" y2="${y(last)}" stroke="${lc}" stroke-width=".6" opacity=".5"/><rect x="${W-R+2}" y="${y(last)-11}" width="${R-2}" height="22" rx="6" fill="${lc}"/><text x="${W-R+7}" y="${y(last)+5}" font-size="13" font-weight="600" fill="#fff">${num(last, s.market)}</text>`;
-    { const z = zsOf(s).find(z => z.label !== "지지" && z.state === "above");   // 다음 살 가격: 오른쪽에 초록 꼬리표
+    if (LT){   // 살 가격·지지선: 이름(가격표 왼쪽) + 오른쪽 가격표 — 지금 가격표와 겹치면 이름만
+      const used = [y(last)];
+      LVN.forEach(({ v, val, ty }) => {
+        const yy = y(val), col = v.kind === "tr" ? "#1B64DA" : "#1B8A4A";
+        g += `<text x="${W - R - 4}" y="${ty}" font-size="12" font-weight="700" fill="${col}" stroke="${TP.halo}" stroke-width="3.5" paint-order="stroke" text-anchor="end">${esc(v.label)}</text>`;
+        if (used.some(u => Math.abs(u - yy) < 24)) return; used.push(yy);
+        g += `<rect x="${W-R+2}" y="${yy-11}" width="${R-2}" height="22" rx="6" fill="${col}"/><text x="${W-R+7}" y="${yy+5}" font-size="13" font-weight="600" fill="#fff">${num(val, s.market)}</text>`;
+      });
+    }
+    else { const z = zsOf(s).find(z => z.label !== "지지" && z.state === "above");   // 다음 살 가격: 오른쪽에 초록 꼬리표
       if (z && z.hi >= lo && z.hi <= hi && Math.abs(y(z.hi) - y(last)) > 24) g += `<line x1="${L}" x2="${W-R}" y1="${y(z.hi)}" y2="${y(z.hi)}" stroke="#1B8A4A" stroke-width=".8" stroke-dasharray="3 3"/><rect x="${W-R+2}" y="${y(z.hi)-11}" width="${R-2}" height="22" rx="6" fill="#1B8A4A"/><text x="${W-R+7}" y="${y(z.hi)+5}" font-size="13" font-weight="600" fill="#fff">${num(z.hi, s.market)}</text>`; }
     /* 거래량 */
     let yo = H0;
@@ -1280,7 +1315,11 @@ function mountChart(box, s){
       for (let i = i0; i <= i1; i++){ const v = bars[i][7] || 0, hh = vm ? v / vm * (HV - 10) : 0; g += `<rect x="${x(i) - bw/2}" y="${yo + HV - hh}" width="${bw}" height="${hh}" fill="${bars[i][4] >= bars[i][1] ? COL.up : COL.down}" opacity=".45"/>`; }
       g += `</g>`; yo += HV; }
     if (HR){ const ry = v => yo + 8 + (100 - v) / 100 * (HR - 14);
-      g += `<line x1="${L}" x2="${W-R}" y1="${yo}" y2="${yo}" stroke="${TP.grid}"/><rect x="${L}" y="${ry(70)}" width="${W-L-R}" height="${ry(30) - ry(70)}" fill="#8E5CF6" opacity=".06"/>
+      g += LT ? `<line x1="${L}" x2="${W-R}" y1="${yo}" y2="${yo}" stroke="${TP.grid}"/><rect x="${L}" y="${ry(100)}" width="${W-L-R}" height="${ry(70) - ry(100)}" fill="#D22F3C" opacity=".06"/>
+        <line x1="${L}" x2="${W-R}" y1="${ry(80)}" y2="${ry(80)}" stroke="#D22F3C" stroke-width=".8" stroke-dasharray="3 3" opacity=".7"/>
+        <line x1="${L}" x2="${W-R}" y1="${ry(70)}" y2="${ry(70)}" stroke="${COL.axis}" stroke-width=".6" stroke-dasharray="2 3" opacity=".7"/>
+        <text x="${W-R+6}" y="${ry(80)+1}" font-size="12" fill="#D22F3C">80 익절</text><text x="${W-R+6}" y="${ry(70)+12}" font-size="12" fill="${COL.axis}">70</text><text x="${W-R+6}" y="${yo + HR - 8}" font-size="12" fill="${COL.axis}">RSI</text><g clip-path="url(#cpv)">`
+        : `<line x1="${L}" x2="${W-R}" y1="${yo}" y2="${yo}" stroke="${TP.grid}"/><rect x="${L}" y="${ry(70)}" width="${W-L-R}" height="${ry(30) - ry(70)}" fill="#8E5CF6" opacity=".06"/>
         <text x="${W-R+6}" y="${ry(70)+4}" font-size="13" fill="${COL.axis}">70</text><text x="${W-R+6}" y="${ry(30)+4}" font-size="13" fill="${COL.axis}">30</text><g clip-path="url(#cpv)">`;
       let d = ""; for (let i = Math.max(0, i0 - 1); i <= Math.min(N - 1, i1 + 1); i++) if (ind.rsi[i] != null) d += (d ? "L" : "M") + x(i).toFixed(1) + " " + ry(ind.rsi[i]).toFixed(1);
       g += `<path d="${d}" fill="none" stroke="#8E5CF6" stroke-width="1.4"/></g>`; yo += HR; }
@@ -1341,7 +1380,7 @@ function mountChart(box, s){
     requestAnimationFrame(step);
   };
   $seg.onclick = e => { const b = e.target.closest("button"); if (!b) return; const k = +b.dataset.k; LS.set("period", b.textContent); tween(k, N - 1); };
-  box.querySelector(".inds").onclick = e => { const b = e.target.closest("[data-ind]"); if (!b) return; const k = b.dataset.ind; IND[k] = !IND[k]; LS.set("ind", IND); b.setAttribute("aria-pressed", IND[k]); legend(); draw(); };
+  box.querySelector(".inds").onclick = e => { const b = e.target.closest("[data-ind]"); if (!b) return; const k = b.dataset.ind; IND[k] = !IND[k]; LS.set(INDK, IND); b.setAttribute("aria-pressed", IND[k]); legend(); draw(); };
 
   /* 손가락 조작 */
   const pts = new Map(); let drag = null, pinch = null, hold = 0, inertia = 0, lastTap = 0;
@@ -1958,12 +1997,10 @@ async function renderLT(){
       ${V.act ? `<p class="lt-say">${esc(V.act)}</p>` : ""}
       <div class="lt-foot2"><span>${nOn.map(esc).join("<br>")}</span><span class="lt-link" style="white-space:nowrap">시장 지표 ›</span></div>
     </button>
-    ${IND.some(x => x.word[0] === "확인 필요") ? `<button class="card press lt-top" id="ltpend" style="margin-top:10px;padding:14px var(--pad-card)"><span style="color:var(--wait);font-weight:600">BofA 새 발표 · 숫자 입력 필요</span><div class="lt-s" style="margin-top:4px">현금 판단 지표 · 눌러서 입력</div></button>` : ""}
 
     <h2 class="sec-title">종목</h2>
     ${st.length || pending.length ? `<div class="list">${st.map(s => { const c = CALL(s);
-        const cr = (S.ltcsv?.rows || []).find(x => symOf(x["시장"], x["티커"]) === s.sym), am = parseFloat(String(cr?.["목표금액"] || "").replace(/[^\d.]/g, "")) || 0;
-        const ln = (c.line || "") + (am && c.frac && c.tone === "buy" ? ` · ${ltMoney(am * c.frac, s.market)}` : "");
+        const ln = (c.line || "") + (c.buy_pct && c.tone === "buy" ? ` · 자산의 ${c.buy_pct}%` : "");
         return `<button class="row press lt-srow" data-sym="${esc(s.sym)}"><div class="main"><div class="lt-n">${esc(s.name)}${tag(s)}</div>${ln ? `<div class="lt-s">${esc(ln)}</div>` : ""}</div>${s.live ? `<div class="lt-px" style="gap:4px"><b class="lt-chip ${esc(c.tone)}">${esc(c.word)}</b><span>${num(s.live.p, s.market)} <span class="${s.live.chg > 0 ? "up" : s.live.chg < 0 ? "down" : ""}">${pct(s.live.chg)}</span></span></div>` : `<b class="lt-chip ${esc(c.tone)}">${esc(c.word)}</b>`}${CHEV}</button>`; }).join("")}
       ${pending.map(r => `<button class="row press lt-srow" data-pend="${esc(symOf(r["시장"], r["티커"]))}"><div class="main"><div class="lt-n">${esc(r["이름"] || r["티커"])}</div><div class="lt-s">${S.busy ? "계산 중 · 1분 정도" : "아직 계산 전"}</div></div>${CHEV}</button>`).join("")}</div>
       <p class="note lt-foot">${st[0]?.date ? md(st[0].date) + " 종가 기준 · " : ""}장기 종목은 5~6개 권장</p>`
@@ -1989,7 +2026,6 @@ async function renderLT(){
   document.getElementById("lthero").onclick = () => go("push", () => S.ltd = "@market");
   document.getElementById("ltrule").onclick = () => ltRules(d, "all");
   document.getElementById("ltmk").onclick = () => go("push", () => S.ltd = "@market");
-  const lp = document.getElementById("ltpend"); if (lp) lp.onclick = () => { const x = IND.find(x => x.word[0] === "확인 필요"); ltManual({ ...x.any, _cond: x.cond, state: x.word[0] }, mk.bofa_hist); };
   document.getElementById("ltal").onclick = () => ltAlerts(d);
 }
 /* 규칙 시트: 판단 기준 · 단어 뜻 · 비중 원칙 · 아직 안 정한 규칙 */
@@ -2084,25 +2120,8 @@ async function ltManual(r, hist){
       ${r.src_link ? `<a class="text-btn" href="${esc(r.src_link)}" target="_blank" rel="noopener" style="margin-left:-6px">기사 열기</a>` : ""}</div>
     ${r.pending ? `<div class="card" style="background:var(--wait-bg);margin-top:10px"><b class="c-wait">새 발표 ${esc(String(r.pending.date).slice(5).replace("-", "/"))}</b><p class="note" style="margin:6px 0 0">${esc(r.pending.title)}</p><p class="note" style="margin:4px 0 0">기사 제목에 숫자 없음 · 기사 확인 후 아래에 입력. 입력 전엔 판단에서 제외.</p>${r.pending.link ? `<a class="text-btn" href="${esc(r.pending.link)}" target="_blank" rel="noopener" style="margin-left:-6px">기사 열기</a>` : ""}</div>` : ""}
     ${H.length ? `<div class="sec-cap" style="margin-left:0">기록</div><div class="list">${H.map(h => `<div class="row"><div class="main">${esc(String(h.date).slice(5).replace("-", "/"))} <span class="sub">${esc(h.src || "")}</span></div><b>${esc(h.v)}${unit}</b></div>`).join("")}</div>` : ""}
-    ${key ? `<details class="adv" ${r.pending || r.cur == null ? "open" : ""} style="margin-top:14px"><summary class="press">직접 넣기</summary>
-      <div class="card stack" style="padding:0;background:none;margin-top:8px"><div class="field"><label for="mv">값${unit ? ` (${unit})` : ""}</label><input id="mv" type="text" inputmode="decimal" value="" placeholder="예: ${unit === "%" ? "4.2" : unit === "bp" ? "40" : "5.0"}"></div>
-      <div class="field"><label for="md">발표일</label><input id="md" type="date" value="${esc(r.pending?.date || today)}"></div></div>
-      <button class="btn primary press" id="msave" style="margin-top:16px">저장하고 다시 계산</button>
-      <p class="note" style="margin:8px 0 0">직접 넣은 값은 그보다 새 뉴스 값이 나올 때까지 쓰여요.</p></details>` : ""}</div>`);
+    ${r.stale_note ? `<p class="note" style="margin:10px 0 0">${esc(r.stale_note)}</p>` : ""}</div>`);
   sheet.classList.add("fit");
-  const b = sheet.querySelector("#msave"); if (!b) return;
-  b.onclick = async () => {
-    const v = parseFloat(String(sheet.querySelector("#mv").value).replace(/,/g, "")); if (!isFinite(v)){ toast("숫자를 넣어 주세요"); return; }
-    b.disabled = true; b.innerHTML = `<span class="spin"></span>`;
-    try{
-      let cur = {}, sha;
-      try{ const j = await gh("/contents/" + enc(LT_MAN) + "?ref=main"); sha = j.sha; cur = JSON.parse(b64dec(j.content)); }catch(e){ if (!e.nf) throw e; }
-      cur[key] = { v, date: sheet.querySelector("#md").value || today };
-      const body = { message: `앱: 장투엔진 ${LT_IND[r.indicator] || key} ${v}`, content: b64enc(JSON.stringify(cur, null, 1)), branch: "main" }; if (sha) body.sha = sha;
-      await gh("/contents/" + enc(LT_MAN), { method: "PUT", body: JSON.stringify(body) });
-      close(); ltRecalc("장투엔진 다시 계산 중");
-    }catch(e){ toast(e.message); b.disabled = false; b.textContent = "저장하고 다시 계산"; }
-  };
 }
 /* 장투 종목 상세 (차트 · 분할매수 가격 · 지지/저항) */
 function ltChart(s, n){
@@ -2136,6 +2155,21 @@ function ltChart(s, n){
     ${mi.map((i, j) => `<text class="ax" x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="${j === 0 ? "start" : j === 2 ? "end" : "middle"}">${mlab(i)}</text>`).join("")}
   </svg>`;
 }
+/* 장투엔진 차트: 살 가격(2·3차)·지지선 선과 표시 뜻 (엔진 tc/longterm.py _marks) */
+function ltLevels(s){
+  const o = (s.tranches || []).filter(t => t.price != null).map(t => ({ v: t.price, label: `${t.order}차`, kind: t.reached ? "ok" : "tr" }));
+  if (s.support) o.push({ lo: s.support.lo, hi: s.support.hi, label: "지지선", kind: "sp" });
+  return o;
+}
+function ltHelp(s){
+  const sw = s.swing || {}, P = v => num(v, s.market), rng = `${P(sw.low)} → ${P(sw.high)}`, h = {
+    "상승 시작": { act: "none", what: "2·3차 가격을 잡는 최근 상승의 시작점", advice: "참고", proof: `최근 상승 ${rng}` },
+    "고점": { act: "none", what: "최근 상승의 꼭대기 · 여기서 상승폭의 50%·61.8% 내려온 자리가 2·3차 가격", advice: "참고", proof: `최근 상승 ${rng}` },
+    "첫 1/3": { act: "buy", what: "장투엔진에 넣은 날", advice: "목표 비중의 1/3 매수", proof: "시작할 때 1/3" } };
+  (s.tranches || []).filter(t => t.price != null).forEach(t => { h[`${t.order}차 가격`] = { act: "buy", what: `${t.order}차 가격 ${P(t.price)}에 처음 닿은 날`, advice: t.order === 3 ? "마지막 1/3 매수 · 실적 발표 2주 안이면 실적 뒤" : "목표 비중의 1/3 매수", proof: `상승폭의 ${Math.round(t.fib * 1000) / 10}% 되돌림` }; });
+  (s.marks || []).filter(m => /^익절 RSI/.test(m[1])).forEach(m => { h[m[1]] = { act: "trim", what: `RSI가 ${m[1].replace(/\D/g, "")}을 넘은 날`, advice: "보유량 1/3 익절", proof: "RSI 70 이상이면 새로 사지 않기" }; });
+  return h;
+}
 function ltSay(s){
   const t = (s.tranches || []).find(t => t.price != null && !t.reached);
   return t ? `${t.order}차 가격 ${num(t.price, s.market)}까지 ${pct(t.dist)}` : "다시 계산하면 결론이 나와요";
@@ -2148,7 +2182,6 @@ function renderLTDetail(sym){
   const md = x => esc(String(x || "").slice(5).replace("-", "/"));
   const rng = S.ltRange || 130, sw = s.swing || {}, sp = s.support, rs = s.resistance;
   const cell = (k, v, n) => `<div class="row lt-r"><div class="main"><div class="lt-n">${k}</div>${n ? `<div class="lt-s">${n}</div>` : ""}</div><div class="lt-px">${v}</div></div>`;
-  const csvRow = (S.ltcsv?.rows || []).find(x => symOf(x["시장"], x["티커"]) === sym), amt = parseFloat(String(csvRow?.["목표금액"] || "").replace(/[^\d.]/g, "")) || 0;
   const T3 = (s.tranches || []).find(t => t.order === 3);
   const M0 = S.lt?.market || {}, M = (s.market === "코스피" || s.market === "코스닥") && M0.kr ? { ...M0, ...M0.kr } : M0;
   const C = s.call || { word: "대기", tone: "wait", line: ltSay(s), why: [] };
@@ -2165,23 +2198,19 @@ function renderLTDetail(sym){
     <section class="card lt-vd">
       <div class="w ${esc(C.tone)}">${esc(C.word)}</div>
       ${say ? `<p class="l">${esc(say)}</p>` : ""}
-      ${C.tone === "buy" && C.frac ? (amt ? `<div class="lt-amt2"><span>매수 금액</span><b>${esc(ltMoney(amt * C.frac, s.market))}</b></div>` : `<button class="lt-link press" id="ltamt2" style="display:block">목표 금액 입력 ›</button>`) : ""}
+      ${C.tone === "buy" && C.buy_pct ? `<div class="lt-amt2"><span>매수 비중</span><b>자산의 ${esc(C.buy_pct)}%</b></div>` : ""}
       ${C.note ? `<p class="n ${/지지선/.test(C.note) ? "warn" : ""}">${esc(C.note)}</p>` : ""}
       ${liveNote ? `<p class="n warn">${esc(liveNote)}</p>` : ""}
       <button class="lt-link press" id="ltwhy">이유 보기 ›</button>
     </section>
-    <section class="card lt-chc" style="margin-top:var(--gap-block)">
-      ${ltChart(s, rng)}
-      <div class="lt-leg"><span><i class="tr"></i>살 가격</span>${(s.tranches || []).some(t => t.reached) ? `<span><i class="tr ok"></i>이미 닿은 가격</span>` : ""}${sp ? `<span><i class="sp"></i>지지선</span>` : ""}</div>
-      <div class="seg" id="ltrng" role="tablist" style="margin:12px 0 0">${[[65, "3개월"], [130, "6개월"], [260, "1년"]].map(([n, t]) => `<button role="tab" aria-selected="${rng === n}" class="${rng === n ? "on" : ""}" data-n="${n}">${t}</button>`).join("")}</div>
-    </section>
+    ${s.bars?.length ? `<div class="card chart" id="chartBox" style="margin-top:var(--gap-block)"></div>` : `<section class="card lt-chc" style="margin-top:var(--gap-block)">${ltChart(s, rng)}</section>`}
 
     <h2 class="sec-title">가격</h2>
     <div class="list">
       ${(s.tranches || []).filter(t => t.at_start).map(t => prow(`${t.order}차`, "시작할 때 1/3", "", "")).join("")}
       ${[...(s.tranches || []).filter(t => t.price != null).map(t => ({ v: t.price, h: prow(`${t.order}차 가격`, num(t.price, s.market), t.reached ? "닿음 " + esc(yy(t.reached)) : pct(t.dist), t.reached ? "ok" : "") })),
         ...(sp ? [{ v: sp.lo, h: prow("지지선", num(sp.lo, s.market), pct((sp.lo / s.price - 1) * 100), "") }] : [])].sort((a, b) => b.v - a.v).map(x => x.h).join("")}
-      <button class="row press lt-srow" id="ltamt"><div class="main"><div class="lt-n">목표 금액</div>${amt ? `<div class="lt-s">1/3씩 ${esc(ltMoney(amt / 3, s.market))}</div>` : ""}</div><b style="color:${amt ? "var(--fg)" : "var(--blue)"}">${amt ? esc(ltMoney(amt, s.market)) : "넣기"}</b>${CHEV}</button>
+      ${s.weight != null ? `<div class="row lt-srow"><div class="main"><div class="lt-n">목표 비중</div><div class="lt-s">1/3씩 자산의 ${Math.round(s.weight / 3 * 10) / 10}% · ${esc(s.role)} 기준</div></div><div class="lt-px"><b>${esc(s.weight)}%</b></div></div>` : ""}
     </div>
 
     <h2 class="sec-title">역할</h2>
@@ -2192,24 +2221,9 @@ function renderLTDetail(sym){
   document.getElementById("ltwhy").onclick = () => { const o = openSheet("이유", `<div class="why"><div class="list">${(C.why || []).map(x => `<div class="row lt-r"><div class="main"><div class="lt-n" style="font-weight:400">${esc(x)}</div></div></div>`).join("")}
     <div class="row lt-r"><div class="main"><div class="lt-n" style="font-weight:400">시장: ${esc(mkLine)}</div></div></div></div></div>`); o.sheet.classList.add("fit"); };
   document.getElementById("back").onclick = () => history.back(); bindNavbar();
-  document.getElementById("ltrng").onclick = e => { const b = e.target.closest("[data-n]"); if (!b) return; S.ltRange = +b.dataset.n; LS.set("ltRange", S.ltRange); const y = scrollY; renderLTDetail(sym); scrollTo(0, y); };
+  if (s.bars?.length) S.chart = mountChart($app.querySelector("#chartBox"), { ...s, sig_help: ltHelp(s), price: s.live?.p ?? s.price, chg: s.live?.chg ?? s.chg }, { lt: true, levels: ltLevels(s) });
   const edit = async (fn, msg, after) => { try{ await loadLT(); const r = S.ltcsv.rows.find(x => symOf(x["시장"], x["티커"]) === sym); if (!r) throw new Error("목록에 없어요"); fn(r); await saveLTcsv(msg); after?.(); ltRecalc(); }catch(e){ toast(e.message); } };
   document.querySelectorAll("#ltrole [data-r]").forEach(b => b.onclick = () => { if (b.dataset.r === s.role) return; s.role = b.dataset.r; renderLTDetail(sym); edit(r => r["구분"] = b.dataset.r, `앱: 장투엔진 ${s.name} ${b.dataset.r}`); });
-  const a2 = document.getElementById("ltamt2"); if (a2) a2.onclick = () => document.getElementById("ltamt").click();
-  document.getElementById("ltamt").onclick = () => {
-    const kr = isKR(s.market), { sheet, close } = openSheet("목표 금액", `<div class="why"><p class="note" style="margin:0 0 14px">${esc(s.name)}에 투자할 총액 · 1·2·3차에 1/3씩 매수</p>
-      <div class="field"><label for="amt">총액 (${kr ? "원" : "달러"})</label><input id="amt" type="text" inputmode="numeric" value="${amt || ""}" placeholder="${kr ? "예: 3000000" : "예: 3000"}"></div>
-      <p class="note" id="amtp" style="margin:8px 0 0"></p>
-      <button class="btn primary press" id="amts" style="margin-top:16px">저장</button>${amt ? `<button class="btn press" id="amtd" style="margin-top:10px">지우기</button>` : ""}</div>`);
-    sheet.classList.add("fit");
-    const $i = sheet.querySelector("#amt"), $p = sheet.querySelector("#amtp");
-    const sync = () => { const v = parseFloat($i.value.replace(/[^\d.]/g, "")) || 0; $p.textContent = v ? `1/3씩 ${ltMoney(v / 3, s.market)}` : ""; if (v) $i.value = Math.round(v).toLocaleString(kr ? "ko-KR" : "en-US"); }; $i.oninput = sync; sync();
-    const save = async v => { try{ await loadLT(); const r = S.ltcsv.rows.find(x => symOf(x["시장"], x["티커"]) === sym); if (!r) throw new Error("목록에 없어요");
-      if (!S.ltcsv.head.includes("목표금액")) S.ltcsv.head.push("목표금액"); r["목표금액"] = v ? String(Math.round(v)) : "";
-      await saveLTcsv(`앱: 장투엔진 ${s.name} 목표 금액`); close(); renderLTDetail(sym); toast(v ? "저장했어요" : "지웠어요"); }catch(e){ toast(e.message); } };
-    sheet.querySelector("#amts").onclick = () => { const v = parseFloat($i.value.replace(/[^\d.]/g, "")) || 0; if (!v){ toast("금액을 넣어 주세요"); return; } save(v); };
-    const d0 = sheet.querySelector("#amtd"); if (d0) d0.onclick = () => save(0);
-  };
   const del = document.getElementById("ltdel");
   del.onclick = () => { if (del.dataset.sure){ edit(r => { S.ltcsv.rows = S.ltcsv.rows.filter(x => x !== r); }, `앱: 장투엔진 ${s.name} 빼기`, () => { delete S.lt.stocks[sym]; history.back(); }); return; }
     del.dataset.sure = "1"; del.querySelector(".main").textContent = "한 번 더 누르면 빠져요"; setTimeout(() => { if (del.isConnected){ delete del.dataset.sure; del.querySelector(".main").textContent = "장투엔진에서 빼기"; } }, 3000); };
