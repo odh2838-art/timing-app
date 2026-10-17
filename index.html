@@ -468,7 +468,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .lt-v{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-variant-numeric:tabular-nums} .lt-v b{font-weight:600}
 .lt-st{font-size:var(--t-small);color:var(--fg2)} .lt-st.ok{color:var(--buy)} .lt-st.on{color:var(--sell)} .lt-st.warn{color:var(--wait)}
 .lt-dim{color:var(--fg2);font-weight:400}
-.lt-rule{align-items:flex-start} .lt-rule .k{flex:none;width:2.6em;font-weight:600;font-size:var(--t-body);line-height:1.4} .lt-rule .d{flex:1;min-width:0;font-size:var(--t-detail);line-height:1.45}
+.lt-rule{align-items:flex-start} .lt-rule .k{flex:none;width:2.6em;font-weight:600;font-size:var(--t-body);line-height:1.4} .lt-rule .d b{font-weight:600} .lt-rule .d{flex:1;min-width:0;font-size:var(--t-detail);line-height:1.45}
 .lt-amt{font-size:var(--t-small);color:var(--fg2)}
 </style>
 </head>
@@ -1924,8 +1924,8 @@ async function renderLT(){
 
     <h2 class="sec-title">판단 순서</h2>
     <div class="list">
-      <div class="row lt-r lt-rule"><span class="k">사기</span><span class="d">1·2·3차 매수가에 닿으면 목표 금액의 1/3씩. 3차까지 산 뒤 더 빠지면 지지선에서 추가.</span></div>
-      <div class="row lt-r lt-rule"><span class="k">팔기</span><span class="d">종가가 지지선 아래로 마감하면 매도 검토. 단, 공포 신호가 켜져 있으면 분할매수가 먼저.</span></div>
+      <div class="row lt-r lt-rule"><span class="k">사기</span><span class="d"><b>정상 조정</b> · 오른 만큼 일부 되돌리는 하락. 1·2·3차 매수가에 닿으면 목표 금액의 1/3씩.</span></div>
+      <div class="row lt-r lt-rule"><span class="k">팔기</span><span class="d"><b>추세 깨짐</b> · 종가가 지지선 아래로 마감하면 매도 검토. 떨어지는 칼날을 피하고 더 낮은 곳에서 다시 사려는 것. 단, 공포 신호가 켜져 있으면 분할매수가 먼저.</span></div>
       <div class="row lt-r lt-rule"><span class="k">현금</span><span class="d">평소 30%. 같은 쪽 신호가 ${need}개 켜지면 과열은 ${mk.targets?.overheated ?? 50}%, 공포는 ${mk.targets?.fear ?? 20}%로.</span></div>
     </div>
 
