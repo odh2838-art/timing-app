@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-21">
+<meta name="app-version" content="2026-10-17-23">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -442,20 +442,20 @@ details.more>summary::-webkit-details-marker{display:none}
 .lt-px{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-variant-numeric:tabular-nums}
 .lt-px b{font-size:var(--t-body);font-weight:600} .lt-px span{font-size:var(--t-small);color:var(--fg2)}
 .lt-px .up{color:var(--up)} .lt-px .down{color:var(--down)}
-.lt-px .lt-w{font-weight:600} .lt-w.hot{color:var(--up)} .lt-w.cold{color:var(--down)} .lt-w.warn{color:var(--wait)}
+.lt-px .lt-w{font-weight:600} .lt-w.hot{color:var(--sell)} .lt-w.cold{color:var(--buy)} .lt-w.warn{color:var(--wait)}
 .lt-val{flex:none;font-size:var(--t-body);font-weight:600;color:var(--down);font-variant-numeric:tabular-nums}
 .lt-cnt{font-size:var(--t-body);color:var(--fg2);font-variant-numeric:tabular-nums}
 .lt-foot{margin:var(--gap-caption) var(--pad-card) 0}
 h2.sec-title{font-size:var(--t-heading)}
-.lt-head{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;margin-top:2px} .lt-head.hot{color:var(--up)} .lt-head.cold{color:var(--down)}
+.lt-head{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;margin-top:2px} .lt-head.hot{color:var(--sell)} .lt-head.cold{color:var(--buy)}
 .lt-why{margin-top:10px;font-size:var(--t-small);color:var(--fg2);line-height:1.45} .lt-why-k{font-weight:600;color:var(--fg);margin-right:6px}
 .lt-ind{align-items:center} .lt-ih{display:flex;justify-content:space-between;align-items:baseline;gap:10px} .lt-iv{flex:none;font-variant-numeric:tabular-nums} .lt-iv b{font-weight:600}
-.lt-iv .lt-w{font-size:var(--t-small);font-weight:600;color:var(--fg2);margin-left:4px} .lt-iv .lt-w.hot{color:var(--up)} .lt-iv .lt-w.cold{color:var(--down)} .lt-iv .lt-w.warn{color:var(--wait)}
+.lt-iv .lt-w{font-size:var(--t-small);font-weight:600;color:var(--fg2);margin-left:4px} .lt-iv .lt-w.hot{color:var(--sell)} .lt-iv .lt-w.cold{color:var(--buy)} .lt-iv .lt-w.warn{color:var(--wait)}
 .lt-now{font-size:var(--t-detail);margin-top:4px;line-height:1.45}
 .lt-chc{padding:14px 12px 14px 14px} .lt-ch{width:100%;height:auto;display:block;overflow:visible}
 .lt-ch .sp{fill:var(--buy);opacity:.14} .lt-ch .spt{fill:var(--buy);font-weight:600}
 .lt-ch line{stroke-width:1;stroke-dasharray:4 4} .lt-ch line.tr{stroke:var(--blue);opacity:.7} .lt-ch line.tr.ok{stroke:var(--buy)} .lt-ch line.rs{stroke:var(--fg3)}
-.lt-ch .tg{font-size:12.5px;font-weight:600;fill:var(--blue)} .lt-ch .tg.ok{fill:var(--buy)} .lt-ch .tg.rs{fill:var(--fg2)}
+.lt-ch .tg{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round;font-size:12.5px;font-weight:600;fill:var(--blue)} .lt-ch .tg.ok{fill:var(--buy)} .lt-ch .tg.rs{fill:var(--fg2)}
 .lt-ch .ax{font-size:11.5px;fill:var(--fg3)}
 .lt-leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:var(--t-small);color:var(--fg2)} .lt-leg span{display:inline-flex;align-items:center;gap:6px}
 .lt-leg i{width:14px;height:0;border-top:1.5px dashed var(--blue)} .lt-leg i.sp{height:8px;border:0;background:var(--buy);opacity:.3;border-radius:2px} .lt-leg i.rs{border-color:var(--fg3)} .lt-leg i.ok{border-color:var(--buy)}
@@ -1808,7 +1808,9 @@ const LT_MKEY = {"BofA Bull & Bear Indicator": "bofa_bull_bear", "BofA Global Fu
 const LT_FG = {"Extreme Fear": "극단적 공포", "Fear": "공포", "Neutral": "중립", "Greed": "탐욕", "Extreme Greed": "극단적 탐욕"};
 const ltKo = t => { let x = String(t || ""); for (const [k, v] of Object.entries(LT_IND)) x = x.split(k).join(v);
   return x.replace(/Extreme Fear|Extreme Greed|Fear|Greed|Neutral/g, w => LT_FG[w] || w).replace(/매수 신호/g, "공포 신호").replace(/매도 신호/g, "과열 신호")
-    .replace("공포 구간이라 분할매수 우선", "공포 신호 켜져 있어 분할매수 우선 검토").replace(/매수 가격대 도달/g, "매수가 도달").replace(/가격대 도달/g, "매수가 도달"); };
+    .replace("공포 구간이라 분할매수 우선", "공포 신호 켜져 있어 분할매수 우선 검토").replace(/매수 가격대 도달/g, "매수가 도달").replace(/가격대 도달/g, "매수가 도달")
+    .replace(/매수 근거\(하락 리스크\) 확인 · (\d{4})Q(\d)/, "분기 점검 · 산 이유가 그대로인지 확인 ($1년 $2분기)").replace(/ 숫자는 기사에서 확인/, " · 숫자 확인은 선택"); };
+const ltBody = b => /[A-Za-z]{4,}.*[A-Za-z]{4,}/.test(b || "") && !/[가-힣]/.test(b || "") ? "" : ltKo(b);
 const ltCond = r => { if (r.op === "in" && Array.isArray(r.value)) return r.value.some(x => /Greed/.test(x)) ? "55 이상(탐욕)" : "45 미만(공포)";
   const v = Array.isArray(r.value) ? r.value.map(x => LT_FG[x] || x).join("·") : r.value;
   const u = /bp/.test(r.indicator) ? "bp" : /%/.test(r.indicator) ? "%" : "";
@@ -1851,8 +1853,8 @@ const LT_LONG = {
 };
 function ltNow(x){
   const r = x.any, v = typeof r.cur === "number" ? r.cur : null, ind = r.indicator, h = x.hot, c = x.cold;
-  if (x.word[0] === "확인 필요") return "새 발표 숫자 미확인 · 판단에서 빠짐";
-  if (x.word[0] === "값 없음") return /change/.test(ind) ? "두 달치 값이 쌓이면 자동 계산" : "값 없음 · 판단에서 빠짐";
+  if (x.word[0] === "확인 필요") return `${r.date ? String(r.date).slice(5).replace("-", "/") + " 값은 지난 발표 · " : ""}새 발표 숫자 미확인 → 판단에서 빠짐`;
+  if (x.word[0] === "값 없음") return /change/.test(ind) ? "두 달치 값이 쌓이면 자동 계산 · 지금은 판단에서 빠짐" : "값 없음 · 판단에서 빠짐";
   if (x.word[0] === "미정") return "기준 미정 · 판단에서 빠짐";
   if (/CNN/.test(ind)){ const n = parseFloat(r.shown); return n < 25 ? "극단적 공포 → 공포 신호 켜짐" : n < 45 ? "공포 → 공포 신호 켜짐" : n < 55 ? "중립" : n < 75 ? "탐욕 → 과열 신호 켜짐" : "극단적 탐욕 → 과열 신호 켜짐"; }
   if (h?.state === "켜짐") return "과열 신호 켜짐";
@@ -1869,8 +1871,8 @@ function ltVerdict(mk, IND){
   const on = IND.filter(x => x.word[1] === "hot" || x.word[1] === "cold").map(x => `${LT_IND[x.any.indicator] || x.any.indicator} ${x.any.shown ? String(x.any.shown).replace(/ · .*/, "") : ""}`.trim()).join(", ");
   if (mk.regime === "overheated") return { tone: "hot", head: "현금 늘리기 검토", act: `현금 목표 ${t.overheated ?? 50}%로 전환 검토. 줄일 땐 중단기 → 보조 종목 순서.`, why: `과열 신호 ${ns}개 · ${on}` };
   if (mk.regime === "fear") return { tone: "cold", head: "분할매수 검토", act: `현금 목표 ${t.fear ?? 20}%로 전환 검토. 투입할 종목은 직접 고르고, 바닥은 서둘러 잡지 않기.`, why: `공포 신호 ${nb}개 · ${on}` };
-  if (nb && !ns) return { tone: "cold", head: "비중 유지", act: `현금 ${t.neutral ?? 30}% 유지. 매수가에 닿은 종목만 분할매수 검토.`, why: `공포 신호 ${nb}개 (${on}) · ${need}개면 현금 목표 ${t.fear ?? 20}%` };
-  if (ns && !nb) return { tone: "hot", head: "비중 유지", act: `현금 ${t.neutral ?? 30}% 유지. 다음 신호 관찰.`, why: `과열 신호 ${ns}개 (${on}) · ${need}개면 현금 목표 ${t.overheated ?? 50}%` };
+  if (nb && !ns) return { tone: "n", head: "비중 유지", act: `현금 ${t.neutral ?? 30}% 유지. 매수가에 닿은 종목만 분할매수 검토.`, why: `공포 신호 ${nb}개 (${on}) · ${need}개면 현금 목표 ${t.fear ?? 20}%` };
+  if (ns && !nb) return { tone: "n", head: "비중 유지", act: `현금 ${t.neutral ?? 30}% 유지. 다음 신호 관찰.`, why: `과열 신호 ${ns}개 (${on}) · ${need}개면 현금 목표 ${t.overheated ?? 50}%` };
   return { tone: "n", head: "비중 유지", act: `현금 ${t.neutral ?? 30}% 유지. 매수가에 닿은 종목만 분할매수 검토.`, why: "켜진 신호 없음" };
 }
 async function renderLT(){
@@ -1926,12 +1928,12 @@ async function renderLT(){
     <div class="list">
       <div class="row lt-r lt-rule"><span class="k">사기</span><span class="d"><b>정상 조정</b> · 오른 만큼 일부 되돌리는 하락. 1·2·3차 매수가에 닿으면 목표 금액의 1/3씩.</span></div>
       <div class="row lt-r lt-rule"><span class="k">팔기</span><span class="d"><b>추세 깨짐</b> · 종가가 지지선 아래로 마감하면 매도 검토. 떨어지는 칼날을 피하고 더 낮은 곳에서 다시 사려는 것. 단, 공포 신호가 켜져 있으면 분할매수가 먼저.</span></div>
-      <div class="row lt-r lt-rule"><span class="k">현금</span><span class="d">평소 30%. 같은 쪽 신호가 ${need}개 켜지면 과열은 ${mk.targets?.overheated ?? 50}%, 공포는 ${mk.targets?.fear ?? 20}%로.</span></div>
+      <div class="row lt-r lt-rule"><span class="k">현금</span><span class="d">전체 투자금 중 현금으로 둘 몫. 평소 30%. 같은 쪽 신호가 ${need}개 켜지면 과열은 ${mk.targets?.overheated ?? 50}%, 공포는 ${mk.targets?.fear ?? 20}%로.</span></div>
     </div>
 
     ${todo.length ? `<h2 class="sec-title">오늘</h2><div class="list">${todo.slice(0, 5).map((x, k) => row(two(esc(x.t), esc(x.sub || "")) + (x.v ? `<span class="lt-val">${esc(x.v)}</span>` : ""), `data-k="${k}" data-todo`)).join("")}</div>` : ""}
 
-    <h2 class="sec-title">종목 <span class="sub">${st.length + pending.length}개 · 규칙 5~6개</span></h2>
+    <h2 class="sec-title">종목 <span class="sub">${st.length + pending.length}개 · 권장 5~6개${st[0]?.date ? ` · ${md(st[0].date)} 종가` : ""}</span></h2>
     ${st.length || pending.length ? `<div class="list">${st.map(s => { const t = nextT(s), n = doneN(s);
         return row(two(`${esc(s.name)}${s.role !== "보조" ? `<span class="lt-core"${s.role === "중단기" ? ' style="color:var(--fg2)"' : ""}>${esc(s.role)}</span>` : ""}`,
           t ? (n ? `${n}차 도달 · ${t.order}차까지 ${pct(t.dist)}` : `1차까지 ${pct(t.dist)}`) : "3차 아래 · 지지선 확인") +
@@ -1958,7 +1960,7 @@ async function renderLT(){
     ${d.errors?.length ? `<p class="note lt-foot">받지 못한 종목: ${d.errors.map(esc).join(", ")}</p>` : ""}
     <p class="note lt-foot">투자 권유 아님 · 검토용</p>
   </div>`;
-  bindLThead();
+  bindLThead(); bindNavbar();
   const a0 = document.getElementById("ltadd0"); if (a0) a0.onclick = ltSearch;
   $app.querySelectorAll("[data-sym]").forEach(b => b.onclick = () => go("push", () => S.ltd = b.dataset.sym));
   $app.querySelectorAll("[data-pend]").forEach(b => b.onclick = () => { const sym = b.dataset.pend, r = (S.ltcsv?.rows || []).find(x => symOf(x["시장"], x["티커"]) === sym); if (!r) return;
@@ -1970,8 +1972,9 @@ async function renderLT(){
   $app.querySelectorAll("button[data-ind]").forEach(b => b.onclick = () => { const x = IND[+b.dataset.ind]; ltManual({ ...x.any, _cond: x.cond, state: x.word[0] }, mk.bofa_hist); });
   $app.querySelectorAll("[data-todo]").forEach(b => b.onclick = () => { const x = todo[+b.dataset.k]; if (x.ix) ltManual({ ...x.ix.any, _cond: x.ix.cond, state: x.ix.word[0] }, mk.bofa_hist); else if (x.sym && d.stocks[x.sym]) go("push", () => S.ltd = x.sym); });
   const fit = o => o.sheet.classList.add("fit");
-  document.getElementById("ltal").onclick = () => fit(openSheet("알림 기록", `<div class="why">${alerts.length ? `<div class="list">${alerts.map(a => `<div class="row lt-r">${two(esc(ltKo(a.title)), `${esc(a.level)} · ${md(a.t)}${a.body ? " · " + esc(ltKo(a.body)) : ""}`)}</div>`).join("")}</div>` : `<p class="note">아직 알림이 없어요.</p>`}</div>`));
-  document.getElementById("ltopen").onclick = () => fit(openSheet("정하지 않은 규칙", `<div class="why"><p class="note" style="margin:0 0 12px">아래 값을 정하기 전까지 이 규칙들은 알림을 보내지 않아요. 정하면 말해 주세요.</p><div class="list">${(d.open || []).map(q => `<div class="row lt-r">${two(esc(String(q).replace(/^[a-z_.]+:\s*/, "")))}</div>`).join("")}</div></div>`));
+  document.getElementById("ltal").onclick = () => { const al = openSheet("알림 기록", `<div class="why">${alerts.length ? `<div class="list">${alerts.map(a => { const go2 = a.sym && d.stocks?.[a.sym]; return `<${go2 ? `button class="row press lt-r" data-asym="${esc(a.sym)}"` : `div class="row lt-r"`}>${two(esc(ltKo(a.title)), `${esc(a.level)} · ${md(a.t)}${ltBody(a.body) ? " · " + esc(ltBody(a.body)) : ""}`)}${go2 ? CHEV + "</button>" : "</div>"}`; }).join("")}</div>` : `<p class="note">아직 알림이 없어요.</p>`}</div>`); fit(al);
+    al.sheet.querySelectorAll("[data-asym]").forEach(b => b.onclick = () => { al.close(); go("push", () => S.ltd = b.dataset.asym); }); };
+  document.getElementById("ltopen").onclick = () => fit(openSheet("정하지 않은 규칙", `<div class="why"><p class="note" style="margin:0 0 12px">아직 정하지 않아서, 이 규칙들은 알림을 보내지 않아요.</p><div class="list">${(d.open || []).map(q => `<div class="row lt-r">${two(esc(String(q).replace(/^[a-z_.]+:\s*/, "")))}</div>`).join("")}</div></div>`));
   document.getElementById("ltalloc").onclick = () => { const a = d.allocation || {}, t = mk.targets || {};
     fit(openSheet("비중 원칙", `<div class="why"><div class="list">${[["현금 (평소)", (a.cash_default_pct ?? 30) + "%"], ["장기", (a.long_term_pct ?? "-") + "%"], ["중단기", (a.short_mid_term_max_pct ?? "-") + "% 이하"], ["과열일 때 현금", (t.overheated ?? 50) + "%"], ["공포일 때 현금", (t.fear ?? 20) + "%"]].map(([k, v]) => `<div class="row lt-r">${two(k)}<div class="lt-px"><b>${esc(v)}</b></div></div>`).join("")}</div>
       <div class="list" style="margin-top:12px">${["같은 쪽 신호 " + need + "개 이상이면 현금 목표 전환 검토 · 1개면 관찰만",
@@ -1984,7 +1987,7 @@ function ltEmpty(head){
   const none = !(S.ltcsv?.rows || []).length;
   $app.innerHTML = `<div class="wrap">${head}<div class="card empty">${none ? `<b>먼저 장투 종목을 추가하세요</b>추가하면 1분 안에 매수가와 지지선을 계산해요<div style="margin-top:14px"><button class="btn primary press" id="ltgo">종목 추가</button></div>`
     : `<b>첫 계산 전이에요</b>1분 정도 걸려요<div style="margin-top:14px"><button class="btn primary press" id="ltgo" data-busy ${S.busy ? "disabled" : ""}>지금 계산</button></div>`}</div></div>`;
-  bindLThead(); document.getElementById("ltgo").onclick = () => none ? ltSearch() : ltRecalc();
+  bindLThead(); bindNavbar(); document.getElementById("ltgo").onclick = () => none ? ltSearch() : ltRecalc();
 }
 function bindLThead(){
   const r = document.getElementById("ltre"); if (r) r.onclick = () => { if (!S.busy) ltRecalc(); };
@@ -2068,12 +2071,13 @@ function ltChart(s, n){
   </svg>`;
 }
 function ltSay(s){
-  const T = s.tranches || [], t = T.find(t => !t.reached), sp = s.support;
+  const T = s.tranches || [], t = T.find(t => !t.reached), sp = s.support, done = T.filter(x => x.reached);
   const md = x => String(x || "").slice(5).replace("-", "/"), waitEarn = s.earn && s.earn >= s.date;
   const today = T.filter(x => x.reached === s.date).pop();
   if (today) return today.order === 3 && waitEarn ? `오늘 3차 매수가 도달 · 실적(${md(s.earn)}) 확인 후 검토` : `오늘 ${today.order}차 매수가 도달 → 목표 금액의 1/3 매수 검토`;
-  if (!t) return sp && s.price <= sp.hi ? "3차 아래 · 지지선 근처 → 추가 매수 검토 (양 미정)" : "3차까지 도달 · 지지선까지는 대기";
-  return `${t.order}차 매수가까지 ${pct(t.dist)} · 닿기 전엔 대기${t.order === 3 && waitEarn ? ` · 3차는 실적(${md(s.earn)}) 확인 후` : ""}`;
+  if (!t) return sp && s.price <= sp.hi ? "1·2·3차 모두 도달 · 지지선 근처 → 추가 매수 검토 (양 미정)" : "1·2·3차 모두 도달 · 더 빠지면 지지선에서 추가 매수 검토";
+  const head = done.length ? `${done.map(x => x.order).join("·")}차 매수가는 이미 지났어요. 아직 안 샀다면 ${done[done.length - 1].order}차분까지 매수 검토. ` : "";
+  return `${head}다음은 ${t.order}차 ${num(t.price, s.market)} (${pct(t.dist)})${!done.length ? " · 닿기 전엔 대기" : ""}${t.order === 3 && waitEarn ? ` · 3차는 실적(${md(s.earn)}) 확인 후` : ""}`;
 }
 const ltMoney = (v, m) => isKR(m) ? (v >= 1e8 ? (Math.round(v / 1e7) / 10) + "억 원" : v >= 1e4 ? Math.round(v / 1e4).toLocaleString("ko-KR") + "만 원" : Math.round(v).toLocaleString("ko-KR") + "원") : "$" + Math.round(v).toLocaleString("en-US");
 function renderLTDetail(sym){
@@ -2084,7 +2088,7 @@ function renderLTDetail(sym){
   const cell = (k, v, n) => `<div class="row lt-r"><div class="main"><div class="lt-n">${k}</div>${n ? `<div class="lt-s">${n}</div>` : ""}</div><div class="lt-px">${v}</div></div>`;
   const csvRow = (S.ltcsv?.rows || []).find(x => symOf(x["시장"], x["티커"]) === sym), amt = parseFloat(String(csvRow?.["목표금액"] || "").replace(/[^\d.]/g, "")) || 0;
   const T3 = (s.tranches || []).find(t => t.order === 3);
-  const clash = !sp || !T3 || T3.reached ? "" : sp.lo > T3.price ? `지지선(${num(sp.lo, s.market)})이 3차 매수가보다 위예요. 3차에 닿기 전에 지지선이 깨지면 '매도 검토'가 먼저 와요.`
+  const clash = !sp || !T3 || T3.reached ? "" : sp.lo > T3.price ? ((S.lt?.market?.n_buy || 0) > 0 ? "" : `지지선(${num(sp.lo, s.market)})이 3차 매수가보다 위예요. 3차에 닿기 전에 지지선이 깨지면 '매도 검토'가 먼저 와요.`)
     : sp.hi >= T3.price ? "3차 매수가가 지지선 안에 있어요. 지지선 안 = 3차 매수 검토, 종가가 지지선 아래로 마감 = 매도 검토." : "";
   $app.innerHTML = `<div class="wrap">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>장투엔진</span></button></div><span class="mini">${esc(s.name)}</span><div class="side r"></div></div>
@@ -2102,14 +2106,14 @@ function renderLTDetail(sym){
       <button class="row press lt-r" id="ltamt"><div class="main"><div class="lt-n">목표 금액</div><div class="lt-s">${amt ? "이 종목에 넣을 총액 · 1/3씩 나눠 사요" : "넣으면 차수마다 살 금액·주식 수를 알려 줘요"}</div></div><div class="lt-px"><b style="color:${amt ? "var(--fg)" : "var(--blue)"}">${amt ? esc(ltMoney(amt, s.market)) : "넣기"}</b></div>${CHEV}</button>
       ${(s.tranches || []).map(t => cell(`${t.order}차 <span class="lt-dim">상승폭 ${Math.round(t.fib * 100)}% 반납</span>`,
       `<b>${num(t.price, s.market)}</b><span class="${t.reached ? "ok" : ""}">${t.reached ? "도달 " + md(t.reached) : pct(t.dist)}</span>`,
-      amt ? `약 ${esc(ltMoney(amt / 3, s.market))} · ${Math.floor(amt / 3 / t.price).toLocaleString()}주` : "")).join("")}</div>
+      amt ? `약 ${esc(ltMoney(amt / 3, s.market))} · 주식 ${Math.floor(amt / 3 / t.price).toLocaleString()}개` : "")).join("")}</div>
     <p class="note lt-foot">최근 상승(${num(sw.low, s.market)} → ${num(sw.high, s.market)})에서 38%·50%·62% 내려온 가격이에요.${s.earn ? ` 실적 발표(${md(s.earn)}) 전엔 1·2차만.` : ""}</p>
 
     <h2 class="sec-title">지지 · 저항</h2>
     <div class="list">${cell("지지선", sp ? `<b>${num(sp.lo, s.market)}–${num(sp.hi, s.market)}</b><span>${pct(sp.dist)}</span>` : "<b>–</b>", sp ? esc(sp.why.join(", ")) : "근거 없음")}
       ${cell("저항선", rs ? `<b>${num(rs.v, s.market)}</b><span>${pct(rs.dist)}</span>` : "<b>–</b>", rs ? esc(rs.why) : "가까운 저항 없음")}</div>
     ${clash ? `<p class="note lt-foot" style="color:var(--wait)">${clash}</p>` : ""}
-    <p class="note lt-foot">종가가 지지선 아래로 마감 → 매도 검토 · 공포 신호가 켜져 있으면 분할매수 먼저 · 3차까지 산 뒤엔 지지선에서 추가 매수 검토</p>
+    <p class="note lt-foot" style="color:var(--fg)">${(S.lt?.market?.n_buy || 0) > 0 ? "지금은 공포 신호가 켜져 있어요 → 종가가 지지선 아래로 마감해도 매도보다 분할매수를 먼저 봐요." : "종가가 지지선 아래로 마감하면 매도 검토 (추세 깨짐). 지금은 공포 신호가 없어서 예외 없음."}</p>
 
     <h2 class="sec-title">참고</h2>
     <div class="list">${cell("RSI", `<b>${s.rsi != null ? Math.round(s.rsi) : "–"}</b>`, "과매수 기준 미정")}${cell("20일 수익률", `<b>${pct(s.gain20)}</b>`, "급등 기준 기간 미정")}${s.earn ? cell("다음 실적 발표", `<b>${md(s.earn)}</b>`) : ""}</div>
@@ -2120,7 +2124,7 @@ function renderLTDetail(sym){
     <div class="list" style="margin-top:var(--gap-section)"><button class="row press" id="ltdel"><div class="main" style="color:var(--sell);text-align:center">장투엔진에서 빼기</div></button></div>
     <p class="note" style="margin:12px 0 0;text-align:center">투자 권유 아님 · 검토용</p>
   </div>`;
-  document.getElementById("back").onclick = () => history.back();
+  document.getElementById("back").onclick = () => history.back(); bindNavbar();
   document.getElementById("ltrng").onclick = e => { const b = e.target.closest("[data-n]"); if (!b) return; S.ltRange = +b.dataset.n; LS.set("ltRange", S.ltRange); const y = scrollY; renderLTDetail(sym); scrollTo(0, y); };
   const edit = async (fn, msg, after) => { try{ await loadLT(); const r = S.ltcsv.rows.find(x => symOf(x["시장"], x["티커"]) === sym); if (!r) throw new Error("목록에 없어요"); fn(r); await saveLTcsv(msg); after?.(); ltRecalc(); }catch(e){ toast(e.message); } };
   document.querySelectorAll("#ltrole [data-r]").forEach(b => b.onclick = () => { if (b.dataset.r === s.role) return; s.role = b.dataset.r; renderLTDetail(sym); edit(r => r["구분"] = b.dataset.r, `앱: 장투엔진 ${s.name} ${b.dataset.r}`); });
@@ -2155,7 +2159,7 @@ function renderSettings(){
       <div class="row"><div class="main"><b>미국장 마감 뒤</b><div class="sub">매일 07:10</div></div></div>
       <div class="row"><div class="main"><b>한국장 마감 뒤</b><div class="sub">매일 15:50</div></div></div>
     </div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">알림은 앱에서만 보여요. 오동엔진은 잠시 멈춤.</p>` : `<div class="sec-title" role="heading" aria-level="2">자동 점검 (한국 시간)</div>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">결과와 알림은 이 앱에서 봐요.</p>` : `<div class="sec-title" role="heading" aria-level="2">자동 점검 (한국 시간)</div>
     <div class="list">
       <div class="row"><div class="main"><b>한국장</b><div class="sub">10:30 · 13:00 · 14:50 · 마감 후 15:50</div></div></div>
       <div class="row"><div class="main"><b>미국장</b><div class="sub">23:50 · 01:50 · 03:50 · 마감 후 07:10</div></div></div>
