@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-41">
+<meta name="app-version" content="2026-10-17-42">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -803,8 +803,8 @@ const IND_LIST = [["ma","평균선"],["ch","20일 채널"],["ich","일목"],["vo
 const IND = Object.assign({ma:true, ch:false, ich:false, vol:true, pat:true}, LS.get("ind", {}));
 const IND_G = IND, LT_CI = Object.assign({ma:true, vol:true, rsi:true}, LS.get("ltind", {}), {pat:true});   // 장투엔진 차트는 설정을 따로 (50·200일선 · 거래량 · RSI)
 const LT_IND_LIST = [["ma","평균선"],["vol","거래량"],["rsi","RSI"]];
-const OD_CI = Object.assign({zone:true, fib:true, tl:true, box:true, vol:true}, LS.get("odind", {}), {ma:false, rsi:false, sig:false});   // 오동엔진 차트: 글의 근거만
-const OD_IND_LIST = [["zone","자리"],["fib","피보나치"],["tl","추세선"],["box","박스"],["vol","거래량"]];
+const OD_CI = Object.assign({main:true, fib:true, tl:true, box:true, more:false, vol:true}, LS.get("odind2", {}), {ma:false, rsi:false, sig:false});   // 오동엔진 차트: 글의 근거만
+const OD_IND_LIST = [["main","자리·나갈 자리"],["fib","피보나치 0.618"],["tl","추세선"],["box","박스"],["more","다른 자리"],["vol","거래량"]];
 const LCOL = {tr:"#1B64DA", ok:"#1B8A4A", sp:"#1B8A4A", zone:"#1B8A4A", stop:"#D22F3C", fib:"#8E5CF6", res:"#8E8E93"};   // 선·이름표 색
 if (!LS.get("patOn4")){ IND.pat = true; LS.set("patOn4", 1); LS.set("ind", IND); }   // 보조 표시(분할청산·과열·TP 등)는 작은 ▲▼로 보이고, 이름표는 매수·매도 신호 먼저 (1개월은 보조 2개까지)   // 지표견처럼 청산·패턴 표시를 기본으로 켬 (한 번만) IND.bb = false; IND.rsi = false;
 const DARK = () => { try { return matchMedia("(prefers-color-scheme: dark)").matches; } catch(e){ return false; } };
@@ -836,12 +836,12 @@ function calcInd(bars){
 }
 
 function mountChart(box, s, opt = {}){
-  const OD = !!opt.od, LT = !!opt.lt || OD, IND = OD ? OD_CI : LT ? LT_CI : IND_G, INDK = OD ? "odind" : LT ? "ltind" : "ind", aux = t => !LT && isAux(t);   // OD: 오동엔진 차트 (자리·나갈 자리·저항·피보나치·추세선·박스)   // LT: 장투엔진 차트 (살 가격·지지선 선, 50·200일선, RSI 70·80)
+  const OD = !!opt.od, LT = !!opt.lt || OD, IND = OD ? OD_CI : LT ? LT_CI : IND_G, INDK = OD ? "odind2" : LT ? "ltind" : "ind", aux = t => !LT && isAux(t);   // OD: 오동엔진 차트 (자리·나갈 자리·저항·피보나치·추세선·박스)   // LT: 장투엔진 차트 (살 가격·지지선 선, 50·200일선, RSI 70·80)
   const bars = s.bars || [], N = bars.length;
   if (N < 10){ box.innerHTML = `<div class="empty">차트 데이터가 부족해요</div>`; return; }
   const hasVol = bars.some(b => b[7] != null);
   let ind = calcInd(bars); const idx = {}; bars.forEach((b,i) => idx[b[0]] = i);
-  const pdef = Math.min(N, (PERIODS.find(p => p[0] === LS.get("period")) || PERIODS[1])[1]);
+  const PK = OD ? "odperiod" : "period", pdef = Math.min(N, (PERIODS.find(p => p[0] === LS.get(PK, OD ? "6개월" : null)) || PERIODS[1])[1]);
   const V = { n: pdef, end: N - 1 };
   box.innerHTML = `
     <div class="seg" role="tablist" aria-label="기간">${PERIODS.filter(p => p[1] <= N + 10).map(([t,k]) => `<button role="tab" data-k="${Math.min(k,N)}">${t}</button>`).join("")}<span class="thumb"></span></div>
@@ -871,7 +871,8 @@ function mountChart(box, s, opt = {}){
   };
   const legend = () => {
     const it = [];
-    if (OD){
+    if (OD){ $leg.innerHTML = ""; return; }   // 오동엔진: 선마다 이름표가 붙어 있어 범례 없음
+    if (false){
       const has = k => (opt.levels || []).some(v => v.kind === k && IND[v.g] !== false);
       if (has("zone")) it.push(["자리", "rgba(27,138,74,.35)"]);
       if (has("stop")) it.push(["나갈 자리", LCOL.stop]);
@@ -924,7 +925,7 @@ function mountChart(box, s, opt = {}){
     const LVN = [];   // 장투: 살 가격·지지선 이름 자리 (가격표 바로 왼쪽) — 신호 이름표가 피해 가게 먼저 잡아 둔다
     if (LT){ const left = [];
       [...LV].sort((a, b) => (b.hi ?? b.v) - (a.hi ?? a.v)).forEach(v => {
-        if (!v.label) return;
+        if (OD || !v.label) return;   // 오동엔진은 아래에서 선 위에 바로 이름표
         const band = v.kind === "sp" || v.kind === "zone", val = band ? v.lo : v.v; if (!(val >= lo && val <= hi)) return;
         let ty = (band ? (y(v.hi) + y(v.lo)) / 2 : y(val)) + 4;
         while (left.some(u => Math.abs(u - ty) < 13)) ty += 13;
@@ -956,8 +957,8 @@ function mountChart(box, s, opt = {}){
       LV.filter(v => v.kind === "box").forEach(v => {   // 박스: 시작~끝 날짜 사이 위아래
         const a = idx[v.d0] ?? (v.d0 < bars[0][0] ? 0 : null), b = idx[v.d1] ?? (v.d1 > bars[N - 1][0] ? N - 1 : null); if (a == null || b == null || b < i0 - 1 || a > i1 + 1) return;
         p += `<rect x="${x(a) - cw / 2}" y="${y(v.hi)}" width="${Math.max(2, x(b) - x(a) + cw)}" height="${Math.max(2, y(v.lo) - y(v.hi))}" fill="#8E8E93" fill-opacity=".07" stroke="#8E8E93" stroke-width="1" stroke-dasharray="4 3" opacity=".9" rx="2"/>`; });
-      LV.filter(v => (v.kind === "sp" || v.kind === "zone") && v.hi >= lo && v.lo <= hi).forEach(v => { p += `<rect x="${L}" y="${y(v.hi)}" width="${W-L-R}" height="${Math.max(3, y(v.lo) - y(v.hi))}" fill="#1B8A4A" opacity="${v.kind === "zone" && !v.label ? ".07" : ".14"}"/>`; });
-      LV.filter(v => !["sp", "zone", "box", "trendline"].includes(v.kind) && v.v >= lo && v.v <= hi).forEach(v => { p += `<line x1="${L}" x2="${W-R}" y1="${y(v.v)}" y2="${y(v.v)}" stroke="${LCOL[v.kind] || "#1B64DA"}" stroke-width="${v.kind === "stop" ? 1.4 : 1.1}" stroke-dasharray="${v.kind === "fib" ? "2 3" : "5 4"}" opacity=".85"/>`; });
+      LV.filter(v => (v.kind === "sp" || v.kind === "zone") && v.hi >= lo && v.lo <= hi).forEach(v => { p += `<rect x="${L}" y="${y(v.hi)}" width="${W-L-R}" height="${Math.max(3, y(v.lo) - y(v.hi))}" fill="#1B8A4A" opacity="${v.kind === "zone" && !v.label ? ".07" : ".14"}"/>` + (OD && v.label ? `<line x1="${L}" x2="${W-R}" y1="${y(v.hi)}" y2="${y(v.hi)}" stroke="#1B8A4A" stroke-width=".8" opacity=".6"/><line x1="${L}" x2="${W-R}" y1="${y(v.lo)}" y2="${y(v.lo)}" stroke="#1B8A4A" stroke-width=".8" opacity=".6"/>` : ""); });
+      LV.filter(v => !["sp", "zone", "box", "trendline"].includes(v.kind) && v.v >= lo && v.v <= hi).forEach(v => { p += `<line x1="${L}" x2="${W-R}" y1="${y(v.v)}" y2="${y(v.v)}" stroke="${LCOL[v.kind] || "#1B64DA"}" stroke-width="${v.kind === "stop" ? 1.5 : 1.1}" ${v.kind === "stop" ? "" : `stroke-dasharray="${v.kind === "fib" ? "3 3" : "5 4"}"`} opacity=".9"/>`; });
       LV.filter(v => v.kind === "trendline" && v.pts?.length === 2).forEach(v => {   // 상승 추세선: 높아지는 눌림 저점 두 개를 이은 선
         const [[d0, v0], [d1, v1]] = v.pts, a = idx[d0], b = idx[d1]; if (a == null || b == null || b <= a) return;
         const k = (v1 - v0) / (b - a), xa = Math.max(a, i0 - 1), xb = Math.min(b, i1 + 1); if (xb <= xa) return;
@@ -975,11 +976,11 @@ function mountChart(box, s, opt = {}){
       if (d) p += `<path d="${d}" fill="none" stroke="#8B5E3C" stroke-width="1.3"/>`;
     }
     const bw = Math.max(1, cw * 0.7);
-    if (cw < 2.6){ let d = ""; for (let i = i0; i <= i1; i++) d += (d ? "L" : "M") + x(i).toFixed(1) + " " + y(bars[i][4]).toFixed(1);   // 봉이 너무 가늘면 종가 선으로
+    if (cw < (OD ? 1.6 : 2.6)){ let d = ""; for (let i = i0; i <= i1; i++) d += (d ? "L" : "M") + x(i).toFixed(1) + " " + y(bars[i][4]).toFixed(1);   // 봉이 너무 가늘면 종가 선으로
       const upc = bars[i1][4] >= bars[i0][4]; p += `<path d="${d}" fill="none" stroke="${upc ? COL.up : COL.down}" stroke-width="1.6" stroke-linejoin="round"/>`; }
     else for (let i = i0; i <= i1; i++){ const b = bars[i], col = b[4] >= b[1] ? COL.up : COL.down, top = y(Math.max(b[1], b[4])), bh = Math.max(1, Math.abs(y(b[1]) - y(b[4])));
       p += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(b[2])}" y2="${y(b[3])}" stroke="${col}" stroke-width="${cw > 6 ? 1 : .8}"/><rect x="${x(i) - bw/2}" y="${top}" width="${bw}" height="${bh}" fill="${col}"${s.live && i === N - 1 ? ' opacity=".5"' : ""}/>`; }
-    for (let i = i0; i <= i1; i++) if (ind.nh[i]) p += `<circle cx="${x(i)}" cy="${y(bars[i][2]) - 5}" r="1.8" fill="${COL.up}" opacity=".8"/>`;
+    if (!OD) for (let i = i0; i <= i1; i++) if (ind.nh[i]) p += `<circle cx="${x(i)}" cy="${y(bars[i][2]) - 5}" r="1.8" fill="${COL.up}" opacity=".8"/>`;
     /* 구간 이름 글자는 차트에 쓰지 않는다: 초록 띠 + 오른쪽 초록 가격표가 같은 뜻 (봉을 가리지 않게) */
     /* 신호 말풍선 (보이는 것 중 최근 6개, 겹치지 않게) */
     const C = TP.chip, boxes = [];
@@ -1033,7 +1034,28 @@ function mountChart(box, s, opt = {}){
     g += p;
     const last = s.price ?? bars[N-1][4], lc = (s.chg ?? 0) >= 0 ? COL.up : COL.down;
     if (last >= lo && last <= hi) g += `<line x1="${L}" x2="${W-R}" y1="${y(last)}" y2="${y(last)}" stroke="${lc}" stroke-width=".6" opacity=".5"/><rect x="${W-R+2}" y="${y(last)-11}" width="${R-2}" height="22" rx="6" fill="${lc}"/><text x="${W-R+7}" y="${y(last)+5}" font-size="13" font-weight="600" fill="#fff">${num(last, s.market)}</text>`;
-    if (LT){   // 살 가격·지지선: 이름(가격표 왼쪽) + 오른쪽 가격표 — 지금 가격표와 겹치면 이름만
+    if (OD){   // 오동엔진: 선마다 왼쪽에 같은 색 이름표(이름 + 가격). 화면 밖이면 위·아래 끝에 화살표로
+      const tw2 = t => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? 11.4 : ch === " " ? 3.6 : 6.9), 0), items = [];
+      LV.forEach(v => { if (!v.label || v.kind === "trendline" || v.kind === "box") return;
+        const band = v.kind === "zone", yy = band ? (y(v.hi) + y(v.lo)) / 2 : y(v.v);
+        const txt = band ? `${v.label} ${num(v.lo, s.market)}${v.hi / v.lo - 1 > 0.004 ? "~" + num(v.hi, s.market) : ""}` : `${v.label} ${num(v.v, s.market)}`;
+        items.push({ yy, txt: txt + (yy < T ? " ↑" : yy > H0 - 6 ? " ↓" : ""), col: LCOL[v.kind] || "#1B8A4A", off: yy < T || yy > H0 - 6 }); });
+      items.forEach(it => it.y0 = Math.max(T, Math.min(H0 - 24, it.yy - 10)));
+      items.sort((a, b) => a.y0 - b.y0);
+      for (let i = 1; i < items.length; i++) if (items[i].y0 < items[i - 1].y0 + 23) items[i].y0 = items[i - 1].y0 + 23;
+      for (let i = items.length - 1; i >= 0; i--){ const mx = i === items.length - 1 ? H0 - 24 : items[i + 1].y0 - 23; if (items[i].y0 > mx) items[i].y0 = mx; }
+      items.forEach(it => { const w = Math.round(tw2(it.txt)) + 16, x0 = L + 4, cy = it.y0 + 10;
+        if (!it.off && Math.abs(cy - it.yy) > 3) g += `<path d="M${x0 + w} ${cy} L${x0 + w + 8} ${cy} L${x0 + w + 16} ${it.yy}" fill="none" stroke="${it.col}" stroke-width="1.2"/>`;
+        g += `<rect x="${x0}" y="${it.y0}" width="${w}" height="20" rx="10" fill="${it.col}"/><text x="${x0 + 8}" y="${it.y0 + 14.5}" font-size="12" font-weight="700" fill="#fff">${esc(it.txt)}</text>`; });
+      LV.filter(v => v.kind === "trendline" && v.label && v.pts?.length === 2).forEach(v => {   // 추세선: 오른쪽 끝에 이름
+        const [[d0, v0], [d1, v1]] = v.pts, a = idx[d0], b = idx[d1]; if (a == null || b == null || b <= a) return;
+        const yy = y(v0 + (v1 - v0) / (b - a) * (Math.min(b, i1) - a)); if (yy < T + 4 || yy > H0 - 22) return;
+        const w = Math.round(tw2(v.label)) + 14;
+        g += `<rect x="${W - R - 6 - w}" y="${yy + 4}" width="${w}" height="18" rx="9" fill="${TP.halo}" stroke="${v.col}" stroke-width="1.2"/><text x="${W - R - 6 - w / 2}" y="${yy + 17}" font-size="11.5" font-weight="700" fill="${v.col}" text-anchor="middle">${esc(v.label)}</text>`; });
+      LV.filter(v => v.kind === "box").forEach(v => { const a = Math.max(idx[v.d0] ?? 0, i0), yy = y(v.hi); if (a > i1 || yy < T + 12 || yy > H0) return;
+        g += `<text x="${x(a) + 3}" y="${yy - 5}" font-size="11.5" font-weight="700" fill="${COL.axis}" stroke="${TP.halo}" stroke-width="3" paint-order="stroke">박스</text>`; });
+    }
+    if (LT && !OD){   // 살 가격·지지선: 이름(가격표 왼쪽) + 오른쪽 가격표 — 지금 가격표와 겹치면 이름만
       const used = [y(last)];
       LVN.forEach(({ v, val, ty }) => {
         const yy = y(val), col = LCOL[v.kind] || "#1B8A4A";
@@ -1115,7 +1137,7 @@ function mountChart(box, s, opt = {}){
     const step = now => { const t = Math.min(1, (now - t0) / D), k = ease(t); V.n = n0 + (n1 - n0) * k; V.end = e0 + (e1 - e0) * k; draw(); if (t < 1) requestAnimationFrame(step); else segSync(); };
     requestAnimationFrame(step);
   };
-  $seg.onclick = e => { const b = e.target.closest("button"); if (!b) return; const k = +b.dataset.k; LS.set("period", b.textContent); tween(k, N - 1); };
+  $seg.onclick = e => { const b = e.target.closest("button"); if (!b) return; const k = +b.dataset.k; LS.set(PK, b.textContent); tween(k, N - 1); };
   box.querySelector(".inds").onclick = e => { const b = e.target.closest("[data-ind]"); if (!b) return; const k = b.dataset.ind; IND[k] = !IND[k]; LS.set(INDK, IND); b.setAttribute("aria-pressed", IND[k]); legend(); draw(); };
 
   /* 손가락 조작 */
@@ -1708,12 +1730,12 @@ async function renderOD(){
 function odLevels(s){
   const o = s.od || {}, hz = o.head?.zone, out = [];
   (o.zones || []).filter(z => z.state !== "위쪽").forEach(z => { const me = hz && z.lo === hz.lo && z.hi === hz.hi;
-    out.push({ lo: z.lo, hi: Math.max(z.hi, z.lo * 1.003), kind: "zone", g: "zone", label: me ? (o.head.tone === "buy" ? "매수 자리" : "다음 자리") : "", fit: me }); });
-  if (hz) out.push({ v: hz.stop * 0.999, kind: "stop", g: "zone", label: "나갈 자리", fit: true });
-  (o.above || []).slice(0, 2).forEach((u, i) => out.push({ v: u.v, kind: "res", g: "zone", label: i ? "" : "위 저항", fit: !i }));
-  const lv = o.fib?.levels || {};
-  ["0.382", "0.5", "0.618", "0.786"].forEach(k => lv[k] != null && out.push({ v: lv[k], kind: "fib", g: "fib", label: k }));
-  (o.trendlines || []).forEach(t => out.push({ pts: t.pts, kind: "trendline", g: "tl", col: t.kind === "up" ? "#1B8A4A" : "#1B64DA" }));
+    out.push(me ? { lo: z.lo, hi: Math.max(z.hi, z.lo * 1.003), kind: "zone", g: "main", label: o.head.tone === "buy" ? "매수 자리" : "다음 자리", fit: true }
+                : { lo: z.lo, hi: Math.max(z.hi, z.lo * 1.003), kind: "zone", g: "more", label: "" }); });
+  if (hz) out.push({ v: hz.stop, kind: "stop", g: "main", label: "나갈 자리", fit: true });
+  const r0 = (o.above || [])[0]; if (r0) out.push({ v: r0.v, kind: "res", g: "main", label: "위 저항", fit: true });
+  const f = o.fib?.levels?.["0.618"]; if (f != null && !(hz && f >= hz.lo * 0.995 && f <= hz.hi * 1.005)) out.push({ v: f, kind: "fib", g: "fib", label: "피보 0.618" });
+  (o.trendlines || []).forEach(t => out.push({ pts: t.pts, kind: "trendline", g: "tl", col: t.kind === "up" ? "#1B8A4A" : "#1B64DA", label: t.kind === "up" ? "상승 추세선" : "빗각" }));
   if (o.box) out.push({ d0: o.box.from, d1: o.box.to, lo: o.box.bot, hi: o.box.top, kind: "box", g: "box" });
   return out;
 }
