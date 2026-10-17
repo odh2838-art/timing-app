@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-31">
+<meta name="app-version" content="2026-10-17-32">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1865,7 +1865,7 @@ const LT_LONG = {
   "BofA Bull & Bear Indicator": "BofA가 매주 내는 투자자 낙관 지표예요. 8 이상이면 너무 낙관(과열 신호), 2 이하면 너무 비관(공포 신호).",
   "BofA Global Fund Manager Survey cash level (%)": "BofA가 매달 전 세계 펀드매니저에게 묻는 현금 비중이에요. 4% 미만이면 거의 다 투자한 상태(과열 신호), 5% 이상이면 겁먹고 현금을 쌓은 상태(공포 신호).",
   "BofA FMS cash level change over 1-2 months (bp)": "펀드매니저 현금 비중이 1~2달 사이 0.6%p(60bp) 넘게 늘면 공포 신호예요. 매달 값이 쌓이면 자동으로 계산해요.",
-  "US High Yield OAS (bp)": "위험한 회사채 금리가 국채보다 얼마나 높은지예요. 400bp(4%p) 근처로 벌어지면 공포 신호. '근처' 범위를 아직 안 정해서 지금은 판단에서 빠져요.",
+  "US High Yield OAS (bp)": "위험한 회사채 금리가 국채보다 얼마나 높은지예요. 350bp(3.5%p) 이상으로 벌어지면 공포 신호. 평소엔 300bp 안팎이에요.",
   "CNN Fear & Greed Index": "CNN이 매일 내는 미국 투자 심리 지수예요. 45 미만은 공포 신호, 55 이상은 과열 신호."
 };
 function ltNow(x){
@@ -1878,7 +1878,7 @@ function ltNow(x){
   if (c?.state === "켜짐") return "공포 신호 켜짐";
   if (v == null) return "";
   const u = /%/.test(ind) ? "%p" : /bp/.test(ind) ? "bp" : "", f = g => (Math.round(Math.abs(g) * 10) / 10) + u;
-  const gh = h && typeof h.value === "number" ? Math.abs(h.value - v) : null, gc = c && typeof c.value === "number" ? Math.abs(c.value - v) : null;
+  const gh = h && typeof h.value === "number" ? Math.abs(h.value - v) : null, gc = c && typeof (c.near_min ?? c.value) === "number" ? Math.abs((c.near_min ?? c.value) - v) : null;
   if (gh != null && (gc == null || gh <= gc)) return `과열 기준까지 ${f(gh)}`;
   if (gc != null) return `공포 기준까지 ${f(gc)}`;
   return "";
