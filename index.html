@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-34">
+<meta name="app-version" content="2026-10-17-35">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -432,7 +432,7 @@ details.more>summary::-webkit-details-marker{display:none}
 .lt-pct{font-size:calc(52rem/17);font-weight:700;letter-spacing:-.04em;line-height:1.05;font-variant-numeric:tabular-nums}
 .lt-pct small{font-size:calc(26rem/17);font-weight:600;margin-left:1px}
 .lt-word{font-size:var(--t-heading);font-weight:600;color:var(--fg2)} .lt-word.hot{color:var(--up)} .lt-word.cold{color:var(--down)}
-.lt-say{margin:8px 0 0;font-size:var(--t-body);line-height:1.5}
+.lt-say{margin:14px 0 0;font-size:var(--t-body);line-height:1.5}
 .lt-meta{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:var(--t-small);color:var(--fg2)}
 .lt-meta b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
 .lt-r{gap:12px}
@@ -479,7 +479,9 @@ h2.sec-title{font-size:var(--t-heading)}
 .lt-p{margin:0 0 16px;font-size:var(--t-body);line-height:1.5}
 .lt-mk2{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center} .lt-mk2 b{display:block;font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums} .lt-mk2 b.cold{color:var(--blue)} .lt-mk2 b.hot{color:var(--sell)} .lt-mk2 span{font-size:var(--t-small);color:var(--fg2)}
 .lt-vd .n{margin:10px 0 0;font-size:var(--t-detail);line-height:1.45;color:var(--fg2)} .lt-vd .n.warn{color:var(--wait)}
-.lt-chip{font-size:var(--t-body);font-weight:700} .lt-chip.buy{color:var(--buy)} .lt-chip.sell{color:var(--sell)} .lt-chip.soon{color:var(--blue)} .lt-chip.wait{color:var(--fg2)}
+.lt-chip{flex:none;font-size:var(--t-small);font-weight:700;padding:6px 12px;border-radius:999px;background:var(--fill);color:var(--fg2)} .lt-chip.buy{background:var(--buy-bg);color:var(--buy)} .lt-chip.sell{background:var(--sell-bg);color:var(--sell)} .lt-chip.soon{background:var(--info-bg);color:var(--info)}
+.lt-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:14px;background:var(--fill);gap:2px} .lt-bar .inv{background:var(--blue)} .lt-bar .cash{background:var(--fg3);opacity:.45}
+.lt-barl{display:flex;justify-content:space-between;margin-top:6px;font-size:var(--t-small);color:var(--fg2);font-variant-numeric:tabular-nums} .lt-barl b{color:var(--fg);font-weight:600;margin-right:2px}
 .lt-more{margin-top:12px;font-size:var(--t-small);color:var(--blue)}
 .lt-vd{padding:18px var(--pad-card)} .lt-vd .w{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em}
 .lt-vd .w.buy{color:var(--buy)} .lt-vd .w.sell{color:var(--sell)} .lt-vd .w.soon{color:var(--blue)} .lt-vd .w.wait{color:var(--fg)}
@@ -1909,7 +1911,7 @@ async function renderLT(){
   const d = S.lt;
   const md = x => esc(String(x || "").slice(5).replace("-", "/"));
   const head = `<div class="navbar"><div class="side"></div><span class="mini">장투엔진</span><div class="side r"><button class="icon-btn press" id="ltre" aria-label="다시 계산" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button><button class="icon-btn press" id="ltadd" aria-label="장투 종목 추가"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
-    <div class="title-block" data-anchor><h1 class="big">장투엔진</h1><div class="sub">${d?.updated ? md(d.updated.slice(0, 10)) + " " + esc(d.updated.slice(11, 16)) + " 업데이트" : "장기 투자 규칙"}</div></div>`;
+    <div class="title-block" data-anchor><h1 class="big">장투엔진</h1><div class="sub">${d?.updated ? (d.updated.slice(0, 10) === new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10) ? "오늘" : md(d.updated.slice(0, 10))) + " " + esc(d.updated.slice(11, 16)) + " 기준" : "내 장기 투자 규칙"}</div></div>`;
   if (!d){
     $app.innerHTML = `<div class="wrap">${head}<div class="card"><div class="sk" style="width:30%;height:14px"></div><div class="sk" style="width:40%;height:40px;margin-top:12px"></div><div class="sk" style="width:80%;height:12px;margin-top:16px"></div></div></div>`;
     bindLThead();
@@ -1938,11 +1940,14 @@ async function renderLT(){
   const on1 = (b, s) => `공포 ${b} · 과열 ${s}`;
   const nOn = hasK && hasU ? [`미국 ${on1(nb, ns)}`, `한국 ${on1(KM.n_buy || 0, KM.n_sell || 0)}`] : hasK ? [`공포 신호 ${KM.n_buy || 0} · 과열 신호 ${KM.n_sell || 0}`] : [`공포 신호 ${nb} · 과열 신호 ${ns}`];
   const nBuy = st.filter(s => CALL(s).tone === "buy").length;
+  const bars = hasK && hasU && KM.regime !== mk.regime ? [["미국", mk], ["한국", KM]] : [[null, hasK && !hasU ? KM : mk]];
   if (!V.act) V.act = nBuy ? `아래 '매수' ${nBuy}종목만 정한 만큼 사요.` : st.length ? "오늘 살 종목은 없어요. 기다려요." : "";
   $app.innerHTML = `<div class="wrap">${head}
     <button class="card lt-top press" id="lthero">
       <div class="lt-cap">오늘</div>
       <div class="lt-head ${V.tone}">${esc(V.head)}</div>
+      ${bars.map(([lab, m]) => { const c = m.cash_target ?? 30; return `<div class="lt-bar" role="img" aria-label="${lab ? lab + " " : ""}주식 ${100 - c}% 현금 ${c}%"><span class="inv" style="width:${100 - c}%"></span><span class="cash" style="width:${c}%"></span></div>
+      <div class="lt-barl"><span>${lab ? `<b>${lab}</b> ` : ""}주식 ${100 - c}%</span><span>현금 ${c}%</span></div>`; }).join("")}
       ${V.act ? `<p class="lt-say">${esc(V.act)}</p>` : ""}
       <div class="lt-foot2"><span>${nOn.map(esc).join("<br>")}</span><span class="lt-link" style="white-space:nowrap">시장 지표 ›</span></div>
     </button>
@@ -2202,7 +2207,7 @@ function renderSettings(){
     <div class="title-block" data-anchor><h1 class="big">설정</h1></div>
     <div class="list">
       ${ODONG_OFF ? "" : `<button class="row press" id="hello"><span class="main" style="color:var(--blue)">디스코드 연결 확인</span></button>`}
-      <button class="row press" id="recat"><span class="main" style="color:var(--blue)">종목 목록 새로 받기</span></button>
+      <button class="row press" id="recat"><span class="main" style="color:var(--blue)">검색용 종목 목록 새로 받기</span></button>
     </div>
     ${ODONG_OFF ? `<div class="sec-title" role="heading" aria-level="2">자동 계산 (한국 시간)</div>
     <div class="list">
@@ -2220,13 +2225,13 @@ function renderSettings(){
       <div class="row"><div class="main"><div class="sub">엔진 저장소</div><b>${esc(S.repo)}</b></div></div>
       <a class="row press" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener"><span class="main" style="color:var(--blue)">실행 기록 보기</span><svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg></a>
     </div>
-    <div class="sec-title" role="heading" aria-level="2">실시간 시세</div>
+    ${ODONG_OFF ? "" : `<div class="sec-title" role="heading" aria-level="2">실시간 시세</div>
     <div class="list">
       <div class="row"><div class="main"><label class="sub" for="qurl">시세 중계 주소</label>
         <input id="qurl" class="qurl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://....workers.dev" value="${esc(LS.get("qurl", ""))}"></div></div>
       <button class="row press" id="qsave"><span class="main" style="color:var(--blue)">저장하고 시험하기</span></button>
     </div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">연결하면 장중 1분마다 시세가 바뀌어요. 한국은 네이버, 미국은 야후 기준. 비우면 엔진 갱신 때만 바뀌어요 (한국 30분 · 미국 1시간).</p>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">연결하면 장중 1분마다 시세가 바뀌어요. 한국은 네이버, 미국은 야후 기준. 비우면 엔진 갱신 때만 바뀌어요 (한국 30분 · 미국 1시간).</p>`}
     <div class="list" style="margin-top:var(--gap-block)">
       <button class="row press" id="out"><span class="main" style="color:var(--sell)">토큰 지우기</span></button>
     </div>
@@ -2236,7 +2241,7 @@ function renderSettings(){
   </div>`;
   const $hello = document.getElementById("hello"); if ($hello) $hello.onclick = async () => { try{ await dispatch("hello"); toast("1–2분 안에 디스코드로 인사가 오면 연결된 거예요"); }catch(e){ toast(e.message); } };
   document.getElementById("recat").onclick = async (ev) => { const b = ev.currentTarget; b.disabled = true; LS.del("catalog"); try{ const r = await catalog(); toast(r.length.toLocaleString() + "개 종목을 받았어요"); }catch(e){ toast(e.message); } b.disabled = false; };
-  document.getElementById("qsave").onclick = async () => {
+  const $qs = document.getElementById("qsave"); if ($qs) $qs.onclick = async () => {
     const v = document.getElementById("qurl").value.trim();
     if (v && !/^https:\/\/[\w.-]+(\/[\w./-]*)?$/.test(v)){ toast("https:// 로 시작하는 주소를 넣어 주세요"); return; }
     LS.set("qurl", v);
