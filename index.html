@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-44">
+<meta name="app-version" content="2026-10-17-45">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -747,6 +747,8 @@ function go(how, fn){ if (how === "push"){ S.listY = scrollY; try{ history.pushS
 let skipPop = 0;
 addEventListener("popstate", () => {
   if (skipPop){ skipPop--; return; }
+  if (SWIPING) return;
+  document.querySelectorAll(".ghost").forEach(g => { if (!g.getAnimations().length) g.remove(); });   // 전환이 끝났는데 남은 화면 조각 (터치가 막히는 원인)
   const sh = document.querySelector(".sheet-bg:not(.closing)");
   if (sh){ sh._close?.(true); return; }
   if (S.odd){ go("pop", () => S.odd = null); return; }
@@ -1207,8 +1209,11 @@ function mountChart(box, s, opt = {}){
     tick: () => { if (bars.length !== N) return false; ind = calcInd(bars); draw(); segSync(false); return true; } };
 }
 
-/* 왼쪽 가장자리에서 밀면 뒤로: 손가락을 따라 앞 화면이 밀리고 뒤 화면이 드러남 */
-(() => {
+/* 왼쪽 가장자리에서 밀면 뒤로: 손가락을 따라 앞 화면이 밀리고 뒤 화면이 드러남.
+   아이폰(홈 화면 앱엔 시스템 뒤로가 없음)에서만. 안드로이드는 시스템 뒤로 제스처가 같은 자리를 써서 둘이 부딪히면 화면이 멈춘다 */
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+let SWIPING = false;
+if (IOS) (() => {
   let x0 = null, y0 = 0, on = false, ghost = null, shade = null, last = [], detailY = 0, sym = null, cur = 0;
   addEventListener("touchstart", e => { const t = e.touches[0]; x0 = ((S.odd || S.ltd) && t.clientX < 24 && !document.querySelector(".sheet-bg") && !REDUCED) ? t.clientX : null; y0 = t.clientY; on = false; last = [[t.clientX, e.timeStamp]]; }, {passive:true});
   addEventListener("touchmove", e => {
@@ -1216,7 +1221,7 @@ function mountChart(box, s, opt = {}){
     if (!on){
       if (Math.abs(t.clientY - y0) > Math.abs(dx)){ x0 = null; return; }
       if (dx < 8) return;
-      on = true; sym = S.odd ? ["odd", S.odd] : ["ltd", S.ltd]; detailY = scrollY;
+      on = true; SWIPING = true; sym = S.odd ? ["odd", S.odd] : ["ltd", S.ltd]; detailY = scrollY;
       ghost = snapshot(); ghost.classList.add("top");
       if (history.state?.v === "d"){ skipPop++; history.back(); }   // 손가락으로 넘긴 뒤로도 기록과 맞춘다
       S.listY = S.listY || 0; S[sym[0]] = null; render("none"); scrollTo(0, S.listY);
@@ -1226,13 +1231,13 @@ function mountChart(box, s, opt = {}){
     ghost.style.transform = `translateX(${dx}px)`; $app.style.transform = `translateX(${-W*.3*(1-p)}px)`; shade.style.opacity = 1 - p;
     last.push([t.clientX, e.timeStamp]); if (last.length > 5) last.shift();
   }, {passive:true});
-  addEventListener("touchend", () => {
+  const end = cancel => {
     if (!on){ x0 = null; return; }
-    x0 = null; on = false;
+    x0 = null; on = false; SWIPING = false;
     const W = innerWidth, a = last[0], b = last[last.length - 1], v = (b[0] - a[0]) / Math.max(1, b[1] - a[1]);
     const p = Math.min(1, cur / W);
-    ghost.style.transform = ""; $app.style.transform = ""; shade.remove();
-    if (p > 0.35 || v > 0.4) slidePages("pop", ghost, p);          // 끝까지 넘김
+    ghost.style.transform = ""; $app.style.transform = ""; shade?.remove();
+    if (cancel || p > 0.35 || v > 0.4) slidePages("pop", ghost, p);   // 끝까지 넘김 (시스템이 손가락을 가져가도 뒤로 마무리)
     else {                                                          // 제자리로
       const o = { duration: 300, easing: PAGE_EASE, fill: "forwards" }, sh = document.createElement("div"); sh.className = "shade"; document.body.appendChild(sh);
       const an = [ ghost.animate([{transform:`translateX(${p*W}px)`}, {transform:"none"}], o), $app.animate([{transform:`translateX(${-W*.3*(1-p)}px)`}, {transform:`translateX(${-W*.3}px)`}], o), sh.animate([{opacity:1-p}, {opacity:1}], o) ];
@@ -1241,7 +1246,9 @@ function mountChart(box, s, opt = {}){
         document.getElementById("tabbar").classList.add("away"); bindNavbar(); scrollTo(0, detailY);
         an.forEach(x => x.cancel()); ghost.remove(); sh.remove(); });
     }
-  });
+  };
+  addEventListener("touchend", () => end(false));
+  addEventListener("touchcancel", () => end(true));
 })();
 
 /* 아래에서 올라오는 창: 같은 곡선(.32,.72,0,1)으로 열림 0.4초 · 닫힘 0.28초(끌다 놓으면 손가락 속도를 이어받아 0.12~0.28초)
