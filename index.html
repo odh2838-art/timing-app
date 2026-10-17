@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-42">
+<meta name="app-version" content="2026-10-17-43">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -488,6 +488,10 @@ h2.sec-title{font-size:var(--t-heading)}
 .lt-vd .w.buy{color:var(--buy)} .lt-vd .w.sell{color:var(--sell)} .lt-vd .w.soon{color:var(--blue)} .lt-vd .w.wait{color:var(--fg)}
 .lt-vd .l{margin:6px 0 0;font-size:var(--t-body);line-height:1.45}
 .od-st{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)} .od-st b{font-size:var(--t-heading)} .od-st span{font-size:var(--t-small);color:var(--fg2)}
+.odleg{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 2px 2px;font-size:var(--t-small)}
+.odleg>div{display:flex;align-items:center;gap:10px;min-width:0} .odleg span{flex:1;color:var(--fg2);min-width:0} .odleg b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.odleg .sw{flex:none;width:22px;height:0;border-top:2px solid} .odleg .sw.dash{border-top-style:dashed} .odleg .sw.dot{border:0;height:2px;background:repeating-linear-gradient(90deg,currentColor 0 3px,transparent 3px 6px)}
+.odleg .sw.band{height:10px;border:0;border-radius:3px;background:var(--buy);opacity:.35} .odleg .sw.boxi{height:10px;border:1.2px dashed var(--fg3);border-radius:2px}
 .lt-vd ul{margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--line);list-style:none;display:flex;flex-direction:column;gap:8px}
 .lt-vd li{font-size:var(--t-detail);color:var(--fg2);line-height:1.45;padding-left:14px;position:relative} .lt-vd li::before{content:"";position:absolute;left:2px;top:.62em;width:4px;height:4px;border-radius:50%;background:var(--fg3)}
 </style>
@@ -847,6 +851,7 @@ function mountChart(box, s, opt = {}){
     <div class="seg" role="tablist" aria-label="기간">${PERIODS.filter(p => p[1] <= N + 10).map(([t,k]) => `<button role="tab" data-k="${Math.min(k,N)}">${t}</button>`).join("")}<span class="thumb"></span></div>
     <div class="rorow"><div class="readout" aria-live="polite"></div>${OD ? "" : `<button class="sigtg press" aria-pressed="${IND.sig !== false}" aria-label="신호 표시 켜기·끄기">신호</button>`}</div>
     <div class="plot"></div>
+    ${OD ? `<div class="odleg" aria-label="차트 선"></div>` : ""}
     <div class="sigm" aria-live="polite" hidden></div>
     <div class="slist" aria-label="이 기간 신호"></div>
     ${s.pattern ? `<div class="patn"><b>${esc(s.pattern.lines[0].replace("모양 · ", ""))}</b> <span class="sub">${s.pattern.grade === "정식" ? "" : "· 참고(" + esc(s.pattern.reasons.join(", ")) + ")"}</span><div class="sub">패턴 돌파는 10번 중 6번 실패해요</div></div>` : ""}
@@ -871,7 +876,16 @@ function mountChart(box, s, opt = {}){
   };
   const legend = () => {
     const it = [];
-    if (OD){ $leg.innerHTML = ""; return; }   // 오동엔진: 선마다 이름표가 붙어 있어 범례 없음
+    if (OD){   // 오동엔진: 차트 안에는 글자 없이 선만. 이름·가격은 여기 (오른쪽 가격표와 같은 색)
+      $leg.innerHTML = "";
+      const sw = { zone: `<i class="sw band"></i>`, stop: `<i class="sw ln" style="border-color:${LCOL.stop}"></i>`, res: `<i class="sw ln dash" style="border-color:${LCOL.res}"></i>`,
+        fib: `<i class="sw dot" style="color:${LCOL.fib}"></i>`, box: `<i class="sw boxi"></i>` };
+      const P = v => num(v, s.market), rows = (opt.levels || []).filter(v => v.label && IND[v.g] !== false).map(v => {
+        const k = v.kind === "trendline" ? `<i class="sw ln dash" style="border-color:${v.col}"></i>` : sw[v.kind] || "";
+        const val = v.kind === "zone" || v.kind === "box" ? `${P(v.lo)}${v.hi / v.lo - 1 > 0.001 ? " ~ " + P(v.hi) : ""}` : P(v.kind === "trendline" ? v.now : v.v);
+        return `<div>${k}<span>${esc(v.label)}</span><b>${val}</b></div>`; });
+      box.querySelector(".odleg").innerHTML = rows.join(""); return;
+    }
     if (false){
       const has = k => (opt.levels || []).some(v => v.kind === k && IND[v.g] !== false);
       if (has("zone")) it.push(["자리", "rgba(27,138,74,.35)"]);
@@ -931,8 +945,15 @@ function mountChart(box, s, opt = {}){
         while (left.some(u => Math.abs(u - ty) < 13)) ty += 13;
         ty = Math.max(T + 10, Math.min(H0 - 4, ty)); left.push(ty);
         LVN.push({ v, val, ty, w: [...v.label].length * 12 + 6 }); }); }
+    const odTags = [];   // 오동엔진: 오른쪽 가격 칸에 선과 같은 색 가격표 (지금 가격표·서로 겹치지 않게 비켜 놓고 짧은 선으로 이음). 화면 밖이면 끝에 ↑↓
+    if (OD){ const used = [lastY], PR = { stop: 0, zone: 1, res: 2, fib: 3 };
+      const stp = LV.find(v => v.kind === "stop");
+      LV.filter(v => v.label && v.kind in PR && !(v.kind === "zone" && stp && v.hi / stp.v - 1 < 0.015)).sort((a, b) => PR[a.kind] - PR[b.kind]).forEach(v => {   // 자리 위끝이 나갈 자리와 거의 같으면 가격표 하나로
+        const val = v.kind === "zone" ? v.hi : v.v, yy = y(val), off = yy < T ? -1 : yy > H0 - 6 ? 1 : 0, want = off < 0 ? T + 11 : off > 0 ? H0 - 12 : yy;
+        let ty = want; for (let k = 0; k < 12; k++){ const c = [want + 24 * k, want - 24 * k].find(t => t >= T + 11 && t <= H0 - 12 && used.every(u => Math.abs(u - t) >= 24)); if (c != null){ ty = c; break; } }
+        used.push(ty); odTags.push({ val, yy, ty, off, col: LCOL[v.kind] }); }); }
     const raw = (hi - lo) / 6, mag = Math.pow(10, Math.floor(Math.log10(raw))), stp = [1, 2, 2.5, 5, 10].map(m => m * mag).find(v => v >= raw) || raw;   // 눈금은 둥근 값 (3~5개)
-    const tickAt = st_ => { const o = []; for (let v = Math.ceil(lo / st_) * st_; v < hi; v += st_){ if (Math.abs(v) < st_ * 1e-6) v = 0; if (v <= 0 || y(v) < T || Math.abs(y(v) - lastY) < 16 || Math.abs(y(v) - ztY) < 16) continue; o.push(v); } return o; };
+    const tickAt = st_ => { const o = []; for (let v = Math.ceil(lo / st_) * st_; v < hi; v += st_){ if (Math.abs(v) < st_ * 1e-6) v = 0; if (v <= 0 || y(v) < T || Math.abs(y(v) - lastY) < 16 || Math.abs(y(v) - ztY) < 16 || odTags.some(t => Math.abs(y(v) - t.ty) < 18)) continue; o.push(v); } return o; };
     const tks = tickAt(stp).length >= 3 ? tickAt(stp) : tickAt(stp / 2);
     for (const v of tks){ if (false || Math.abs(y(v) - lastY) < 16 || Math.abs(y(v) - ztY) < 16) continue; g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${TP.grid}" stroke-width=".6"/><text x="${W-R+6}" y="${y(v)+4}" font-size="13" fill="${COL.axis}">${num(v, s.market)}</text>`; }
     let p = `<g clip-path="url(#cp)">`;
@@ -1034,27 +1055,9 @@ function mountChart(box, s, opt = {}){
     g += p;
     const last = s.price ?? bars[N-1][4], lc = (s.chg ?? 0) >= 0 ? COL.up : COL.down;
     if (last >= lo && last <= hi) g += `<line x1="${L}" x2="${W-R}" y1="${y(last)}" y2="${y(last)}" stroke="${lc}" stroke-width=".6" opacity=".5"/><rect x="${W-R+2}" y="${y(last)-11}" width="${R-2}" height="22" rx="6" fill="${lc}"/><text x="${W-R+7}" y="${y(last)+5}" font-size="13" font-weight="600" fill="#fff">${num(last, s.market)}</text>`;
-    if (OD){   // 오동엔진: 선마다 왼쪽에 같은 색 이름표(이름 + 가격). 화면 밖이면 위·아래 끝에 화살표로
-      const tw2 = t => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? 11.4 : ch === " " ? 3.6 : 6.9), 0), items = [];
-      LV.forEach(v => { if (!v.label || v.kind === "trendline" || v.kind === "box") return;
-        const band = v.kind === "zone", yy = band ? (y(v.hi) + y(v.lo)) / 2 : y(v.v);
-        const txt = band ? `${v.label} ${num(v.lo, s.market)}${v.hi / v.lo - 1 > 0.004 ? "~" + num(v.hi, s.market) : ""}` : `${v.label} ${num(v.v, s.market)}`;
-        items.push({ yy, txt: txt + (yy < T ? " ↑" : yy > H0 - 6 ? " ↓" : ""), col: LCOL[v.kind] || "#1B8A4A", off: yy < T || yy > H0 - 6 }); });
-      items.forEach(it => it.y0 = Math.max(T, Math.min(H0 - 24, it.yy - 10)));
-      items.sort((a, b) => a.y0 - b.y0);
-      for (let i = 1; i < items.length; i++) if (items[i].y0 < items[i - 1].y0 + 23) items[i].y0 = items[i - 1].y0 + 23;
-      for (let i = items.length - 1; i >= 0; i--){ const mx = i === items.length - 1 ? H0 - 24 : items[i + 1].y0 - 23; if (items[i].y0 > mx) items[i].y0 = mx; }
-      items.forEach(it => { const w = Math.round(tw2(it.txt)) + 16, x0 = L + 4, cy = it.y0 + 10;
-        if (!it.off && Math.abs(cy - it.yy) > 3) g += `<path d="M${x0 + w} ${cy} L${x0 + w + 8} ${cy} L${x0 + w + 16} ${it.yy}" fill="none" stroke="${it.col}" stroke-width="1.2"/>`;
-        g += `<rect x="${x0}" y="${it.y0}" width="${w}" height="20" rx="10" fill="${it.col}"/><text x="${x0 + 8}" y="${it.y0 + 14.5}" font-size="12" font-weight="700" fill="#fff">${esc(it.txt)}</text>`; });
-      LV.filter(v => v.kind === "trendline" && v.label && v.pts?.length === 2).forEach(v => {   // 추세선: 오른쪽 끝에 이름
-        const [[d0, v0], [d1, v1]] = v.pts, a = idx[d0], b = idx[d1]; if (a == null || b == null || b <= a) return;
-        const yy = y(v0 + (v1 - v0) / (b - a) * (Math.min(b, i1) - a)); if (yy < T + 4 || yy > H0 - 22) return;
-        const w = Math.round(tw2(v.label)) + 14;
-        g += `<rect x="${W - R - 6 - w}" y="${yy + 4}" width="${w}" height="18" rx="9" fill="${TP.halo}" stroke="${v.col}" stroke-width="1.2"/><text x="${W - R - 6 - w / 2}" y="${yy + 17}" font-size="11.5" font-weight="700" fill="${v.col}" text-anchor="middle">${esc(v.label)}</text>`; });
-      LV.filter(v => v.kind === "box").forEach(v => { const a = Math.max(idx[v.d0] ?? 0, i0), yy = y(v.hi); if (a > i1 || yy < T + 12 || yy > H0) return;
-        g += `<text x="${x(a) + 3}" y="${yy - 5}" font-size="11.5" font-weight="700" fill="${COL.axis}" stroke="${TP.halo}" stroke-width="3" paint-order="stroke">박스</text>`; });
-    }
+    if (OD) odTags.forEach(t => {
+      if (!t.off && Math.abs(t.ty - t.yy) > 2) g += `<path d="M${W - R - 8} ${t.yy} L${W - R + 2} ${t.ty}" stroke="${t.col}" stroke-width="1.2" fill="none"/>`;
+      g += `<rect x="${W - R + 2.5}" y="${t.ty - 10.5}" width="${R - 3}" height="21" rx="6" fill="${TP.halo}" stroke="${t.col}" stroke-width="1.3"/><text x="${W - R + 7}" y="${t.ty + 5}" font-size="13" font-weight="700" fill="${t.col}">${num(t.val, s.market)}${t.off ? (t.off < 0 ? "↑" : "↓") : ""}</text>`; });
     if (LT && !OD){   // 살 가격·지지선: 이름(가격표 왼쪽) + 오른쪽 가격표 — 지금 가격표와 겹치면 이름만
       const used = [y(last)];
       LVN.forEach(({ v, val, ty }) => {
@@ -1735,8 +1738,8 @@ function odLevels(s){
   if (hz) out.push({ v: hz.stop, kind: "stop", g: "main", label: "나갈 자리", fit: true });
   const r0 = (o.above || [])[0]; if (r0) out.push({ v: r0.v, kind: "res", g: "main", label: "위 저항", fit: true });
   const f = o.fib?.levels?.["0.618"]; if (f != null && !(hz && f >= hz.lo * 0.995 && f <= hz.hi * 1.005)) out.push({ v: f, kind: "fib", g: "fib", label: "피보 0.618" });
-  (o.trendlines || []).forEach(t => out.push({ pts: t.pts, kind: "trendline", g: "tl", col: t.kind === "up" ? "#1B8A4A" : "#1B64DA", label: t.kind === "up" ? "상승 추세선" : "빗각" }));
-  if (o.box) out.push({ d0: o.box.from, d1: o.box.to, lo: o.box.bot, hi: o.box.top, kind: "box", g: "box" });
+  (o.trendlines || []).forEach(t => out.push({ pts: t.pts, kind: "trendline", g: "tl", col: t.kind === "up" ? "#1B8A4A" : "#1B64DA", label: t.kind === "up" ? "상승 추세선" : "빗각", now: t.v }));
+  if (o.box) out.push({ d0: o.box.from, d1: o.box.to, lo: o.box.bot, hi: o.box.top, kind: "box", g: "box", label: "박스" });
   return out;
 }
 function odPrice(){
