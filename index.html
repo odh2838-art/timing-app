@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-26">
+<meta name="app-version" content="2026-10-17-27">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1929,7 +1929,7 @@ async function renderLT(){
   const V = ltVerdict(mk, IND);
   const alerts = d.alerts || [];
   const CALL = s => s.call || { word: "대기", tone: "wait", line: "", say: ltSay(s), why: [] };
-  const RANK = { "매도": 0, "줄이기": 1, "분할매수": 2, "추가 매수": 3, "매도 보류": 4, "곧 매수": 5, "대기": 6 };
+  const RANK = { "매도": 0, "줄이기": 1, "과매수": 1.5, "분할매수": 2, "추가 매수": 3, "매도 보류": 4, "곧 매수": 5, "대기": 6 };
   st.sort((a, b) => (RANK[CALL(a).word] ?? 9) - (RANK[CALL(b).word] ?? 9) || (a.role === "핵심" ? 0 : 1) - (b.role === "핵심" ? 0 : 1) || order.indexOf(a.sym) - order.indexOf(b.sym));
   const tag = s => s.role !== "보조" ? `<span class="lt-tag ${s.role === "핵심" ? "core" : ""}">${esc(s.role)}</span>` : "";
   const nOn = `${nb ? `공포 신호 ${nb}개` : ""}${nb && ns ? " · " : ""}${ns ? `과열 신호 ${ns}개` : ""}` || "켜진 신호 없음";
@@ -1979,10 +1979,11 @@ function ltRules(d, mode){
   const basis = `<div class="list">
       ${R2("사기", "<b>오른 만큼 일부 되돌리면</b> 1·2·3차 가격에서 목표 금액의 1/3씩 사요.")}
       ${R2("팔기", "<b>종가가 지지선 아래로 마감하면</b> 추세가 깨진 거라 팔아요. 공포 신호가 켜져 있으면 보류.")}
+      ${R2("익절", "<b>RSI 70 이상(과매수)이 되면</b> 가지고 있는 양의 1/3을 팔아요. 과매수일 땐 새로 사지 않아요.")}
       ${R2("현금", `평소 ${a.cash_default_pct ?? 30}%. 공포 신호가 ${need}개 켜지면 ${t.fear ?? 20}%로 줄여 더 사고, 과열 신호가 ${need}개면 ${t.overheated ?? 50}%로 늘려요.`)}
     </div>
     <div class="sec-cap" style="margin-left:0;font-size:var(--t-small)">결론의 뜻</div>
-    <div class="list">${[["분할매수", "지금 살 가격이에요"], ["곧 매수", "1차 가격까지 3% 안"], ["대기", "아직 살 가격이 아니에요"], ["추가 매수", "3차 뒤 지지선 근처"], ["매도", "지지선 아래로 마감"], ["매도 보류", "지지선이 깨졌지만 공포 신호 중"], ["줄이기", "과열 신호 2개 · 현금 늘리기"]].map(([k, v]) => R2(k, v)).join("").replace(/class="k"/g, 'class="k" style="width:5em"')}</div>`;
+    <div class="list">${[["분할매수", "지금 살 가격이에요"], ["곧 매수", "1차 가격까지 3% 안"], ["대기", "아직 살 가격이 아니에요"], ["추가 매수", "3차 뒤 지지선 근처"], ["과매수", "RSI 70 이상 · 1/3 익절, 새로 안 사기"], ["매도", "지지선 아래로 마감"], ["매도 보류", "지지선이 깨졌지만 공포 신호 중"], ["줄이기", "과열 신호 2개 · 현금 늘리기"]].map(([k, v]) => R2(k, v)).join("").replace(/class="k"/g, 'class="k" style="width:5em"')}</div>`;
   const more = `<div class="sec-cap" style="margin-left:0">비중</div>
     <div class="list">${[["현금", (a.cash_default_pct ?? 30) + "%"], ["장기", (a.long_term_pct ?? "-") + "%"], ["중단기", (a.short_mid_term_max_pct ?? "-") + "% 이하"]].map(([k, v]) => `<div class="row lt-r"><div class="main"><div class="lt-n">${k}</div></div><b>${esc(v)}</b></div>`).join("")}</div>
     <div class="list" style="margin-top:10px">${["장기 5~6개 · 핵심 2~3개", "핵심 종목 비중이 보조보다 크게", "현금을 늘릴 땐 중단기 → 보조 순서로", "바닥은 서둘러 잡지 않기", "레버리지 ETF · 금 · 대출 몰빵 안 함"].map(x => `<div class="row lt-r"><div class="main"><div class="lt-n" style="font-weight:400">${x}</div></div></div>`).join("")}</div>
