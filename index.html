@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-18">
+<meta name="app-version" content="2026-10-17-19">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -447,6 +447,11 @@ details.more>summary::-webkit-details-marker{display:none}
 .lt-cnt{font-size:var(--t-body);color:var(--fg2);font-variant-numeric:tabular-nums}
 .lt-foot{margin:var(--gap-caption) var(--pad-card) 0}
 h2.sec-title{font-size:var(--t-heading)}
+.lt-head{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;margin-top:2px} .lt-head.hot{color:var(--up)} .lt-head.cold{color:var(--down)}
+.lt-why{margin-top:10px;font-size:var(--t-small);color:var(--fg2);line-height:1.45} .lt-why-k{font-weight:600;color:var(--fg);margin-right:6px}
+.lt-ind{align-items:center} .lt-ih{display:flex;justify-content:space-between;align-items:baseline;gap:10px} .lt-iv{flex:none;font-variant-numeric:tabular-nums} .lt-iv b{font-weight:600}
+.lt-iv .lt-w{font-size:var(--t-small);font-weight:600;color:var(--fg2);margin-left:4px} .lt-iv .lt-w.hot{color:var(--up)} .lt-iv .lt-w.cold{color:var(--down)} .lt-iv .lt-w.warn{color:var(--wait)}
+.lt-now{font-size:var(--t-detail);margin-top:4px;line-height:1.45}
 .lt-chc{padding:14px 12px 14px 14px} .lt-ch{width:100%;height:auto;display:block;overflow:visible}
 .lt-ch .sp{fill:var(--buy);opacity:.14} .lt-ch .spt{fill:var(--buy);font-weight:600}
 .lt-ch line{stroke-width:1;stroke-dasharray:4 4} .lt-ch line.tr{stroke:var(--blue);opacity:.7} .lt-ch line.tr.ok{stroke:var(--buy)} .lt-ch line.rs{stroke:var(--fg3)}
@@ -1824,6 +1829,39 @@ async function ltAdd(m, c, n0){
   await saveLTcsv(`앱: 장투엔진 ${name} 추가`);
   render("none"); ltRecalc(name + " 계산 중");
 }
+/* 시장 지표 풀이: 무엇을 재는지 · 지금 어느 쪽인지 · 기준까지 얼마나 남았는지 */
+const LT_WHAT = {
+  "BofA Bull & Bear Indicator": "투자자들이 얼마나 낙관적인지 0~10으로 잰 값이에요.",
+  "BofA Global Fund Manager Survey cash level (%)": "전 세계 펀드매니저가 들고 있는 현금 비중이에요. 적을수록 이미 많이 샀다는 뜻이에요.",
+  "BofA FMS cash level change over 1-2 months (bp)": "펀드매니저 현금이 한두 달 새 얼마나 늘었는지예요. 급히 늘면 겁먹었다는 뜻이에요.",
+  "US High Yield OAS (bp)": "위험한 회사채에 붙는 추가 금리예요. 벌어질수록 시장이 불안하다는 뜻이에요.",
+  "CNN Fear & Greed Index": "미국 투자 심리를 0(공포)~100(탐욕)으로 잰 값이에요."
+};
+function ltNow(x){
+  const r = x.any, v = typeof r.cur === "number" ? r.cur : null, ind = r.indicator, h = x.hot, c = x.cold;
+  if (["확인 필요"].includes(x.word[0])) return "새 발표가 나왔는데 숫자를 아직 못 찾았어요. 지난 값은 판단에 쓰지 않아요.";
+  if (x.word[0] === "값 없음") return /change/.test(ind) ? "현금 비중이 두 달치 쌓이면 자동으로 계산돼요." : "값이 아직 없어요.";
+  if (x.word[0] === "미정") return "'가까이'의 범위를 아직 정하지 않아서 판단하지 않아요.";
+  if (/CNN/.test(ind)){ const n = Math.round(parseFloat(r.shown)); return n < 25 ? `${n}, 극단적 공포예요. 남들이 겁낼 때라 사기 좋은 쪽 신호예요.` : n < 45 ? `${n}, 공포예요. 사기 좋은 쪽 신호예요.` : n < 55 ? `${n}, 중립이에요.` : n < 75 ? `${n}, 탐욕이에요. 비싸게 사지 않게 조심할 쪽이에요.` : `${n}, 극단적 탐욕이에요. 과열 쪽 신호예요.`; }
+  if (v == null) return "";
+  const gap = (a, op) => op === ">=" || op === ">" ? a - v : v - a;
+  if (h?.state === "켜짐") return "과열 기준을 넘었어요. 현금을 늘릴 쪽 신호예요.";
+  if (c?.state === "켜짐") return "공포 기준을 넘었어요. 사기 좋은 쪽 신호예요.";
+  const parts = [];
+  if (h && typeof h.value === "number"){ const g = gap(h.value, h.op); parts.push(`과열까지 ${Math.abs(g).toFixed(Math.abs(g) < 1 ? 2 : 1).replace(/\.?0+$/, "")}${/%/.test(ind) ? "%p" : ""}`); }
+  if (c && typeof c.value === "number"){ const g = gap(c.value, c.op); parts.push(`공포까지 ${Math.abs(g).toFixed(Math.abs(g) < 1 ? 2 : 1).replace(/\.?0+$/, "")}${/%/.test(ind) ? "%p" : /bp/.test(ind) ? "bp" : ""}`); }
+  const lean = h && c && typeof h.value === "number" && typeof c.value === "number" ? (Math.abs(gap(h.value, h.op)) < Math.abs(gap(c.value, c.op)) ? "과열 쪽에 가까워요" : "공포 쪽에 가까워요") : "";
+  return `중간이에요${lean ? ", " + lean : ""}. ${parts.join(" · ")}.`;
+}
+function ltVerdict(mk, IND){
+  const ns = mk.n_sell || 0, nb = mk.n_buy || 0, need = mk.need || 2, t = mk.targets || {};
+  const on = IND.filter(x => x.word[1] === "hot" || x.word[1] === "cold").map(x => `${LT_IND[x.any.indicator] || x.any.indicator} ${x.any.shown ? String(x.any.shown).replace(/ · .*/, "") : ""}`.trim());
+  if (mk.regime === "overheated") return { tone: "hot", head: "현금 늘리기", act: `현금을 ${t.overheated ?? 50}%까지 늘려요. 중단기 → 보조 종목 순서로 줄이고, 새로 사지 않아요.`, why: `과열 신호 ${ns}개 (${on.join(", ")})` };
+  if (mk.regime === "fear") return { tone: "cold", head: "나눠 사기", act: `현금을 ${t.fear ?? 20}%까지 써요. 장투 종목을 정해 둔 가격에서 나눠 사고, 바닥을 서둘러 잡지는 않아요.`, why: `공포 신호 ${nb}개 (${on.join(", ")})` };
+  if (nb && !ns) return { tone: "cold", head: "비중 유지 · 공포 쪽", act: `현금 ${t.neutral ?? 30}%는 그대로 두고, 매수 가격에 닿은 종목만 나눠 사요. 지지선이 깨져도 서둘러 팔지 않아요.`, why: `공포 신호 ${nb}개 (${on.join(", ")}) · ${need}개가 되면 현금을 ${t.fear ?? 20}%로 줄이고 더 사요` };
+  if (ns && !nb) return { tone: "hot", head: "비중 유지 · 과열 쪽", act: `현금 ${t.neutral ?? 30}%는 그대로, 새로 크게 사지는 않아요. 매수 가격까지 기다려요.`, why: `과열 신호 ${ns}개 (${on.join(", ")}) · ${need}개가 되면 현금을 ${t.overheated ?? 50}%로 늘려요` };
+  return { tone: "n", head: "비중 유지", act: `현금 ${t.neutral ?? 30}%를 지키고, 장투 종목은 정해 둔 매수 가격에 닿을 때만 사요.`, why: "켜진 신호가 없어요" };
+}
 async function renderLT(){
   const d = S.lt;
   const md = x => esc(String(x || "").slice(5).replace("-", "/"));
@@ -1857,6 +1895,7 @@ async function renderLT(){
     const cond = [x.hot && "과열 " + ltCond(x.hot), x.cold && "공포 " + ltCond(x.cold)].filter(Boolean).join(" · ");
     return { ...x, any, word, cond };
   });
+  const V = ltVerdict(mk, IND);
   const todo = [];
   (d.alerts || []).filter(a => a.t === (d.updated || "").slice(0, 10) && a.level === "행동 검토").forEach(a => todo.push({ t: ltKo(a.title), sub: ltKo(a.body), v: "", sym: a.sym }));
   st.forEach(s => { const t = (s.tranches || []).find(t => !t.reached); if (t && t.dist > -5) todo.push({ t: `${s.name} ${t.order}차 매수 가격`, sub: `${num(t.price, s.market)} · 목표 금액의 1/3`, v: pct(t.dist), sym: s.sym }); });
@@ -1868,10 +1907,11 @@ async function renderLT(){
   const alerts = d.alerts || [];
   $app.innerHTML = `<div class="wrap">${head}
     <section class="card lt-hero">
-      <div class="lt-cap">현금 목표</div>
-      <div class="lt-hl"><span class="lt-pct">${mk.cash_target ?? 30}<small>%</small></span><span class="lt-word ${REG[1]}">${REG[0]}</span></div>
-      <p class="lt-say">${esc(say)}</p>
-      <div class="lt-meta"><span>과열 신호 <b>${ns}</b></span><span>공포 신호 <b>${nb}</b></span><span>${need}개면 전환</span></div>
+      <div class="lt-cap">지금 할 일</div>
+      <div class="lt-head ${V.tone}">${esc(V.head)}</div>
+      <p class="lt-say">${esc(V.act)}</p>
+      <div class="lt-why"><span class="lt-why-k">이유</span>${esc(V.why)}</div>
+      <div class="lt-meta"><span>현금 목표 <b>${mk.cash_target ?? 30}%</b></span><span>과열 신호 <b>${ns}</b></span><span>공포 신호 <b>${nb}</b></span><span>${need}개면 전환</span></div>
     </section>
 
     ${todo.length ? `<h2 class="sec-title">오늘</h2><div class="list">${todo.slice(0, 5).map((x, k) => row(two(esc(x.t), esc(x.sub || "")) + (x.v ? `<span class="lt-val">${esc(x.v)}</span>` : ""), `data-k="${k}" data-todo`)).join("")}</div>` : ""}
@@ -1884,10 +1924,12 @@ async function renderLT(){
       ${pending.map(r => row(two(esc(r["이름"] || r["티커"]), "다음 계산 때 나와요"), "", false)).join("")}</div>`
       : `<div class="card empty"><b>종목을 추가하세요</b>분할매수 가격과 지지선을 계산해 드려요<div style="margin-top:14px"><button class="btn primary press" id="ltadd0">종목 추가</button></div></div>`}
 
-    <h2 class="sec-title">시장 지표</h2>
-    <div class="list">${IND.map((x, k) => { const tap = x.any.manual || x.any.src_link;
-      return row(two(esc(LT_IND[x.any.indicator] || x.any.indicator), esc(x.cond)) +
-        `<div class="lt-px"><b>${x.any.shown ? esc(x.any.shown.replace(/ · .*/, "")) : "–"}</b><span class="lt-w ${x.word[1]}">${esc(x.word[0])}</span></div>`, `data-ind="${k}"`, !!tap); }).join("")}
+    <h2 class="sec-title">시장 지표 <span class="sub">2개가 같은 쪽으로 켜지면 현금 전환</span></h2>
+    <div class="list">${IND.map((x, k) => { const tap = x.any.manual || x.any.src_link, now = ltNow(x);
+      return `<${tap ? "button" : "div"} class="row lt-r lt-ind ${tap ? "press" : ""}" data-ind="${k}"><div class="main">
+        <div class="lt-ih"><span class="lt-n">${esc(LT_IND[x.any.indicator] || x.any.indicator)}</span><span class="lt-iv"><b>${x.any.shown ? esc(x.any.shown.replace(/ · .*/, "")) : "–"}</b> <span class="lt-w ${x.word[1]}">${esc(x.word[0])}</span></span></div>
+        ${now ? `<div class="lt-now">${esc(now)}</div>` : ""}
+        <div class="lt-s">${esc(LT_WHAT[x.any.indicator] || "")} 기준: ${esc(x.cond)}</div></div>${tap ? CHEV : ""}</${tap ? "button" : "div"}>`; }).join("")}
       ${ctx.t10 != null ? row(two("미국 10년물 금리", "20일 변화 " + `${ctx.t1020 >= 0 ? "+" : "−"}${Math.abs(ctx.t1020).toFixed(2)}%p`) + `<div class="lt-px"><b>${ctx.t10.toFixed(2)}%</b></div>`, "", false) : ""}
       ${ctx.wti != null ? row(two("WTI 유가", "20일 변화 " + pct(ctx.wti20)) + `<div class="lt-px"><b>$${ctx.wti.toFixed(1)}</b></div>`, "", false) : ""}
     </div>
