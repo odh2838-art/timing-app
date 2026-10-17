@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-32">
+<meta name="app-version" content="2026-10-17-33">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1820,7 +1820,7 @@ const LT_REG = {neutral: ["중립", "hold"], overheated: ["과열", "sell"], fea
 const LT_LV = {"행동 검토": "sell", "경고": "wait", "정보": "info", "점검": "hold"};
 const LT_ST = {"과열 신호": "p-sell", "공포 신호": "p-wait", "보통": "p-hold", "켜짐": "p-sell", "꺼짐": "p-hold", "값 없음": "p-hold", "확인 필요": "p-wait", "입력 필요": "p-wait", "오래됨": "p-wait", "자료 없음": "p-hold", "미정": "p-hold"};
 const LT_IND = {"BofA Bull & Bear Indicator": "BofA 불앤베어", "BofA Global Fund Manager Survey cash level (%)": "펀드매니저 현금 비중",
-  "BofA FMS cash level change over 1-2 months (bp)": "펀드매니저 현금 증가폭", "US High Yield OAS (bp)": "미국 하이일드 스프레드", "CNN Fear & Greed Index": "CNN 공포·탐욕"};
+  "BofA FMS cash level change over 1-2 months (bp)": "펀드매니저 현금 증가폭", "US High Yield OAS (bp)": "미국 하이일드 스프레드", "CNN Fear & Greed Index": "CNN 공포·탐욕 (미국)", "Korea Fear & Greed (own)": "한국 공포·탐욕"};
 const LT_MKEY = {"BofA Bull & Bear Indicator": "bofa_bull_bear", "BofA Global Fund Manager Survey cash level (%)": "bofa_fms_cash", "BofA FMS cash level change over 1-2 months (bp)": "bofa_fms_cash_change_bp"};
 const LT_FG = {"Extreme Fear": "극단적 공포", "Fear": "공포", "Neutral": "중립", "Greed": "탐욕", "Extreme Greed": "극단적 탐욕"};
 const ltKo = t => { let x = String(t || ""); for (const [k, v] of Object.entries(LT_IND)) x = x.split(k).join(v);
@@ -1859,21 +1859,23 @@ const LT_WHAT = {
   "BofA Global Fund Manager Survey cash level (%)": "BofA 설문 · 기관 현금 %",
   "BofA FMS cash level change over 1-2 months (bp)": "1~2달 사이 늘어난 폭",
   "US High Yield OAS (bp)": "회사채 위험 신호",
-  "CNN Fear & Greed Index": "미국 투자 심리 (0~100)"
+  "CNN Fear & Greed Index": "미국 투자 심리 (0~100)",
+  "Korea Fear & Greed (own)": "한국 투자 심리 (0~100)"
 };
 const LT_LONG = {
   "BofA Bull & Bear Indicator": "BofA가 매주 내는 투자자 낙관 지표예요. 8 이상이면 너무 낙관(과열 신호), 2 이하면 너무 비관(공포 신호).",
   "BofA Global Fund Manager Survey cash level (%)": "BofA가 매달 전 세계 펀드매니저에게 묻는 현금 비중이에요. 4% 미만이면 거의 다 투자한 상태(과열 신호), 5% 이상이면 겁먹고 현금을 쌓은 상태(공포 신호).",
   "BofA FMS cash level change over 1-2 months (bp)": "펀드매니저 현금 비중이 1~2달 사이 0.6%p(60bp) 넘게 늘면 공포 신호예요. 매달 값이 쌓이면 자동으로 계산해요.",
   "US High Yield OAS (bp)": "위험한 회사채 금리가 국채보다 얼마나 높은지예요. 350bp(3.5%p) 이상으로 벌어지면 공포 신호. 평소엔 300bp 안팎이에요.",
-  "CNN Fear & Greed Index": "CNN이 매일 내는 미국 투자 심리 지수예요. 45 미만은 공포 신호, 55 이상은 과열 신호."
+  "CNN Fear & Greed Index": "CNN이 매일 내는 미국 투자 심리 지수예요. 45 미만은 공포 신호, 55 이상은 과열 신호. 미국 종목 판단에 써요.",
+  "Korea Fear & Greed (own)": "코스피의 힘·RSI·변동성·고점에서 거리로 직접 계산한 한국 투자 심리예요. 한국 종목 판단에 CNN 대신 써요. 45 미만은 공포 신호, 55 이상은 과열 신호."
 };
 function ltNow(x){
   const r = x.any, v = typeof r.cur === "number" ? r.cur : null, ind = r.indicator, h = x.hot, c = x.cold;
   if (x.word[0] === "확인 필요") return "새 발표 숫자 미확인 · 판단에서 빠짐";
   if (x.word[0] === "값 없음") return /change/.test(ind) ? "값이 쌓이면 자동 계산" : "값 없음 · 판단에서 빠짐";
   if (x.word[0] === "미정") return "기준 미정 · 판단에서 빠짐";
-  if (/CNN/.test(ind)){ const n = parseFloat(r.shown); return n < 25 ? "극단적 공포 → 공포 신호 켜짐" : n < 45 ? "공포 → 공포 신호 켜짐" : n < 55 ? "중립" : n < 75 ? "탐욕 → 과열 신호 켜짐" : "극단적 탐욕 → 과열 신호 켜짐"; }
+  if (/CNN|Korea/.test(ind)){ const n = parseFloat(r.shown); return n < 25 ? "극단적 공포 → 공포 신호 켜짐" : n < 45 ? "공포 → 공포 신호 켜짐" : n < 55 ? "중립" : n < 75 ? "탐욕 → 과열 신호 켜짐" : "극단적 탐욕 → 과열 신호 켜짐"; }
   if (h?.state === "켜짐") return "과열 신호 켜짐";
   if (c?.state === "켜짐") return "공포 신호 켜짐";
   if (v == null) return "";
@@ -1926,13 +1928,17 @@ async function renderLT(){
   const ns = mk.n_sell || 0, nb = mk.n_buy || 0, need = mk.need || 2;
   const REG = { neutral: ["보통", "n"], overheated: ["과열", "hot"], fear: ["공포", "cold"] }[mk.regime] || ["보통", "n"];
   const IND = ltIND(mk);
-  const V = ltVerdict(mk, IND);
+  const isK = s => s.market === "코스피" || s.market === "코스닥";
+  const KM = mk.kr ? { ...mk, ...mk.kr } : null, hasK = st.some(isK) && KM, hasU = st.some(s => !isK(s)) || !st.length;
+  const V0 = ltVerdict(mk, IND), VK = KM ? ltVerdict(KM, ltIND(KM)) : null;
+  const V = hasK && !hasU ? VK : hasK && hasU && (KM.regime !== mk.regime) ? { tone: "n", head: "시장마다 달라요", act: `미국 종목 현금 ${mk.cash_target ?? 30}% · 한국 종목 현금 ${KM.cash_target ?? 30}%`, why: "" } : V0;
   const alerts = d.alerts || [];
   const CALL = s => s.call || { word: "대기", tone: "wait", line: "", say: ltSay(s), why: [] };
   const RANK = { "매도": 0, "줄이기": 1, "익절": 1.5, "다시 매수": 2, "매수": 2, "분할매수": 2, "추가 매수": 3, "매도 보류": 4, "곧 매수": 5, "대기": 6 };
   st.sort((a, b) => (RANK[CALL(a).word] ?? 9) - (RANK[CALL(b).word] ?? 9) || (a.role === "핵심" ? 0 : 1) - (b.role === "핵심" ? 0 : 1) || order.indexOf(a.sym) - order.indexOf(b.sym));
   const tag = s => s.role !== "보조" ? `<span class="lt-tag ${s.role === "핵심" ? "core" : ""}">${esc(s.role)}</span>` : "";
-  const nOn = `${nb ? `공포 신호 ${nb}개` : ""}${nb && ns ? " · " : ""}${ns ? `과열 신호 ${ns}개` : ""}` || "켜진 신호 없음";
+  const on1 = (b, s) => `${b ? `공포 ${b}` : ""}${b && s ? " · " : ""}${s ? `과열 ${s}` : ""}` || "신호 없음";
+  const nOn = hasK && hasU ? `미국 ${on1(nb, ns)} · 한국 ${on1(KM.n_buy || 0, KM.n_sell || 0)}` : hasK ? `한국 ${on1(KM.n_buy || 0, KM.n_sell || 0)}`.replace("한국 신호 없음", "켜진 신호 없음") : (on1(nb, ns) === "신호 없음" ? "켜진 신호 없음" : `${nb ? `공포 신호 ${nb}개` : ""}${nb && ns ? " · " : ""}${ns ? `과열 신호 ${ns}개` : ""}`);
   $app.innerHTML = `<div class="wrap">${head}
     <button class="card lt-top press" id="lthero">
       <div class="lt-cap">오늘</div>
@@ -1983,7 +1989,7 @@ function ltRules(d, mode){
       ${R2("팔기", "<b>장기 종목</b>은 지지선이 깨져도 팔지 않고 산 이유를 점검해요. <b>중단기</b>는 종가가 지지선 아래로 마감하면 전량 팔아요 (공포 신호 중엔 보류).")}
       ${R2("다시", "중단기를 판 뒤, 종가가 깨진 지지선 위로 회복하고 10일 동안 판 가격 아래로 안 내려가면 다시 사요.")}
       ${R2("익절", `<b>RSI ${lv.ob_sell ?? 80} 이상(과매수)이 되면</b> 가지고 있는 양의 1/3을 팔아요. RSI ${lv.no_entry ?? 70} 이상일 땐 새로 사지 않아요.`)}
-      ${R2("현금", `평소 ${a.cash_default_pct ?? 30}%. 공포 신호가 ${need}개 켜지면 ${t.fear ?? 20}%로 줄여 더 사고, 과열 신호가 ${need}개면 ${t.overheated ?? 50}%로 늘려요. 그 쪽 신호가 모두 꺼지면 ${a.cash_default_pct ?? 30}%로 돌아와요.`)}
+      ${R2("현금", `평소 ${a.cash_default_pct ?? 30}%. 공포 신호가 ${need}개 켜지면 ${t.fear ?? 20}%로 줄여 더 사고, 과열 신호가 ${need}개면 ${t.overheated ?? 50}%로 늘려요. 그 쪽 신호가 모두 꺼지면 ${a.cash_default_pct ?? 30}%로 돌아와요. 공포·탐욕은 미국 종목엔 CNN, 한국 종목엔 한국 지수를 써요 (BofA·하이일드는 같이).`)}
     </div>
     <div class="sec-cap" style="margin-left:0;font-size:var(--t-small)">결론의 뜻</div>
     <div class="list">${[["매수", "지금 살 때예요 (정한 1/3)"], ["곧 매수", "1차 가격까지 3% 안"], ["대기", "아직 살 가격이 아니에요"], ["추가 매수", "3차 뒤 지지선 근처"], ["다시 매수", "판 중단기가 지지선을 회복하고 10일 지킴"], ["익절", `RSI ${lv.ob_sell ?? 80} 이상이 된 날 · 가진 양의 1/3`], ["매도", "중단기가 지지선 아래로 마감 · 전량"], ["매도 보류", "지지선이 깨졌지만 공포 신호 중"], ["줄이기", "과열 신호 2개 · 현금 늘리기"]].map(([k, v]) => R2(k, v)).join("").replace(/class="k"/g, 'class="k" style="width:5em"')}</div>`;
@@ -2016,12 +2022,12 @@ function ltAlerts(d){
 /* 시장 지표 화면 */
 function renderLTMarket(){
   const d = S.lt; if (!d){ S.ltd = null; return renderLT(); }
-  const mk = d.market || {}, IND = ltIND(mk), ns = mk.n_sell || 0, nb = mk.n_buy || 0, need = mk.need || 2, t = mk.targets || {}, ctx = mk.context || {};
+  const mk = d.market || {}, IND = [...ltIND(mk), ...(mk.kr ? ltIND({ ...mk, ...mk.kr }).filter(x => /Korea/.test(x.any.indicator)) : [])], ns = mk.n_sell || 0, nb = mk.n_buy || 0, need = mk.need || 2, t = mk.targets || {}, ctx = mk.context || {};
   $app.innerHTML = `<div class="wrap">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>장투엔진</span></button></div><span class="mini">시장 지표</span><div class="side r"></div></div>
     <div class="title-block" data-anchor><h1 class="big">시장 지표</h1></div>
     <section class="card lt-top">
-      <div class="lt-mk2"><div><b class="${nb ? "cold" : ""}">${nb}</b><span>공포 신호</span></div><div><b class="${ns ? "hot" : ""}">${ns}</b><span>과열 신호</span></div><div><b>${mk.cash_target ?? 30}%</b><span>현금 목표</span></div></div>
+      ${[["미국 종목", mk], ...(mk.kr ? [["한국 종목", mk.kr]] : [])].map(([lab, m], j) => `${mk.kr ? `<div class="lt-cap" style="${j ? "margin-top:14px" : ""}">${lab}</div>` : ""}<div class="lt-mk2" style="margin-top:6px"><div><b class="${m.n_buy ? "cold" : ""}">${m.n_buy || 0}</b><span>공포 신호</span></div><div><b class="${m.n_sell ? "hot" : ""}">${m.n_sell || 0}</b><span>과열 신호</span></div><div><b>${m.cash_target ?? 30}%</b><span>현금 목표</span></div></div>`).join("")}
       <p class="lt-say" style="margin-top:16px">공포 신호나 과열 신호가 ${need}개 켜지면 현금 목표가 바뀌어요.</p><p class="lt-why" style="margin-top:4px">공포 ${need}개 → 현금 ${t.fear ?? 20}% · 과열 ${need}개 → 현금 ${t.overheated ?? 50}%</p>
     </section>
     <div class="list" style="margin-top:var(--gap-block)">${IND.map((x, k) => { const now = ltNow(x);
@@ -2139,8 +2145,9 @@ function renderLTDetail(sym){
   const cell = (k, v, n) => `<div class="row lt-r"><div class="main"><div class="lt-n">${k}</div>${n ? `<div class="lt-s">${n}</div>` : ""}</div><div class="lt-px">${v}</div></div>`;
   const csvRow = (S.ltcsv?.rows || []).find(x => symOf(x["시장"], x["티커"]) === sym), amt = parseFloat(String(csvRow?.["목표금액"] || "").replace(/[^\d.]/g, "")) || 0;
   const T3 = (s.tranches || []).find(t => t.order === 3);
-  const C = s.call || { word: "대기", tone: "wait", line: ltSay(s), why: [] }, M = S.lt?.market || {};
-  const mkLine = `${M.n_sell ? `과열 신호 ${M.n_sell}개 · ` : ""}${M.n_buy ? `공포 신호 ${M.n_buy}개 · ` : ""}현금 목표 ${M.cash_target ?? 30}%`;
+  const M0 = S.lt?.market || {}, M = (s.market === "코스피" || s.market === "코스닥") && M0.kr ? { ...M0, ...M0.kr } : M0;
+  const C = s.call || { word: "대기", tone: "wait", line: ltSay(s), why: [] };
+  const mkLine = `${M0.kr ? ((s.market === "코스피" || s.market === "코스닥") ? "한국 " : "미국 ") : ""}${M.n_sell ? `과열 신호 ${M.n_sell}개 · ` : ""}${M.n_buy ? `공포 신호 ${M.n_buy}개 · ` : ""}현금 목표 ${M.cash_target ?? 30}%`;
   const clash = !sp || !T3 || T3.reached ? "" : sp.lo > T3.price ? ((S.lt?.market?.n_buy || 0) > 0 ? "" : `지지선(${num(sp.lo, s.market)})이 3차 매수가보다 위예요. 3차에 닿기 전에 지지선이 깨지면 '매도 검토'가 먼저 와요.`)
     : sp.hi >= T3.price ? "3차 매수가가 지지선 안에 있어요. 지지선 안 = 3차 매수 검토, 종가가 지지선 아래로 마감 = 매도 검토." : "";
   const yy = x => { const t = String(x || ""); return t.slice(0, 4) === String(s.date || "").slice(0, 4) ? t.slice(5).replace("-", "/") : t.slice(2).replace(/-/g, "."); };
