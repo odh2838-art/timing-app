@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-17-40">
+<meta name="app-version" content="2026-10-17-41">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -690,6 +690,7 @@ function render(how = "fade"){
   tb.classList.toggle("away", !!(S.odd || S.ltd));
   document.querySelectorAll(".tabbar button").forEach(b => { b.classList.toggle("on", b.dataset.tab === S.tab); b.toggleAttribute("aria-current", b.dataset.tab === S.tab); if (b.dataset.tab === S.tab) b.setAttribute("aria-current", "page"); });
   tb.inert = !!(S.odd || S.ltd);   // 화면 밖으로 내려간 탭바에 포커스가 가지 않게
+  LS.set("view", { tab: S.tab, odd: S.odd, ltd: S.ltd, t: Date.now() });   // 다시 열거나 새 버전으로 바뀌어도 보던 곳으로
   const keep = how === "none" ? scrollY : 0;
   const slide = (how === "push" || how === "pop") && !REDUCED;
   const ghost = slide ? snapshot() : null;
@@ -1603,6 +1604,8 @@ function ltSay(s){
 }
 const ltMoney = (v, m) => isKR(m) ? (v >= 1e8 ? (Math.round(v / 1e7) / 10) + "억 원" : v >= 1e4 ? Math.round(v / 1e4).toLocaleString("ko-KR") + "만 원" : Math.round(v).toLocaleString("ko-KR") + "원") : "$" + Math.round(v).toLocaleString("en-US");
 function renderLTDetail(sym){
+  if (!S.lt){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div><div class="sk" style="width:70%;height:12px;margin-top:14px"></div></div></div>`;
+    loadLT().then(() => { if (S.ltd === sym) render("none"); }).catch(e => toast(e.message)); return; }
   if (sym === "@market") return renderLTMarket();
   const s = S.lt?.stocks?.[sym];
   if (!s){ S.ltd = null; return renderLT(); }
@@ -1719,6 +1722,8 @@ function odPrice(){
   if (s.live) el.innerHTML = `지금 ${num(s.live.p, s.market)} <span class="${s.live.chg >= 0 ? "up" : "down"}">${pct(s.live.chg)}</span> · 실시간 ${hhmm(s.live.t)}`;
 }
 function renderODDetail(sym){
+  if (!S.lt){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div><div class="sk" style="width:70%;height:12px;margin-top:14px"></div></div></div>`;
+    loadLT().then(() => { if (S.odd === sym) render("none"); }).catch(e => toast(e.message)); return; }
   const s = S.lt?.stocks?.[sym];
   if (!s){ S.odd = null; return S.tab === "od" ? renderOD() : renderLT(); }
   const o = s.od || {}, h = o.head || {}, z = h.zone, mk = s.market, P = v => num(v, mk);
@@ -1843,6 +1848,10 @@ document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => {
 });
 let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (S.odd && S.chart) S.chart.redraw(); }, 150); });
 addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.token && !S.busy) refresh(); });
+{ const v = LS.get("view");   // 보던 탭은 늘, 상세 화면은 10분 안에 다시 열었을 때만
+  if (v && ["lt", "od", "settings"].includes(v.tab)){ S.tab = v.tab;
+    if (Date.now() - (v.t || 0) < 6e5){ S.odd = v.odd || null; S.ltd = v.ltd || null; }
+    try{ if (S.tab !== HOME) history.pushState({v: "t"}, ""); if (S.odd || S.ltd) history.pushState({v: "d"}, ""); }catch(e){} } }
 render("none");
 if (S.token) refresh();
 </script>
