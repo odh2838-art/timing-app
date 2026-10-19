@@ -1,5 +1,5 @@
 // rooru.invest 실시간 시세 중계 (Cloudflare Worker, 무료)
-// 한국: 네이버 증권 실시간 · 미국: 야후 파이낸스 1분봉 · 차트 봉(?bars=종목&i=1m|5m|15m|60m|1d|1wk): 야후 파이낸스
+// 한국: 네이버 증권 실시간 · 미국: 야후 파이낸스 1분봉 · 차트 봉(?bars=종목&i=1m|5m|15m|60m|1d|1wk): 야후 파이낸스 (한국 분봉 최근 6거래일은 네이버)
 // 정해진 두 곳만 대신 불러오고, rooru.invest 앱 주소에서만 읽을 수 있다 (아무 주소나 대신 여는 중계가 아님).
 // 개인 정보는 오가지 않는다: 앱이 보내는 것은 종목 코드뿐.
 
@@ -48,7 +48,44 @@ async function intraday(sym) {
 
 // 차트 봉: [시각(초), 시가, 고가, 저가, 종가, 거래량]. 간격마다 받을 기간 (야후 한도 안: 1분봉 7일, 5·15분봉 60일, 1시간봉 730일)
 const RANGE = { "1m": "5d", "5m": "1mo", "15m": "1mo", "60m": "6mo", "1d": "2y", "1wk": "10y" };
+const STEP = { "1m": 60, "5m": 300, "15m": 900, "60m": 3600 };
+
+// 한국 분봉: 야후는 15:00~15:30 (마감 동시호가 포함, 하루 거래량의 15~20%)이 빠져서, 최근 6거래일은 네이버 1분봉으로 채운다.
+// 네이버 분봉은 최근 6거래일만 주고 시간외(15:40~20:00)도 섞여 있어서, 정규장 09:00~15:30만 남기고 간격에 맞게 묶는다.
+async function naverBars(sym, iv) {
+  const step = STEP[iv]; if (!step) return null;
+  const code = sym.split(".")[0], kst = d => new Date(d.getTime() + 9 * 3600e3).toISOString().replace(/\D/g, "").slice(0, 8);
+  const now = new Date(), from = kst(new Date(now.getTime() - 14 * 864e5)), to = kst(now);
+  const r = await fetch(`https://api.stock.naver.com/chart/domestic/item/${code}/minute?startDateTime=${from}0000&endDateTime=${to}2359`,
+                        { headers: { "User-Agent": UA, "Referer": "https://m.stock.naver.com/" } });
+  const xs = await r.json();
+  if (!Array.isArray(xs) || !xs.length) return null;
+  const out = [];
+  for (const x of xs) {
+    const s = String(x.localDateTime || ""), hm = s.slice(8, 12);
+    if (s.length < 12 || hm < "0900" || hm > "1530") continue;
+    const o = num(x.openPrice), h = num(x.highPrice), l = num(x.lowPrice), c = num(x.currentPrice);
+    if (!c || !h || !l) continue;
+    const t = Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8), +s.slice(8, 10), +s.slice(10, 12)) / 1000 - 9 * 3600;
+    const k = Math.floor((t + 9 * 3600) / step) * step - 9 * 3600, v = Number(x.accumulatedTradingVolume) || 0, last = out[out.length - 1];
+    if (last && last[0] === k) { last[2] = Math.max(last[2], h); last[3] = Math.min(last[3], l); last[4] = c; last[5] += v; }
+    else out.push([k, o || c, h, l, c, v]);
+  }
+  return out.length ? out : null;
+}
+const kstDay = t => new Date((t + 9 * 3600) * 1000).toISOString().slice(0, 10);
+
 async function bars(sym, iv) {
+  const out = await yahooBars(sym, iv);
+  if (!/\.(KS|KQ)$/.test(sym) || !STEP[iv]) return out;
+  let nv = null; try { nv = await naverBars(sym, iv); } catch (e) { nv = null; }
+  if (!nv) return out;
+  const days = new Set(nv.map(x => kstDay(x[0])));   // 네이버가 있는 날은 네이버로, 그 전 날은 야후로
+  const old = (out?.rows || []).filter(x => !days.has(kstDay(x[0])) && x[0] < nv[0][0]);
+  return { tz: "Asia/Seoul", prev: out?.prev ?? null, iv, src: "naver", rows: old.concat(nv) };
+}
+
+async function yahooBars(sym, iv) {
   const range = RANGE[iv] || "1d";
   const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${iv}&range=${range}&includePrePost=false`, { headers: { "User-Agent": UA } });
   const res = (await r.json())?.chart?.result?.[0];

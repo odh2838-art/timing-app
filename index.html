@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-68">
+<meta name="app-version" content="2026-10-20-69">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -2081,7 +2081,7 @@ function mountPro(box, cfg){
     if (j.iv !== tf && ["1d", "1wk"].includes(tf)){ cfg.noRelayDaily = true; return getRows(); }   // 예전 중계 코드면 일·주는 엔진 자료로
     const out = toRows(j);
     if (j.iv !== tf){ $src.textContent = `중계가 예전 코드라 ${j.iv}만 와요 · 설정 › 분봉 중계를 새 코드로 바꿔 주세요`; tf = j.iv; return out; }
-    $src.textContent = intraday() ? `야후 자료 · 시각은 한국 시간${kr ? " · 몇 분 늦을 수 있어요" : " (미국 장 22:30~05:00, 서머타임 끝나면 23:30~06:00)"}` : "야후 자료";
+    $src.textContent = !intraday() ? "야후 자료" : kr ? (j.src === "naver" ? "네이버 자료 (최근 6거래일, 그 전은 야후) · 한국 시간" : "야후 자료 · 15:00 뒤 봉이 빠져요 · 설정 › 분봉 중계를 새 코드로 바꾸면 네이버로 채워요") : "야후 자료 · 시각은 한국 시간 (미국 장 22:30~05:00, 서머타임 끝나면 23:30~06:00)";
     if (!intraday()) await patchToday(out);
     return out;
   }
