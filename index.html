@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-66">
+<meta name="app-version" content="2026-10-20-67">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -451,18 +451,21 @@ details.more>summary::-webkit-details-marker{display:none}
 .pro-tf{display:flex;gap:2px;padding:8px 8px 4px;border-bottom:1px solid var(--line)}
 .pro-tf button{flex:1;min-height:36px;border-radius:8px;font-weight:600;font-size:var(--t-small);color:var(--fg2)}
 .pro-tf button[aria-selected="true"]{background:var(--fill);color:var(--fg)}
-.pro-leg{display:flex;flex-wrap:wrap;gap:2px 10px;padding:8px 12px 4px;font-size:12px;line-height:1.5;color:var(--fg2);font-variant-numeric:tabular-nums;min-height:44px}
+.pro-leg{padding:8px 12px 2px;font-size:12px;line-height:18px;color:var(--fg2);font-variant-numeric:tabular-nums;height:46px;box-sizing:border-box}
+.pro-leg>div{display:flex;gap:9px;white-space:nowrap;overflow:hidden}
+.pro-leg>div+div{font-size:11px}
 .pro-leg b{color:var(--fg);font-weight:600}
-.pro-leg .t{color:var(--fg);font-weight:700;margin-right:2px}
+.pro-leg .t{color:var(--fg);font-weight:700}
 .pro-box{position:relative;height:380px;touch-action:pan-y}
 .pro.big .pro-box{height:min(72vh,640px)}
-.pro-tools{position:absolute;left:10px;top:8px;z-index:3;display:flex;gap:6px}
-.pro-tools button{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--card);color:var(--fg);box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.pro-tools{margin-left:auto;display:flex;gap:6px}
+.pro-tools button{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--fill);color:var(--fg)}
 .pro-lv{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 12px 2px;font-size:12px;color:var(--fg2);font-variant-numeric:tabular-nums}
 .pro-lv span i{display:inline-block;width:12px;height:0;border-top:2px dashed currentColor;vertical-align:middle;margin-right:5px}
 .pro-lv b{color:var(--fg);font-weight:600}
 .pro-lv em{font-style:normal;color:var(--fg3,var(--fg2));margin-left:3px}
-.pro-ma{display:flex;gap:6px;flex-wrap:wrap;padding:6px 10px 10px;border-top:1px solid var(--line)}
+.pro-ma{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 10px;border-top:1px solid var(--line)}
+.pro-src{margin:0 12px 10px !important;font-size:11px !important}
 .pro-ma button{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--fill);color:var(--fg2)}
 .pro-ma button[aria-pressed="true"]{color:var(--fg)}
 .pro-ma button i{display:inline-block;width:10px;height:2px;border-radius:1px;vertical-align:middle;margin-right:5px}
@@ -2042,8 +2045,8 @@ function mountPro(box, cfg){
     <div class="pro-leg" aria-live="polite"></div>
     <div class="pro-box"><div class="pro-msg"><div class="sk" style="width:60%;height:12px"></div></div></div>
     <div class="pro-lv"></div>
-    <div class="pro-ma">${MA_DEF.map(([n, c]) => `<button class="press" data-ma="${n}" aria-pressed="${!!ma[n]}"><i style="background:${c}"></i>${n}</button>`).join("")}</div>
-    <p class="note pro-src" style="margin:0 12px 10px"></p>`;
+    <div class="pro-ma">${MA_DEF.map(([n, c]) => `<button class="press" data-ma="${n}" aria-pressed="${!!ma[n]}" aria-label="${n}일 이동평균"><i style="background:${c}"></i>${n}</button>`).join("")}<div class="pro-tools"><button class="press" data-a="now" hidden>최근으로</button><button class="press" data-a="big">크게</button></div></div>
+    <p class="note pro-src"></p>`;
   const $box = box.querySelector(".pro-box"), $leg = box.querySelector(".pro-leg"), $src = box.querySelector(".pro-src");
   let chart = null, cs = null, vs = null, maS = {}, rows = [], timer = null, alive = true, gen = 0;
   const P = v => num(v, mk), fmtV = v => v == null ? "-" : v >= 1e8 ? (v / 1e8).toFixed(1) + "억" : v >= 1e4 ? Math.round(v / 1e4).toLocaleString("ko-KR") + "만" : Math.round(v).toLocaleString("ko-KR");
@@ -2054,7 +2057,7 @@ function mountPro(box, cfg){
   const legend = i => { const r = rows[i]; if (!r){ $leg.innerHTML = ""; return; }
     const pc = i > 0 ? rows[i - 1].close : r.open, ch = pc ? (r.close / pc - 1) * 100 : 0, cl = ch > 0 ? "up" : ch < 0 ? "down" : "";
     const mav = MA_DEF.filter(([n]) => ma[n] && i >= n - 1).map(([n, c]) => { let sm = 0; for (let k = i - n + 1; k <= i; k++) sm += rows[k].close; return `<span style="color:${c}">${n} <b style="color:${c}">${P(sm / n)}</b></span>`; }).join("");
-    $leg.innerHTML = `<span class="t">${label(r.time)}</span><span>시 <b>${P(r.open)}</b></span><span>고 <b>${P(r.high)}</b></span><span>저 <b>${P(r.low)}</b></span><span>종 <b class="${cl}">${P(r.close)}</b> <span class="${cl}">${pct(ch)}</span></span><span>거래량 <b>${fmtV(r.vol)}</b></span>${mav}`; };
+    $leg.innerHTML = `<div><span class="t">${label(r.time)}</span><span>종 <b class="${cl}">${P(r.close)}</b> <span class="${cl}">${pct(ch)}</span></span><span>고 <b>${P(r.high)}</b></span><span>저 <b>${P(r.low)}</b></span><span>시 <b>${P(r.open)}</b></span></div><div><span>거래량 <b>${fmtV(r.vol)}</b></span>${mav}</div>`; };
   const $lv = box.querySelector(".pro-lv");
   const lvRow = () => { const lo = Math.min(...rows.map(r => r.low)), hi = Math.max(...rows.map(r => r.high));   // 선 목록: 차트 밖이면 위/아래 표시
     $lv.innerHTML = levels.filter(v => v.v != null && isFinite(v.v)).map(v => `<span style="color:${LCOL[v.kind] || "#8E8E93"}"><i></i>${esc(v.label)} <b>${P(v.v)}</b>${v.v > hi ? "<em>↑ 차트 위</em>" : v.v < lo ? "<em>↓ 차트 아래</em>" : ""}</span>`).join(""); };
@@ -2069,11 +2072,33 @@ function mountPro(box, cfg){
     }
     const j = await fetchBars(sym, tf);
     if (j.iv !== tf && ["1d", "1wk"].includes(tf)){ cfg.noRelayDaily = true; return getRows(); }   // 예전 중계 코드면 일·주는 엔진 자료로
-    const out = j.rows.filter(x => [1, 2, 3, 4].every(k => x[k] != null && isFinite(x[k])))
-      .map(x => ({ time: ["1d", "1wk"].includes(j.iv) ? new Date((x[0] + tzOffset(x[0], j.tz || tz)) * 1000).toISOString().slice(0, 10) : x[0] + tzOffset(x[0], j.tz || tz), open: x[1], high: x[2], low: x[3], close: x[4], vol: x[5] }));
-    if (j.iv !== tf){ $src.textContent = `중계가 예전 코드라 ${j.iv}만 와요 · 설정 › 분봉 중계를 새 코드로 바꿔 주세요`; tf = j.iv; }
-    else $src.textContent = `야후 자료 · ${intraday() ? "한국은 몇 분 늦을 수 있어요 · " : ""}끌어서 이동, 두 손가락으로 확대, 눌러서 값 보기`;
-    const seen = new Set(); return out.filter(r => !seen.has(r.time) && seen.add(r.time));
+    const out = toRows(j);
+    if (j.iv !== tf){ $src.textContent = `중계가 예전 코드라 ${j.iv}만 와요 · 설정 › 분봉 중계를 새 코드로 바꿔 주세요`; tf = j.iv; return out; }
+    $src.textContent = intraday() ? `야후 자료${kr ? " · 한국 분봉은 몇 분 늦을 수 있어요" : ""}` : "야후 자료";
+    if (!intraday()) await patchToday(out);
+    return out;
+  }
+  function toRows(j){   // 봉 시각을 간격에 맞추고 (미국 마지막 봉은 초 단위로 옴), 같은 칸은 합침
+    const step = { "1m": 60, "5m": 300, "15m": 900, "60m": 3600 }[j.iv], day = ["1d", "1wk"].includes(j.iv), out = [];
+    for (const x of j.rows){ if (![1, 2, 3, 4].every(k => x[k] != null && isFinite(x[k]))) continue;
+      const lt = x[0] + tzOffset(x[0], j.tz || tz), time = day ? new Date(lt * 1000).toISOString().slice(0, 10) : Math.floor(lt / step) * step, l = out[out.length - 1];
+      if (l && l.time === time){ l.high = Math.max(l.high, x[2]); l.low = Math.min(l.low, x[3]); l.close = x[4]; l.vol = (l.vol || 0) + (x[5] || 0); continue; }
+      if (l && !day && time < l.time) continue;
+      out.push({ time, open: x[1], high: x[2], low: x[3], close: x[4], vol: x[5] || 0 }); }
+    return out;
+  }
+  async function patchToday(out){   // 야후 일봉은 마지막 날이 늦게 붙어요 → 5분봉으로 그날 봉을 채움
+    try{
+      const j = await fetchBars(sym, "5m"), m = toRows(j); if (!m.length) return;
+      const dk = t => new Date(t * 1000).toISOString().slice(0, 10), last = dk(m[m.length - 1].time), d = m.filter(r => dk(r.time) === last);
+      const b = { time: last, open: d[0].open, high: Math.max(...d.map(r => r.high)), low: Math.min(...d.map(r => r.low)), close: d[d.length - 1].close, vol: d.reduce((a, r) => a + (r.vol || 0), 0) };
+      const L = out[out.length - 1]; if (!L) return;
+      if (tf === "1d"){ if (last > L.time) out.push(b); return; }
+      const mon = s => { const x = new Date(s + "T00:00:00Z"); return new Date(x - ((x.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10); };   // 주봉: 같은 주면 늘리고, 새 주면 추가
+      if (mon(last) === mon(L.time)){   // 이미 들어 있어도 같은 값이 돼요
+        L.high = Math.max(L.high, b.high); L.low = Math.min(L.low, b.low); L.close = b.close; }
+      else if (mon(last) > mon(L.time)) out.push({ ...b, time: mon(last) });
+    }catch(e){ /* 5분봉이 없으면 그대로 */ }
   }
   function build(L){
     const dark = DARK(), TP = CP(), up = COL.up, dn = COL.down;
@@ -2095,21 +2120,23 @@ function mountPro(box, cfg){
     levels.filter(v => v.v != null && isFinite(v.v)).forEach(v => cs.createPriceLine({ price: v.v, color: LCOL[v.kind] || "#8E8E93", lineWidth: v.kind === "stop" ? 2 : 1, lineStyle: v.kind === "stop" ? 0 : 2, axisLabelVisible: true, title: v.label }));
     chart.subscribeCrosshairMove(p => { if (!p || p.time == null || !p.point){ legend(rows.length - 1); return; } const i = rows.findIndex(r => r.time === p.time); legend(i >= 0 ? i : rows.length - 1); });
   }
-  function tools(){
-    const t = document.createElement("div"); t.className = "pro-tools";
-    t.innerHTML = `<button class="press" data-a="now" hidden>최근으로</button><button class="press" data-a="big">${box.classList.contains("big") ? "작게" : "크게"}</button>`;
-    $box.appendChild(t);
-    t.querySelector('[data-a="now"]').onclick = () => { const k = PRO_SHOW[tf] || 120; chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, rows.length - k), to: rows.length + 4 }); };
-    t.querySelector('[data-a="big"]').onclick = e => { box.classList.toggle("big"); e.currentTarget.textContent = box.classList.contains("big") ? "작게" : "크게"; if (box.classList.contains("big")) box.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" }); };
-    chart.timeScale().subscribeVisibleLogicalRangeChange(r => { const b = t.querySelector('[data-a="now"]'); if (b && r) b.hidden = r.to >= rows.length - 2; });
+  const $now = box.querySelector('[data-a="now"]');
+  $now.onclick = () => { if (!chart) return; const k = PRO_SHOW[tf] || 120; chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, rows.length - k), to: rows.length + 4 }); };
+  box.querySelector('[data-a="big"]').onclick = e => { box.classList.toggle("big"); e.currentTarget.textContent = box.classList.contains("big") ? "작게" : "크게"; if (box.classList.contains("big")) box.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" }); };
+  function tools(){ $now.hidden = true; chart.timeScale().subscribeVisibleLogicalRangeChange(r => { if (r) $now.hidden = r.to >= rows.length - 2; }); }
+  function prevClose(){   // 지금 가격선 색의 기준 = 전날 종가 (분봉이면 앞 거래일 마지막 봉)
+    if (rows.length < 2) return null; if (!intraday()) return rows[rows.length - 2].close;
+    const dk = t => new Date(t * 1000).toISOString().slice(0, 10), d = dk(rows[rows.length - 1].time);
+    for (let i = rows.length - 2; i >= 0; i--) if (dk(rows[i].time) !== d) return rows[i].close;
+    return rows[0].open;
   }
   function fill(keepView){
     const range = keepView ? chart.timeScale().getVisibleLogicalRange() : null;
     cs.setData(rows.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })));
     vs.setData(rows.map(r => ({ time: r.time, value: r.vol || 0, color: (r.close >= r.open ? COL.up : COL.down) + "66" })));
     setMA(); legend(rows.length - 1); lvRow();
-    const lst = rows[rows.length - 1], pv = rows[rows.length - 2];
-    cs.applyOptions({ priceLineColor: pv && lst.close < pv.close ? COL.down : COL.up });   // 지금 가격선 색 = 오늘 오르면 빨강, 내리면 파랑
+    const lst = rows[rows.length - 1], pv = prevClose();
+    cs.applyOptions({ priceLineColor: pv != null && lst.close < pv ? COL.down : COL.up });   // 지금 가격선 색 = 오늘 오르면 빨강, 내리면 파랑
     if (range) chart.timeScale().setVisibleLogicalRange(range);
     else { const k = PRO_SHOW[tf] || 120; chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, rows.length - k), to: rows.length + 4 }); }
   }
@@ -2130,7 +2157,7 @@ function mountPro(box, cfg){
   show(false);
   clearInterval(S.tfTimer);
   S.tfTimer = setInterval(() => { if (!box.isConnected){ alive = false; clearInterval(S.tfTimer); if (chart) chart.remove(); return; }
-    if (intraday() && relayBase() && !document.hidden && marketOpenNow(kr)) show(true); }, 20000);   // 장중엔 20초마다 (보던 위치는 그대로)
+    if (tf !== "1wk" && relayBase() && !cfg.noRelayDaily && !document.hidden && marketOpenNow(kr)) show(true); }, 20000);   // 장중엔 20초마다 (보던 위치는 그대로, 일봉도)
   return { redraw(){} };
 }
 function renderDHDetail(sym){
@@ -2515,7 +2542,7 @@ function renderGuide(){
     <p class="note" style="margin:8px var(--pad-card) 0">카투의 2026년 국내 매매와 맞춰 봤어요: 할 때 84% · 쉴 때 98% 일치, 전량매도 6번 중 5번 경고. 코스닥 종목은 코스닥 지수로 봐요 (J63). 미국은 그의 미국 매수일이 모두 ‘할 때’가 되게 맞췄어요.</p>
 
     <h2 class="sec-title" id="g-chart">차트 보는 법</h2>
-    <p class="note" style="margin:0 var(--pad-card) 10px;line-height:1.5">차트는 <b>일봉</b>이에요. 봉 하나가 하루예요. 1개월·3개월·6개월은 보여 주는 기간이고, 아래 5월·7월 같은 글자는 날짜 눈금이에요. 카투도 일봉으로 자리를 보고, 사는 순간은 분봉·호가로 확인해요 (A69). 분봉은 증권사 앱에서 봐요.</p>
+    <p class="note" style="margin:0 var(--pad-card) 10px;line-height:1.5">위 버튼으로 봉 간격을 골라요 (1분·5분·15분·1시간·일·주). 자리는 <b>일봉</b>으로 보고, 사는 순간은 분봉으로 돌파 때 거래량이 실렸는지 확인해요 (A69). 옆으로 끌면 지난 봉, 두 손가락으로 벌리면 확대, 누르고 있으면 그 봉의 시·고·저·종이 위에 나와요. 지난 봉을 보다가 ‘최근으로’를 누르면 돌아와요. 1분~1시간봉은 설정의 분봉 중계 주소가 있어야 보여요.</p>
     <div class="card gd-legend">
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="pv"/></svg><span><b>직전 고점</b>넘어야 할 가격</span></div>
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="rf"/></svg><span><b>라운드피겨</b>12만·175만처럼 딱 떨어지는 가격. 주문이 몰려 막히거나 받쳐줘요. 돌파 전엔 ‘넘을 라운드피겨’, 돌파 뒤엔 ‘가야 할 자리’</span></div>
