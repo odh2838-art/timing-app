@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-56">
+<meta name="app-version" content="2026-10-19-57">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1911,7 +1911,7 @@ const earnLine = e => { if (!e || !e.d) return "실적 발표일: 못 찾았어�
   if (e.kind === "마감") return `실적 발표: 늦어도 ${md} (정기보고서 마감) · 날짜는 증권사 앱에서 확인`;
   if (e.kind === "발표됨" || n < 0) return `실적 발표됨 ${md}${e.src ? ` (${e.src})` : ""}`;
   return `${e.kind === "IR" ? "IR(실적 설명회일 수 있음)" : "실적 발표"} ${md} ${e.kind === "추정" ? "무렵 (작년 같은 분기로 추정)" : e.src ? "(" + e.src + ")" : ""} · ${n ? n + "거래일 남음" : "오늘"}. 발표 전 급등했으면 셀온 주의`; };
-const dhAbove = it => it.price != null && (it.round_pivot == null || it.price >= it.round_pivot || it.price > it.pivot);   // 이미 넘었으면 '가야 할 자리'
+const dhAbove = it => it.price != null && (it.round_pivot == null || it.price >= it.round_pivot || it.price > it.pivot || /돌파/.test(it.state || ""));   // 이미 넘었으면 '가야 할 자리'
 const dhPx = (v, t, raw) => (t === "dhu" && v != null && isFinite(v) ? "$" : "") + (raw && t !== "dhu" && v != null && isFinite(v) ? Math.round(v).toLocaleString("ko-KR") : num(v, DHM[t].mk));   // raw = 호가 단위로 반올림 안 함 (평균 매수가)
 const pct2 = v => { if (!isNum(v)) return "-"; const r = +v.toFixed(2); return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(2) + "%"; };
 function dhRow(it, t){
@@ -1950,7 +1950,7 @@ async function renderDH0(){
     ${nC ? secs : `<div class="card empty" style="margin:0"><b>오늘은 없어요</b>거래대금 기준을 넘으면서 6개월 신고가를 낸 종목이 없어요. 주도주는 하루 몇 개 없는 게 정상이에요 (A1).</div>`}
     ${(d.setups || []).length ? `<h2 class="sec-title">셋업 <span class="lt-cnt">${d.setups.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">최근 주도 후보였고, 고점 아래에서 흔들림·거래대금이 줄며 버티는 종목</p><div class="list">${d.setups.map(x => dhRow(x, t)).join("")}</div>` : ""}
     ${(d.counter || []).length ? `<h2 class="sec-title">역의 역 <span class="lt-cnt">${d.counter.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">지수가 빠진 날 안 빠지거나 오른 종목</p><div class="list">${d.counter.map(x => dhRow(x, t)).join("")}</div>` : ""}
-    <p class="note lt-foot">${md ? md + " 종가 기준 · " : ""}Katoo 글의 규칙으로 계산 · 출처 번호는 종목 화면에</p>
+    ${md ? `<p class="note lt-foot">${md} 종가 기준</p>` : ""}
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
   bind();
@@ -1973,7 +1973,8 @@ function renderDHDetail(sym){
   const P = v => dhPx(v, t), tone = DH_TONE[it.state] || "wait";
   const stops = it.stops || [];
   S.dhStop = Math.min(S.dhStop || 0, Math.max(0, stops.length - 1));
-  const line = it.state === "돌파 자리" ? `거래대금 실린 ${P(it.pivot)}(직전 고점) 돌파를 종가로 확인했어요.`
+  const lowLv = it.brk_level != null && it.pivot != null && it.brk_level < it.pivot && it.price <= it.pivot;   // 직전 고점 바로 아래 라운드피겨를 넘은 돌파
+  const line = it.state === "돌파 자리" ? (lowLv ? `직전 고점 ${P(it.pivot)} 바로 아래 라운드피겨 ${P(it.brk_level)}를 거래대금 실어 종가로 넘었어요.` : `거래대금 실린 ${P(it.pivot)}(직전 고점) 돌파를 종가로 확인했어요.`)
     : it.state === "주도 후보" ? (it.price > it.pivot && (it.base_len ?? 0) < 10 ? `베이스 없이 신고가가 이어지는 중이에요. 급하게 오른 자리를 쫓아 사면 손익비가 나빠요 (A54 A47). 쉬면서 베이스를 만들면 셋업으로 다시 봐요.` : `거래대금·신고가·상승률 기준을 넘었어요. 거래대금 실린 직전 고점 돌파는 아직이에요.`)
     : it.state === "2등주 돌파" ? `직전 고점 ${P(it.pivot)} 돌파는 맞지만 업종 1등이 아니에요. 카투는 2등주는 안 사요 (A47 A80). 1등이 쉴 때를 기다려요.`
     : it.state === "셋업" ? `고점 ${P(it.pivot)} 아래에서 버티는 중. 거래대금 실어 뚫으면 돌파 자리예요.`
@@ -2352,6 +2353,7 @@ function renderGuide(){
     ${rule("buy", "buy", "살 때", "쉬었다가 직전 고점을 <b>거래대금 실어 종가로</b> 넘은 날", [
       "고점 뒤 5일 이상 쉰 뒤예요. 흔들림·거래대금이 줄었으면 더 좋지만(VCP, A54) 꼭은 아니에요 (C24)",
       "돌파 날 거래대금이 평소(20일 평균)의 1.2배 이상 (카투가 산 돌파 중 가장 작은 게 1.23배)",
+      "직전 고점 바로 아래 라운드피겨를 넘어도 돌파예요 (직전 고점 112,100 → 11만 돌파, A48)",
       "같은 업종이 같이 오르면 그 업종 <b>1등</b>만 사요"],
       "이럴 땐 안 사요: 쉬지 않고 급하게 오른 걸 쫓을 때 · 거래대금 없이 슬쩍 넘을 때")}
     ${rule("stop", "sell", "손절할 때", "사기 전에 정한 손절선을 <b>깨면 바로</b>", [
@@ -2405,7 +2407,6 @@ function renderGuide(){
       <li>뉴스 때문에 파는 날(예: 1/20)은 엔진이 못 잡아요. 그런 날은 직접 판단해요.</li>
       <li>규칙으로 계산한 결과예요. 사고파는 결정은 직접 해요.</li>
     </ul>
-    <p class="note lt-foot" style="text-align:center;margin-top:20px">출처: Katoo(@blazingbees) 아티클·매매일지·구독 코멘트</p>
   </div>`;
   bindNavbar(); guideImages();
   if (S.guideAt){ const el = document.getElementById("g-" + S.guideAt); S.guideAt = null; if (el) requestAnimationFrame(() => scrollTo(0, el.getBoundingClientRect().top + scrollY - 60)); }
