@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-18-47">
+<meta name="app-version" content="2026-10-19-48">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -502,6 +502,7 @@ h2.sec-title{font-size:var(--t-heading)}
 <nav class="tabbar" id="tabbar" hidden aria-label="탭">
   <button data-tab="lt" aria-label="신호"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>신호</button>
   <button data-tab="od" aria-label="오동엔진"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v4M6 15v6M12 5v4M12 15v4M18 3v3M18 14v7"/><rect x="4" y="7" width="4" height="8" rx="1"/><rect x="10" y="9" width="4" height="6" rx="1"/><rect x="16" y="6" width="4" height="8" rx="1"/></svg>오동엔진</button>
+  <button data-tab="dh" aria-label="동현"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16V9M12 16V5M17 16v-4"/><path d="M14 7l3-3 3 3"/></svg>동현</button>
   <button data-tab="settings" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
 </nav>
 <script>
@@ -645,6 +646,7 @@ async function pullQuotes(syms){
 /* 화면에 반영: 홈은 다시 그리고, 상세는 가격·차트만 고친다 (보던 위치 유지) */
 function showQuotes(){
   if (S.dirty || document.querySelector(".sheet-bg:not(.closing)")) return;
+  if (S.dhd || S.tab === "dh") return;   // 동현엔진은 종가 기준이라 실시간으로 다시 그리지 않음
   if (S.odd){ odPrice(); return; }   // 오동엔진 상세: 차트는 그대로 두고 가격만
   const y = scrollY;
   if (S.ltd) renderLTDetail(S.ltd); else if (S.tab === "lt") renderLT(); else if (S.tab === "od") renderOD(); else return;
@@ -692,22 +694,24 @@ const BACK = `<svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke
 function render(how = "fade"){
   const tb = document.getElementById("tabbar");
   tb.hidden = !S.token;
-  tb.classList.toggle("away", !!(S.odd || S.ltd));
+  tb.classList.toggle("away", !!(S.odd || S.ltd || S.dhd));
   document.querySelectorAll(".tabbar button").forEach(b => { b.classList.toggle("on", b.dataset.tab === S.tab); b.toggleAttribute("aria-current", b.dataset.tab === S.tab); if (b.dataset.tab === S.tab) b.setAttribute("aria-current", "page"); });
-  tb.inert = !!(S.odd || S.ltd);   // 화면 밖으로 내려간 탭바에 포커스가 가지 않게
-  LS.set("view", { tab: S.tab, odd: S.odd, ltd: S.ltd, t: Date.now() });   // 다시 열거나 새 버전으로 바뀌어도 보던 곳으로
+  tb.inert = !!(S.odd || S.ltd || S.dhd);   // 화면 밖으로 내려간 탭바에 포커스가 가지 않게
+  LS.set("view", { tab: S.tab, odd: S.odd, ltd: S.ltd, dhd: S.dhd, t: Date.now() });   // 다시 열거나 새 버전으로 바뀌어도 보던 곳으로
   const keep = how === "none" ? scrollY : 0;
   const slide = (how === "push" || how === "pop") && !REDUCED;
   const ghost = slide ? snapshot() : null;
   try{
     if (!S.token) renderSetup();
+    else if (S.dhd) renderDHDetail(S.dhd);
     else if (S.odd) renderODDetail(S.odd);
     else if (S.ltd) renderLTDetail(S.ltd);
     else if (S.tab === "od") renderOD();
+    else if (S.tab === "dh") renderDH();
     else if (S.tab === "settings") renderSettings();
     else renderLT();
   }catch(e){   // 자료 한 곳이 이상해도 앱 전체가 멈추지 않게: 전환 화면을 걷고 홈으로
-    console.error(e); ghost?.remove(); S.odd = null; S.ltd = null; S.tab = HOME; try{ renderLT(); }catch(_){} toast("이 화면을 열지 못했어요");
+    console.error(e); ghost?.remove(); S.odd = null; S.ltd = null; S.dhd = null; S.tab = HOME; try{ renderLT(); }catch(_){} toast("이 화면을 열지 못했어요");
     bindNavbar(); return;
   }
   $app.classList.remove("v-push","v-pop","v-fade");
@@ -752,6 +756,7 @@ addEventListener("popstate", () => {
   const sh = document.querySelector(".sheet-bg:not(.closing)");
   if (sh){ sh._close?.(true); return; }
   const how = BACK_ANIM ? "pop" : "none"; BACK_ANIM = false;   // 앱의 뒤로 버튼이면 밀리는 전환, 시스템 제스처면 그대로 (두 번 밀리지 않게)
+  if (S.dhd){ go(how, () => S.dhd = null); return; }
   if (S.odd){ go(how, () => S.odd = null); return; }
   if (S.ltd){ go(how, () => S.ltd = null); return; }
   if (S.tab !== HOME) go("fade", () => { S.tab = HOME; });
@@ -1281,7 +1286,7 @@ function openSheet(label, inner){
     const dur = v > 0 ? Math.max(120, Math.min(280, rest / v)) : 280;
     move(H(), dur, "var(--ease)"); document.body.style.overflow = "";
     removeEventListener("keydown", onKey);
-    $app.inert = false; document.getElementById("tabbar").inert = !!(S.ltd || S.odd); try{ opener?.focus?.(); }catch(e){}
+    $app.inert = false; document.getElementById("tabbar").inert = !!(S.ltd || S.odd || S.dhd); try{ opener?.focus?.(); }catch(e){}
     setTimeout(() => { bg.remove(); document.body.classList.remove("sheet-open"); $app.style.transition = ""; $app.style.transform = ""; $app.style.borderRadius = ""; $app.style.overflow = ""; }, REDUCED ? 0 : dur);
   };
   bg._close = fromPop => close(0, fromPop);
@@ -1803,6 +1808,106 @@ function renderODDetail(sym){
   if (box) S.chart = mountChart(box, { ...s, marks: [], sig_help: null, pattern: null, price: s.live?.p ?? s.price, chg: s.live?.chg ?? s.chg }, { od: true, levels: odLevels(s) });
 }
 
+/* ───────── 동현엔진 (tc/donghyun.py · Katoo 규칙) ─────────
+   한국 거래대금 상위 300에서 오늘 주도 후보(거래대금·신고가·상승률) → 업종별로 묶고 업종 1등 표시.
+   셋업 = 최근 60일 안에 주도 후보였던 종목이 고점 아래에서 흔들림·거래대금 줄며 버팀. 역의 역 = 지수 빠진 날 버틴 종목.
+   자료: 상태/동현엔진.json (매일 16:05 계산). 1단계: 시장 판정·보유 관리는 다음 단계. */
+const DH_TONE = {"돌파 자리": "buy", "주도 후보": "soon", "셋업": "soon", "관찰": ""};
+async function loadDH(){ S.dh = await readJSON("상태/동현엔진.json", null); S.dhLoaded = true; return S.dh; }
+function dhAll(d){ return [...(d?.sectors || []).flatMap(g => g.items), ...(d?.setups || []), ...(d?.counter || [])]; }
+const dhEok = v => v == null ? "-" : v >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억";
+function dhRow(it){
+  const sub = it.state === "셋업" ? `고점 ${num(it.pivot, "코스피")} 아래 ${it.base_len != null ? Math.round(it.base_len) + "일" : ""} · 거래대금 ${dhEok(it.tv)}`
+    : `${it.sector_lead ? "업종 1등 · " : ""}거래대금 ${dhEok(it.tv)}${it.state === "돌파 자리" && it.pivot ? ` · ${num(it.pivot, "코스피")} 돌파` : ""}`;
+  return `<button class="row press lt-srow" data-dh="${esc(it.sym)}"><div class="main"><div class="lt-n">${esc(it.name)}</div><div class="lt-s">${esc(sub)}</div></div>
+    <div class="lt-px"><b class="lt-chip ${DH_TONE[it.state] || ""}">${esc(it.state)}</b><span>${num(it.price, "코스피")} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span></div>${CHEV}</button>`;
+}
+async function renderDH(){
+  const head = `<div class="navbar"><div class="side"></div><span class="mini">동현</span><div class="side r"><button class="icon-btn press" id="dhre" aria-label="다시 계산" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></div></div>
+    <div class="title-block" data-anchor><h1 class="big">동현</h1><div class="sub">주도주를 확인하고 산다</div></div>`;
+  const bind = () => { const r = document.getElementById("dhre"); if (r) r.onclick = async () => { if (S.busy) return; try{ const t = await dispatch("동현엔진"); await waitRun(t, "동현엔진 계산"); S.dh = null; S.dhLoaded = false; if (S.tab === "dh" && !S.dhd) renderDH(); }catch(e){ toast(e.message); } }; bindNavbar(); };
+  if (!S.dhLoaded){
+    $app.innerHTML = `<div class="wrap">${head}<div class="card"><div class="sk" style="width:40%;height:16px"></div><div class="sk" style="width:70%;height:12px;margin-top:12px"></div></div></div>`; bind();
+    try{ await loadDH(); }catch(e){ const w = $app.querySelector(".wrap"); if (w) w.insertAdjacentHTML("beforeend", `<div class="err" style="margin-top:var(--gap-block)">${esc(e.message)}</div>`); return; }
+    if (S.tab === "dh" && !S.dhd) renderDH(); return;
+  }
+  const d = S.dh;
+  if (!d){ $app.innerHTML = `<div class="wrap">${head}<div class="card empty"><b>아직 계산 전이에요</b>매일 16:05에 계산해요. 지금 계산하려면 위의 다시 계산을 누르세요.</div></div>`; bind(); return; }
+  const m = d.market || {}, md = String(d.date || "").slice(5).replace("-", "/");
+  const nC = (d.sectors || []).reduce((a, g) => a + g.n, 0);
+  const secs = (d.sectors || []).map(g => `<p class="note" style="margin:var(--gap-sub) var(--pad-card) 6px">${esc(g.sector)}${g.together ? ` · ${g.n}종목 같이 오름` : ""}</p><div class="list">${g.items.map(dhRow).join("")}</div>`).join("");
+  $app.innerHTML = `<div class="wrap">${head}
+    <section class="card lt-vd">
+      <div class="lt-mk2">
+        <div><b>${m.tv_jo != null ? m.tv_jo + "조" : "-"}</b><span>시장 거래대금</span></div>
+        <div><b>${dhEok(m.threshold_eok)}</b><span>주도주 기준</span></div>
+        <div><b class="${m.index_chg > 0 ? "hot" : m.index_chg < 0 ? "cold" : ""}">${m.index_chg != null ? pct(m.index_chg) : "-"}</b><span>코스피</span></div>
+      </div>
+      <p class="n">기준 = 시장 거래대금의 0.3% (최소 500억). 할 때·쉴 때 판정은 다음 단계에서 붙여요.</p>
+    </section>
+    <h2 class="sec-title">오늘의 주도 후보 <span class="lt-cnt">${nC}</span></h2>
+    ${nC ? secs : `<div class="card empty" style="margin:0"><b>오늘은 없어요</b>거래대금 기준을 넘으면서 6개월 신고가를 낸 종목이 없어요. 주도주는 하루 몇 개 없는 게 정상이에요 (A1).</div>`}
+    ${(d.setups || []).length ? `<h2 class="sec-title">셋업 <span class="lt-cnt">${d.setups.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">최근 주도 후보였고, 고점 아래에서 흔들림·거래대금이 줄며 버티는 종목</p><div class="list">${d.setups.map(dhRow).join("")}</div>` : ""}
+    ${(d.counter || []).length ? `<h2 class="sec-title">역의 역 <span class="lt-cnt">${d.counter.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">지수가 빠진 날 안 빠지거나 오른 종목</p><div class="list">${d.counter.map(dhRow).join("")}</div>` : ""}
+    <p class="note lt-foot">${md ? md + " 종가 기준 · " : ""}Katoo 글의 규칙으로 계산 · 출처 번호는 종목 화면에</p>
+    <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
+  </div>`;
+  bind();
+  $app.querySelectorAll("[data-dh]").forEach(b => b.onclick = () => go("push", () => S.dhd = b.dataset.dh));
+}
+function renderDHDetail(sym){
+  if (!S.dhLoaded){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
+    loadDH().then(() => { if (S.dhd === sym) render("none"); }).catch(e => toast(e.message)); return; }
+  const it = dhAll(S.dh).find(x => x.sym === sym);
+  if (!it){ S.dhd = null; return renderDH(); }
+  const P = v => num(v, "코스피"), tone = DH_TONE[it.state] || "wait";
+  const stops = it.stops || [];
+  S.dhStop = Math.min(S.dhStop || 0, Math.max(0, stops.length - 1));
+  const line = it.state === "돌파 자리" ? `거래대금 실린 ${P(it.pivot)}(직전 고점) 돌파를 종가로 확인했어요.`
+    : it.state === "주도 후보" ? (it.price > it.pivot && (it.base_len ?? 0) < 10 ? `베이스 없이 신고가가 이어지는 중이에요. 급하게 오른 자리를 쫓아 사면 손익비가 나빠요 (A54 A47). 쉬면서 베이스를 만들면 셋업으로 다시 봐요.` : `거래대금·신고가·상승률 기준을 넘었어요. 거래대금 실린 직전 고점 돌파는 아직이에요.`)
+    : it.state === "셋업" ? `고점 ${P(it.pivot)} 아래에서 버티는 중. 거래대금 실어 뚫으면 돌파 자리예요.`
+    : `지수가 빠진 날 버텼어요. 관찰 목록이에요.`;
+  const sp = stops[S.dhStop];
+  $app.innerHTML = `<div class="wrap">
+    <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현</span></button></div><span class="mini">${esc(it.name)}</span><div class="side r"></div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(it.name)}</h1><div class="sub">${esc(String(S.dh.date || "").slice(5).replace("-", "/"))} 종가 ${P(it.price)} <span class="${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span> · 거래대금 ${dhEok(it.tv)}${it.sector ? " · " + esc(it.sector) : ""}</div></div>
+    <section class="card lt-vd">
+      <div class="w ${tone}">${esc(it.state)}${it.sector_lead ? ` <span class="lt-chip buy" style="vertical-align:middle;margin-left:6px">업종 1등</span>` : ""}</div>
+      <p class="l">${esc(line)}</p>
+      <div class="lt-mk2 od-st">
+        <div><b>${P(it.pivot)}</b><span>직전 고점</span></div>
+        <div><b>${P(it.round_next)}</b><span>다음 라운드피겨</span></div>
+        <div><b>${it.base_len != null ? Math.round(it.base_len) + "일" : "-"}</b><span>고점 뒤</span></div>
+      </div>
+    </section>
+    <div class="card chart" id="chartBox" style="margin-top:var(--gap-block)"></div>
+    ${stops.length ? `<h2 class="sec-title">비중 계산</h2>
+    <div class="card">
+      <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
+      <div class="lt-mk2">
+        <div><b>${P(sp.price)}</b><span>손절선 ${pct(sp.pct)}</span></div>
+        <div><b>1%</b><span>계좌 손실 한도</span></div>
+        <div><b class="${sp.weight >= 50 ? "hot" : ""}" style="color:var(--buy)">${sp.weight}%</b><span>최대 비중</span></div>
+      </div>
+      <p class="n" style="margin:12px 0 0;font-size:var(--t-detail);color:var(--fg2)">비중 = 1% ÷ 손절폭 (A19 A52). 첫 진입은 5~10%로 시작하고, 맞으면 불타기로 키워요 (A18).</p>
+    </div>` : ""}
+    <h2 class="sec-title">근거</h2>
+    <div class="list">${(it.why || []).map(w => `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(w.t)}</div></div><div class="lt-px"><span>${esc(w.src)}</span></div></div>`).join("") || `<div class="row"><div class="main sub">근거 없음</div></div>`}</div>
+    <h2 class="sec-title">직접 확인</h2>
+    <div class="list">${["분봉: 돌파 때 거래량이 실렸나", "호가: 한 호가에 몇억씩 쌓였나", "재료: 왜 오르는지 (뉴스·공시)", "실적 발표일 전이면 셀온 주의"].map(t => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${esc(t)}</div></div></div>`).join("")}</div>
+    <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
+  </div>`;
+  document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
+  $app.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { S.dhStop = +b.dataset.st; render("none"); });
+  const lv = [];
+  if (it.pivot) lv.push({ v: it.pivot, kind: "res", g: "main", label: "직전 고점", fit: true });
+  if (it.round_next) lv.push({ v: it.round_next, kind: "fib", g: "main", label: "다음 라운드피겨" });
+  if (sp) lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
+  if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
+  const box = $app.querySelector("#chartBox");
+  if (box) S.chart = mountChart(box, { sym: it.sym, name: it.name, market: "코스피", bars: it.bars || [], marks: [], sig_help: null, pattern: null, price: it.price, chg: it.chg }, { od: true, levels: lv });
+}
+
 function renderSettings(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">설정</span><div class="side r"></div></div>
     <div class="title-block" data-anchor><h1 class="big">설정</h1></div>
@@ -1813,6 +1918,7 @@ function renderSettings(){
     <div class="list">
       <div class="row"><div class="main"><b>미국장 마감 뒤</b><div class="sub">매일 07:10</div></div></div>
       <div class="row"><div class="main"><b>한국장 마감 뒤</b><div class="sub">매일 15:50</div></div></div>
+      <div class="row"><div class="main"><b>동현엔진</b><div class="sub">평일 16:05</div></div></div>
     </div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">신호와 오동엔진을 함께 계산해요.</p>
     <details class="adv"><summary class="press">고급 설정 ›</summary>
@@ -1878,17 +1984,17 @@ function toast(msg, spin){
 }
 
 document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => {
-  if (S.tab === b.dataset.tab && !S.ltd && !S.odd){ scrollTo({top:0, behavior: REDUCED ? "auto" : "smooth"}); return; }  // 같은 탭 다시 누르면 맨 위로
-  if ((S.ltd || S.odd) && history.state?.v === "d"){ skipPop++; history.back(); }
+  if (S.tab === b.dataset.tab && !S.ltd && !S.odd && !S.dhd){ scrollTo({top:0, behavior: REDUCED ? "auto" : "smooth"}); return; }  // 같은 탭 다시 누르면 맨 위로
+  if ((S.ltd || S.odd || S.dhd) && history.state?.v === "d"){ skipPop++; history.back(); }
   if (S.tab === HOME && b.dataset.tab !== HOME){ try{ history.pushState({v: "t"}, ""); }catch(e){} }
-  go("fade", () => { S.tab = b.dataset.tab; S.ltd = null; S.odd = null; });
+  go("fade", () => { S.tab = b.dataset.tab; S.ltd = null; S.odd = null; S.dhd = null; });
 });
-let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (S.odd && S.chart) S.chart.redraw(); }, 150); });
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if ((S.odd || S.dhd) && S.chart) S.chart.redraw(); }, 150); });
 addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.token && !S.busy) refresh(); });
 { const v = LS.get("view");   // 보던 탭은 늘, 상세 화면은 10분 안에 다시 열었을 때만
-  if (v && ["lt", "od", "settings"].includes(v.tab)){ S.tab = v.tab;
-    if (Date.now() - (v.t || 0) < 6e5){ S.odd = v.odd || null; S.ltd = v.ltd || null; }
-    try{ if (S.tab !== HOME) history.pushState({v: "t"}, ""); if (S.odd || S.ltd) history.pushState({v: "d"}, ""); }catch(e){} } }
+  if (v && ["lt", "od", "dh", "settings"].includes(v.tab)){ S.tab = v.tab;
+    if (Date.now() - (v.t || 0) < 6e5){ S.odd = v.odd || null; S.ltd = v.ltd || null; S.dhd = v.dhd || null; }
+    try{ if (S.tab !== HOME) history.pushState({v: "t"}, ""); if (S.odd || S.ltd || S.dhd) history.pushState({v: "d"}, ""); }catch(e){} } }
 render("none");
 if (S.token) refresh();
 </script>
