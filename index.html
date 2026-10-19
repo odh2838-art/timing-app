@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-58">
+<meta name="app-version" content="2026-10-19-59">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -814,7 +814,7 @@ function histTo(n, v){   // 기록을 깊이 n(맨 위 항목 v)으로 맞춘다
     else { skipPop++; popFix = n ? () => { try{ history.replaceState({ v, n }, ""); }catch(e){} } : null; history.go(n - cur); }
   }catch(e){}
 }
-function go(how, fn){ if (how === "push"){ S.listY = scrollY; hPush("d"); } S.dirty = false; S.chart = null; fn(); render(how); }
+function go(how, fn){ if (how === "push"){ S.listY = scrollY; hPush("d"); } S.dirty = false; S.chart = null; clearInterval(S.tfTimer); fn(); render(how); }
 /* 시스템 '뒤로'(안드로이드 제스처·버튼, 브라우저 뒤로): 시트 → 상세 → 다른 탭 순서로 한 단계씩 닫는다 */
 addEventListener("popstate", () => {
   if (skipPop){ skipPop--; const f = popFix; popFix = null; f?.(); return; }
@@ -1976,6 +1976,67 @@ async function renderDH0(){
   const hr = document.getElementById("hretry"); if (hr) hr.onclick = () => { S.holdErr = null; render("none"); };
   if (!S.hold && !S.holdP && !S.holdErr){ S.holdP = loadHold().catch(e => { S.holdErr = e.message; }).finally(() => { S.holdP = null; if (isDH(S.tab) && !S.dhd) render("none"); }); }   // 실패하면 멈추고 '다시 받기' 버튼 (계속 다시 받지 않게)
 }
+/* ───────── 분봉 (설정의 '분봉 중계 주소' = 내 Cloudflare 중계 relay/worker.js, 야후 1분·5분봉) ─────────
+   엔진은 일봉으로 자리를 고르고, 사는 순간은 분봉으로 확인 (A69 '시장 > 일봉 > 분봉 > 호가'). 돌파 때 거래량이 실리는지 본다. */
+const relayBase = () => (LS.get("qurl", "") || "").trim().replace(/\/+$/, "");
+async function fetchBars(sym, iv){
+  const base = relayBase(); if (!base) throw new Error("설정에서 분봉 중계 주소를 넣어 주세요");
+  let r; try{ r = await fetch(`${base}?bars=${encodeURIComponent(sym)}&i=${iv}`, { cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined }); }
+  catch(e){ throw new Error("분봉을 받지 못했어요 · 인터넷이나 중계 주소를 확인해 주세요"); }
+  if (!r.ok) throw new Error("분봉을 받지 못했어요 · 중계를 최신 코드로 바꿨는지 확인해 주세요");
+  const j = await r.json(); if (!j || !j.rows?.length) throw new Error("분봉 자료가 없어요");
+  return j;
+}
+function drawIntraday(box, j, levels, mk){
+  const TP = CP(), W = Math.max(280, box.clientWidth || 340), H0 = 230, HV = 54, L = 6, R = 64, T = 10, B = 22, H = H0 + HV + B;
+  const rows = j.rows, n = rows.length, tz = j.tz || (isKR(mk) ? "Asia/Seoul" : "America/New_York");
+  const lo0 = Math.min(...rows.map(x => x[3])), hi0 = Math.max(...rows.map(x => x[2]));
+  const near = levels.filter(v => v.v >= lo0 * 0.97 && v.v <= hi0 * 1.03);   // 화면 근처 선만 범위에 넣음
+  const lo = Math.min(lo0, ...near.map(v => v.v)), hi = Math.max(hi0, ...near.map(v => v.v)), pad = (hi - lo) * 0.06 || hi * 0.01;
+  const y = v => T + (hi + pad - v) / ((hi - lo) + 2 * pad) * (H0 - T), x = i => L + (i + 0.5) * (W - L - R) / n, bw = Math.max(1, (W - L - R) / n * 0.7);
+  const vmax = Math.max(...rows.map(x => x[5] || 0)) || 1;
+  const fmtT = t => new Intl.DateTimeFormat("ko-KR", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(t * 1000));
+  const fmtD = t => new Intl.DateTimeFormat("en-CA", { timeZone: tz, month: "2-digit", day: "2-digit" }).format(new Date(t * 1000)).replace("-", "/");
+  let g = "";
+  for (let k = 0; k <= 4; k++){ const v = lo - pad + ((hi - lo) + 2 * pad) * k / 4, yy = y(v);
+    g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="${TP.grid}" stroke-width=".6"/><text x="${W - R + 6}" y="${yy + 4}" font-size="10.5" fill="${COL.axis}">${num(v, mk)}</text>`; }
+  let lastLab = -99, lastDay = "";
+  rows.forEach((r, i) => { const d = fmtD(r[0]), lab = d !== lastDay ? d : fmtT(r[0]);
+    const mm = new Date(r[0] * 1000).getUTCMinutes();
+    if ((d !== lastDay || (j.iv === "1m" ? mm === 0 : false)) && x(i) - lastLab > 46){ g += `<text x="${Math.max(L, x(i))}" y="${H - 6}" font-size="10" fill="${COL.axis}" text-anchor="${x(i) < 30 ? "start" : "middle"}">${lab}</text>`; lastLab = x(i) + (x(i) < 30 ? 20 : 0); }
+    lastDay = d; });
+  rows.forEach((r, i) => { const [ , o, h, l, c, v] = r, col = c >= o ? COL.up : COL.down, xx = x(i);
+    g += `<line x1="${xx}" x2="${xx}" y1="${y(h)}" y2="${y(l)}" stroke="${col}" stroke-width="1"/>`;
+    g += `<rect x="${xx - bw / 2}" y="${Math.min(y(o), y(c))}" width="${bw}" height="${Math.max(0.8, Math.abs(y(o) - y(c)))}" fill="${col}"/>`;
+    const vh = (v || 0) / vmax * (HV - 6); g += `<rect x="${xx - bw / 2}" y="${H0 + HV - vh}" width="${bw}" height="${vh}" fill="${col}" opacity=".45"/>`; });
+  const used = [];
+  levels.forEach(v => { const col = LCOL[v.kind] || COL.axis, off = v.v > hi + pad ? -1 : v.v < lo - pad ? 1 : 0, yy = off < 0 ? T + 8 : off > 0 ? H0 - 8 : y(v.v);
+    if (!off) g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="${col}" stroke-width="1.2" stroke-dasharray="${v.kind === "stop" ? "0" : "4 3"}"/>`;
+    let ty = yy; while (used.some(u => Math.abs(u - ty) < 14)) ty += 14; used.push(ty);
+    g += `<text x="${L + 4}" y="${ty - 3}" font-size="10.5" font-weight="700" fill="${col}" stroke="${TP.halo}" stroke-width="3" paint-order="stroke">${esc(v.label)} ${num(v.v, mk)}${off ? (off < 0 ? " ↑" : " ↓") : ""}</text>`; });
+  const last = rows[n - 1][4], lc = last >= (j.prev ?? last) ? COL.up : COL.down;
+  g += `<rect x="${W - R + 2}" y="${y(last) - 10}" width="${R - 4}" height="20" rx="6" fill="${lc}"/><text x="${W - R + 6}" y="${y(last) + 4}" font-size="11.5" font-weight="700" fill="#fff">${num(last, mk)}</text>`;
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="분봉 차트">${g}</svg>
+    <p class="note" style="margin:6px 4px 0">${j.iv === "1m" ? "1분봉 · 마지막 장 하루" : "5분봉 · 5일"} · ${fmtT(rows[n - 1][0])} 기준 · 야후 자료라 한국은 몇 분 늦을 수 있어요. 돌파 때 거래량(아래 막대)이 실리는지 봐요.</p>`;
+}
+/* 일봉/분봉 바꾸기: tfBar() 를 차트 위에 두고, bindTf()로 그린다. levels 는 일봉과 같은 선 (직전 고점·라운드피겨·손절선 등) */
+function tfBar(){ const v = S.tf || "d";
+  return `<div class="seg" role="tablist" aria-label="차트 단위" id="tf" style="margin:var(--gap-block) 0 8px">${[["d", "일봉"], ["1m", "1분봉"], ["5m", "5분봉"]].map(([k, n]) => `<button role="tab" data-tf="${k}" aria-selected="${v === k}">${n}</button>`).join("")}</div>`; }
+function bindTf(box, sym, mk, levels, drawDaily){
+  clearInterval(S.tfTimer);
+  const show = async () => {
+    const v = S.tf || "d";
+    if (v === "d"){ drawDaily(); return; }
+    S.chart = null;
+    if (!relayBase()){ box.innerHTML = `<div class="empty" style="padding:28px 16px"><b>분봉 중계 주소가 없어요</b>설정 › 고급 설정 › 분봉 중계 주소에 내 Cloudflare 중계 주소를 넣으면 보여요.</div>`; return; }
+    if (!box.querySelector("svg")) box.innerHTML = `<div class="sk" style="height:240px;margin:12px"></div>`;
+    try{ const j = await fetchBars(sym, v); if (box.isConnected && (S.tf || "d") === v) drawIntraday(box, j, levels, mk); }
+    catch(e){ if (box.isConnected) box.innerHTML = `<div class="empty" style="padding:28px 16px"><b>분봉을 못 불러왔어요</b>${esc(e.message)}</div>`; }
+  };
+  document.querySelectorAll("#tf [data-tf]").forEach(b => b.onclick = () => { S.tf = b.dataset.tf; document.querySelectorAll("#tf [data-tf]").forEach(x => x.setAttribute("aria-selected", x === b)); show(); });
+  show();
+  S.tfTimer = setInterval(() => { if (!box.isConnected){ clearInterval(S.tfTimer); return; } if ((S.tf || "d") !== "d" && !document.hidden && marketOpenNow(isKR(mk))) show(); }, 60000);   // 장중엔 1분마다
+}
 function renderDHDetail(sym){
   const t = dhTab();
   if (String(sym).startsWith("h:")){
@@ -2009,8 +2070,9 @@ function renderDHDetail(sym){
         <div><b>${it.base_len != null ? Math.round(it.base_len) + "일" : "-"}</b><span>고점 뒤</span></div>
       </div>
     </section>
-    <div class="card chart" id="chartBox" style="margin-top:var(--gap-block)"></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">일봉 (봉 하나 = 하루) · 회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선 · 점선 상자 베이스 · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
+    ${tfBar()}
+    <div class="card chart" id="chartBox"></div>
+    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선 · 점선 상자 베이스 · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
     ${stops.length && it.state !== "2등주 돌파" ? `<h2 class="sec-title">비중 계산</h2>
     <div class="card">
       <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
@@ -2037,7 +2099,7 @@ function renderDHDetail(sym){
   if (sp && it.state !== "2등주 돌파") lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
   if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
   const box = $app.querySelector("#chartBox");
-  if (box) S.chart = mountChart(box, { sym: it.sym, name: it.name, market: DHM[t].mk, bars: it.bars || [], marks: [], sig_help: null, pattern: null, price: it.price, chg: it.chg }, { od: true, levels: lv });
+  if (box) bindTf(box, it.sym, DHM[t].mk, lv.filter(v => v.v != null), () => { box.innerHTML = ""; S.chart = mountChart(box, { sym: it.sym, name: it.name, market: DHM[t].mk, bars: it.bars || [], marks: [], sig_help: null, pattern: null, price: it.price, chg: it.chg }, { od: true, levels: lv }); });
 }
 
 /* ───────── 동현 2단계: 시장 판정 카드 · 내 보유 ─────────
@@ -2149,8 +2211,8 @@ function renderHoldDetail(id){
         <div><b>${nb ? pct2(r.acct) : "-"}</b><span>계좌 영향 · 비중 ${Math.round(w * 10) / 10}%</span></div>
       </div>
     </section>
-    ${nb ? `<div class="card chart" id="chartBox" style="margin-top:var(--gap-block)"></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">일봉 (봉 하나 = 하루) · 회색 점선 평균 매수가 · 보라 점선 가야 할 자리 · 빨간 선 손절선</p>` : ""}
+    ${nb ? `${tfBar()}<div class="card chart" id="chartBox"></div>
+    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 평균 매수가 · 보라 점선 가야 할 자리 · 빨간 선 손절선</p>` : ""}
     <div class="sec-row"><h2 class="sec-title">산 기록</h2><button class="pill-btn primary press" id="hmore">+ 불타기</button></div>
     <div class="list">${lots.map(x => `<button class="row press lt-srow" data-lot="${esc(x.k)}"><div class="main"><div class="lt-n">${esc(String(x.d).slice(5).replace("-", "/"))} ${esc(x.kind || "")} · ${P(x.px)}</div>
       <div class="lt-s">비중 ${x.w}% · 손절선 ${x.stop != null ? P(x.stop) + " (" + pct((x.stop / x.px - 1) * 100) + ")" : "없음"}</div></div>
@@ -2175,7 +2237,7 @@ function renderHoldDetail(id){
     if (r.goal) lv.push({ v: r.goal, kind: "fib", g: "main", label: "가야 할 자리" });
     (r.lots || []).forEach(x => { if (x.stop != null) lv.push({ v: x.stop, kind: "stop", g: "main", label: "손절선 · " + (x.kind || ""), fit: true }); });
     const box = $app.querySelector("#chartBox");
-    if (box) S.chart = mountChart(box, { sym: h.sym, name: h.name, market: DHM[t].mk, bars: r.bars || [], marks: [], sig_help: null, pattern: null, price: r.price, chg: r.chg }, { od: true, levels: lv });
+    if (box) bindTf(box, h.sym, DHM[t].mk, lv.filter(v => v.v != null), () => { box.innerHTML = ""; S.chart = mountChart(box, { sym: h.sym, name: h.name, market: DHM[t].mk, bars: r.bars || [], marks: [], sig_help: null, pattern: null, price: r.price, chg: r.chg }, { od: true, levels: lv }); });
   }
 }
 /* 보유 추가: 종목 찾기 → 산 기록 입력 */
@@ -2446,6 +2508,13 @@ function renderSettings(){
       <div class="row"><div class="main"><div class="sub">엔진 저장소</div><b>${esc(S.repo)}</b></div></div>
       <a class="row press" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener"><span class="main" style="color:var(--blue)">실행 기록 보기</span><svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg></a>
     </div>
+    <div class="sec-title" role="heading" aria-level="2">분봉</div>
+    <div class="list">
+      <div class="row"><div class="main"><label class="sub" for="qurl">분봉 중계 주소</label>
+        <input id="qurl" class="qurl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://....workers.dev" value="${esc(LS.get("qurl", ""))}"></div></div>
+      <button class="row press" id="qsave"><span class="main" style="color:var(--blue)">저장하고 시험하기</span></button>
+    </div>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">내 Cloudflare 중계(timing-app 저장소의 relay/worker.js)를 거쳐 야후 1분·5분봉을 받아요. 종목 화면의 차트 위에서 1분봉·5분봉을 고르면 보여요.</p>
     <div class="list" style="margin-top:var(--gap-block)">
       <button class="row press" id="out"><span class="main" style="color:var(--sell)">토큰 지우기</span></button>
     </div>
@@ -2458,9 +2527,9 @@ function renderSettings(){
     const v = document.getElementById("qurl").value.trim();
     if (v && !/^https:\/\/[\w.-]+(\/[\w./-]*)?$/.test(v)){ toast("https:// 로 시작하는 주소를 넣어 주세요"); return; }
     LS.set("qurl", v);
-    if (!v){ toast("실시간 시세를 껐어요"); return; }
-    try{ const ok = await pullQuotes(quoteSyms().slice(0, 3)); toast(ok ? "연결됐어요 · 장중 1분마다 갱신" : "종목을 먼저 추가해 주세요"); }
-    catch(e){ toast("연결 실패: 주소를 확인해 주세요"); }
+    if (!v){ toast("분봉 중계 주소를 지웠어요"); return; }
+    try{ const j = await fetchBars("005930.KS", "1m"); toast(`연결됐어요 · 삼성전자 1분봉 ${j.rows.length}개`); }
+    catch(e){ toast(e.message); }
   };
   const out = document.getElementById("out");
   out.onclick = () => {

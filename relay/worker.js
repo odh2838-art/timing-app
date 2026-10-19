@@ -1,5 +1,5 @@
 // rooru.invest 실시간 시세 중계 (Cloudflare Worker, 무료)
-// 한국: 네이버 증권 실시간 · 미국: 야후 파이낸스 1분봉
+// 한국: 네이버 증권 실시간 · 미국: 야후 파이낸스 1분봉 · 분봉 차트(?bars=종목&i=1m|5m): 야후 파이낸스
 // 정해진 두 곳만 대신 불러오고, rooru.invest 앱 주소에서만 읽을 수 있다 (아무 주소나 대신 여는 중계가 아님).
 // 개인 정보는 오가지 않는다: 앱이 보내는 것은 종목 코드뿐.
 
@@ -46,12 +46,31 @@ async function intraday(sym) {
   return { pts, prev: res.meta?.chartPreviousClose ?? null, start: new Date(t0 * 1000).toISOString() };
 }
 
+// 분봉 차트: 1분봉은 오늘(마지막 장) 하루, 5분봉은 5일. [시각(초), 시가, 고가, 저가, 종가, 거래량]
+async function bars(sym, iv) {
+  const range = iv === "1m" ? "1d" : "5d";
+  const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${iv}&range=${range}&includePrePost=false`, { headers: { "User-Agent": UA } });
+  const res = (await r.json())?.chart?.result?.[0];
+  if (!res || !res.timestamp) return null;
+  const q = res.indicators?.quote?.[0] || {};
+  const rows = res.timestamp.map((t, i) => [t, q.open?.[i], q.high?.[i], q.low?.[i], q.close?.[i], q.volume?.[i]])
+    .filter(x => x[4] != null && x[2] != null && x[3] != null);
+  return { tz: res.meta?.exchangeTimezoneName || "", prev: res.meta?.chartPreviousClose ?? null, iv, rows };
+}
+
 export default {
   async fetch(req) {
     const cors = { "Access-Control-Allow-Origin": APP_ORIGIN, "Vary": "Origin", "Cache-Control": "no-store",
                    "Content-Type": "application/json; charset=utf-8" };
     if (req.method === "OPTIONS") return new Response(null, { headers: cors });
     const u = new URL(req.url);
+    const b = (u.searchParams.get("bars") || "").trim().toUpperCase(), iv = u.searchParams.get("i") === "5m" ? "5m" : "1m";
+    if (b) {
+      if (!/^\^?[A-Z0-9.-]{1,15}$/.test(b)) return new Response("null", { status: 400, headers: cors });
+      let out = null;
+      try { out = await bars(b, iv); } catch (e) { out = null; }
+      return new Response(JSON.stringify(out), { headers: cors });
+    }
     const syms = (u.searchParams.get("s") || "").split(",").map(s => s.trim().toUpperCase())
       .filter(s => /^\^?[A-Z0-9.-]{1,15}$/.test(s)).slice(0, 40);
     const out = {};
