@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-55">
+<meta name="app-version" content="2026-10-19-56">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1981,7 +1981,7 @@ function renderDHDetail(sym){
   const sp = stops[S.dhStop];
   $app.innerHTML = `<div class="wrap ${t}">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현 ${DHM[t].flag}</span></button></div><span class="mini">${esc(it.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(it.name)}</h1><div class="sub">${esc(String(D.date || "").slice(5).replace("-", "/"))} 종가 ${P(it.price)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span> · 거래대금 ${dhMoney(it.tv, t)}${it.sector ? " · " + esc(it.sector) : ""}</div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(it.name)}</h1><div class="sub">${it.kq && D.regime_kq ? `코스닥 ${esc(D.regime_kq.state)} · ` : ""}${esc(String(D.date || "").slice(5).replace("-", "/"))} 종가 ${P(it.price)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span> · 거래대금 ${dhMoney(it.tv, t)}${it.sector ? " · " + esc(it.sector) : ""}</div></div>
     <section class="card lt-vd">
       <div class="w ${tone}">${esc(it.state)}${it.sector_lead ? ` <span class="lt-chip buy" style="vertical-align:middle;margin-left:6px">업종 1등</span>` : ""}</div>
       <p class="l">${esc(line)}</p>
@@ -2089,6 +2089,7 @@ function dhRegimeCard(d, t){
     <p class="l">${esc(g.line || "")}</p>
     ${g.warn ? `<div class="mk-warn"><b>전량매도 경고</b>${esc(g.warn.t)} <span>${esc(g.warn.src)}</span></div>` : ""}
     ${(g.notes || []).map(n => `<p class="mk-note">${esc(n.t)} <span>${esc(n.src)}</span></p>`).join("")}
+    ${t === "dh" && d.regime_kq ? `<p class="mk-note">코스닥은 <b>${esc(d.regime_kq.state)}</b>${d.regime_kq.warn ? " · " + esc(d.regime_kq.warn.t) : ""}. 코스닥 종목은 이걸로 봐요 <span>J63</span></p>` : ""}
     ${spark}
     ${stats}
     <p class="n">거래대금 20일 평균 대비 ${g.tv_ratio != null ? (g.tv_ratio >= 1 ? "+" : "−") + Math.abs(Math.round((g.tv_ratio - 1) * 100)) + "%" : "-"} · 오른 종목 ${g.up_pct != null ? g.up_pct + "%" : "-"} · 기준 = 시장 거래대금의 0.3%</p>
@@ -2336,7 +2337,7 @@ function renderGuide(){
       ${[["buy", "할 때", "지수가 지난 20일 박스 상단을 종가로 넘었어요. 그 뒤로 경고가 없는 동안"], ["", "쉴 때", "전량매도 경고 뒤, 다시 박스 상단을 넘기 전까지. 현금도 포지션이에요"], ["sell", "전량매도 경고", "지수 −3% 이상 급락, 또는 소수 종목만 오르던 쏠림 뒤 첫 하락. 들고 있는 종목은 정리"]]
         .map(([c, n, x]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${x}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
     </div>
-    <p class="note" style="margin:8px var(--pad-card) 0">카투의 2026년 국내 매매와 맞춰 봤어요: 할 때 84% · 쉴 때 98% 일치, 전량매도 6번 중 5번 경고.</p>
+    <p class="note" style="margin:8px var(--pad-card) 0">카투의 2026년 국내 매매와 맞춰 봤어요: 할 때 84% · 쉴 때 98% 일치, 전량매도 6번 중 5번 경고. 코스닥 종목은 코스닥 지수로 봐요 (J63). 미국은 그의 미국 매수일이 모두 ‘할 때’가 되게 맞췄어요.</p>
 
     <h2 class="sec-title" id="g-chart">차트 보는 법</h2>
     <p class="note" style="margin:0 var(--pad-card) 10px;line-height:1.5">차트는 <b>일봉</b>이에요. 봉 하나가 하루예요. 1개월·3개월·6개월은 보여 주는 기간이고, 아래 5월·7월 같은 글자는 날짜 눈금이에요. 카투도 일봉으로 자리를 보고, 사는 순간은 분봉·호가로 확인해요 (A69). 분봉은 증권사 앱에서 봐요.</p>
@@ -2349,8 +2350,8 @@ function renderGuide(){
     </div>
 
     ${rule("buy", "buy", "살 때", "쉬었다가 직전 고점을 <b>거래대금 실어 종가로</b> 넘은 날", [
-      "고점 뒤 10일 이상 쉰 뒤예요. 흔들림·거래대금이 줄었으면 더 좋지만(VCP, A54) 꼭은 아니에요 (C24)",
-      "돌파 날 거래대금이 평소(20일 평균)의 1.5배 이상",
+      "고점 뒤 5일 이상 쉰 뒤예요. 흔들림·거래대금이 줄었으면 더 좋지만(VCP, A54) 꼭은 아니에요 (C24)",
+      "돌파 날 거래대금이 평소(20일 평균)의 1.2배 이상 (카투가 산 돌파 중 가장 작은 게 1.23배)",
       "같은 업종이 같이 오르면 그 업종 <b>1등</b>만 사요"],
       "이럴 땐 안 사요: 쉬지 않고 급하게 오른 걸 쫓을 때 · 거래대금 없이 슬쩍 넘을 때")}
     ${rule("stop", "sell", "손절할 때", "사기 전에 정한 손절선을 <b>깨면 바로</b>", [
