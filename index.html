@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-51">
+<meta name="app-version" content="2026-10-19-52">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -543,6 +543,13 @@ h2.sec-title{font-size:var(--t-heading)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .lot-calc{margin-top:14px} .lot-calc .lt-mk2 b{font-size:var(--t-heading)} .lot-calc .bad{margin:10px 4px 0;color:var(--sell);font-size:var(--t-detail);line-height:1.5}
 #form .seg{margin:0}
+
+/* 사용법: 실제 매매 차트 */
+.gd-real{margin-top:var(--gap-block)} .gd-rt{display:block;font-size:var(--t-heading);font-weight:700;letter-spacing:-.01em} .gd-rs{display:block;margin-top:2px;font-size:var(--t-small);color:var(--fg2)}
+.gd-img{margin:12px calc(-1*var(--pad-card)) 0;max-width:none} .gd-img:has(.sk){aspect-ratio:1080/840} .gd-img img{display:block;width:100%;height:auto} .gd-img .sk{width:100%;height:100%;border-radius:0}
+.gd-real ol{margin:12px 0 0;padding:0;list-style:none;counter-reset:n;display:flex;flex-direction:column;gap:10px}
+.gd-real li{counter-increment:n;display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:var(--t-detail);line-height:1.5}
+.gd-real li::before{content:counter(n);width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;margin-top:1px}
 </style>
 </head>
 <body>
@@ -2226,6 +2233,27 @@ const GUIDE_PICS = {
     <circle cx="66" cy="76" r="6" class="dg"/><text x="20" y="66" class="tg">처음</text>
     <circle cx="248" cy="26" r="6" class="dg"/><text x="258" y="22" class="tg">더 산다</text>`, "오른 뒤 다시 쉬었다가 새 고점을 넘으면 더 사고, 더 산 만큼은 따로 손절선을 둔다"),
 };
+const GUIDE_REAL = [
+  { f: "4_kospi", t: "시장부터 보기", s: "코스피 2026 · 초록 바탕 = 엔진이 ‘할 때’로 본 날 · ▼ = 카투가 다 판 날",
+    n: ["빨간 ▼는 엔진도 그날 전량매도 경고를 띄운 날이에요 (6번 중 5번). 회색 ▼(1/20)는 뉴스로 판 날이라 못 잡았어요", "3월 급락 뒤 쉬다가 4/14 지수가 박스 상단을 넘자 다시 ‘할 때’. 카투도 그날 다시 샀어요"] },
+  { f: "1_amd", t: "살 때 · 더 살 때 · 더 산 만큼만 팔 때", s: "AMD 2026 (J91 · A70)",
+    n: ["7주 쉰 베이스 위로 직전 고점을 거래량 실어 넘은 날 산다 ($608, 15%)", "3주 높은 데서 버티다 새 고점 → 불타기 ($651, +5%). 더 산 만큼 손절선은 $620", "$620 아래로 마감 → 더 산 5%만 판다. 처음 산 15%는 처음 손절선 그대로"] },
+  { f: "2_dell", t: "수익을 지킬 때", s: "DELL 2026 (J93)",
+    n: ["3개월 박스를 거래량 실어 넘은 날 25% 산다", "가야 할 자리($600) 근처, +17%까지 오자 손절선을 산 가격 위($518)로 올림", "시장 급락 날 그 손절선에 걸려 +0.3%로 나옴. 안 올렸으면 손실"] },
+  { f: "3_ls", t: "가야 할 자리에서 못 가면 팔 때", s: "LS ELECTRIC 2026년 1월 (A72 · J07)",
+    n: ["직전 고점(107,800)을 거래량 실어 넘은 날 산다", "위로 긴 꼬리만 반복 = 가야 할 자리에서 못 감", "밀리자 −5.8% 손절. 버티지 않는다"] },
+];
+S.gimg = {};
+async function guideImages(){
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  for (const el of $app.querySelectorAll("[data-gimg]")){
+    const path = `연구/donghyun/사용법차트/${dark}/${el.dataset.gimg}.png`;
+    try{
+      if (!S.gimg[path]){ const j = await gh("/contents/" + enc(path) + "?ref=main"); S.gimg[path] = "data:image/png;base64," + j.content.replace(/\n/g, ""); }
+      if (el.isConnected) el.innerHTML = `<img src="${S.gimg[path]}" alt="">`;
+    }catch(e){ if (el.isConnected) el.innerHTML = `<p class="note" style="margin:0">차트를 불러오지 못했어요</p>`; }
+  }
+}
 function renderGuide(){
   const rule = (k, tone, title, head, items, dont) => `<section class="card gd-card" id="g-${k}">
       <div class="gd-h"><b class="lt-chip ${tone}">${title}</b></div>
@@ -2282,6 +2310,14 @@ function renderGuide(){
       "더 산 만큼은 따로 손절선을 둬요 (새 박스 하단)",
       "처음 산 것은 처음 손절선 그대로"])}
 
+    <h2 class="sec-title">카투 실제 매매로 보기</h2>
+    <p class="note" style="margin:0 var(--pad-card) 10px;line-height:1.5">카투가 실제로 한 매매를 앱 차트와 같은 방식으로 그렸어요. 파란 숫자가 아래 설명 순서예요.</p>
+    ${GUIDE_REAL.map(g => `<section class="card gd-real">
+      <b class="gd-rt">${g.t}</b><span class="gd-rs">${g.s}</span>
+      <div class="gd-img" data-gimg="${g.f}"><div class="sk"></div></div>
+      <ol>${g.n.map(x => `<li>${x}</li>`).join("")}</ol>
+    </section>`).join("")}
+
     <h2 class="sec-title">내 보유 상태</h2>
     <div class="list">
       ${[["sell", "정리", "손절선을 종가로 깼거나 이 종목으로 계좌가 1% 줄었어요. 팔아요"], ["sell", "불타기분만 정리", "더 산 묶음의 손절선만 깼어요. 그만큼만 팔아요"], ["wait", "가야 할 자리 실패", "산 지 3일 안에 돌파 기준점 아래로 왔거나 윗꼬리가 반복돼요"], ["wait", "매입가 위협", "평균 매수가 아래예요. 잘 갈 종목은 이러지 않아요"], ["wait", "실적일 주의", "실적 발표 3거래일 안이에요. 발표 전에 올랐으면 발표 뒤 셀온 조심"], ["buy", "불타기 자리", "수익 중에 쉬었다가 새 고점을 넘었어요. 더 살 자리"], ["soon", "수익 보존", "가야 할 자리까지 왔거나 시장이 불안해요. 손절선을 매수가 위로"], ["", "유지", "수익 중이고 경고가 없어요. 그대로 둬요"]]
@@ -2312,7 +2348,7 @@ function renderGuide(){
     </ul>
     <p class="note lt-foot" style="text-align:center;margin-top:20px">출처: Katoo(@blazingbees) 아티클·매매일지·구독 코멘트</p>
   </div>`;
-  bindNavbar();
+  bindNavbar(); guideImages();
   if (S.guideAt){ const el = document.getElementById("g-" + S.guideAt); S.guideAt = null; if (el) requestAnimationFrame(() => scrollTo(0, el.getBoundingClientRect().top + scrollY - 60)); }
 }
 
