@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-67">
+<meta name="app-version" content="2026-10-20-68">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -2029,7 +2029,14 @@ const loadLWC = () => lwcP || (lwcP = new Promise((ok, no) => { if (window.Light
 const PRO_TF = [["1m", "1분"], ["5m", "5분"], ["15m", "15분"], ["60m", "1시간"], ["1d", "일"], ["1wk", "주"]];
 const PRO_SHOW = { "1m": 120, "5m": 80, "15m": 130, "60m": 140, "1d": 130, "1wk": 104 };   // 처음 보일 봉 수
 const MA_DEF = [[5, "#F5A623"], [20, "#E0457B"], [60, "#2BB673"], [120, "#8E5CF6"]];
-function tzOffset(t, tz){ try{ const d = new Date(t * 1000); return (new Date(d.toLocaleString("en-US", { timeZone: tz })) - new Date(d.toLocaleString("en-US", { timeZone: "UTC" }))) / 1000; }catch(e){ return 0; } }
+const TZF = {}, TZC = {};
+function tzOffset(t, tz){   // 그 시각의 시간대 차이(초). 아이폰 사파리에서도 되게 formatToParts로 (한 시간 단위로 기억)
+  const k = tz + "|" + Math.floor(t / 3600); if (k in TZC) return TZC[k];
+  try{ const f = TZF[tz] || (TZF[tz] = new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    const s = Math.floor(t), p = {}; f.formatToParts(new Date(s * 1000)).forEach(x => p[x.type] = x.value);
+    return TZC[k] = (Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second) / 1000) - s;
+  }catch(e){ return TZC[k] = tz === "Asia/Seoul" ? 32400 : 0; }
+}
 function weekly(daily){   // 일봉 → 주봉 (월요일 시작)
   const out = []; let cur = null, key = null;
   for (const b of daily){ const d = new Date(b[0] + "T00:00:00Z"), mon = new Date(d - ((d.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10);
@@ -2074,14 +2081,14 @@ function mountPro(box, cfg){
     if (j.iv !== tf && ["1d", "1wk"].includes(tf)){ cfg.noRelayDaily = true; return getRows(); }   // 예전 중계 코드면 일·주는 엔진 자료로
     const out = toRows(j);
     if (j.iv !== tf){ $src.textContent = `중계가 예전 코드라 ${j.iv}만 와요 · 설정 › 분봉 중계를 새 코드로 바꿔 주세요`; tf = j.iv; return out; }
-    $src.textContent = intraday() ? `야후 자료${kr ? " · 한국 분봉은 몇 분 늦을 수 있어요" : ""}` : "야후 자료";
+    $src.textContent = intraday() ? `야후 자료 · 시각은 한국 시간${kr ? " · 몇 분 늦을 수 있어요" : " (미국 장 22:30~05:00, 서머타임 끝나면 23:30~06:00)"}` : "야후 자료";
     if (!intraday()) await patchToday(out);
     return out;
   }
-  function toRows(j){   // 봉 시각을 간격에 맞추고 (미국 마지막 봉은 초 단위로 옴), 같은 칸은 합침
-    const step = { "1m": 60, "5m": 300, "15m": 900, "60m": 3600 }[j.iv], day = ["1d", "1wk"].includes(j.iv), out = [];
+  function toRows(j, zone){   // 봉 시각을 간격에 맞추고 (미국 마지막 봉은 초 단위로 옴), 같은 칸은 합침. 분봉 시각은 한국 시간 (내 시계와 같게)
+    const step = { "1m": 60, "5m": 300, "15m": 900, "60m": 3600 }[j.iv], day = ["1d", "1wk"].includes(j.iv), out = [], z = zone || (day ? j.tz || tz : "Asia/Seoul");
     for (const x of j.rows){ if (![1, 2, 3, 4].every(k => x[k] != null && isFinite(x[k]))) continue;
-      const lt = x[0] + tzOffset(x[0], j.tz || tz), time = day ? new Date(lt * 1000).toISOString().slice(0, 10) : Math.floor(lt / step) * step, l = out[out.length - 1];
+      const lt = x[0] + tzOffset(x[0], z), time = day ? new Date(lt * 1000).toISOString().slice(0, 10) : Math.floor(lt / step) * step, l = out[out.length - 1];
       if (l && l.time === time){ l.high = Math.max(l.high, x[2]); l.low = Math.min(l.low, x[3]); l.close = x[4]; l.vol = (l.vol || 0) + (x[5] || 0); continue; }
       if (l && !day && time < l.time) continue;
       out.push({ time, open: x[1], high: x[2], low: x[3], close: x[4], vol: x[5] || 0 }); }
@@ -2089,7 +2096,7 @@ function mountPro(box, cfg){
   }
   async function patchToday(out){   // 야후 일봉은 마지막 날이 늦게 붙어요 → 5분봉으로 그날 봉을 채움
     try{
-      const j = await fetchBars(sym, "5m"), m = toRows(j); if (!m.length) return;
+      const j = await fetchBars(sym, "5m"), m = toRows(j, j.tz || tz);   // 날짜는 거래소 기준 if (!m.length) return;
       const dk = t => new Date(t * 1000).toISOString().slice(0, 10), last = dk(m[m.length - 1].time), d = m.filter(r => dk(r.time) === last);
       const b = { time: last, open: d[0].open, high: Math.max(...d.map(r => r.high)), low: Math.min(...d.map(r => r.low)), close: d[d.length - 1].close, vol: d.reduce((a, r) => a + (r.vol || 0), 0) };
       const L = out[out.length - 1]; if (!L) return;
@@ -2126,8 +2133,7 @@ function mountPro(box, cfg){
   function tools(){ $now.hidden = true; chart.timeScale().subscribeVisibleLogicalRangeChange(r => { if (r) $now.hidden = r.to >= rows.length - 2; }); }
   function prevClose(){   // 지금 가격선 색의 기준 = 전날 종가 (분봉이면 앞 거래일 마지막 봉)
     if (rows.length < 2) return null; if (!intraday()) return rows[rows.length - 2].close;
-    const dk = t => new Date(t * 1000).toISOString().slice(0, 10), d = dk(rows[rows.length - 1].time);
-    for (let i = rows.length - 2; i >= 0; i--) if (dk(rows[i].time) !== d) return rows[i].close;
+    for (let i = rows.length - 2; i >= 0; i--) if (rows[i + 1].time - rows[i].time > 3 * 3600) return rows[i].close;   // 장 사이 빈 시간 = 앞 거래일 끝 (미국은 한국 시간으로 자정을 넘어서)
     return rows[0].open;
   }
   function fill(keepView){
