@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-50">
+<meta name="app-version" content="2026-10-19-51">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1877,11 +1877,14 @@ function dhMoney(v, t){
   if (t === "dhu") return v >= 1000 ? "$" + (v / 1000).toFixed(1) + "B" : "$" + Math.round(v).toLocaleString("en-US") + "M";
   return v >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억";
 }
+const earnTag = e => e && e.d && e.kind !== "발표됨" && e.n != null && e.n >= 0 && e.n <= 14 ? ` · 실적 ${e.n ? "D-" + e.n : "D-day"}` : "";
+const earnLine = e => !e || !e.d ? "실적 발표일: 못 찾았어요 · 직접 확인" : e.kind === "발표됨" ? `실적 발표됨 ${String(e.d).slice(5).replace("-", "/")} (${e.src})` : `실적 발표 ${String(e.d).slice(5).replace("-", "/")} ${e.kind === "추정" ? "무렵 (작년 같은 분기로 추정)" : "(" + e.src + ")"} · ${e.n ? e.n + "거래일 남음" : "오늘"}. 발표 전 급등했으면 셀온 주의`;
 const dhPx = (v, t) => (t === "dhu" && v != null && isFinite(v) ? "$" : "") + num(v, DHM[t].mk);
 function dhRow(it, t){
   const sub = it.state === "셋업" ? `고점 ${dhPx(it.pivot, t)} 아래 ${it.base_len != null ? Math.round(it.base_len) + "일" : ""} · 거래대금 ${dhMoney(it.tv, t)}`
     : `${it.sector_lead ? "업종 1등 · " : ""}거래대금 ${dhMoney(it.tv, t)}${it.state === "돌파 자리" && it.pivot ? ` · ${dhPx(it.pivot, t)} 돌파` : ""}`;
-  return `<button class="row press lt-srow" data-dh="${esc(it.sym)}"><div class="main"><div class="lt-n">${esc(it.name)}</div><div class="lt-s">${esc(sub)}</div></div>
+  const sub2 = sub + earnTag(it.earn);
+  return `<button class="row press lt-srow" data-dh="${esc(it.sym)}"><div class="main"><div class="lt-n">${esc(it.name)}</div><div class="lt-s">${esc(sub2)}</div></div>
     <div class="lt-px"><b class="lt-chip ${DH_TONE[it.state] || ""}">${esc(it.state)}</b><span>${dhPx(it.price, t)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span></div>${CHEV}</button>`;
 }
 async function renderDH(){
@@ -1952,7 +1955,7 @@ function renderDHDetail(sym){
       </div>
     </section>
     <div class="card chart" id="chartBox" style="margin-top:var(--gap-block)"></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선 · 점선 상자 베이스 · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
+    <p class="note" style="margin:8px var(--pad-card) 0">일봉 (봉 하나 = 하루) · 회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선 · 점선 상자 베이스 · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
     ${stops.length ? `<h2 class="sec-title">비중 계산</h2>
     <div class="card">
       <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
@@ -1966,7 +1969,7 @@ function renderDHDetail(sym){
     <h2 class="sec-title">근거</h2>
     <div class="list">${(it.why || []).map(w => `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(w.t)}</div></div><div class="lt-px"><span>${esc(w.src)}</span></div></div>`).join("") || `<div class="row"><div class="main sub">근거 없음</div></div>`}</div>
     <h2 class="sec-title">직접 확인</h2>
-    <div class="list">${["분봉: 돌파 때 거래량이 실렸나", "호가: 한 호가에 큰 주문이 쌓였나", "재료: 왜 오르는지 (뉴스·공시)", "실적 발표일 전이면 셀온 주의"].map(x => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${esc(x)}</div></div></div>`).join("")}</div>
+    <div class="list">${["분봉: 돌파 때 거래량이 실렸나", "호가: 한 호가에 큰 주문이 쌓였나", "재료: 왜 오르는지 (뉴스·공시)", earnLine(it.earn)].map(x => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${esc(x)}</div></div></div>`).join("")}</div>
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
   document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
@@ -1984,9 +1987,9 @@ function renderDHDetail(sym){
 /* ───────── 동현 2단계: 시장 판정 카드 · 내 보유 ─────────
    보유 입력은 저장소의 동현보유.json (이 저장소는 비공개). 엔진이 매일(또는 저장 직후) 상태/동현보유_판정.json을 만든다. */
 const HOLD_SRC = "동현보유.json", HOLD_RES = "상태/동현보유_판정.json";
-const HOLD_TONE = {"정리": "sell", "불타기분만 정리": "sell", "가야 할 자리 실패": "wait", "매입가 위협": "wait", "불타기 자리": "buy", "수익 보존": "soon", "유지": "", "점검 중": "", "자료 없음": ""};
+const HOLD_TONE = {"정리": "sell", "불타기분만 정리": "sell", "가야 할 자리 실패": "wait", "매입가 위협": "wait", "실적일 주의": "wait", "불타기 자리": "buy", "수익 보존": "soon", "유지": "", "점검 중": "", "자료 없음": ""};
 const HOLD_LINE = {"정리": "손절선을 깼어요. 정한 대로 팔아요", "불타기분만 정리": "더 산 만큼만 팔아요", "가야 할 자리 실패": "가야 할 자리에서 못 가고 있어요",
-  "매입가 위협": "평균 매수가 아래예요", "불타기 자리": "더 살 자리예요", "수익 보존": "손절선을 매수가 위로 올려요", "유지": "잘 가고 있어요. 그대로 둬요"};
+  "매입가 위협": "평균 매수가 아래예요", "실적일 주의": "실적 발표가 코앞이에요", "불타기 자리": "더 살 자리예요", "수익 보존": "손절선을 매수가 위로 올려요", "유지": "잘 가고 있어요. 그대로 둬요"};
 async function loadHold(){
   const [src, res] = await Promise.all([(async () => {
     try{ const j = await gh("/contents/" + enc(HOLD_SRC) + "?ref=main"); return { sha: j.sha, data: JSON.parse(b64dec(j.content) || "{}") }; }
@@ -2052,7 +2055,7 @@ function dhHoldSection(t){
     <div class="list">${mine.map(h => {
       const r = holdRes(h.id), fresh = r && (r.lots || []).length === (h.lots || []).length;
       const st = fresh ? r.status : "점검 중", { w, avg } = holdCalc(h);
-      const sub = `평균 ${dhPx(fresh ? r.avg : avg, t)} · 비중 ${Math.round(w * 10) / 10}%${fresh && r.acct != null ? ` · 계좌 ${r.acct > 0 ? "+" : ""}${r.acct}%` : ""}${h.acct ? " · " + esc(h.acct) : ""}`;
+      const sub = `평균 ${dhPx(fresh ? r.avg : avg, t)} · 비중 ${Math.round(w * 10) / 10}%${fresh && r.acct != null ? ` · 계좌 ${r.acct > 0 ? "+" : ""}${r.acct}%` : ""}${h.acct ? " · " + esc(h.acct) : ""}${fresh ? earnTag(r.earn) : ""}`;
       return `<button class="row press lt-srow" data-dh="h:${esc(h.id)}"><div class="main"><div class="lt-n">${esc(h.name)}</div><div class="lt-s">${sub}</div></div>
         <div class="lt-px"><b class="lt-chip ${HOLD_TONE[st] || ""}">${esc(st)}</b><span>${fresh ? dhPx(r.price, t) + ` <span class="${r.pnl > 0 ? "up" : r.pnl < 0 ? "down" : ""}">${pct(r.pnl)}</span>` : ""}</span></div>${CHEV}</button>`; }).join("")}</div>`;
 }
@@ -2064,7 +2067,7 @@ function renderHoldDetail(id){
   const lots = (r?.lots || h.lots || []).map((x, i) => ({ ...x, i }));
   $app.innerHTML = `<div class="wrap ${t}">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현 ${DHM[t].flag}</span></button></div><span class="mini">${esc(h.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(h.name)}</h1><div class="sub">${r ? `${esc(String(r.date || "").slice(5).replace("-", "/"))} 종가 ${P(r.price)} <span class="${r.chg >= 0 ? "up" : "down"}">${pct(r.chg)}</span> · ` : ""}내 보유${h.acct ? " · " + esc(h.acct) : ""}</div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(h.name)}</h1><div class="sub">${r ? `${esc(String(r.date || "").slice(5).replace("-", "/"))} 종가 ${P(r.price)} <span class="${r.chg >= 0 ? "up" : "down"}">${pct(r.chg)}</span> · ` : ""}내 보유${h.acct ? " · " + esc(h.acct) : ""}${r ? earnTag(r.earn) : ""}</div></div>
     <section class="card lt-vd">
       <div class="w ${HOLD_TONE[st] === "sell" ? "sell" : HOLD_TONE[st] === "buy" ? "buy" : HOLD_TONE[st] === "soon" ? "soon" : HOLD_TONE[st] === "wait" ? "amber" : "hold"}">${esc(st)}</div>
       <p class="l">${esc(r ? HOLD_LINE[st] || "" : "방금 바뀌었어요. 엔진이 점검하는 중이에요 (1~2분).")}</p>
@@ -2076,7 +2079,7 @@ function renderHoldDetail(id){
       </div>
     </section>
     ${r ? `<div class="card chart" id="chartBox" style="margin-top:var(--gap-block)"></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 평균 매수가 · 보라 점선 가야 할 자리 · 빨간 선 손절선</p>` : ""}
+    <p class="note" style="margin:8px var(--pad-card) 0">일봉 (봉 하나 = 하루) · 회색 점선 평균 매수가 · 보라 점선 가야 할 자리 · 빨간 선 손절선</p>` : ""}
     <div class="sec-row"><h2 class="sec-title">산 기록</h2><button class="pill-btn primary press" id="hmore">+ 불타기</button></div>
     <div class="list">${lots.map(x => `<button class="row press lt-srow" data-lot="${x.i}"><div class="main"><div class="lt-n">${esc(String(x.d).slice(5).replace("-", "/"))} ${esc(x.kind || "")} · ${P(x.px)}</div>
       <div class="lt-s">비중 ${x.w}% · 손절선 ${x.stop != null ? P(x.stop) + " (" + pct((x.stop / x.px - 1) * 100) + ")" : "없음"}</div></div>
@@ -2252,6 +2255,7 @@ function renderGuide(){
     <p class="note" style="margin:8px var(--pad-card) 0">카투의 2026년 국내 매매와 맞춰 봤어요: 할 때 84% · 쉴 때 98% 일치, 전량매도 6번 중 5번 경고.</p>
 
     <h2 class="sec-title" id="g-chart">차트 보는 법</h2>
+    <p class="note" style="margin:0 var(--pad-card) 10px;line-height:1.5">차트는 <b>일봉</b>이에요. 봉 하나가 하루예요. 1개월·3개월·6개월은 보여 주는 기간이고, 아래 5월·7월 같은 글자는 날짜 눈금이에요. 카투도 일봉으로 자리를 보고, 사는 순간은 분봉·호가로 확인해요 (A69). 분봉은 증권사 앱에서 봐요.</p>
     <div class="card gd-legend">
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="pv"/></svg><span><b>직전 고점</b>넘어야 할 가격</span></div>
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="rf"/></svg><span><b>라운드피겨</b>딱 떨어지는 가격. 매물이 모여요</span></div>
@@ -2280,7 +2284,7 @@ function renderGuide(){
 
     <h2 class="sec-title">내 보유 상태</h2>
     <div class="list">
-      ${[["sell", "정리", "손절선을 종가로 깼거나 이 종목으로 계좌가 1% 줄었어요. 팔아요"], ["sell", "불타기분만 정리", "더 산 묶음의 손절선만 깼어요. 그만큼만 팔아요"], ["wait", "가야 할 자리 실패", "산 지 3일 안에 돌파 기준점 아래로 왔거나 윗꼬리가 반복돼요"], ["wait", "매입가 위협", "평균 매수가 아래예요. 잘 갈 종목은 이러지 않아요"], ["buy", "불타기 자리", "수익 중에 쉬었다가 새 고점을 넘었어요. 더 살 자리"], ["soon", "수익 보존", "가야 할 자리까지 왔거나 시장이 불안해요. 손절선을 매수가 위로"], ["", "유지", "수익 중이고 경고가 없어요. 그대로 둬요"]]
+      ${[["sell", "정리", "손절선을 종가로 깼거나 이 종목으로 계좌가 1% 줄었어요. 팔아요"], ["sell", "불타기분만 정리", "더 산 묶음의 손절선만 깼어요. 그만큼만 팔아요"], ["wait", "가야 할 자리 실패", "산 지 3일 안에 돌파 기준점 아래로 왔거나 윗꼬리가 반복돼요"], ["wait", "매입가 위협", "평균 매수가 아래예요. 잘 갈 종목은 이러지 않아요"], ["wait", "실적일 주의", "실적 발표 3거래일 안이에요. 발표 전에 올랐으면 발표 뒤 셀온 조심"], ["buy", "불타기 자리", "수익 중에 쉬었다가 새 고점을 넘었어요. 더 살 자리"], ["soon", "수익 보존", "가야 할 자리까지 왔거나 시장이 불안해요. 손절선을 매수가 위로"], ["", "유지", "수익 중이고 경고가 없어요. 그대로 둬요"]]
         .map(([c, n, x]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${x}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
     </div>
     <p class="note" style="margin:8px var(--pad-card) 0">내려갈 때 더 사는 기록(물타기)을 넣으면 앱이 막아요 (A10 A20).</p>
@@ -2301,7 +2305,8 @@ function renderGuide(){
     <h2 class="sec-title">알아둘 것</h2>
     <ul class="card gd-ul gd-note">
       <li>후보가 0개인 날이 많아요. 주도주는 하루 몇 개 없는 게 정상이에요.</li>
-      <li>엔진은 일봉만 봐요. 분봉·호가·뉴스·실적일은 직접 확인해요.</li>
+      <li>엔진은 일봉만 봐요. 분봉·호가·뉴스는 직접 확인해요.</li>
+      <li>실적 발표일은 한국은 DART 공시(없으면 작년 같은 분기로 추정), 미국은 야후에서 받아요. ‘추정’은 날짜가 며칠 다를 수 있어요.</li>
       <li>뉴스 때문에 파는 날(예: 1/20)은 엔진이 못 잡아요. 그런 날은 직접 판단해요.</li>
       <li>규칙으로 계산한 결과예요. 사고파는 결정은 직접 해요.</li>
     </ul>
