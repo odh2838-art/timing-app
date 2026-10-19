@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-63">
+<meta name="app-version" content="2026-10-20-65">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -446,6 +446,20 @@ details.more>summary::-webkit-details-marker{display:none}
 .lt-val{flex:none;font-size:var(--t-body);font-weight:600;color:var(--down);font-variant-numeric:tabular-nums}
 .lt-cnt{font-size:var(--t-body);color:var(--fg2);font-variant-numeric:tabular-nums}
 .lt-foot{margin:var(--gap-caption) var(--pad-card) 0}
+/* 거래소 같은 차트 (TradingView Lightweight Charts) */
+.pro{padding:0 !important;overflow:hidden}
+.pro-tf{display:flex;gap:2px;padding:8px 8px 4px;border-bottom:1px solid var(--line)}
+.pro-tf button{flex:1;min-height:36px;border-radius:8px;font-weight:600;font-size:var(--t-small);color:var(--fg2)}
+.pro-tf button[aria-selected="true"]{background:var(--fill);color:var(--fg)}
+.pro-leg{display:flex;flex-wrap:wrap;gap:2px 10px;padding:8px 12px 4px;font-size:12px;line-height:1.5;color:var(--fg2);font-variant-numeric:tabular-nums;min-height:44px}
+.pro-leg b{color:var(--fg);font-weight:600}
+.pro-leg .t{color:var(--fg);font-weight:700;margin-right:2px}
+.pro-box{position:relative;height:360px;touch-action:none}
+.pro-ma{display:flex;gap:6px;flex-wrap:wrap;padding:6px 10px 10px;border-top:1px solid var(--line)}
+.pro-ma button{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--fill);color:var(--fg2)}
+.pro-ma button[aria-pressed="true"]{color:var(--fg)}
+.pro-ma button i{display:inline-block;width:10px;height:2px;border-radius:1px;vertical-align:middle;margin-right:5px}
+.pro-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--fg2);font-size:var(--t-small)}
 h2.sec-title{font-size:var(--t-heading)}
 .lt-head{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;margin-top:2px} .lt-head.hot{color:var(--sell)} .lt-head.cold{color:var(--blue)}
 .lt-why{margin-top:10px;font-size:var(--t-small);color:var(--fg2);line-height:1.45} .lt-why-k{font-weight:600;color:var(--fg);margin-right:6px}
@@ -1996,43 +2010,105 @@ async function fetchBars(sym, iv){
   const j = await r.json(); if (!j || !j.rows?.length) throw new Error("분봉 자료가 없어요");
   return j;
 }
-/* 분봉 → 일봉 차트와 같은 차트(끌기·두 손가락 확대·길게 눌러 가격)로. 시각은 거래소 시각 "YYYY-MM-DD HH:MM" */
-const TM_PER = { "1m": [["30분", 30], ["1시간", 60], ["2시간", 120], ["하루", 400]], "5m": [["2시간", 24], ["하루", 80], ["5일", 400]] };
-function intradayBars(j, mk){
-  const tz = j.tz || (isKR(mk) ? "Asia/Seoul" : "America/New_York");
-  const F = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
-  const key = t => { const p = Object.fromEntries(F.formatToParts(new Date(t * 1000)).map(x => [x.type, x.value])); return `${p.year}-${p.month}-${p.day} ${p.hour === "24" ? "00" : p.hour}:${p.minute}`; };
-  return j.rows.filter(x => [1, 2, 3, 4].every(k => x[k] != null && isFinite(x[k]))).map(x => [key(x[0]), x[1], x[2], x[3], x[4], null, null, x[5] ?? null]);
+/* ───────── 거래소 같은 차트: 1분·5분·15분·1시간·일·주, 끌기·확대·십자선, 거래량, 이동평균(5·20·60·120, A49), 엔진 선 ─────────
+   그리기는 TradingView Lightweight Charts 4.2.3 (Apache-2.0, 차트 안 로고 = 출처 표시). 봉은 내 중계(야후), 중계가 없으면 일·주만 엔진 자료로. */
+const LWC_URL = "https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js";
+let lwcP = null;
+const loadLWC = () => lwcP || (lwcP = new Promise((ok, no) => { if (window.LightweightCharts) return ok(window.LightweightCharts);
+  const sc = document.createElement("script"); sc.src = LWC_URL; sc.async = true; sc.onload = () => ok(window.LightweightCharts); sc.onerror = () => { lwcP = null; no(new Error("차트를 불러오지 못했어요")); }; document.head.appendChild(sc); }));
+const PRO_TF = [["1m", "1분"], ["5m", "5분"], ["15m", "15분"], ["60m", "1시간"], ["1d", "일"], ["1wk", "주"]];
+const PRO_SHOW = { "1m": 120, "5m": 80, "15m": 130, "60m": 140, "1d": 130, "1wk": 104 };   // 처음 보일 봉 수
+const MA_DEF = [[5, "#F5A623"], [20, "#E0457B"], [60, "#2BB673"], [120, "#8E5CF6"]];
+function tzOffset(t, tz){ try{ const d = new Date(t * 1000); return (new Date(d.toLocaleString("en-US", { timeZone: tz })) - new Date(d.toLocaleString("en-US", { timeZone: "UTC" }))) / 1000; }catch(e){ return 0; } }
+function weekly(daily){   // 일봉 → 주봉 (월요일 시작)
+  const out = []; let cur = null, key = null;
+  for (const b of daily){ const d = new Date(b[0] + "T00:00:00Z"), mon = new Date(d - ((d.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10);
+    if (key !== mon){ if (cur) out.push(cur); key = mon; cur = [mon, b[1], b[2], b[3], b[4], null, null, b[7] || 0]; }
+    else { cur[2] = Math.max(cur[2], b[2]); cur[3] = Math.min(cur[3], b[3]); cur[4] = b[4]; cur[7] += b[7] || 0; } }
+  if (cur) out.push(cur); return out;
 }
-function drawIntraday(box, j, levels, mk, meta){
-  const bars = intradayBars(j, mk), n = bars.length;
-  if (n < 10){ box.innerHTML = `<div class="empty" style="padding:28px 16px"><b>분봉이 아직 적어요</b>장이 열리고 조금 지나면 보여요.</div>`; return; }
-  const last = bars[n - 1][4], prev = j.prev ?? bars[0][1];
-  const today = bars[n - 1][0].slice(0, 10), nDay = bars.filter(b => b[0].startsWith(today)).length;   // '하루' = 마지막 장 하루치
-  const per = TM_PER[j.iv].map(([t, k]) => [t, t === "하루" ? Math.max(10, nDay) : t === "5일" ? n : k]);
-  S.chart = mountChart(box, { sym: meta.sym, name: meta.name, market: mk, bars, marks: [], sig_help: null, pattern: null, price: last, chg: prev ? (last / prev - 1) * 100 : null },
-    { od: true, levels, tm: { iv: j.iv, name: j.iv === "1m" ? "1분봉" : "5분봉", periods: per, def: j.iv === "1m" ? "1시간" : "하루" } });
-  box.insertAdjacentHTML("beforeend", `<p class="note" style="margin:6px 4px 0">${bars[n - 1][0].slice(11)} 기준 · 야후 자료라 한국은 몇 분 늦을 수 있어요. 끌어서 지난 시간, 두 손가락으로 확대, 길게 눌러 가격·거래량. 돌파 때 아래 거래량 막대가 커지는지 봐요.</p>`);
-}
-/* 일봉/분봉 바꾸기: tfBar() 를 차트 위에 두고, bindTf()로 그린다. levels 는 일봉과 같은 선 (직전 고점·라운드피겨·손절선 등) */
-function tfBar(){ const v = S.tf || "d";
-  return `<div class="seg" role="tablist" aria-label="차트 단위" id="tf" style="margin:var(--gap-block) 0 8px">${[["d", "일봉"], ["1m", "1분봉"], ["5m", "5분봉"]].map(([k, n]) => `<button role="tab" data-tf="${k}" aria-selected="${v === k}">${n}</button>`).join("")}</div>`; }
-function bindTf(box, sym, mk, levels, drawDaily){
+function mountPro(box, cfg){
+  const { sym, mk, levels = [], daily = [] } = cfg, kr = isKR(mk), tz = kr ? "Asia/Seoul" : "America/New_York";
+  let tf = LS.get("protf", "1d"); if (!relayBase() && !["1d", "1wk"].includes(tf)) tf = "1d";
+  const ma = Object.assign({ 5: true, 20: true, 60: true, 120: false }, LS.get("proma", {}));
+  box.innerHTML = `<div class="pro-tf" role="tablist" aria-label="차트 간격">${PRO_TF.map(([k, n]) => `<button role="tab" data-k="${k}" aria-selected="${k === tf}">${n}</button>`).join("")}</div>
+    <div class="pro-leg" aria-live="polite"></div><div class="pro-box"><div class="pro-msg"><div class="sk" style="width:60%;height:12px"></div></div></div>
+    <div class="pro-ma">${MA_DEF.map(([n, c]) => `<button class="press" data-ma="${n}" aria-pressed="${!!ma[n]}"><i style="background:${c}"></i>${n}</button>`).join("")}</div>
+    <p class="note pro-src" style="margin:0 12px 10px"></p>`;
+  const $box = box.querySelector(".pro-box"), $leg = box.querySelector(".pro-leg"), $src = box.querySelector(".pro-src");
+  let chart = null, cs = null, vs = null, maS = {}, rows = [], timer = null, alive = true, gen = 0;
+  const P = v => num(v, mk), fmtV = v => v == null ? "-" : v >= 1e8 ? (v / 1e8).toFixed(1) + "억" : v >= 1e4 ? Math.round(v / 1e4).toLocaleString("ko-KR") + "만" : Math.round(v).toLocaleString("ko-KR");
+  const intraday = () => !["1d", "1wk"].includes(tf);
+  const label = t => { if (typeof t === "string") return `${+t.slice(5, 7)}/${+t.slice(8, 10)}`;
+    const d = new Date(t * 1000), mo = d.getUTCMonth() + 1, da = d.getUTCDate(), hh = String(d.getUTCHours()).padStart(2, "0"), mm = String(d.getUTCMinutes()).padStart(2, "0");
+    return `${mo}/${da} ${hh}:${mm}`; };
+  const legend = i => { const r = rows[i]; if (!r){ $leg.innerHTML = ""; return; }
+    const pc = i > 0 ? rows[i - 1].close : r.open, ch = pc ? (r.close / pc - 1) * 100 : 0, cl = ch > 0 ? "up" : ch < 0 ? "down" : "";
+    $leg.innerHTML = `<span class="t">${label(r.time)}</span><span>시 <b>${P(r.open)}</b></span><span>고 <b>${P(r.high)}</b></span><span>저 <b>${P(r.low)}</b></span><span>종 <b class="${cl}">${P(r.close)}</b> <span class="${cl}">${pct(ch)}</span></span><span>거래량 <b>${fmtV(r.vol)}</b></span>`; };
+  const sma = (n) => { const o = []; let sum = 0; rows.forEach((r, i) => { sum += r.close; if (i >= n) sum -= rows[i - n].close; if (i >= n - 1) o.push({ time: r.time, value: sum / n }); }); return o; };
+  const setMA = () => MA_DEF.forEach(([n, c]) => { if (!maS[n]) maS[n] = chart.addLineSeries({ color: c, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
+    maS[n].setData(ma[n] ? sma(n) : []); });
+  async function getRows(){
+    if (["1d", "1wk"].includes(tf) && (!relayBase() || cfg.noRelayDaily)){
+      const src = tf === "1wk" ? weekly(daily) : daily;
+      $src.textContent = `${tf === "1wk" ? "주봉" : "일봉"} · 엔진 자료 (최근 ${src.length}개)`;
+      return src.filter(b => b[1] != null).map(b => ({ time: b[0], open: b[1], high: b[2], low: b[3], close: b[4], vol: b[7] }));
+    }
+    const j = await fetchBars(sym, tf);
+    if (j.iv !== tf && ["1d", "1wk"].includes(tf)){ cfg.noRelayDaily = true; return getRows(); }   // 예전 중계 코드면 일·주는 엔진 자료로
+    const out = j.rows.filter(x => [1, 2, 3, 4].every(k => x[k] != null && isFinite(x[k])))
+      .map(x => ({ time: ["1d", "1wk"].includes(j.iv) ? new Date((x[0] + tzOffset(x[0], j.tz || tz)) * 1000).toISOString().slice(0, 10) : x[0] + tzOffset(x[0], j.tz || tz), open: x[1], high: x[2], low: x[3], close: x[4], vol: x[5] }));
+    if (j.iv !== tf){ $src.textContent = `중계가 예전 코드라 ${j.iv}만 와요 · 설정 › 분봉 중계를 새 코드로 바꿔 주세요`; tf = j.iv; }
+    else $src.textContent = `야후 자료 · ${intraday() ? "한국은 몇 분 늦을 수 있어요 · " : ""}끌어서 이동, 두 손가락으로 확대, 눌러서 값 보기`;
+    const seen = new Set(); return out.filter(r => !seen.has(r.time) && seen.add(r.time));
+  }
+  function build(L){
+    const dark = DARK(), TP = CP(), up = COL.up, dn = COL.down;
+    $box.innerHTML = "";
+    chart = L.createChart($box, { autoSize: true,
+      layout: { background: { color: "transparent" }, textColor: dark ? "#A1A1A6" : "#6E6E73", fontSize: 11, fontFamily: "Pretendard Variable,-apple-system,sans-serif" },
+      grid: { vertLines: { color: TP.grid }, horzLines: { color: TP.grid } },
+      rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.24 } },
+      timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false, rightOffset: 4, barSpacing: 7, minBarSpacing: 1.5,
+        tickMarkFormatter: (t, type) => { if (typeof t === "string" || typeof t === "object"){ const s = typeof t === "string" ? t : `${t.year}-${String(t.month).padStart(2, "0")}-${String(t.day).padStart(2, "0")}`; return type === 0 ? s.slice(0, 4) : type === 1 ? `${+s.slice(5, 7)}월` : `${+s.slice(5, 7)}/${+s.slice(8, 10)}`; }
+          const d = new Date(t * 1000); return type <= 2 ? `${d.getUTCMonth() + 1}/${d.getUTCDate()}` : `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`; } },
+      crosshair: { mode: 0, vertLine: { labelBackgroundColor: dark ? "#3A3A3C" : "#1D1D1F" }, horzLine: { labelBackgroundColor: dark ? "#3A3A3C" : "#1D1D1F" } },
+      localization: { locale: "ko-KR", priceFormatter: P, timeFormatter: t => label(t) },
+      handleScale: { axisPressedMouseMove: true, pinch: true, mouseWheel: true }, handleScroll: { horzTouchDrag: true, vertTouchDrag: false, mouseWheel: true, pressedMouseMove: true } });
+    cs = chart.addCandlestickSeries({ upColor: up, downColor: dn, borderVisible: false, wickUpColor: up, wickDownColor: dn, priceLineColor: up, priceFormat: { type: "custom", formatter: P, minMove: kr ? 1 : 0.01 } });
+    vs = chart.addHistogramSeries({ priceScaleId: "vol", priceFormat: { type: "volume" }, lastValueVisible: false, priceLineVisible: false });
+    chart.priceScale("vol").applyOptions({ scaleMargins: { top: 0.8, bottom: 0 }, visible: false });
+    maS = {};
+    levels.filter(v => v.v != null && isFinite(v.v)).forEach(v => cs.createPriceLine({ price: v.v, color: LCOL[v.kind] || "#8E8E93", lineWidth: v.kind === "stop" ? 2 : 1, lineStyle: v.kind === "stop" ? 0 : 2, axisLabelVisible: true, title: v.label }));
+    chart.subscribeCrosshairMove(p => { if (!p || p.time == null || !p.point){ legend(rows.length - 1); return; } const i = rows.findIndex(r => r.time === p.time); legend(i >= 0 ? i : rows.length - 1); });
+  }
+  function fill(keepView){
+    const range = keepView ? chart.timeScale().getVisibleLogicalRange() : null;
+    cs.setData(rows.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })));
+    vs.setData(rows.map(r => ({ time: r.time, value: r.vol || 0, color: (r.close >= r.open ? COL.up : COL.down) + "66" })));
+    setMA(); legend(rows.length - 1);
+    if (range) chart.timeScale().setVisibleLogicalRange(range);
+    else { const k = PRO_SHOW[tf] || 120; chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, rows.length - k), to: rows.length + 3 }); }
+  }
+  async function show(keepView){
+    const my = ++gen;
+    try{
+      const L = await loadLWC(); if (!alive || my !== gen) return;
+      const r = await getRows(); if (!alive || my !== gen) return;
+      if (r.length < 2){ $box.innerHTML = `<div class="pro-msg">봉 자료가 아직 없어요</div>`; chart = null; return; }
+      const sameTf = keepView && chart; rows = r;
+      if (!sameTf){ if (chart) chart.remove(); build(L); }
+      fill(!!sameTf);
+    }catch(e){ if (alive && my === gen){ if (chart){ chart.remove(); chart = null; } $box.innerHTML = `<div class="pro-msg">${esc(e.message)}${!relayBase() ? "<br>설정 › 분봉 중계 주소를 넣으면 1분~1시간봉도 보여요" : ""}</div>`; } }
+  }
+  box.querySelectorAll(".pro-tf [data-k]").forEach(b => b.onclick = () => { if (b.dataset.k === tf) return; tf = b.dataset.k; LS.set("protf", tf);
+    box.querySelectorAll(".pro-tf [data-k]").forEach(x => x.setAttribute("aria-selected", x === b)); if (chart){ chart.remove(); chart = null; } $box.innerHTML = `<div class="pro-msg"><div class="sk" style="width:60%;height:12px"></div></div>`; show(false); });
+  box.querySelectorAll(".pro-ma [data-ma]").forEach(b => b.onclick = () => { const n = +b.dataset.ma; ma[n] = !ma[n]; LS.set("proma", ma); b.setAttribute("aria-pressed", ma[n]); if (chart) setMA(); });
+  show(false);
   clearInterval(S.tfTimer);
-  const show = async () => {
-    const v = S.tf || "d";
-    if (v === "d"){ box.dataset.tf = "d"; drawDaily(); return; }
-    S.chart = null;
-    if (!relayBase()){ box.innerHTML = `<div class="empty" style="padding:28px 16px"><b>분봉 중계 주소가 없어요</b>설정 › 고급 설정 › 분봉 중계 주소에 내 Cloudflare 중계 주소를 넣으면 보여요.</div>`; return; }
-    if (!box.querySelector("svg") || box.dataset.tf !== v) box.innerHTML = `<div class="sk" style="height:240px;margin:12px"></div>`;
-    box.dataset.tf = v;
-    try{ const j = await fetchBars(sym, v); if (box.isConnected && (S.tf || "d") === v) drawIntraday(box, j, levels, mk, { sym, name: sym }); }
-    catch(e){ if (box.isConnected) box.innerHTML = `<div class="empty" style="padding:28px 16px"><b>분봉을 못 불러왔어요</b>${esc(e.message)}</div>`; }
-  };
-  document.querySelectorAll("#tf [data-tf]").forEach(b => b.onclick = () => { S.tf = b.dataset.tf; document.querySelectorAll("#tf [data-tf]").forEach(x => x.setAttribute("aria-selected", x === b)); show(); });
-  show();
-  let touched = 0; box.addEventListener("pointerdown", () => { touched = Date.now(); });   // 보는 중(끌기·확대)엔 새로 그리지 않음
-  S.tfTimer = setInterval(() => { if (!box.isConnected){ clearInterval(S.tfTimer); return; } if ((S.tf || "d") !== "d" && !document.hidden && marketOpenNow(isKR(mk)) && Date.now() - touched > 45000) show(); }, 60000);   // 장중엔 1분마다
+  S.tfTimer = setInterval(() => { if (!box.isConnected){ alive = false; clearInterval(S.tfTimer); if (chart) chart.remove(); return; }
+    if (intraday() && relayBase() && !document.hidden && marketOpenNow(kr)) show(true); }, 20000);   // 장중엔 20초마다 (보던 위치는 그대로)
+  return { redraw(){} };
 }
 function renderDHDetail(sym){
   const t = dhTab();
@@ -2067,9 +2143,8 @@ function renderDHDetail(sym){
         <div><b>${it.base_len != null ? Math.round(it.base_len) + "일" : "-"}</b><span>고점 뒤</span></div>
       </div>
     </section>
-    ${tfBar()}
-    <div class="card chart" id="chartBox"></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선 · 점선 상자 베이스 · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
+    <div class="card chart pro" id="chartBox" style="margin-top:var(--gap-block)"></div>
+    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선 · 아래 버튼은 이동평균선 (A49) · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
     ${stops.length && it.state !== "2등주 돌파" ? `<h2 class="sec-title">비중 계산</h2>
     <div class="card">
       <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
@@ -2096,7 +2171,7 @@ function renderDHDetail(sym){
   if (sp && it.state !== "2등주 돌파") lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
   if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
   const box = $app.querySelector("#chartBox");
-  if (box) bindTf(box, it.sym, DHM[t].mk, lv.filter(v => v.v != null), () => { box.innerHTML = ""; S.chart = mountChart(box, { sym: it.sym, name: it.name, market: DHM[t].mk, bars: it.bars || [], marks: [], sig_help: null, pattern: null, price: it.price, chg: it.chg }, { od: true, levels: lv }); });
+  if (box) S.chart = mountPro(box, { sym: it.sym, mk: DHM[t].mk, levels: lv.filter(v => v.v != null), daily: it.bars || [] });
 }
 
 /* ───────── 동현 2단계: 시장 판정 카드 · 내 보유 ─────────
@@ -2208,7 +2283,7 @@ function renderHoldDetail(id){
         <div><b>${nb ? pct2(r.acct) : "-"}</b><span>계좌 영향 · 비중 ${Math.round(w * 10) / 10}%</span></div>
       </div>
     </section>
-    ${nb ? `${tfBar()}<div class="card chart" id="chartBox"></div>
+    ${nb ? `<div class="card chart pro" id="chartBox" style="margin-top:var(--gap-block)"></div>
     <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 평균 매수가 · 보라 점선 가야 할 자리 · 빨간 선 손절선</p>` : ""}
     <div class="sec-row"><h2 class="sec-title">산 기록</h2><button class="pill-btn primary press" id="hmore">+ 불타기</button></div>
     <div class="list">${lots.map(x => `<button class="row press lt-srow" data-lot="${esc(x.k)}"><div class="main"><div class="lt-n">${esc(String(x.d).slice(5).replace("-", "/"))} ${esc(x.kind || "")} · ${P(x.px)}</div>
@@ -2234,7 +2309,7 @@ function renderHoldDetail(id){
     if (r.goal) lv.push({ v: r.goal, kind: "fib", g: "main", label: "가야 할 자리" });
     (r.lots || []).forEach(x => { if (x.stop != null) lv.push({ v: x.stop, kind: "stop", g: "main", label: "손절선 · " + (x.kind || ""), fit: true }); });
     const box = $app.querySelector("#chartBox");
-    if (box) bindTf(box, h.sym, DHM[t].mk, lv.filter(v => v.v != null), () => { box.innerHTML = ""; S.chart = mountChart(box, { sym: h.sym, name: h.name, market: DHM[t].mk, bars: r.bars || [], marks: [], sig_help: null, pattern: null, price: r.price, chg: r.chg }, { od: true, levels: lv }); });
+    if (box) S.chart = mountPro(box, { sym: h.sym, mk: DHM[t].mk, levels: lv.filter(v => v.v != null), daily: r.bars || [] });
   }
 }
 /* 보유 추가: 종목 찾기 → 산 기록 입력 */
