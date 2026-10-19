@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-49">
+<meta name="app-version" content="2026-10-19-50">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -526,6 +526,23 @@ h2.sec-title{font-size:var(--t-heading)}
 .gd-legend span{font-size:var(--t-detail);color:var(--fg2);line-height:1.4} .gd-legend span b{color:var(--fg);margin-right:8px}
 .gd-calc .gd-f{margin:0 0 16px;text-align:center;font-size:var(--t-heading);font-weight:700}
 .gd-calc .n{margin:14px 0 0;font-size:var(--t-detail);color:var(--fg2);line-height:1.5}
+
+/* 동현 2단계: 시장 판정 · 내 보유 */
+.sec-row{display:flex;align-items:center;justify-content:space-between;gap:12px} .sec-row .pill-btn{margin-top:var(--gap-section);min-height:36px}
+.mk-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px} .mk-src{font-size:var(--t-small);color:var(--fg3)}
+.lt-vd .w.hold{color:var(--fg)} .lt-vd .w.amber{color:var(--wait)} .lt-chip.wait{background:var(--wait-bg);color:var(--wait)}
+.mk-warn{margin:12px 0 0;padding:12px 14px;border-radius:12px;background:var(--sell-bg);color:var(--sell);font-size:var(--t-detail);line-height:1.5}
+.mk-warn b{display:block;font-weight:700;margin-bottom:2px} .mk-warn span{opacity:.75;font-size:var(--t-small)}
+.mk-note{margin:10px 0 0;font-size:var(--t-detail);line-height:1.5;color:var(--wait)} .mk-note span{opacity:.75;font-size:var(--t-small)}
+.mk-spark{display:block;width:100%;height:56px;margin-top:14px;overflow:visible}
+.mk-spark line{stroke-width:2;stroke-linecap:round;vector-effect:non-scaling-stroke} .mk-spark .on{stroke:var(--buy)} .mk-spark .off{stroke:var(--fg3)}
+.mk-spark .bh{stroke:#8E8E93;stroke-width:1;stroke-dasharray:4 3}
+.mk-leg{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:var(--t-small);color:var(--fg2)} .mk-leg .r{margin-left:auto;color:var(--fg3)}
+.mk-leg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle} .mk-leg i.on{background:var(--buy)} .mk-leg i.off{background:var(--fg3)} .mk-leg i.bh{height:0;border-top:1.5px dashed #8E8E93}
+.lt-vd li .src{color:var(--fg3);font-size:var(--t-small)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.lot-calc{margin-top:14px} .lot-calc .lt-mk2 b{font-size:var(--t-heading)} .lot-calc .bad{margin:10px 4px 0;color:var(--sell);font-size:var(--t-detail);line-height:1.5}
+#form .seg{margin:0}
 </style>
 </head>
 <body>
@@ -622,7 +639,7 @@ function syncBusy(){ document.querySelectorAll("[data-busy]").forEach(b => b.dis
 
 /* ───────── 데이터 ───────── */
 async function refresh(){
-  S.err = ""; S.lt = null; S.loading = false; S.dhL = {};
+  S.err = ""; S.lt = null; S.loading = false; S.dhL = {}; if (!document.querySelector(".sheet-bg")) S.hold = null;
   if (!S.dirty) render("none");   // 입력 중이면 화면을 덮어쓰지 않는다 (목록 화면이 자료를 다시 받음)
 }
 /* ───────── 실시간 시세 (설정의 '실시간 시세 주소' = 내 Cloudflare 중계) ─────────
@@ -1889,14 +1906,8 @@ async function renderDH(){
   const nC = (d.sectors || []).reduce((a, g) => a + g.n, 0);
   const secs = (d.sectors || []).map(g => `<p class="note" style="margin:var(--gap-sub) var(--pad-card) 6px">${esc(g.sector)}${g.together ? ` · ${g.n}종목 같이 오름` : ""}</p><div class="list">${g.items.map(x => dhRow(x, t)).join("")}</div>`).join("");
   $app.innerHTML = `<div class="wrap ${t}">${head}
-    <section class="card lt-vd">
-      <div class="lt-mk2">
-        <div><b>${total != null ? (t === "dhu" ? "$" + Math.round(total) + "B" : total + "조") : "-"}</b><span>시장 거래대금</span></div>
-        <div><b>${dhMoney(thr, t)}</b><span>주도주 기준</span></div>
-        <div><b class="${m.index_chg > 0 ? "hot" : m.index_chg < 0 ? "cold" : ""}">${m.index_chg != null ? pct(m.index_chg) : "-"}</b><span>${C.idx}</span></div>
-      </div>
-      <p class="n">기준 = 시장 거래대금의 0.3% (최소 ${C.floor}). 할 때·쉴 때 판정은 다음 단계에서 붙여요.</p>
-    </section>
+    ${dhRegimeCard(d, t)}
+    ${dhHoldSection(t)}
     <h2 class="sec-title">오늘의 주도 후보 <span class="lt-cnt">${nC}</span></h2>
     ${nC ? secs : `<div class="card empty" style="margin:0"><b>오늘은 없어요</b>거래대금 기준을 넘으면서 6개월 신고가를 낸 종목이 없어요. 주도주는 하루 몇 개 없는 게 정상이에요 (A1).</div>`}
     ${(d.setups || []).length ? `<h2 class="sec-title">셋업 <span class="lt-cnt">${d.setups.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">최근 주도 후보였고, 고점 아래에서 흔들림·거래대금이 줄며 버티는 종목</p><div class="list">${d.setups.map(x => dhRow(x, t)).join("")}</div>` : ""}
@@ -1906,9 +1917,16 @@ async function renderDH(){
   </div>`;
   bind();
   $app.querySelectorAll("[data-dh]").forEach(b => b.onclick = () => go("push", () => S.dhd = b.dataset.dh));
+  const ha = document.getElementById("hadd"); if (ha) ha.onclick = () => openHoldAdd(t);
+  if (!S.hold && !S.holdP){ S.holdP = loadHold().catch(e => toast(e.message)).finally(() => { S.holdP = null; if (isDH(S.tab) && !S.dhd) render("none"); }); }
 }
 function renderDHDetail(sym){
   const t = dhTab();
+  if (String(sym).startsWith("h:")){
+    if (!S.hold){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
+      loadHold().then(() => { if (S.dhd === sym) render("none"); }).catch(e => toast(e.message)); return; }
+    return renderHoldDetail(sym.slice(2));
+  }
   if (!S.dhL[t]){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
     loadDH(t).then(() => { if (S.dhd === sym) render("none"); }).catch(e => toast(e.message)); return; }
   const D = S.dhc[t], it = dhAll(D).find(x => x.sym === sym);
@@ -1963,6 +1981,218 @@ function renderDHDetail(sym){
   if (box) S.chart = mountChart(box, { sym: it.sym, name: it.name, market: DHM[t].mk, bars: it.bars || [], marks: [], sig_help: null, pattern: null, price: it.price, chg: it.chg }, { od: true, levels: lv });
 }
 
+/* ───────── 동현 2단계: 시장 판정 카드 · 내 보유 ─────────
+   보유 입력은 저장소의 동현보유.json (이 저장소는 비공개). 엔진이 매일(또는 저장 직후) 상태/동현보유_판정.json을 만든다. */
+const HOLD_SRC = "동현보유.json", HOLD_RES = "상태/동현보유_판정.json";
+const HOLD_TONE = {"정리": "sell", "불타기분만 정리": "sell", "가야 할 자리 실패": "wait", "매입가 위협": "wait", "불타기 자리": "buy", "수익 보존": "soon", "유지": "", "점검 중": "", "자료 없음": ""};
+const HOLD_LINE = {"정리": "손절선을 깼어요. 정한 대로 팔아요", "불타기분만 정리": "더 산 만큼만 팔아요", "가야 할 자리 실패": "가야 할 자리에서 못 가고 있어요",
+  "매입가 위협": "평균 매수가 아래예요", "불타기 자리": "더 살 자리예요", "수익 보존": "손절선을 매수가 위로 올려요", "유지": "잘 가고 있어요. 그대로 둬요"};
+async function loadHold(){
+  const [src, res] = await Promise.all([(async () => {
+    try{ const j = await gh("/contents/" + enc(HOLD_SRC) + "?ref=main"); return { sha: j.sha, data: JSON.parse(b64dec(j.content) || "{}") }; }
+    catch(e){ if (e.nf) return { sha: null, data: { items: [] } }; throw e; } })(), readJSON(HOLD_RES, null)]);
+  if (!Array.isArray(src.data.items)) src.data.items = [];
+  S.hold = { sha: src.sha, items: src.data.items, res: res };
+  return S.hold;
+}
+async function saveHold(msg){
+  // 저장 직전에 최신 sha를 다시 받아 다른 기기에서 고친 것과 부딪히지 않게
+  try{ const j = await gh("/contents/" + enc(HOLD_SRC) + "?ref=main"); S.hold.sha = j.sha; }catch(e){ if (!e.nf) throw e; S.hold.sha = null; }
+  const body = { message: msg, content: b64enc(JSON.stringify({ items: S.hold.items }, null, 1) + "\n"), branch: "main" };
+  if (S.hold.sha) body.sha = S.hold.sha;
+  const r = await gh("/contents/" + enc(HOLD_SRC), { method: "PUT", body: JSON.stringify(body) }); S.hold.sha = r.content.sha;
+  try{ const t = await dispatch("동현보유"); waitRun(t, "보유 점검 중").then(async () => { try{ S.hold.res = await readJSON(HOLD_RES, null); }catch(e){} if (isDH(S.tab)) render("none"); }); }catch(e){ toast(e.message); }
+}
+const holdRes = id => (S.hold?.res?.items || []).find(x => x.id === id);
+const holdMk = t => t === "dhu" ? "us" : "kr";
+function holdCalc(h){   // 판정 전(방금 추가)에도 숫자는 보이게
+  const lots = h.lots || [], w = lots.reduce((a, x) => a + (+x.w || 0), 0);
+  const avg = w ? lots.reduce((a, x) => a + x.px * (+x.w || 0), 0) / w : (lots[0]?.px ?? null);
+  return { w, avg };
+}
+function dhRegimeCard(d, t){
+  const g = d.regime, C = DHM[t], m = d.market || {};
+  const total = m.tv_total ?? m.tv_jo, thr = m.threshold ?? m.threshold_eok;
+  const stats = `<div class="lt-mk2" style="margin-top:16px">
+      <div><b>${total != null ? (t === "dhu" ? "$" + Math.round(total) + "B" : total + "조") : "-"}</b><span>시장 거래대금</span></div>
+      <div><b>${dhMoney(thr, t)}</b><span>주도주 기준</span></div>
+      <div><b class="${m.index_chg > 0 ? "hot" : m.index_chg < 0 ? "cold" : ""}">${m.index_chg != null ? pct(m.index_chg) : "-"}</b><span>${C.idx}</span></div>
+    </div>`;
+  if (!g) return `<section class="card lt-vd">${stats}<p class="n">기준 = 시장 거래대금의 0.3% (최소 ${C.floor}). 시장 판정은 다음 계산부터 보여요.</p></section>`;
+  const on = g.state === "할 때";
+  const H = g.hist || [], vals = H.map(x => x[1]).filter(v => v != null);
+  let spark = "";
+  if (vals.length > 5){
+    const lo = Math.min(...vals, g.box_hi ?? Infinity), hi = Math.max(...vals, g.box_hi ?? -Infinity), W = 300, Ht = 56;
+    const X = i => (i / (H.length - 1)) * W, Y = v => Ht - 4 - ((v - lo) / ((hi - lo) || 1)) * (Ht - 8);
+    let segs = "";
+    for (let i = 1; i < H.length; i++) if (H[i][1] != null && H[i - 1][1] != null)
+      segs += `<line x1="${X(i - 1).toFixed(1)}" y1="${Y(H[i - 1][1]).toFixed(1)}" x2="${X(i).toFixed(1)}" y2="${Y(H[i][1]).toFixed(1)}" class="${H[i][2] ? "on" : "off"}"/>`;
+    const bh = g.box_hi != null ? `<line x1="0" x2="${W}" y1="${Y(g.box_hi).toFixed(1)}" y2="${Y(g.box_hi).toFixed(1)}" class="bh"/>` : "";
+    spark = `<svg class="mk-spark" viewBox="0 0 ${W} ${Ht}" preserveAspectRatio="none" aria-hidden="true">${bh}${segs}</svg>
+      <div class="mk-leg"><span><i class="on"></i>할 때</span><span><i class="off"></i>쉴 때</span>${g.box_hi != null ? `<span><i class="bh"></i>박스 상단 ${t === "dhu" ? num(g.box_hi, "미국") : Math.round(g.box_hi).toLocaleString("ko-KR")}</span>` : ""}<span class="r">6개월 ${C.idx}</span></div>`;
+  }
+  return `<section class="card lt-vd mk-card">
+    <div class="mk-top"><span class="w ${on ? "buy" : "wait"}">${g.state}</span><span class="mk-src">${esc(g.src || "")}</span></div>
+    <p class="l">${esc(g.line || "")}</p>
+    ${g.warn ? `<div class="mk-warn"><b>전량매도 경고</b>${esc(g.warn.t)} <span>${esc(g.warn.src)}</span></div>` : ""}
+    ${(g.notes || []).map(n => `<p class="mk-note">${esc(n.t)} <span>${esc(n.src)}</span></p>`).join("")}
+    ${spark}
+    ${stats}
+    <p class="n">거래대금 20일 평균 대비 ${g.tv_ratio != null ? (g.tv_ratio >= 1 ? "+" : "−") + Math.abs(Math.round((g.tv_ratio - 1) * 100)) + "%" : "-"} · 오른 종목 ${g.up_pct != null ? g.up_pct + "%" : "-"} · 기준 = 시장 거래대금의 0.3%</p>
+  </section>`;
+}
+function dhHoldSection(t){
+  const H = S.hold; if (!H) return `<h2 class="sec-title">내 보유</h2><div class="card"><div class="sk" style="width:50%;height:14px"></div></div>`;
+  const mine = H.items.filter(h => (h.mk || "kr") === holdMk(t));
+  const add = `<button class="pill-btn primary press" id="hadd">+ 추가</button>`;
+  if (!mine.length) return `<div class="sec-row"><h2 class="sec-title">내 보유</h2>${add}</div>
+    <div class="card empty" style="margin:0"><b>들고 있는 종목이 없어요</b>산 종목을 넣으면 손절·불타기·정리할 때를 알려 드려요.</div>`;
+  return `<div class="sec-row"><h2 class="sec-title">내 보유 <span class="lt-cnt">${mine.length}</span></h2>${add}</div>
+    <div class="list">${mine.map(h => {
+      const r = holdRes(h.id), fresh = r && (r.lots || []).length === (h.lots || []).length;
+      const st = fresh ? r.status : "점검 중", { w, avg } = holdCalc(h);
+      const sub = `평균 ${dhPx(fresh ? r.avg : avg, t)} · 비중 ${Math.round(w * 10) / 10}%${fresh && r.acct != null ? ` · 계좌 ${r.acct > 0 ? "+" : ""}${r.acct}%` : ""}${h.acct ? " · " + esc(h.acct) : ""}`;
+      return `<button class="row press lt-srow" data-dh="h:${esc(h.id)}"><div class="main"><div class="lt-n">${esc(h.name)}</div><div class="lt-s">${sub}</div></div>
+        <div class="lt-px"><b class="lt-chip ${HOLD_TONE[st] || ""}">${esc(st)}</b><span>${fresh ? dhPx(r.price, t) + ` <span class="${r.pnl > 0 ? "up" : r.pnl < 0 ? "down" : ""}">${pct(r.pnl)}</span>` : ""}</span></div>${CHEV}</button>`; }).join("")}</div>`;
+}
+function renderHoldDetail(id){
+  const t = dhTab(), h = S.hold?.items.find(x => x.id === id);
+  if (!h){ S.dhd = null; return renderDH(); }
+  const r0 = holdRes(id), r = r0 && (r0.lots || []).length === (h.lots || []).length ? r0 : null;
+  const P = v => dhPx(v, t), st = r ? r.status : "점검 중", { w, avg } = holdCalc(h);
+  const lots = (r?.lots || h.lots || []).map((x, i) => ({ ...x, i }));
+  $app.innerHTML = `<div class="wrap ${t}">
+    <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현 ${DHM[t].flag}</span></button></div><span class="mini">${esc(h.name)}</span><div class="side r"></div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(h.name)}</h1><div class="sub">${r ? `${esc(String(r.date || "").slice(5).replace("-", "/"))} 종가 ${P(r.price)} <span class="${r.chg >= 0 ? "up" : "down"}">${pct(r.chg)}</span> · ` : ""}내 보유${h.acct ? " · " + esc(h.acct) : ""}</div></div>
+    <section class="card lt-vd">
+      <div class="w ${HOLD_TONE[st] === "sell" ? "sell" : HOLD_TONE[st] === "buy" ? "buy" : HOLD_TONE[st] === "soon" ? "soon" : HOLD_TONE[st] === "wait" ? "amber" : "hold"}">${esc(st)}</div>
+      <p class="l">${esc(r ? HOLD_LINE[st] || "" : "방금 바뀌었어요. 엔진이 점검하는 중이에요 (1~2분).")}</p>
+      ${r && r.why?.length ? `<ul>${r.why.map(x => `<li>${esc(x.t)} <span class="src">${esc(x.src)}</span></li>`).join("")}</ul>` : ""}
+      <div class="lt-mk2 od-st" style="margin-top:14px">
+        <div><b>${P(r ? r.avg : avg)}</b><span>평균 매수가</span></div>
+        <div><b class="${r && r.pnl > 0 ? "hot" : r && r.pnl < 0 ? "cold" : ""}">${r ? pct(r.pnl) : "-"}</b><span>수익률</span></div>
+        <div><b>${r ? (r.acct > 0 ? "+" : "") + r.acct + "%" : "-"}</b><span>계좌 영향 · 비중 ${Math.round(w * 10) / 10}%</span></div>
+      </div>
+    </section>
+    ${r ? `<div class="card chart" id="chartBox" style="margin-top:var(--gap-block)"></div>
+    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 평균 매수가 · 보라 점선 가야 할 자리 · 빨간 선 손절선</p>` : ""}
+    <div class="sec-row"><h2 class="sec-title">산 기록</h2><button class="pill-btn primary press" id="hmore">+ 불타기</button></div>
+    <div class="list">${lots.map(x => `<button class="row press lt-srow" data-lot="${x.i}"><div class="main"><div class="lt-n">${esc(String(x.d).slice(5).replace("-", "/"))} ${esc(x.kind || "")} · ${P(x.px)}</div>
+      <div class="lt-s">비중 ${x.w}% · 손절선 ${x.stop != null ? P(x.stop) + " (" + pct((x.stop / x.px - 1) * 100) + ")" : "없음"}</div></div>
+      <div class="lt-px">${x.hit ? `<b class="lt-chip sell">손절선 깸</b>` : x.pnl != null ? `<span class="${x.pnl > 0 ? "up" : x.pnl < 0 ? "down" : ""}">${pct(x.pnl)}</span>` : ""}</div>${CHEV}</button>`).join("")}</div>
+    <p class="note" style="margin:8px var(--pad-card) 0">줄을 누르면 손절선을 바꾸거나 판 묶음을 지울 수 있어요.</p>
+    <div class="stack" style="margin-top:var(--gap-section)"><button class="btn danger press" id="hsold">다 팔았어요 · 목록에서 빼기</button></div>
+    <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 사고파는 결정은 직접 하세요.</p>
+  </div>`;
+  document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
+  document.getElementById("hmore").onclick = () => openLotForm({ h, t, kind: "불타기" });
+  $app.querySelectorAll("[data-lot]").forEach(b => b.onclick = () => openLotEdit(h, +b.dataset.lot, t));
+  const sold = document.getElementById("hsold");
+  sold.onclick = async () => {
+    if (!sold.dataset.ok){ sold.dataset.ok = 1; sold.textContent = "한 번 더 누르면 빠져요"; setTimeout(() => { if (sold.isConnected){ delete sold.dataset.ok; sold.textContent = "다 팔았어요 · 목록에서 빼기"; } }, 4000); return; }
+    sold.disabled = true; sold.innerHTML = `<span class="spin"></span>빼는 중`;
+    try{ S.hold.items = S.hold.items.filter(x => x.id !== id); await saveHold(`앱: 보유 ${h.name} 정리`); toast("목록에서 뺐어요"); BACK_ANIM = true; history.back(); }
+    catch(e){ toast(e.message); sold.disabled = false; sold.textContent = "다 팔았어요 · 목록에서 빼기"; }
+  };
+  if (r){
+    const lv = [];
+    if (r.avg) lv.push({ v: r.avg, kind: "res", g: "main", label: "평균 매수가", fit: true });
+    if (r.goal) lv.push({ v: r.goal, kind: "fib", g: "main", label: "가야 할 자리" });
+    (r.lots || []).forEach(x => { if (x.stop != null) lv.push({ v: x.stop, kind: "stop", g: "main", label: "손절선 · " + (x.kind || ""), fit: true }); });
+    const box = $app.querySelector("#chartBox");
+    if (box) S.chart = mountChart(box, { sym: h.sym, name: h.name, market: DHM[t].mk, bars: r.bars || [], marks: [], sig_help: null, pattern: null, price: r.price, chg: r.chg }, { od: true, levels: lv });
+  }
+}
+/* 보유 추가: 종목 찾기 → 산 기록 입력 */
+function openHoldAdd(t){
+  openSearch({ title: "보유 추가", have: new Set((S.hold?.items || []).map(h => h.sym)), add: async (m, c, n) => {
+    if ((m === "미국") !== (t === "dhu")){ throw new Error(t === "dhu" ? "미국 종목만 넣을 수 있어요 · 한국은 🇰🇷 탭에서" : "한국 종목만 넣을 수 있어요 · 미국은 🇺🇸 탭에서"); }
+    const name = m === "미국" ? (Object.entries(ALIAS).find(([k, v]) => v === c)?.[0] || shortName(n, c, m)) : n;
+    document.querySelector(".sheet-bg:not(.closing)")?._close?.();
+    setTimeout(() => openLotForm({ t, sym: symOf(m, c), name, kind: "첫 진입" }), REDUCED ? 0 : 320);
+  } });
+}
+function dhKnown(sym, t){ return dhAll(S.dhc[t]).find(x => x.sym === sym); }
+const todayISO = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+function openLotForm(o){
+  const { t } = o, h = o.h, sym = h ? h.sym : o.sym, name = h ? h.name : o.name, kind = o.kind;
+  const known = dhKnown(sym, t), r = h ? holdRes(h.id) : null;
+  const px0 = known?.price ?? r?.price ?? "";
+  const stops = known?.stops || [];
+  const { avg } = h ? holdCalc(h) : { avg: null };
+  const step = t === "dhu" ? "0.01" : "1";
+  const { bg, close } = openSheet(kind === "불타기" ? `${name} 불타기` : `${name} 산 기록`, `<div class="results"><div id="form" class="form card">
+      <div class="field"><label for="ld">산 날</label><input id="ld" type="date" value="${todayISO()}"></div>
+      <div class="field"><label for="lp">산 가격${t === "dhu" ? " ($)" : ""}</label><input id="lp" type="number" inputmode="decimal" step="${step}" value="${px0}" placeholder="0"></div>
+      <div class="field"><label for="lw">계좌 대비 비중 (%)</label><input id="lw" type="number" inputmode="decimal" step="0.5" placeholder="${kind === "불타기" ? "5" : "10"}"></div>
+      <div class="field"><label for="ls">손절선${t === "dhu" ? " ($)" : ""}</label><input id="ls" type="number" inputmode="decimal" step="${step}" placeholder="사기 전에 정해요"></div>
+      ${kind !== "불타기" ? `<div class="field"><label>계좌</label><div class="seg" role="tablist" aria-label="계좌" id="lacct" style="width:58%">${["안 나눔", "단기", "중장기"].map((a, i) => `<button role="tab" data-a="${a}" aria-selected="${i === 0}">${a}</button>`).join("")}</div></div>` : ""}
+    </div>
+    ${stops.length ? `<p class="note" style="margin:10px 4px 6px">엔진이 본 손절선 후보</p><div class="chips" id="lsc">${stops.map(s => `<button class="pill-btn press" data-v="${s.price}">${esc(s.name)} ${dhPx(s.price, t)}</button>`).join("")}</div>` : ""}
+    <div id="lcalc" class="lot-calc"></div>
+    <button class="btn primary press" id="lsave" style="margin-top:16px" disabled>저장</button>
+    <p class="note" style="margin:12px 4px">저장하면 엔진이 1~2분 안에 상태를 점검해요.</p></div>`);
+  const $ = s => bg.querySelector(s), num0 = s => parseFloat($(s).value);
+  let acct = "", force = false;
+  bg.querySelectorAll("#lacct button").forEach(b => b.onclick = () => { acct = b.dataset.a === "안 나눔" ? "" : b.dataset.a; bg.querySelectorAll("#lacct button").forEach(x => x.setAttribute("aria-selected", x === b)); });
+  bg.querySelectorAll("#lsc [data-v]").forEach(b => b.onclick = () => { $("#ls").value = b.dataset.v; calc(); });
+  const calc = () => {
+    const px = num0("#lp"), w = num0("#lw"), sp = num0("#ls"), out = [];
+    let ok = px > 0 && w > 0 && sp > 0 && sp < px, warn = false;
+    if (px > 0 && sp > 0){
+      if (sp >= px) out.push(`<p class="bad">손절선은 산 가격보다 낮아야 해요</p>`);
+      else { const gap = (px - sp) / px, loss = w > 0 ? w * gap : null, mx = Math.min(100, 1 / gap * 100);
+        out.push(`<div class="lt-mk2"><div><b>${(gap * 100).toFixed(1)}%</b><span>손절폭</span></div><div><b class="${loss > 1 ? "hot" : ""}">${loss != null ? "−" + loss.toFixed(2) + "%" : "-"}</b><span>손절 때 계좌</span></div><div><b style="color:var(--buy)">${mx.toFixed(1)}%</b><span>1% 한도 비중</span></div></div>`);
+        if (loss > 1) out.push(`<p class="bad">손절하면 계좌가 1% 넘게 줄어요. 비중을 ${mx.toFixed(1)}% 이하로 (A19 A52)</p>`); }
+    }
+    if (kind === "불타기" && avg && px > 0 && (px < avg || (r && r.price < avg))){
+      warn = true;
+      out.push(`<div class="mk-warn"><b>물타기예요</b>평균 매수가 ${dhPx(avg, t)}보다 낮은 데서 더 사는 기록이에요. 카투 규칙: 물타기는 절대 안 해요 (A10 A20). 불타기는 수익 중일 때, 새 고점을 넘을 때만.${force ? "" : ` <button class="tlink press" id="lforce" style="display:inline;padding:0">그래도 기록</button>`}</div>`);
+    }
+    if (kind !== "불타기" && w > 10) out.push(`<p class="note" style="margin:8px 4px 0">첫 진입은 보통 5~10%로 시작해요 (A18).</p>`);
+    $("#lcalc").innerHTML = out.join("");
+    const f = bg.querySelector("#lforce"); if (f) f.onclick = () => { force = true; calc(); };
+    $("#lsave").disabled = !ok || (warn && !force);
+  };
+  ["#lp", "#lw", "#ls"].forEach(s => $(s).oninput = calc); calc();
+  $("#lsave").onclick = async () => {
+    const b = $("#lsave"); b.disabled = true; b.innerHTML = `<span class="spin"></span>저장 중`;
+    const lot = { d: $("#ld").value || todayISO(), px: num0("#lp"), w: num0("#lw"), stop: num0("#ls"), kind };
+    try{
+      if (!S.hold) await loadHold();
+      if (h){ const x = S.hold.items.find(y => y.id === h.id); x.lots.push(lot); x.lots.sort((a, c) => a.d < c.d ? -1 : 1); }
+      else S.hold.items.push({ id: "h" + Date.now().toString(36), sym, name, mk: holdMk(t), acct, lots: [lot] });
+      await saveHold(`앱: 보유 ${name} ${kind}`); close(); toast("저장했어요 · 점검 중"); render("none");
+    }catch(e){ toast(e.message); b.disabled = false; b.textContent = "저장"; }
+  };
+}
+function openLotEdit(h, i, t){
+  const x = h.lots[i]; if (!x) return;
+  const step = t === "dhu" ? "0.01" : "1";
+  const { bg, close } = openSheet(`${String(x.d).slice(5).replace("-", "/")} ${x.kind || ""} ${dhPx(x.px, t)}`, `<div class="results"><div id="form" class="form card">
+      <div class="field"><label for="es">손절선</label><input id="es" type="number" inputmode="decimal" step="${step}" value="${x.stop ?? ""}"></div>
+    </div>
+    <p class="note" style="margin:10px 4px">수익을 지키려면 매수가 ${dhPx(x.px, t)}보다 위로 올려요 (J93 J94). 내리지는 않아요.</p>
+    <button class="btn primary press" id="esave">손절선 저장</button>
+    <button class="btn danger press" id="edel" style="margin-top:10px">${h.lots.length > 1 ? "이 묶음 팔았어요 · 지우기" : "다 팔았어요 · 목록에서 빼기"}</button></div>`);
+  const sv = bg.querySelector("#esave"), dl = bg.querySelector("#edel");
+  sv.onclick = async () => {
+    const v = parseFloat(bg.querySelector("#es").value); if (!(v > 0)){ toast("손절선을 넣어 주세요"); return; }
+    if (x.stop != null && v < x.stop && !sv.dataset.ok){ sv.dataset.ok = 1; sv.textContent = "손절선을 내려요? 한 번 더 누르면 저장"; return; }
+    sv.disabled = true; sv.innerHTML = `<span class="spin"></span>저장 중`;
+    try{ x.stop = v; await saveHold(`앱: 보유 ${h.name} 손절선`); close(); render("none"); }catch(e){ toast(e.message); sv.disabled = false; sv.textContent = "손절선 저장"; }
+  };
+  dl.onclick = async () => {
+    dl.disabled = true; dl.innerHTML = `<span class="spin"></span>지우는 중`;
+    try{
+      if (h.lots.length > 1) h.lots.splice(i, 1); else S.hold.items = S.hold.items.filter(y => y.id !== h.id);
+      await saveHold(`앱: 보유 ${h.name} 매도 기록`); close();
+      if (!S.hold.items.find(y => y.id === h.id)){ BACK_ANIM = true; history.back(); } else render("none");
+    }catch(e){ toast(e.message); dl.disabled = false; dl.textContent = "지우기"; }
+  };
+}
+
 /* ───────── 사용법 (Katoo 규칙을 그림으로) ─────────
    그림 색은 차트와 같다: 회색 점선 = 직전 고점, 보라 점선 = 라운드피겨, 빨간 선 = 손절선, 점선 상자 = 베이스. */
 function gSvg(body, label){
@@ -2007,10 +2237,19 @@ function renderGuide(){
 
     <h2 class="sec-title">하루 순서</h2>
     <ol class="card gd-steps">
+      <li><b>시장부터 보기</b><span>맨 위 카드가 ‘할 때’면 종목을 찾고, ‘쉴 때’면 쉬어요. 빨간 전량매도 경고가 뜨면 들고 있는 걸 정리해요.</span></li>
       <li><b>장 끝나고 목록 보기</b><span>🇰🇷는 평일 16:05, 🇺🇸는 아침 07:20에 새로 계산돼요. 초록 ‘돌파 자리’부터 봐요.</span></li>
       <li><b>사기 전에 손절선·비중 정하기</b><span>종목을 눌러 손절선을 고르면 최대 비중이 나와요. 사고 나서 정하지 않아요.</span></li>
       <li><b>다음 장에서 확인하고 사기</b><span>직전 고점을 거래대금 실어 넘는지 분봉·호가로 보고, 5~10%만 먼저 사요.</span></li>
+      <li><b>산 걸 ‘내 보유’에 넣기</b><span>산 가격·비중·손절선을 넣으면 매일 상태를 알려 줘요. 더 사면 ‘불타기’로 따로 넣어요.</span></li>
     </ol>
+
+    <h2 class="sec-title">시장 판정</h2>
+    <div class="list">
+      ${[["buy", "할 때", "지수가 지난 20일 박스 상단을 종가로 넘었어요. 그 뒤로 경고가 없는 동안"], ["", "쉴 때", "전량매도 경고 뒤, 다시 박스 상단을 넘기 전까지. 현금도 포지션이에요"], ["sell", "전량매도 경고", "지수 −3% 이상 급락, 또는 소수 종목만 오르던 쏠림 뒤 첫 하락"]]
+        .map(([c, n, x]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${x}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
+    </div>
+    <p class="note" style="margin:8px var(--pad-card) 0">카투의 2026년 국내 매매와 맞춰 봤어요: 할 때 84% · 쉴 때 98% 일치, 전량매도 6번 중 5번 경고.</p>
 
     <h2 class="sec-title" id="g-chart">차트 보는 법</h2>
     <div class="card gd-legend">
@@ -2039,6 +2278,13 @@ function renderGuide(){
       "더 산 만큼은 따로 손절선을 둬요 (새 박스 하단)",
       "처음 산 것은 처음 손절선 그대로"])}
 
+    <h2 class="sec-title">내 보유 상태</h2>
+    <div class="list">
+      ${[["sell", "정리", "손절선을 종가로 깼거나 이 종목으로 계좌가 1% 줄었어요. 팔아요"], ["sell", "불타기분만 정리", "더 산 묶음의 손절선만 깼어요. 그만큼만 팔아요"], ["wait", "가야 할 자리 실패", "산 지 3일 안에 돌파 기준점 아래로 왔거나 윗꼬리가 반복돼요"], ["wait", "매입가 위협", "평균 매수가 아래예요. 잘 갈 종목은 이러지 않아요"], ["buy", "불타기 자리", "수익 중에 쉬었다가 새 고점을 넘었어요. 더 살 자리"], ["soon", "수익 보존", "가야 할 자리까지 왔거나 시장이 불안해요. 손절선을 매수가 위로"], ["", "유지", "수익 중이고 경고가 없어요. 그대로 둬요"]]
+        .map(([c, n, x]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${x}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
+    </div>
+    <p class="note" style="margin:8px var(--pad-card) 0">내려갈 때 더 사는 기록(물타기)을 넣으면 앱이 막아요 (A10 A20).</p>
+
     <h2 class="sec-title">칩 뜻</h2>
     <div class="list">
       ${[["buy", "돌파 자리", "살 자리. 손절선·비중부터 정해요"], ["soon", "주도 후보", "주도주 조건은 넘었지만 돌파는 아직"], ["soon", "셋업", "최근 주도주가 고점 아래에서 쉬는 중"], ["", "관찰", "지수가 빠진 날 버틴 종목"]]
@@ -2056,6 +2302,7 @@ function renderGuide(){
     <ul class="card gd-ul gd-note">
       <li>후보가 0개인 날이 많아요. 주도주는 하루 몇 개 없는 게 정상이에요.</li>
       <li>엔진은 일봉만 봐요. 분봉·호가·뉴스·실적일은 직접 확인해요.</li>
+      <li>뉴스 때문에 파는 날(예: 1/20)은 엔진이 못 잡아요. 그런 날은 직접 판단해요.</li>
       <li>규칙으로 계산한 결과예요. 사고파는 결정은 직접 해요.</li>
     </ul>
     <p class="note lt-foot" style="text-align:center;margin-top:20px">출처: Katoo(@blazingbees) 아티클·매매일지·구독 코멘트</p>
