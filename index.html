@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-48">
+<meta name="app-version" content="2026-10-19-49">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -495,14 +495,45 @@ h2.sec-title{font-size:var(--t-heading)}
 .odleg .sw.band{height:10px;border:0;border-radius:3px;background:var(--buy);opacity:.35} .odleg .sw.boxi{height:10px;border:1.2px dashed var(--fg3);border-radius:2px}
 .lt-vd ul{margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--line);list-style:none;display:flex;flex-direction:column;gap:8px}
 .lt-vd li{font-size:var(--t-detail);color:var(--fg2);line-height:1.45;padding-left:14px;position:relative} .lt-vd li::before{content:"";position:absolute;left:2px;top:.62em;width:4px;height:4px;border-radius:50%;background:var(--fg3)}
+
+/* 동현 탭 국기 · 사용법 */
+.wrap.dhu .lt-mk2 b{font-size:var(--t-heading);white-space:nowrap}
+.tabbar .tf{font-size:21px;line-height:24px;height:24px;display:block}
+.gi{width:100%;height:auto;display:block;overflow:visible}
+.gi .p{fill:none;stroke:var(--fg);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
+.gi .pv,.gd-legend .pv{stroke:#8E8E93;stroke-width:1.5;stroke-dasharray:5 4}
+.gi .rf,.gd-legend .rf{stroke:#8E5CF6;stroke-width:1.5;stroke-dasharray:3 3}
+.gi .st,.gd-legend .st{stroke:var(--sell);stroke-width:2} .gi .st2{stroke-dasharray:6 3;opacity:.7}
+.gi .bx,.gd-legend .bx{fill:#8E8E93;fill-opacity:.1;stroke:#8E8E93;stroke-width:1;stroke-dasharray:4 3}
+.gi .v,.gd-legend .v{fill:var(--fg3);opacity:.6} .gi .vh,.gd-legend .vh{fill:var(--buy)}
+.gi .dg{fill:var(--buy);stroke:var(--card);stroke-width:2.5} .gi .db{fill:var(--info);stroke:var(--card);stroke-width:2.5}
+.gi .x{stroke:var(--sell);stroke-width:3;stroke-linecap:round;fill:none}
+.gi text{font-size:12px;font-family:inherit} .gi .tl{fill:var(--fg2)} .gi .tg{fill:var(--buy);font-weight:700} .gi .tr{fill:var(--sell);font-weight:700} .gi .tb{fill:var(--info);font-weight:700}
+.gd-card{margin-top:var(--gap-block)}
+.gd-lead{margin:10px 0 14px;font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
+.gd-lead b{font-weight:700;color:var(--blue)}
+.gd-pic{background:var(--fill);border-radius:14px;padding:12px 10px 8px}
+.gd-ul{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.gd-ul li{position:relative;padding-left:16px;font-size:var(--t-detail);line-height:1.5} .gd-ul li::before{content:"";position:absolute;left:3px;top:.68em;width:5px;height:5px;border-radius:50%;background:var(--fg3)}
+.gd-ul.gd-note{margin:0;padding:16px var(--pad-card)}
+.gd-dont{margin:14px 0 0;padding:10px 12px;border-radius:12px;background:var(--wait-bg);color:var(--wait);font-size:var(--t-detail);line-height:1.5}
+.gd-steps{list-style:none;margin:0;padding:4px var(--pad-card);counter-reset:s}
+.gd-steps li{counter-increment:s;display:grid;grid-template-columns:28px 1fr;column-gap:14px;row-gap:2px;padding:14px 0;border-bottom:1px solid var(--line)} .gd-steps li:last-child{border-bottom:0}
+.gd-steps li::before{content:counter(s);grid-row:span 2;width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px}
+.gd-steps li span{color:var(--fg2);font-size:var(--t-detail);line-height:1.5}
+.gd-legend{display:flex;flex-direction:column;gap:14px;padding:16px var(--pad-card)}
+.gd-legend>div{display:flex;align-items:center;gap:14px} .gd-legend svg{width:40px;height:10px;flex:none;overflow:visible}
+.gd-legend span{font-size:var(--t-detail);color:var(--fg2);line-height:1.4} .gd-legend span b{color:var(--fg);margin-right:8px}
+.gd-calc .gd-f{margin:0 0 16px;text-align:center;font-size:var(--t-heading);font-weight:700}
+.gd-calc .n{margin:14px 0 0;font-size:var(--t-detail);color:var(--fg2);line-height:1.5}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <nav class="tabbar" id="tabbar" hidden aria-label="탭">
-  <button data-tab="lt" aria-label="신호"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>신호</button>
-  <button data-tab="od" aria-label="오동엔진"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v4M6 15v6M12 5v4M12 15v4M18 3v3M18 14v7"/><rect x="4" y="7" width="4" height="8" rx="1"/><rect x="10" y="9" width="4" height="6" rx="1"/><rect x="16" y="6" width="4" height="8" rx="1"/></svg>오동엔진</button>
-  <button data-tab="dh" aria-label="동현"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16V9M12 16V5M17 16v-4"/><path d="M14 7l3-3 3 3"/></svg>동현</button>
+  <button data-tab="dh" aria-label="동현 한국"><span class="tf" aria-hidden="true">🇰🇷</span>동현</button>
+  <button data-tab="dhu" aria-label="동현 미국"><span class="tf" aria-hidden="true">🇺🇸</span>동현</button>
+  <button data-tab="guide" aria-label="사용법"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V5.5M9 8h7M9 12h5"/></svg>사용법</button>
   <button data-tab="settings" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
 </nav>
 <script>
@@ -514,7 +545,7 @@ const LS = {
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
 /* 2026-10-17: 탭 = 신호(시장 지표·종목별 매수·매도) · 오동엔진(차트 자리) · 설정. 예전 오동엔진(종목·발견·알림)은 뺐다 */
-const HOME = "lt";
+const HOME = "dh";
 const S = { token: LS.get("tok", ""), repo: LS.get("repo", "odh2838-art/timing-agent"),
   tab: HOME, ltd: null, odd: null, ltRange: LS.get("ltRange", 130), detail: null, dash: LS.get("dash"), csv: null, alerts: null, err: "", busy: null, loading: true, dirty: false };
 let REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -591,7 +622,7 @@ function syncBusy(){ document.querySelectorAll("[data-busy]").forEach(b => b.dis
 
 /* ───────── 데이터 ───────── */
 async function refresh(){
-  S.err = ""; S.lt = null; S.loading = false;
+  S.err = ""; S.lt = null; S.loading = false; S.dhL = {};
   if (!S.dirty) render("none");   // 입력 중이면 화면을 덮어쓰지 않는다 (목록 화면이 자료를 다시 받음)
 }
 /* ───────── 실시간 시세 (설정의 '실시간 시세 주소' = 내 Cloudflare 중계) ─────────
@@ -646,7 +677,7 @@ async function pullQuotes(syms){
 /* 화면에 반영: 홈은 다시 그리고, 상세는 가격·차트만 고친다 (보던 위치 유지) */
 function showQuotes(){
   if (S.dirty || document.querySelector(".sheet-bg:not(.closing)")) return;
-  if (S.dhd || S.tab === "dh") return;   // 동현엔진은 종가 기준이라 실시간으로 다시 그리지 않음
+  if (S.dhd || isDH(S.tab) || S.tab === "guide") return;   // 동현엔진은 종가 기준이라 실시간으로 다시 그리지 않음
   if (S.odd){ odPrice(); return; }   // 오동엔진 상세: 차트는 그대로 두고 가격만
   const y = scrollY;
   if (S.ltd) renderLTDetail(S.ltd); else if (S.tab === "lt") renderLT(); else if (S.tab === "od") renderOD(); else return;
@@ -707,11 +738,12 @@ function render(how = "fade"){
     else if (S.odd) renderODDetail(S.odd);
     else if (S.ltd) renderLTDetail(S.ltd);
     else if (S.tab === "od") renderOD();
-    else if (S.tab === "dh") renderDH();
+    else if (isDH(S.tab)) renderDH();
+    else if (S.tab === "guide") renderGuide();
     else if (S.tab === "settings") renderSettings();
-    else renderLT();
+    else renderDH();
   }catch(e){   // 자료 한 곳이 이상해도 앱 전체가 멈추지 않게: 전환 화면을 걷고 홈으로
-    console.error(e); ghost?.remove(); S.odd = null; S.ltd = null; S.dhd = null; S.tab = HOME; try{ renderLT(); }catch(_){} toast("이 화면을 열지 못했어요");
+    console.error(e); ghost?.remove(); S.odd = null; S.ltd = null; S.dhd = null; S.tab = HOME; try{ renderDH(); }catch(_){} toast("이 화면을 열지 못했어요");
     bindNavbar(); return;
   }
   $app.classList.remove("v-push","v-pop","v-fade");
@@ -1809,46 +1841,66 @@ function renderODDetail(sym){
 }
 
 /* ───────── 동현엔진 (tc/donghyun.py · Katoo 규칙) ─────────
-   한국 거래대금 상위 300에서 오늘 주도 후보(거래대금·신고가·상승률) → 업종별로 묶고 업종 1등 표시.
+   🇰🇷 한국 거래대금 상위 300 · 🇺🇸 S&P500에서 오늘 주도 후보(거래대금·신고가·상승률) → 업종별로 묶고 업종 1등 표시.
    셋업 = 최근 60일 안에 주도 후보였던 종목이 고점 아래에서 흔들림·거래대금 줄며 버팀. 역의 역 = 지수 빠진 날 버틴 종목.
-   자료: 상태/동현엔진.json (매일 16:05 계산). 1단계: 시장 판정·보유 관리는 다음 단계. */
+   자료: 상태/동현엔진.json (평일 16:05) · 상태/동현엔진_미국.json (화~토 07:20). */
+const DHM = {
+  dh:  { file: "상태/동현엔진.json",      run: "동현엔진",      mk: "코스피", flag: "🇰🇷", idx: "코스피", when: "평일 16:05", floor: "500억" },
+  dhu: { file: "상태/동현엔진_미국.json", run: "동현엔진-미국", mk: "미국",   flag: "🇺🇸", idx: "S&P500", when: "화~토 07:20", floor: "$35M" },
+};
+const isDH = t => t === "dh" || t === "dhu";
+const dhTab = () => isDH(S.tab) ? S.tab : "dh";
+S.dhc = {}; S.dhL = {};
 const DH_TONE = {"돌파 자리": "buy", "주도 후보": "soon", "셋업": "soon", "관찰": ""};
-async function loadDH(){ S.dh = await readJSON("상태/동현엔진.json", null); S.dhLoaded = true; return S.dh; }
+async function loadDH(t){ S.dhc[t] = await readJSON(DHM[t].file, null); S.dhL[t] = true; return S.dhc[t]; }
 function dhAll(d){ return [...(d?.sectors || []).flatMap(g => g.items), ...(d?.setups || []), ...(d?.counter || [])]; }
-const dhEok = v => v == null ? "-" : v >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억";
-function dhRow(it){
-  const sub = it.state === "셋업" ? `고점 ${num(it.pivot, "코스피")} 아래 ${it.base_len != null ? Math.round(it.base_len) + "일" : ""} · 거래대금 ${dhEok(it.tv)}`
-    : `${it.sector_lead ? "업종 1등 · " : ""}거래대금 ${dhEok(it.tv)}${it.state === "돌파 자리" && it.pivot ? ` · ${num(it.pivot, "코스피")} 돌파` : ""}`;
+/* 거래대금: 한국은 억 단위, 미국은 백만 달러 단위로 들어온다 */
+function dhMoney(v, t){
+  if (v == null) return "-";
+  if (t === "dhu") return v >= 1000 ? "$" + (v / 1000).toFixed(1) + "B" : "$" + Math.round(v).toLocaleString("en-US") + "M";
+  return v >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억";
+}
+const dhPx = (v, t) => (t === "dhu" && v != null && isFinite(v) ? "$" : "") + num(v, DHM[t].mk);
+function dhRow(it, t){
+  const sub = it.state === "셋업" ? `고점 ${dhPx(it.pivot, t)} 아래 ${it.base_len != null ? Math.round(it.base_len) + "일" : ""} · 거래대금 ${dhMoney(it.tv, t)}`
+    : `${it.sector_lead ? "업종 1등 · " : ""}거래대금 ${dhMoney(it.tv, t)}${it.state === "돌파 자리" && it.pivot ? ` · ${dhPx(it.pivot, t)} 돌파` : ""}`;
   return `<button class="row press lt-srow" data-dh="${esc(it.sym)}"><div class="main"><div class="lt-n">${esc(it.name)}</div><div class="lt-s">${esc(sub)}</div></div>
-    <div class="lt-px"><b class="lt-chip ${DH_TONE[it.state] || ""}">${esc(it.state)}</b><span>${num(it.price, "코스피")} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span></div>${CHEV}</button>`;
+    <div class="lt-px"><b class="lt-chip ${DH_TONE[it.state] || ""}">${esc(it.state)}</b><span>${dhPx(it.price, t)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span></div>${CHEV}</button>`;
 }
 async function renderDH(){
-  const head = `<div class="navbar"><div class="side"></div><span class="mini">동현</span><div class="side r"><button class="icon-btn press" id="dhre" aria-label="다시 계산" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></div></div>
-    <div class="title-block" data-anchor><h1 class="big">동현</h1><div class="sub">주도주를 확인하고 산다</div></div>`;
-  const bind = () => { const r = document.getElementById("dhre"); if (r) r.onclick = async () => { if (S.busy) return; try{ const t = await dispatch("동현엔진"); await waitRun(t, "동현엔진 계산"); S.dh = null; S.dhLoaded = false; if (S.tab === "dh" && !S.dhd) renderDH(); }catch(e){ toast(e.message); } }; bindNavbar(); };
-  if (!S.dhLoaded){
+  const t = dhTab(), C = DHM[t];
+  const head = `<div class="navbar"><div class="side"></div><span class="mini">동현 ${C.flag}</span><div class="side r"><button class="icon-btn press" id="dhre" aria-label="다시 계산" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></div></div>
+    <div class="title-block" data-anchor><h1 class="big">동현 ${C.flag}</h1><div class="sub">주도주를 확인하고 산다 · <button class="tlink press" id="dhhow" style="display:inline;padding:0">사용법</button></div></div>`;
+  const bind = () => {
+    const r = document.getElementById("dhre");
+    if (r) r.onclick = async () => { if (S.busy) return; try{ const k = await dispatch(C.run); await waitRun(k, "동현엔진 계산"); S.dhc[t] = null; S.dhL[t] = false; if (S.tab === t && !S.dhd) renderDH(); }catch(e){ toast(e.message); } };
+    const h = document.getElementById("dhhow"); if (h) h.onclick = () => { try{ history.pushState({v: "t"}, ""); }catch(e){} go("fade", () => { S.tab = "guide"; }); };
+    bindNavbar();
+  };
+  if (!S.dhL[t]){
     $app.innerHTML = `<div class="wrap">${head}<div class="card"><div class="sk" style="width:40%;height:16px"></div><div class="sk" style="width:70%;height:12px;margin-top:12px"></div></div></div>`; bind();
-    try{ await loadDH(); }catch(e){ const w = $app.querySelector(".wrap"); if (w) w.insertAdjacentHTML("beforeend", `<div class="err" style="margin-top:var(--gap-block)">${esc(e.message)}</div>`); return; }
-    if (S.tab === "dh" && !S.dhd) renderDH(); return;
+    try{ await loadDH(t); }catch(e){ const w = $app.querySelector(".wrap"); if (w) w.insertAdjacentHTML("beforeend", `<div class="err" style="margin-top:var(--gap-block)">${esc(e.message)}</div>`); return; }
+    if (S.tab === t && !S.dhd) renderDH(); return;
   }
-  const d = S.dh;
-  if (!d){ $app.innerHTML = `<div class="wrap">${head}<div class="card empty"><b>아직 계산 전이에요</b>매일 16:05에 계산해요. 지금 계산하려면 위의 다시 계산을 누르세요.</div></div>`; bind(); return; }
+  const d = S.dhc[t];
+  if (!d){ $app.innerHTML = `<div class="wrap">${head}<div class="card empty"><b>아직 계산 전이에요</b>${C.when}에 계산해요. 지금 계산하려면 위의 다시 계산을 누르세요.</div></div>`; bind(); return; }
   const m = d.market || {}, md = String(d.date || "").slice(5).replace("-", "/");
+  const total = m.tv_total ?? m.tv_jo, thr = m.threshold ?? m.threshold_eok;
   const nC = (d.sectors || []).reduce((a, g) => a + g.n, 0);
-  const secs = (d.sectors || []).map(g => `<p class="note" style="margin:var(--gap-sub) var(--pad-card) 6px">${esc(g.sector)}${g.together ? ` · ${g.n}종목 같이 오름` : ""}</p><div class="list">${g.items.map(dhRow).join("")}</div>`).join("");
-  $app.innerHTML = `<div class="wrap">${head}
+  const secs = (d.sectors || []).map(g => `<p class="note" style="margin:var(--gap-sub) var(--pad-card) 6px">${esc(g.sector)}${g.together ? ` · ${g.n}종목 같이 오름` : ""}</p><div class="list">${g.items.map(x => dhRow(x, t)).join("")}</div>`).join("");
+  $app.innerHTML = `<div class="wrap ${t}">${head}
     <section class="card lt-vd">
       <div class="lt-mk2">
-        <div><b>${m.tv_jo != null ? m.tv_jo + "조" : "-"}</b><span>시장 거래대금</span></div>
-        <div><b>${dhEok(m.threshold_eok)}</b><span>주도주 기준</span></div>
-        <div><b class="${m.index_chg > 0 ? "hot" : m.index_chg < 0 ? "cold" : ""}">${m.index_chg != null ? pct(m.index_chg) : "-"}</b><span>코스피</span></div>
+        <div><b>${total != null ? (t === "dhu" ? "$" + Math.round(total) + "B" : total + "조") : "-"}</b><span>시장 거래대금</span></div>
+        <div><b>${dhMoney(thr, t)}</b><span>주도주 기준</span></div>
+        <div><b class="${m.index_chg > 0 ? "hot" : m.index_chg < 0 ? "cold" : ""}">${m.index_chg != null ? pct(m.index_chg) : "-"}</b><span>${C.idx}</span></div>
       </div>
-      <p class="n">기준 = 시장 거래대금의 0.3% (최소 500억). 할 때·쉴 때 판정은 다음 단계에서 붙여요.</p>
+      <p class="n">기준 = 시장 거래대금의 0.3% (최소 ${C.floor}). 할 때·쉴 때 판정은 다음 단계에서 붙여요.</p>
     </section>
     <h2 class="sec-title">오늘의 주도 후보 <span class="lt-cnt">${nC}</span></h2>
     ${nC ? secs : `<div class="card empty" style="margin:0"><b>오늘은 없어요</b>거래대금 기준을 넘으면서 6개월 신고가를 낸 종목이 없어요. 주도주는 하루 몇 개 없는 게 정상이에요 (A1).</div>`}
-    ${(d.setups || []).length ? `<h2 class="sec-title">셋업 <span class="lt-cnt">${d.setups.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">최근 주도 후보였고, 고점 아래에서 흔들림·거래대금이 줄며 버티는 종목</p><div class="list">${d.setups.map(dhRow).join("")}</div>` : ""}
-    ${(d.counter || []).length ? `<h2 class="sec-title">역의 역 <span class="lt-cnt">${d.counter.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">지수가 빠진 날 안 빠지거나 오른 종목</p><div class="list">${d.counter.map(dhRow).join("")}</div>` : ""}
+    ${(d.setups || []).length ? `<h2 class="sec-title">셋업 <span class="lt-cnt">${d.setups.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">최근 주도 후보였고, 고점 아래에서 흔들림·거래대금이 줄며 버티는 종목</p><div class="list">${d.setups.map(x => dhRow(x, t)).join("")}</div>` : ""}
+    ${(d.counter || []).length ? `<h2 class="sec-title">역의 역 <span class="lt-cnt">${d.counter.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">지수가 빠진 날 안 빠지거나 오른 종목</p><div class="list">${d.counter.map(x => dhRow(x, t)).join("")}</div>` : ""}
     <p class="note lt-foot">${md ? md + " 종가 기준 · " : ""}Katoo 글의 규칙으로 계산 · 출처 번호는 종목 화면에</p>
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
@@ -1856,11 +1908,12 @@ async function renderDH(){
   $app.querySelectorAll("[data-dh]").forEach(b => b.onclick = () => go("push", () => S.dhd = b.dataset.dh));
 }
 function renderDHDetail(sym){
-  if (!S.dhLoaded){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
-    loadDH().then(() => { if (S.dhd === sym) render("none"); }).catch(e => toast(e.message)); return; }
-  const it = dhAll(S.dh).find(x => x.sym === sym);
+  const t = dhTab();
+  if (!S.dhL[t]){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
+    loadDH(t).then(() => { if (S.dhd === sym) render("none"); }).catch(e => toast(e.message)); return; }
+  const D = S.dhc[t], it = dhAll(D).find(x => x.sym === sym);
   if (!it){ S.dhd = null; return renderDH(); }
-  const P = v => num(v, "코스피"), tone = DH_TONE[it.state] || "wait";
+  const P = v => dhPx(v, t), tone = DH_TONE[it.state] || "wait";
   const stops = it.stops || [];
   S.dhStop = Math.min(S.dhStop || 0, Math.max(0, stops.length - 1));
   const line = it.state === "돌파 자리" ? `거래대금 실린 ${P(it.pivot)}(직전 고점) 돌파를 종가로 확인했어요.`
@@ -1868,9 +1921,9 @@ function renderDHDetail(sym){
     : it.state === "셋업" ? `고점 ${P(it.pivot)} 아래에서 버티는 중. 거래대금 실어 뚫으면 돌파 자리예요.`
     : `지수가 빠진 날 버텼어요. 관찰 목록이에요.`;
   const sp = stops[S.dhStop];
-  $app.innerHTML = `<div class="wrap">
-    <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현</span></button></div><span class="mini">${esc(it.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(it.name)}</h1><div class="sub">${esc(String(S.dh.date || "").slice(5).replace("-", "/"))} 종가 ${P(it.price)} <span class="${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span> · 거래대금 ${dhEok(it.tv)}${it.sector ? " · " + esc(it.sector) : ""}</div></div>
+  $app.innerHTML = `<div class="wrap ${t}">
+    <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현 ${DHM[t].flag}</span></button></div><span class="mini">${esc(it.name)}</span><div class="side r"></div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(it.name)}</h1><div class="sub">${esc(String(D.date || "").slice(5).replace("-", "/"))} 종가 ${P(it.price)} <span class="${it.chg >= 0 ? "up" : "down"}">${pct(it.chg)}</span> · 거래대금 ${dhMoney(it.tv, t)}${it.sector ? " · " + esc(it.sector) : ""}</div></div>
     <section class="card lt-vd">
       <div class="w ${tone}">${esc(it.state)}${it.sector_lead ? ` <span class="lt-chip buy" style="vertical-align:middle;margin-left:6px">업종 1등</span>` : ""}</div>
       <p class="l">${esc(line)}</p>
@@ -1881,6 +1934,7 @@ function renderDHDetail(sym){
       </div>
     </section>
     <div class="card chart" id="chartBox" style="margin-top:var(--gap-block)"></div>
+    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선 · 점선 상자 베이스 · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
     ${stops.length ? `<h2 class="sec-title">비중 계산</h2>
     <div class="card">
       <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
@@ -1894,10 +1948,11 @@ function renderDHDetail(sym){
     <h2 class="sec-title">근거</h2>
     <div class="list">${(it.why || []).map(w => `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(w.t)}</div></div><div class="lt-px"><span>${esc(w.src)}</span></div></div>`).join("") || `<div class="row"><div class="main sub">근거 없음</div></div>`}</div>
     <h2 class="sec-title">직접 확인</h2>
-    <div class="list">${["분봉: 돌파 때 거래량이 실렸나", "호가: 한 호가에 몇억씩 쌓였나", "재료: 왜 오르는지 (뉴스·공시)", "실적 발표일 전이면 셀온 주의"].map(t => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${esc(t)}</div></div></div>`).join("")}</div>
+    <div class="list">${["분봉: 돌파 때 거래량이 실렸나", "호가: 한 호가에 큰 주문이 쌓였나", "재료: 왜 오르는지 (뉴스·공시)", "실적 발표일 전이면 셀온 주의"].map(x => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${esc(x)}</div></div></div>`).join("")}</div>
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
   document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
+  document.getElementById("dhhow2").onclick = () => { S.guideAt = "chart"; S.dhd = null; go("fade", () => { S.tab = "guide"; }); };
   $app.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { S.dhStop = +b.dataset.st; render("none"); });
   const lv = [];
   if (it.pivot) lv.push({ v: it.pivot, kind: "res", g: "main", label: "직전 고점", fit: true });
@@ -1905,7 +1960,108 @@ function renderDHDetail(sym){
   if (sp) lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
   if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
   const box = $app.querySelector("#chartBox");
-  if (box) S.chart = mountChart(box, { sym: it.sym, name: it.name, market: "코스피", bars: it.bars || [], marks: [], sig_help: null, pattern: null, price: it.price, chg: it.chg }, { od: true, levels: lv });
+  if (box) S.chart = mountChart(box, { sym: it.sym, name: it.name, market: DHM[t].mk, bars: it.bars || [], marks: [], sig_help: null, pattern: null, price: it.price, chg: it.chg }, { od: true, levels: lv });
+}
+
+/* ───────── 사용법 (Katoo 규칙을 그림으로) ─────────
+   그림 색은 차트와 같다: 회색 점선 = 직전 고점, 보라 점선 = 라운드피겨, 빨간 선 = 손절선, 점선 상자 = 베이스. */
+function gSvg(body, label){
+  return `<svg class="gi" viewBox="0 0 320 132" role="img" aria-label="${esc(label)}">${body}</svg>`;
+}
+const G_VOL = hs => hs.map(([x, h, hot]) => `<rect x="${x - 3}" y="${128 - h}" width="6" height="${h}" rx="1" class="${hot ? "vh" : "v"}"/>`).join("");
+const GUIDE_PICS = {
+  buy: gSvg(`<rect x="96" y="30" width="112" height="34" rx="3" class="bx"/><text x="152" y="76" class="tl" text-anchor="middle">베이스</text>
+    <line x1="80" x2="312" y1="30" y2="30" class="pv"/><text x="312" y="46" class="tl" text-anchor="end">직전 고점</text>
+    <polyline class="p" points="8,96 30,84 52,66 74,44 92,30 108,58 124,36 140,54 156,40 172,50 186,42 200,46 214,38 226,14"/>
+    <circle cx="226" cy="14" r="6" class="dg"/><text x="236" y="18" class="tg">여기서 산다</text>
+    ${G_VOL([[30,8],[52,10],[74,12],[92,14],[108,9],[124,8],[140,7],[156,6],[172,5],[186,5],[200,4],[214,5],[226,20,1]])}`, "베이스를 만든 뒤 직전 고점을 거래량과 함께 넘는 날 산다"),
+  stop: gSvg(`<line x1="8" x2="312" y1="40" y2="40" class="pv"/><text x="312" y="34" class="tl" text-anchor="end">직전 고점</text>
+    <line x1="96" x2="312" y1="62" y2="62" class="st"/><text x="312" y="76" class="tr" text-anchor="end">손절선</text>
+    <polyline class="p" points="8,70 30,52 52,62 74,50 96,38 118,28 140,36 162,48 184,58 206,72 228,80"/>
+    <circle cx="96" cy="38" r="6" class="dg"/><text x="70" y="22" class="tg">산 자리</text>
+    <path d="M200 66l12 12M212 66l-12 12" class="x"/><text x="220" y="100" class="tr">종가로 깨면 바로 판다</text>`, "산 뒤 손절선을 종가로 깨면 바로 판다"),
+  sell: gSvg(`<line x1="8" x2="312" y1="22" y2="22" class="rf"/><text x="312" y="16" class="tl" text-anchor="end">라운드피겨</text>
+    <line x1="8" x2="312" y1="58" y2="58" class="pv"/><text x="312" y="72" class="tl" text-anchor="end">직전 고점</text>
+    <polyline class="p" points="8,88 34,74 60,80 86,66 110,50 134,34 156,26 176,30 196,42 218,56 240,68"/>
+    <circle cx="110" cy="50" r="6" class="dg"/><text x="110" y="80" class="tg" text-anchor="middle">산 자리</text>
+    <circle cx="240" cy="68" r="6" class="db"/><text x="252" y="96" class="tb" text-anchor="middle">못 가고 밀리면 판다</text>`, "올라야 할 자리에서 못 가고 다시 밀리면 판다"),
+  add: gSvg(`<line x1="8" x2="160" y1="78" y2="78" class="pv"/><line x1="150" x2="312" y1="42" y2="42" class="pv"/>
+    <rect x="164" y="40" width="70" height="22" rx="3" class="bx"/>
+    <line x1="60" x2="312" y1="100" y2="100" class="st"/><text x="312" y="114" class="tr" text-anchor="end">처음 손절선</text>
+    <line x1="240" x2="312" y1="64" y2="64" class="st st2"/><text x="312" y="78" class="tr" text-anchor="end">더 산 만큼 손절선</text>
+    <polyline class="p" points="8,110 30,96 50,90 66,76 88,62 110,52 132,46 152,40 168,54 184,46 200,56 216,48 232,50 248,26"/>
+    <circle cx="66" cy="76" r="6" class="dg"/><text x="20" y="66" class="tg">처음</text>
+    <circle cx="248" cy="26" r="6" class="dg"/><text x="258" y="22" class="tg">더 산다</text>`, "오른 뒤 다시 쉬었다가 새 고점을 넘으면 더 사고, 더 산 만큼은 따로 손절선을 둔다"),
+};
+function renderGuide(){
+  const rule = (k, tone, title, head, items, dont) => `<section class="card gd-card" id="g-${k}">
+      <div class="gd-h"><b class="lt-chip ${tone}">${title}</b></div>
+      <p class="gd-lead">${head}</p>
+      <div class="gd-pic">${GUIDE_PICS[k]}</div>
+      <ul class="gd-ul">${items.map(x => `<li>${x}</li>`).join("")}</ul>
+      ${dont ? `<p class="gd-dont">${dont}</p>` : ""}
+    </section>`;
+  $app.innerHTML = `<div class="wrap gd">
+    <div class="navbar"><div class="side"></div><span class="mini">사용법</span><div class="side r"></div></div>
+    <div class="title-block" data-anchor><h1 class="big">사용법</h1><div class="sub">카투 규칙으로 주도주를 고르고, 살 자리·손절선·비중을 계산해요. 결정은 직접 해요.</div></div>
+
+    <h2 class="sec-title">하루 순서</h2>
+    <ol class="card gd-steps">
+      <li><b>장 끝나고 목록 보기</b><span>🇰🇷는 평일 16:05, 🇺🇸는 아침 07:20에 새로 계산돼요. 초록 ‘돌파 자리’부터 봐요.</span></li>
+      <li><b>사기 전에 손절선·비중 정하기</b><span>종목을 눌러 손절선을 고르면 최대 비중이 나와요. 사고 나서 정하지 않아요.</span></li>
+      <li><b>다음 장에서 확인하고 사기</b><span>직전 고점을 거래대금 실어 넘는지 분봉·호가로 보고, 5~10%만 먼저 사요.</span></li>
+    </ol>
+
+    <h2 class="sec-title" id="g-chart">차트 보는 법</h2>
+    <div class="card gd-legend">
+      <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="pv"/></svg><span><b>직전 고점</b>넘어야 할 가격</span></div>
+      <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="rf"/></svg><span><b>라운드피겨</b>딱 떨어지는 가격. 매물이 모여요</span></div>
+      <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="st"/></svg><span><b>손절선</b>여기를 깨면 팔아요</span></div>
+      <div><svg viewBox="0 0 40 10" aria-hidden="true"><rect x="1" y="1" width="38" height="8" rx="2" class="bx"/></svg><span><b>베이스</b>고점 뒤 쉬는 구간</span></div>
+      <div><svg viewBox="0 0 40 10" aria-hidden="true"><rect x="4" y="4" width="6" height="6" class="v"/><rect x="17" y="2" width="6" height="8" class="v"/><rect x="30" y="0" width="6" height="10" class="vh"/></svg><span><b>아래 막대</b>거래량. 돌파 날 커야 해요</span></div>
+    </div>
+
+    ${rule("buy", "buy", "살 때", "쉬었다가 직전 고점을 <b>거래대금 실어 종가로</b> 넘은 날", [
+      "고점 뒤 10일 이상 쉬면서 흔들림과 거래대금이 줄어 있어야 해요",
+      "돌파 날 거래대금이 평소(20일 평균)의 1.5배 이상",
+      "같은 업종이 같이 오르면 그 업종 <b>1등</b>만 사요"],
+      "이럴 땐 안 사요: 쉬지 않고 급하게 오른 걸 쫓을 때 · 거래대금 없이 슬쩍 넘을 때")}
+    ${rule("stop", "sell", "손절할 때", "사기 전에 정한 손절선을 <b>종가로 깨면 바로</b>", [
+      "손절선은 산 날 저점 · 라운드피겨 아래 · 박스 하단 중 하나",
+      "한 번 손절해도 계좌는 <b>1%</b>만 줄도록 비중을 맞춰요",
+      "내려갈 때 더 사지 않아요 (물타기 안 함)"])}
+    ${rule("sell", "soon", "팔 때", "가야 할 자리에서 <b>못 가고 밀리면</b>", [
+      "돌파했는데 다시 직전 고점 아래로 들어오면 줄이거나 팔아요",
+      "라운드피겨·새 고점 앞에서 힘없이 밀리면 팔아요",
+      "많이 오르면 손절선을 산 가격 위로 올려 수익을 지켜요"])}
+    ${rule("add", "buy", "더 살 때", "맞았을 때만 더 사요 (불타기)", [
+      "오른 뒤 다시 쉬었다가 새 고점을 넘을 때 더 사요",
+      "더 산 만큼은 따로 손절선을 둬요 (새 박스 하단)",
+      "처음 산 것은 처음 손절선 그대로"])}
+
+    <h2 class="sec-title">칩 뜻</h2>
+    <div class="list">
+      ${[["buy", "돌파 자리", "살 자리. 손절선·비중부터 정해요"], ["soon", "주도 후보", "주도주 조건은 넘었지만 돌파는 아직"], ["soon", "셋업", "최근 주도주가 고점 아래에서 쉬는 중"], ["", "관찰", "지수가 빠진 날 버틴 종목"]]
+        .map(([c, n, s]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${s}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
+    </div>
+
+    <h2 class="sec-title">비중 정하기</h2>
+    <section class="card gd-calc">
+      <p class="gd-f">최대 비중 = 1% ÷ 손절폭</p>
+      <div class="lt-mk2"><div><b>20%</b><span>손절폭 5%</span></div><div><b>12.5%</b><span>손절폭 8%</span></div><div><b>10%</b><span>손절폭 10%</span></div></div>
+      <p class="n">손절선이 멀수록 적게 사요. 처음엔 최대 비중을 다 채우지 말고 5~10%로 시작해요.</p>
+    </section>
+
+    <h2 class="sec-title">알아둘 것</h2>
+    <ul class="card gd-ul gd-note">
+      <li>후보가 0개인 날이 많아요. 주도주는 하루 몇 개 없는 게 정상이에요.</li>
+      <li>엔진은 일봉만 봐요. 분봉·호가·뉴스·실적일은 직접 확인해요.</li>
+      <li>규칙으로 계산한 결과예요. 사고파는 결정은 직접 해요.</li>
+    </ul>
+    <p class="note lt-foot" style="text-align:center;margin-top:20px">출처: Katoo(@blazingbees) 아티클·매매일지·구독 코멘트</p>
+  </div>`;
+  bindNavbar();
+  if (S.guideAt){ const el = document.getElementById("g-" + S.guideAt); S.guideAt = null; if (el) requestAnimationFrame(() => scrollTo(0, el.getBoundingClientRect().top + scrollY - 60)); }
 }
 
 function renderSettings(){
@@ -1916,9 +2072,8 @@ function renderSettings(){
     </div>
     <div class="sec-title" role="heading" aria-level="2">자동 계산 (한국 시간)</div>
     <div class="list">
-      <div class="row"><div class="main"><b>미국장 마감 뒤</b><div class="sub">매일 07:10</div></div></div>
-      <div class="row"><div class="main"><b>한국장 마감 뒤</b><div class="sub">매일 15:50</div></div></div>
-      <div class="row"><div class="main"><b>동현엔진</b><div class="sub">평일 16:05</div></div></div>
+      <div class="row"><div class="main"><b>동현 🇰🇷</b><div class="sub">평일 16:05 (한국장 마감 뒤)</div></div></div>
+      <div class="row"><div class="main"><b>동현 🇺🇸</b><div class="sub">화~토 07:20 (미국장 마감 뒤)</div></div></div>
     </div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">신호와 오동엔진을 함께 계산해요.</p>
     <details class="adv"><summary class="press">고급 설정 ›</summary>
@@ -1992,8 +2147,8 @@ document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => {
 let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if ((S.odd || S.dhd) && S.chart) S.chart.redraw(); }, 150); });
 addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.token && !S.busy) refresh(); });
 { const v = LS.get("view");   // 보던 탭은 늘, 상세 화면은 10분 안에 다시 열었을 때만
-  if (v && ["lt", "od", "dh", "settings"].includes(v.tab)){ S.tab = v.tab;
-    if (Date.now() - (v.t || 0) < 6e5){ S.odd = v.odd || null; S.ltd = v.ltd || null; S.dhd = v.dhd || null; }
+  if (v && ["dh", "dhu", "guide", "settings"].includes(v.tab)){ S.tab = v.tab;
+    if (Date.now() - (v.t || 0) < 6e5){ S.dhd = v.dhd || null; }
     try{ if (S.tab !== HOME) history.pushState({v: "t"}, ""); if (S.odd || S.ltd || S.dhd) history.pushState({v: "d"}, ""); }catch(e){} } }
 render("none");
 if (S.token) refresh();
