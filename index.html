@@ -1877,8 +1877,8 @@ function dhMoney(v, t){
   if (t === "dhu") return v >= 1000 ? "$" + (v / 1000).toFixed(1) + "B" : "$" + Math.round(v).toLocaleString("en-US") + "M";
   return v >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억";
 }
-const earnTag = e => e && e.d && e.kind !== "발표됨" && e.n != null && e.n >= 0 && e.n <= 14 ? ` · 실적 ${e.n ? "D-" + e.n : "D-day"}` : "";
-const earnLine = e => !e || !e.d ? "실적 발표일: 못 찾았어요 · 직접 확인" : e.kind === "발표됨" ? `실적 발표됨 ${String(e.d).slice(5).replace("-", "/")} (${e.src})` : `실적 발표 ${String(e.d).slice(5).replace("-", "/")} ${e.kind === "추정" ? "무렵 (작년 같은 분기로 추정)" : "(" + e.src + ")"} · ${e.n ? e.n + "거래일 남음" : "오늘"}. 발표 전 급등했으면 셀온 주의`;
+const earnTag = e => !e || !e.d || e.kind === "발표됨" || e.n == null || e.n < 0 || e.n > 14 ? "" : e.kind === "마감" ? ` · 실적 ${String(e.d).slice(5).replace("-", "/")} 전` : ` · 실적 ${e.n ? "D-" + e.n : "D-day"}`;
+const earnLine = e => !e || !e.d ? "실적 발표일: 못 찾았어요 · 직접 확인" : e.kind === "마감" ? `실적 발표: 늦어도 ${String(e.d).slice(5).replace("-", "/")} (정기보고서 마감) · 날짜는 증권사 앱에서 확인` : e.kind === "발표됨" ? `실적 발표됨 ${String(e.d).slice(5).replace("-", "/")} (${e.src})` : `실적 발표 ${String(e.d).slice(5).replace("-", "/")} ${e.kind === "추정" ? "무렵 (작년 같은 분기로 추정)" : "(" + e.src + ")"} · ${e.n ? e.n + "거래일 남음" : "오늘"}. 발표 전 급등했으면 셀온 주의`;
 const dhPx = (v, t) => (t === "dhu" && v != null && isFinite(v) ? "$" : "") + num(v, DHM[t].mk);
 function dhRow(it, t){
   const sub = it.state === "셋업" ? `고점 ${dhPx(it.pivot, t)} 아래 ${it.base_len != null ? Math.round(it.base_len) + "일" : ""} · 거래대금 ${dhMoney(it.tv, t)}`
