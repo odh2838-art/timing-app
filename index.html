@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-53">
+<meta name="app-version" content="2026-10-19-54">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1875,7 +1875,7 @@ const DHM = {
 const isDH = t => t === "dh" || t === "dhu";
 const dhTab = () => isDH(S.tab) ? S.tab : "dh";
 S.dhc = {}; S.dhL = {};
-const DH_TONE = {"돌파 자리": "buy", "주도 후보": "soon", "셋업": "soon", "관찰": ""};
+const DH_TONE = {"돌파 자리": "buy", "2등주 돌파": "", "주도 후보": "soon", "셋업": "soon", "관찰": ""};
 async function loadDH(t){ S.dhc[t] = await readJSON(DHM[t].file, null); S.dhL[t] = true; return S.dhc[t]; }
 function dhAll(d){ return [...(d?.sectors || []).flatMap(g => g.items), ...(d?.setups || []), ...(d?.counter || [])]; }
 /* 거래대금: 한국은 억 단위, 미국은 백만 달러 단위로 들어온다 */
@@ -1884,8 +1884,19 @@ function dhMoney(v, t){
   if (t === "dhu") return v >= 1000 ? "$" + (v / 1000).toFixed(1) + "B" : "$" + Math.round(v).toLocaleString("en-US") + "M";
   return v >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억";
 }
-const earnTag = e => !e || !e.d || e.kind === "발표됨" || e.n == null || e.n < 0 || e.n > 14 ? "" : e.kind === "마감" ? ` · 실적 ${String(e.d).slice(5).replace("-", "/")} 전` : ` · 실적 ${e.n ? "D-" + e.n : "D-day"}`;
-const earnLine = e => !e || !e.d ? "실적 발표일: 못 찾았어요 · 직접 확인" : e.kind === "마감" ? `실적 발표: 늦어도 ${String(e.d).slice(5).replace("-", "/")} (정기보고서 마감) · 날짜는 증권사 앱에서 확인` : e.kind === "발표됨" ? `실적 발표됨 ${String(e.d).slice(5).replace("-", "/")} (${e.src})` : `실적 발표 ${String(e.d).slice(5).replace("-", "/")} ${e.kind === "추정" ? "무렵 (작년 같은 분기로 추정)" : "(" + e.src + ")"} · ${e.n ? e.n + "거래일 남음" : "오늘"}. 발표 전 급등했으면 셀온 주의`;
+const bizDays = d => {   // 오늘부터 그날까지 평일 수 (지난 날이면 음수)
+  const t = new Date(todayISO() + "T00:00:00Z"), x = new Date(String(d) + "T00:00:00Z"); let n = 0;
+  const step = x >= t ? 1 : -1;
+  for (let y = new Date(t); step > 0 ? y < x : y > x; ){ y.setUTCDate(y.getUTCDate() + step); if (y.getUTCDay() % 6) n += step; }
+  return n;
+};
+const earnN = e => e && e.d ? bizDays(e.d) : null;
+const earnTag = e => { const n = earnN(e); return !e || !e.d || e.kind === "발표됨" || n == null || n < 0 || n > 14 ? "" : e.kind === "마감" ? ` · 실적 ${String(e.d).slice(5).replace("-", "/")} 전` : ` · ${e.kind === "IR" ? "IR" : "실적"} ${n ? "D-" + n : "D-day"}`; };
+const earnLine = e => { if (!e || !e.d) return "실적 발표일: 못 찾았어요 · 직접 확인"; const md = String(e.d).slice(5).replace("-", "/"), n = earnN(e);
+  if (e.kind === "마감") return `실적 발표: 늦어도 ${md} (정기보고서 마감) · 날짜는 증권사 앱에서 확인`;
+  if (e.kind === "발표됨" || n < 0) return `실적 발표됨 ${md} (${e.src})`;
+  return `${e.kind === "IR" ? "IR(실적 설명회일 수 있음)" : "실적 발표"} ${md} ${e.kind === "추정" ? "무렵 (작년 같은 분기로 추정)" : "(" + e.src + ")"} · ${n ? n + "거래일 남음" : "오늘"}. 발표 전 급등했으면 셀온 주의`; };
+const dhAbove = it => it.price != null && (it.round_pivot == null || it.price >= it.round_pivot || it.price > it.pivot);   // 이미 넘었으면 '가야 할 자리'
 const dhPx = (v, t) => (t === "dhu" && v != null && isFinite(v) ? "$" : "") + num(v, DHM[t].mk);
 function dhRow(it, t){
   const sub = it.state === "셋업" ? `고점 ${dhPx(it.pivot, t)} 아래 ${it.base_len != null ? Math.round(it.base_len) + "일" : ""} · 거래대금 ${dhMoney(it.tv, t)}`
@@ -1946,6 +1957,7 @@ function renderDHDetail(sym){
   S.dhStop = Math.min(S.dhStop || 0, Math.max(0, stops.length - 1));
   const line = it.state === "돌파 자리" ? `거래대금 실린 ${P(it.pivot)}(직전 고점) 돌파를 종가로 확인했어요.`
     : it.state === "주도 후보" ? (it.price > it.pivot && (it.base_len ?? 0) < 10 ? `베이스 없이 신고가가 이어지는 중이에요. 급하게 오른 자리를 쫓아 사면 손익비가 나빠요 (A54 A47). 쉬면서 베이스를 만들면 셋업으로 다시 봐요.` : `거래대금·신고가·상승률 기준을 넘었어요. 거래대금 실린 직전 고점 돌파는 아직이에요.`)
+    : it.state === "2등주 돌파" ? `직전 고점 ${P(it.pivot)} 돌파는 맞지만 업종 1등이 아니에요. 카투는 2등주는 안 사요 (A47 A80). 1등이 쉴 때를 기다려요.`
     : it.state === "셋업" ? `고점 ${P(it.pivot)} 아래에서 버티는 중. 거래대금 실어 뚫으면 돌파 자리예요.`
     : `지수가 빠진 날 버텼어요. 관찰 목록이에요.`;
   const sp = stops[S.dhStop];
@@ -1957,13 +1969,13 @@ function renderDHDetail(sym){
       <p class="l">${esc(line)}</p>
       <div class="lt-mk2 od-st">
         <div><b>${P(it.pivot)}</b><span>직전 고점</span></div>
-        ${it.state === "돌파 자리" ? `<div><b>${P(it.goal ?? it.round_next)}</b><span>가야 할 자리</span></div>` : `<div><b>${P(it.round_pivot ?? it.round_next)}</b><span>넘을 라운드피겨</span></div>`}
+        ${dhAbove(it) ? `<div><b>${P(it.goal ?? it.round_next)}</b><span>가야 할 자리</span></div>` : `<div><b>${P(it.round_pivot ?? it.round_next)}</b><span>넘을 라운드피겨</span></div>`}
         <div><b>${it.base_len != null ? Math.round(it.base_len) + "일" : "-"}</b><span>고점 뒤</span></div>
       </div>
     </section>
     <div class="card chart" id="chartBox" style="margin-top:var(--gap-block)"></div>
     <p class="note" style="margin:8px var(--pad-card) 0">일봉 (봉 하나 = 하루) · 회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선 · 점선 상자 베이스 · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
-    ${stops.length ? `<h2 class="sec-title">비중 계산</h2>
+    ${stops.length && it.state !== "2등주 돌파" ? `<h2 class="sec-title">비중 계산</h2>
     <div class="card">
       <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
       <div class="lt-mk2">
@@ -1984,8 +1996,8 @@ function renderDHDetail(sym){
   $app.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { S.dhStop = +b.dataset.st; render("none"); });
   const lv = [];
   if (it.pivot) lv.push({ v: it.pivot, kind: "res", g: "main", label: "직전 고점", fit: true });
-  const rf = it.state === "돌파 자리" ? (it.goal ?? it.round_next) : (it.round_pivot ?? it.round_next);
-  if (rf) lv.push({ v: rf, kind: "fib", g: "main", label: it.state === "돌파 자리" ? "가야 할 자리" : "넘을 라운드피겨" });
+  const rf = dhAbove(it) ? (it.goal ?? it.round_next) : (it.round_pivot ?? it.round_next);
+  if (rf) lv.push({ v: rf, kind: "fib", g: "main", label: dhAbove(it) ? "가야 할 자리" : "넘을 라운드피겨" });
   if (sp) lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
   if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
   const box = $app.querySelector("#chartBox");
@@ -2014,6 +2026,8 @@ async function saveHold(msg){
   const r = await gh("/contents/" + enc(HOLD_SRC), { method: "PUT", body: JSON.stringify(body) }); S.hold.sha = r.content.sha;
   try{ const t = await dispatch("동현보유"); waitRun(t, "보유 점검 중").then(async () => { try{ S.hold.res = await readJSON(HOLD_RES, null); }catch(e){} if (isDH(S.tab)) render("none"); }); }catch(e){ toast(e.message); }
 }
+const lotSig = ls => JSON.stringify((ls || []).map(x => [x.d, +x.px, +x.w, x.stop == null ? null : +x.stop, x.kind]).sort());
+const holdFresh = (h, r) => !!r && lotSig(r.lots) === lotSig(h.lots);
 const holdRes = id => (S.hold?.res?.items || []).find(x => x.id === id);
 const holdMk = t => t === "dhu" ? "us" : "kr";
 function holdCalc(h){   // 판정 전(방금 추가)에도 숫자는 보이게
@@ -2041,7 +2055,7 @@ function dhRegimeCard(d, t){
       segs += `<line x1="${X(i - 1).toFixed(1)}" y1="${Y(H[i - 1][1]).toFixed(1)}" x2="${X(i).toFixed(1)}" y2="${Y(H[i][1]).toFixed(1)}" class="${H[i][2] ? "on" : "off"}"/>`;
     const bh = g.box_hi != null ? `<line x1="0" x2="${W}" y1="${Y(g.box_hi).toFixed(1)}" y2="${Y(g.box_hi).toFixed(1)}" class="bh"/>` : "";
     spark = `<svg class="mk-spark" viewBox="0 0 ${W} ${Ht}" preserveAspectRatio="none" aria-hidden="true">${bh}${segs}</svg>
-      <div class="mk-leg"><span><i class="on"></i>할 때</span><span><i class="off"></i>쉴 때</span>${g.box_hi != null ? `<span><i class="bh"></i>박스 상단 ${t === "dhu" ? num(g.box_hi, "미국") : Math.round(g.box_hi).toLocaleString("ko-KR")}</span>` : ""}<span class="r">6개월 ${C.idx}</span></div>`;
+      <div class="mk-leg"><span><i class="on"></i>할 때</span><span><i class="off"></i>쉴 때</span>${g.box_hi != null ? `<span><i class="bh"></i>20일 고점 ${t === "dhu" ? num(g.box_hi, "미국") : Math.round(g.box_hi).toLocaleString("ko-KR")}</span>` : ""}<span class="r">6개월 ${C.idx}</span></div>`;
   }
   return `<section class="card lt-vd mk-card">
     <div class="mk-top"><span class="w ${on ? "buy" : "wait"}">${g.state}</span><span class="mk-src">${esc(g.src || "")}</span></div>
@@ -2061,7 +2075,7 @@ function dhHoldSection(t){
     <div class="card empty" style="margin:0"><b>들고 있는 종목이 없어요</b>산 종목을 넣으면 손절·불타기·정리할 때를 알려 드려요.</div>`;
   return `<div class="sec-row"><h2 class="sec-title">내 보유 <span class="lt-cnt">${mine.length}</span></h2>${add}</div>
     <div class="list">${mine.map(h => {
-      const r = holdRes(h.id), fresh = r && (r.lots || []).length === (h.lots || []).length;
+      const r = holdRes(h.id), fresh = holdFresh(h, r);
       const st = fresh ? r.status : "점검 중", { w, avg } = holdCalc(h);
       const sub = `평균 ${dhPx(fresh ? r.avg : avg, t)} · 비중 ${Math.round(w * 10) / 10}%${fresh && r.acct != null ? ` · 계좌 ${r.acct > 0 ? "+" : ""}${r.acct}%` : ""}${h.acct ? " · " + esc(h.acct) : ""}${fresh ? earnTag(r.earn) : ""}`;
       return `<button class="row press lt-srow" data-dh="h:${esc(h.id)}"><div class="main"><div class="lt-n">${esc(h.name)}</div><div class="lt-s">${sub}</div></div>
@@ -2070,7 +2084,7 @@ function dhHoldSection(t){
 function renderHoldDetail(id){
   const t = dhTab(), h = S.hold?.items.find(x => x.id === id);
   if (!h){ S.dhd = null; return renderDH(); }
-  const r0 = holdRes(id), r = r0 && (r0.lots || []).length === (h.lots || []).length ? r0 : null;
+  const r0 = holdRes(id), r = holdFresh(h, r0) ? r0 : null;
   const P = v => dhPx(v, t), st = r ? r.status : "점검 중", { w, avg } = holdCalc(h);
   const lots = (r?.lots || h.lots || []).map((x, i) => ({ ...x, i }));
   $app.innerHTML = `<div class="wrap ${t}">
@@ -2125,7 +2139,7 @@ function openHoldAdd(t){
   } });
 }
 function dhKnown(sym, t){ return dhAll(S.dhc[t]).find(x => x.sym === sym); }
-const todayISO = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const todayISO = tz => new Intl.DateTimeFormat("en-CA", { timeZone: tz || "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 function openLotForm(o){
   const { t } = o, h = o.h, sym = h ? h.sym : o.sym, name = h ? h.name : o.name, kind = o.kind;
   const known = dhKnown(sym, t), r = h ? holdRes(h.id) : null;
@@ -2134,7 +2148,7 @@ function openLotForm(o){
   const { avg } = h ? holdCalc(h) : { avg: null };
   const step = t === "dhu" ? "0.01" : "1";
   const { bg, close } = openSheet(kind === "불타기" ? `${name} 불타기` : `${name} 산 기록`, `<div class="results"><div id="form" class="form card">
-      <div class="field"><label for="ld">산 날</label><input id="ld" type="date" value="${todayISO()}"></div>
+      <div class="field"><label for="ld">산 날${t === "dhu" ? " (뉴욕)" : ""}</label><input id="ld" type="date" value="${todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul")}"></div>
       <div class="field"><label for="lp">산 가격${t === "dhu" ? " ($)" : ""}</label><input id="lp" type="number" inputmode="decimal" step="${step}" value="${px0}" placeholder="0"></div>
       <div class="field"><label for="lw">계좌 대비 비중 (%)</label><input id="lw" type="number" inputmode="decimal" step="0.5" placeholder="${kind === "불타기" ? "5" : "10"}"></div>
       <div class="field"><label for="ls">손절선${t === "dhu" ? " ($)" : ""}</label><input id="ls" type="number" inputmode="decimal" step="${step}" placeholder="사기 전에 정해요"></div>
@@ -2169,7 +2183,7 @@ function openLotForm(o){
   ["#lp", "#lw", "#ls"].forEach(s => $(s).oninput = calc); calc();
   $("#lsave").onclick = async () => {
     const b = $("#lsave"); b.disabled = true; b.innerHTML = `<span class="spin"></span>저장 중`;
-    const lot = { d: $("#ld").value || todayISO(), px: num0("#lp"), w: num0("#lw"), stop: num0("#ls"), kind };
+    const lot = { d: $("#ld").value || todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul"), px: num0("#lp"), w: num0("#lw"), stop: num0("#ls"), kind };
     try{
       if (!S.hold) await loadHold();
       if (h){ const x = S.hold.items.find(y => y.id === h.id); x.lots.push(lot); x.lots.sort((a, c) => a.d < c.d ? -1 : 1); }
@@ -2272,7 +2286,7 @@ function renderGuide(){
       <li><b>시장부터 보기</b><span>맨 위 카드가 ‘할 때’면 종목을 찾고, ‘쉴 때’면 쉬어요. 빨간 전량매도 경고가 뜨면 들고 있는 걸 정리해요.</span></li>
       <li><b>장 끝나고 목록 보기</b><span>🇰🇷는 평일 16:05, 🇺🇸는 아침 07:20에 새로 계산돼요. 초록 ‘돌파 자리’부터 봐요.</span></li>
       <li><b>사기 전에 손절선·비중 정하기</b><span>종목을 눌러 손절선을 고르면 최대 비중이 나와요. 사고 나서 정하지 않아요.</span></li>
-      <li><b>다음 장에서 확인하고 사기</b><span>직전 고점을 거래대금 실어 넘는지 분봉·호가로 보고, 5~10%만 먼저 사요.</span></li>
+      <li><b>그날 바로 사기</b><span>🇰🇷 16:05에 돌파 자리가 뜨면 그날 NXT 애프터마켓(20:00까지)에서 종가 근처로, 🇺🇸 07:20에 뜨면 그날 밤 장에서 사요. 5~10%만 먼저. 한국은 다음 날 아침에 사면 백테스트에서 손실이었어요.</span></li>
       <li><b>산 걸 ‘내 보유’에 넣기</b><span>산 가격·비중·손절선을 넣으면 매일 상태를 알려 줘요. 더 사면 ‘불타기’로 따로 넣어요.</span></li>
     </ol>
 
@@ -2328,7 +2342,7 @@ function renderGuide(){
 
     <h2 class="sec-title">칩 뜻</h2>
     <div class="list">
-      ${[["buy", "돌파 자리", "살 자리. 손절선·비중부터 정해요"], ["soon", "주도 후보", "주도주 조건은 넘었지만 돌파는 아직"], ["soon", "셋업", "최근 주도주가 고점 아래에서 쉬는 중"], ["", "관찰", "지수가 빠진 날 버틴 종목"]]
+      ${[["buy", "돌파 자리", "살 자리. 손절선·비중부터 정해요"], ["", "2등주 돌파", "돌파는 맞지만 업종 1등이 아니라 안 사요 (A47 A80)"], ["soon", "주도 후보", "주도주 조건은 넘었지만 돌파는 아직"], ["soon", "셋업", "최근 주도주가 고점 아래에서 쉬는 중"], ["", "관찰", "지수가 빠진 날 버틴 종목"]]
         .map(([c, n, s]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${s}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
     </div>
 
