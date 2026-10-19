@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-62">
+<meta name="app-version" content="2026-10-20-63">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -919,13 +919,14 @@ function calcInd(bars){
 function mountChart(box, s, opt = {}){
   const OD = !!opt.od, LT = !!opt.lt || OD, IND = OD ? OD_CI : LT ? LT_CI : IND_G, INDK = OD ? "odind2" : LT ? "ltind" : "ind", aux = t => !LT && isAux(t);   // OD: 오동엔진 차트 (자리·나갈 자리·저항·피보나치·추세선·박스)   // LT: 장투엔진 차트 (살 가격·지지선 선, 50·200일선, RSI 70·80)
   const bars = s.bars || [], N = bars.length;
+  const TM = opt.tm || null, PER = TM ? TM.periods : PERIODS;   // TM: 분봉 (bars[i][0] = "YYYY-MM-DD HH:MM", 거래소 시각)
   if (N < 10){ box.innerHTML = `<div class="empty">차트 데이터가 부족해요</div>`; return; }
   const hasVol = bars.some(b => b[7] != null);
   let ind = calcInd(bars); const idx = {}; bars.forEach((b,i) => idx[b[0]] = i);
-  const PK = OD ? "odperiod" : "period", pdef = Math.min(N, (PERIODS.find(p => p[0] === LS.get(PK, OD ? "6개월" : null)) || PERIODS[1])[1]);
+  const PK = TM ? "tmperiod_" + TM.iv : OD ? "odperiod" : "period", pdef = Math.min(N, (PER.find(p => p[0] === LS.get(PK, TM ? TM.def : OD ? "6개월" : null)) || PER[1])[1]);
   const V = { n: pdef, end: N - 1 };
   box.innerHTML = `
-    <div class="seg" role="tablist" aria-label="기간">${PERIODS.filter(p => p[1] <= N + 10).map(([t,k]) => `<button role="tab" data-k="${Math.min(k,N)}">${t}</button>`).join("")}<span class="thumb"></span></div>
+    <div class="seg" role="tablist" aria-label="기간">${PER.filter((p, k) => p[1] <= N + 10 || k === PER.length - 1).map(([t,k]) => `<button role="tab" data-k="${Math.min(k,N)}">${t}</button>`).join("")}<span class="thumb"></span></div>
     <div class="rorow"><div class="readout" aria-live="polite"></div>${OD ? "" : `<button class="sigtg press" aria-pressed="${IND.sig !== false}" aria-label="신호 표시 켜기·끄기">신호</button>`}</div>
     <div class="plot"></div>
     ${OD ? `<div class="odleg" aria-label="차트 선"></div>` : ""}
@@ -963,7 +964,7 @@ function mountChart(box, s, opt = {}){
         const at = v.kind === "trendline" ? v.now : v.kind === "zone" || v.kind === "box" ? null : v.v, px = s.price;
         const note = at == null || !V.lo ? "" : at < V.lo ? "차트 아래" : at > V.hi ? "차트 위" : v.kind === "fib" && at > px ? "지금 가격 위" : "";
         return `<div>${k}<span>${esc(v.label)}${note ? ` <em>${note}</em>` : ""}</span><b>${val}</b></div>`; });
-      const el = box.querySelector(".odleg"), h = rows.join(""); if (el.dataset.h !== h){ el.dataset.h = h; el.innerHTML = h; } return;
+      const el = box.querySelector(".odleg"), h = rows.join(""); if (!el) return; /* 차트가 바뀐 뒤 늦게 온 그리기는 무시 */ if (el.dataset.h !== h){ el.dataset.h = h; el.innerHTML = h; } return;
     }
     if (false){
       const has = k => (opt.levels || []).some(v => v.kind === k && IND[v.g] !== false);
@@ -1169,7 +1170,13 @@ function mountChart(box, s, opt = {}){
     /* 날짜 */
     /* 날짜 눈금: 일봉 한 칸 = 하루. 1개월은 매주 첫 거래일, 3개월은 1일·15일, 그보다 넓으면 매달 1일 (글자가 겹치면 건너뜀) */
     const span = i1 - i0, ticks = [];
-    for (let i = Math.max(1, i0); i <= i1; i++){
+    for (let i = Math.max(1, i0); i <= i1 && TM; i++){   // 분봉: 날이 바뀌면 날짜, 아니면 정시(좁게 보면 30분)
+      const d = bars[i][0], p_ = bars[i-1][0], newDay = d.slice(0, 10) !== p_.slice(0, 10), hh = d.slice(11, 13) !== p_.slice(11, 13);
+      const half = span <= 90 && d.slice(14, 16) >= "30" && p_.slice(14, 16) < "30" && !hh;
+      const lab = newDay ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : (span <= 240 && (hh || half)) ? d.slice(11, 16) : null;
+      if (lab) ticks.push([i, lab]);
+    }
+    for (let i = Math.max(1, i0); i <= i1 && !TM; i++){
       const d = bars[i][0], p_ = bars[i-1][0], dd = new Date(d + "T00:00:00"), pd_ = new Date(p_ + "T00:00:00");
       const newWeek = dd.getDay() < pd_.getDay() || (dd - pd_) > 3 * 864e5, newMonth = d.slice(5,7) !== p_.slice(5,7), mid = +d.slice(8) >= 15 && +p_.slice(8) < 15;
       const lab = span <= 32 ? (newWeek ? `${+d.slice(5,7)}/${+d.slice(8)}` : null)
@@ -1185,13 +1192,14 @@ function mountChart(box, s, opt = {}){
       g += `<line x1="${x(i)}" x2="${x(i)}" y1="${T - 8}" y2="${H - AX}" stroke="${TP.ink}" stroke-width=".7" stroke-dasharray="2 2"/>`;
       if (yy >= 0 && yy <= H0) g += `<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="${TP.ink}" stroke-width=".7" stroke-dasharray="2 2"/><circle cx="${x(i)}" cy="${yy}" r="3.5" fill="${TP.ink}"/><rect x="${W-R+2}" y="${yy-11}" width="${R-2}" height="22" rx="6" fill="${TP.ink}"/><text x="${W-R+7}" y="${yy+5}" font-size="13" font-weight="600" fill="${TP.inkOn}">${num(b[4], s.market)}</text>`;
       const pv = bars[i-1], ch = pv ? (b[4] / pv[4] - 1) * 100 : 0;
-      $read.innerHTML = `<b>${+b[0].slice(5,7)}월 ${+b[0].slice(8)}일 (${"일월화수목금토"[new Date(b[0] + "T00:00:00").getDay()]})${s.live && i === N - 1 ? " 장중" : ""}</b><span><b>${num(b[4], s.market)}</b> <span class="${ch >= 0 ? "up" : "down"}">${pct(ch)}</span></span><span>고 ${num(b[2], s.market)} · 저 ${num(b[3], s.market)}</span>${IND.rsi && ind.rsi[i] != null ? `<span>RSI ${ind.rsi[i].toFixed(0)}</span>` : ""}`;
+      $read.innerHTML = `<b>${TM ? `${+b[0].slice(5, 7)}/${+b[0].slice(8, 10)} ${b[0].slice(11, 16)}` : `${+b[0].slice(5,7)}월 ${+b[0].slice(8)}일 (${"일월화수목금토"[new Date(b[0] + "T00:00:00").getDay()]})`}${s.live && i === N - 1 ? " 장중" : ""}</b>${TM && b[7] != null ? `<span>거래량 ${Math.round(+b[7]).toLocaleString("ko-KR")}</span>` : ""}<span><b>${num(b[4], s.market)}</b> <span class="${ch >= 0 ? "up" : "down"}">${pct(ch)}</span></span><span>고 ${num(b[2], s.market)} · 저 ${num(b[3], s.market)}</span>${IND.rsi && ind.rsi[i] != null ? `<span>RSI ${ind.rsi[i].toFixed(0)}</span>` : ""}`;
       { const dm = (s.marks || []).filter(m => m[0] === b[0]); if (dm.length) $read.innerHTML += dm.map(m => { const a = (s.sig_help || {})[m[1]]?.act; return `<span class="mk c-${a ? ({buy:"buy", trim:"wait"}[a] || "sub") : m[2] === "buy" ? "buy" : m[2] === "sell" ? "sell" : "info"}">${esc(m[1])}</span>`; }).join(""); }
     } else {
       const a = bars[i0][0], z = bars[i1][0];
-      $read.innerHTML = `<span><b>일봉 · ${a.replace(/-/g, ".")} – ${z.slice(5).replace("-", ".")}${s.live && i1 === N - 1 ? " 장중" : ""}</b></span><span>${hint}</span>`;
+      $read.innerHTML = TM ? `<span><b>${TM.name} · ${+a.slice(5, 7)}/${+a.slice(8, 10)} ${a.slice(11, 16)} – ${a.slice(0, 10) === z.slice(0, 10) ? "" : `${+z.slice(5, 7)}/${+z.slice(8, 10)} `}${z.slice(11, 16)}</b></span><span>${hint}</span>`
+        : `<span><b>일봉 · ${a.replace(/-/g, ".")} – ${z.slice(5).replace("-", ".")}${s.live && i1 === N - 1 ? " 장중" : ""}</b></span><span>${hint}</span>`;
     }
-    $plot.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(`일봉 차트, ${PERIODS.find(p => p[1] === Math.round(V.n))?.[0] || ""}, 지금 ${num(s.price, s.market)}` + (s.timing?.price ? `, 매수 가격 ${num(s.timing.price, s.market)}` : ""))}" font-family="Pretendard Variable,-apple-system,sans-serif">${g}</svg>`;
+    $plot.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(`${TM ? TM.name : "일봉"} 차트, ${PER.find(p => p[1] === Math.round(V.n))?.[0] || ""}, 지금 ${num(s.price, s.market)}` + (s.timing?.price ? `, 매수 가격 ${num(s.timing.price, s.market)}` : ""))}" font-family="Pretendard Variable,-apple-system,sans-serif">${g}</svg>`;
     geo = { L, cw, start, W, H, boxes };
     if (OD) legend();   // 설명줄: 지금 보이는 범위 밖의 선은 '차트 아래·위'로
     if (cross != null && drag?.cross && IND.sig !== false){   // 손가락으로 길게 눌러 짚은 날에 신호가 있으면 그 뜻을 (없으면 그대로 두어 화면이 들썩이지 않게)
@@ -1988,37 +1996,23 @@ async function fetchBars(sym, iv){
   const j = await r.json(); if (!j || !j.rows?.length) throw new Error("분봉 자료가 없어요");
   return j;
 }
-function drawIntraday(box, j, levels, mk){
-  const TP = CP(), W = Math.max(280, box.clientWidth || 340), H0 = 230, HV = 54, L = 6, R = 64, T = 10, B = 22, H = H0 + HV + B;
-  const rows = j.rows.filter(x => [1, 2, 3, 4].every(k => x[k] != null && isFinite(x[k]))), n = rows.length, tz = j.tz || (isKR(mk) ? "Asia/Seoul" : "America/New_York");
-  const lo0 = Math.min(...rows.map(x => x[3])), hi0 = Math.max(...rows.map(x => x[2]));
-  const near = levels.filter(v => v.v >= lo0 * 0.97 && v.v <= hi0 * 1.03);   // 화면 근처 선만 범위에 넣음
-  const lo = Math.min(lo0, ...near.map(v => v.v)), hi = Math.max(hi0, ...near.map(v => v.v)), pad = (hi - lo) * 0.06 || hi * 0.01;
-  const y = v => T + (hi + pad - v) / ((hi - lo) + 2 * pad) * (H0 - T), x = i => L + (i + 0.5) * (W - L - R) / n, bw = Math.max(1, (W - L - R) / n * 0.7);
-  const vmax = Math.max(...rows.map(x => x[5] || 0)) || 1;
-  const fmtT = t => new Intl.DateTimeFormat("ko-KR", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(t * 1000));
-  const fmtD = t => new Intl.DateTimeFormat("en-CA", { timeZone: tz, month: "2-digit", day: "2-digit" }).format(new Date(t * 1000)).replace("-", "/");
-  let g = "";
-  for (let k = 0; k <= 4; k++){ const v = lo - pad + ((hi - lo) + 2 * pad) * k / 4, yy = y(v);
-    g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="${TP.grid}" stroke-width=".6"/><text x="${W - R + 6}" y="${yy + 4}" font-size="10.5" fill="${COL.axis}">${num(v, mk)}</text>`; }
-  let lastLab = -99, lastDay = "";
-  rows.forEach((r, i) => { const d = fmtD(r[0]), lab = d !== lastDay ? d : fmtT(r[0]);
-    const mm = new Date(r[0] * 1000).getUTCMinutes();
-    if ((d !== lastDay || (j.iv === "1m" ? mm === 0 : false)) && x(i) - lastLab > 46){ g += `<text x="${Math.max(L, x(i))}" y="${H - 6}" font-size="10" fill="${COL.axis}" text-anchor="${x(i) < 30 ? "start" : "middle"}">${lab}</text>`; lastLab = x(i) + (x(i) < 30 ? 20 : 0); }
-    lastDay = d; });
-  rows.forEach((r, i) => { const [ , o, h, l, c, v] = r, col = c >= o ? COL.up : COL.down, xx = x(i);
-    g += `<line x1="${xx}" x2="${xx}" y1="${y(h)}" y2="${y(l)}" stroke="${col}" stroke-width="1"/>`;
-    g += `<rect x="${xx - bw / 2}" y="${Math.min(y(o), y(c))}" width="${bw}" height="${Math.max(0.8, Math.abs(y(o) - y(c)))}" fill="${col}"/>`;
-    const vh = (v || 0) / vmax * (HV - 6); g += `<rect x="${xx - bw / 2}" y="${H0 + HV - vh}" width="${bw}" height="${vh}" fill="${col}" opacity=".45"/>`; });
-  const used = [];
-  levels.forEach(v => { const col = LCOL[v.kind] || COL.axis, off = v.v > hi + pad ? -1 : v.v < lo - pad ? 1 : 0, yy = off < 0 ? T + 8 : off > 0 ? H0 - 8 : y(v.v);
-    if (!off) g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="${col}" stroke-width="1.2" stroke-dasharray="${v.kind === "stop" ? "0" : "4 3"}"/>`;
-    let ty = yy; while (used.some(u => Math.abs(u - ty) < 14)) ty += 14; used.push(ty);
-    g += `<text x="${L + 4}" y="${ty - 3}" font-size="10.5" font-weight="700" fill="${col}" stroke="${TP.halo}" stroke-width="3" paint-order="stroke">${esc(v.label)} ${num(v.v, mk)}${off ? (off < 0 ? " ↑" : " ↓") : ""}</text>`; });
-  const last = rows[n - 1][4], lc = last >= (j.prev ?? last) ? COL.up : COL.down;
-  g += `<rect x="${W - R + 2}" y="${y(last) - 10}" width="${R - 4}" height="20" rx="6" fill="${lc}"/><text x="${W - R + 6}" y="${y(last) + 4}" font-size="11.5" font-weight="700" fill="#fff">${num(last, mk)}</text>`;
-  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="분봉 차트">${g}</svg>
-    <p class="note" style="margin:6px 4px 0">${j.iv === "1m" ? "1분봉 · 마지막 장 하루" : "5분봉 · 5일"} · ${fmtT(rows[n - 1][0])} 기준 · 야후 자료라 한국은 몇 분 늦을 수 있어요. 돌파 때 거래량(아래 막대)이 실리는지 봐요.</p>`;
+/* 분봉 → 일봉 차트와 같은 차트(끌기·두 손가락 확대·길게 눌러 가격)로. 시각은 거래소 시각 "YYYY-MM-DD HH:MM" */
+const TM_PER = { "1m": [["30분", 30], ["1시간", 60], ["2시간", 120], ["하루", 400]], "5m": [["2시간", 24], ["하루", 80], ["5일", 400]] };
+function intradayBars(j, mk){
+  const tz = j.tz || (isKR(mk) ? "Asia/Seoul" : "America/New_York");
+  const F = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+  const key = t => { const p = Object.fromEntries(F.formatToParts(new Date(t * 1000)).map(x => [x.type, x.value])); return `${p.year}-${p.month}-${p.day} ${p.hour === "24" ? "00" : p.hour}:${p.minute}`; };
+  return j.rows.filter(x => [1, 2, 3, 4].every(k => x[k] != null && isFinite(x[k]))).map(x => [key(x[0]), x[1], x[2], x[3], x[4], null, null, x[5] ?? null]);
+}
+function drawIntraday(box, j, levels, mk, meta){
+  const bars = intradayBars(j, mk), n = bars.length;
+  if (n < 10){ box.innerHTML = `<div class="empty" style="padding:28px 16px"><b>분봉이 아직 적어요</b>장이 열리고 조금 지나면 보여요.</div>`; return; }
+  const last = bars[n - 1][4], prev = j.prev ?? bars[0][1];
+  const today = bars[n - 1][0].slice(0, 10), nDay = bars.filter(b => b[0].startsWith(today)).length;   // '하루' = 마지막 장 하루치
+  const per = TM_PER[j.iv].map(([t, k]) => [t, t === "하루" ? Math.max(10, nDay) : t === "5일" ? n : k]);
+  S.chart = mountChart(box, { sym: meta.sym, name: meta.name, market: mk, bars, marks: [], sig_help: null, pattern: null, price: last, chg: prev ? (last / prev - 1) * 100 : null },
+    { od: true, levels, tm: { iv: j.iv, name: j.iv === "1m" ? "1분봉" : "5분봉", periods: per, def: j.iv === "1m" ? "1시간" : "하루" } });
+  box.insertAdjacentHTML("beforeend", `<p class="note" style="margin:6px 4px 0">${bars[n - 1][0].slice(11)} 기준 · 야후 자료라 한국은 몇 분 늦을 수 있어요. 끌어서 지난 시간, 두 손가락으로 확대, 길게 눌러 가격·거래량. 돌파 때 아래 거래량 막대가 커지는지 봐요.</p>`);
 }
 /* 일봉/분봉 바꾸기: tfBar() 를 차트 위에 두고, bindTf()로 그린다. levels 는 일봉과 같은 선 (직전 고점·라운드피겨·손절선 등) */
 function tfBar(){ const v = S.tf || "d";
@@ -2027,16 +2021,18 @@ function bindTf(box, sym, mk, levels, drawDaily){
   clearInterval(S.tfTimer);
   const show = async () => {
     const v = S.tf || "d";
-    if (v === "d"){ drawDaily(); return; }
+    if (v === "d"){ box.dataset.tf = "d"; drawDaily(); return; }
     S.chart = null;
     if (!relayBase()){ box.innerHTML = `<div class="empty" style="padding:28px 16px"><b>분봉 중계 주소가 없어요</b>설정 › 고급 설정 › 분봉 중계 주소에 내 Cloudflare 중계 주소를 넣으면 보여요.</div>`; return; }
-    if (!box.querySelector("svg")) box.innerHTML = `<div class="sk" style="height:240px;margin:12px"></div>`;
-    try{ const j = await fetchBars(sym, v); if (box.isConnected && (S.tf || "d") === v) drawIntraday(box, j, levels, mk); }
+    if (!box.querySelector("svg") || box.dataset.tf !== v) box.innerHTML = `<div class="sk" style="height:240px;margin:12px"></div>`;
+    box.dataset.tf = v;
+    try{ const j = await fetchBars(sym, v); if (box.isConnected && (S.tf || "d") === v) drawIntraday(box, j, levels, mk, { sym, name: sym }); }
     catch(e){ if (box.isConnected) box.innerHTML = `<div class="empty" style="padding:28px 16px"><b>분봉을 못 불러왔어요</b>${esc(e.message)}</div>`; }
   };
   document.querySelectorAll("#tf [data-tf]").forEach(b => b.onclick = () => { S.tf = b.dataset.tf; document.querySelectorAll("#tf [data-tf]").forEach(x => x.setAttribute("aria-selected", x === b)); show(); });
   show();
-  S.tfTimer = setInterval(() => { if (!box.isConnected){ clearInterval(S.tfTimer); return; } if ((S.tf || "d") !== "d" && !document.hidden && marketOpenNow(isKR(mk))) show(); }, 60000);   // 장중엔 1분마다
+  let touched = 0; box.addEventListener("pointerdown", () => { touched = Date.now(); });   // 보는 중(끌기·확대)엔 새로 그리지 않음
+  S.tfTimer = setInterval(() => { if (!box.isConnected){ clearInterval(S.tfTimer); return; } if ((S.tf || "d") !== "d" && !document.hidden && marketOpenNow(isKR(mk)) && Date.now() - touched > 45000) show(); }, 60000);   // 장중엔 1분마다
 }
 function renderDHDetail(sym){
   const t = dhTab();
