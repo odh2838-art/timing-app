@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-52">
+<meta name="app-version" content="2026-10-19-53">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1957,7 +1957,7 @@ function renderDHDetail(sym){
       <p class="l">${esc(line)}</p>
       <div class="lt-mk2 od-st">
         <div><b>${P(it.pivot)}</b><span>직전 고점</span></div>
-        <div><b>${P(it.round_next)}</b><span>다음 라운드피겨</span></div>
+        ${it.state === "돌파 자리" ? `<div><b>${P(it.goal ?? it.round_next)}</b><span>가야 할 자리</span></div>` : `<div><b>${P(it.round_pivot ?? it.round_next)}</b><span>넘을 라운드피겨</span></div>`}
         <div><b>${it.base_len != null ? Math.round(it.base_len) + "일" : "-"}</b><span>고점 뒤</span></div>
       </div>
     </section>
@@ -1984,7 +1984,8 @@ function renderDHDetail(sym){
   $app.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { S.dhStop = +b.dataset.st; render("none"); });
   const lv = [];
   if (it.pivot) lv.push({ v: it.pivot, kind: "res", g: "main", label: "직전 고점", fit: true });
-  if (it.round_next) lv.push({ v: it.round_next, kind: "fib", g: "main", label: "다음 라운드피겨" });
+  const rf = it.state === "돌파 자리" ? (it.goal ?? it.round_next) : (it.round_pivot ?? it.round_next);
+  if (rf) lv.push({ v: rf, kind: "fib", g: "main", label: it.state === "돌파 자리" ? "가야 할 자리" : "넘을 라운드피겨" });
   if (sp) lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
   if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
   const box = $app.querySelector("#chartBox");
@@ -2286,9 +2287,9 @@ function renderGuide(){
     <p class="note" style="margin:0 var(--pad-card) 10px;line-height:1.5">차트는 <b>일봉</b>이에요. 봉 하나가 하루예요. 1개월·3개월·6개월은 보여 주는 기간이고, 아래 5월·7월 같은 글자는 날짜 눈금이에요. 카투도 일봉으로 자리를 보고, 사는 순간은 분봉·호가로 확인해요 (A69). 분봉은 증권사 앱에서 봐요.</p>
     <div class="card gd-legend">
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="pv"/></svg><span><b>직전 고점</b>넘어야 할 가격</span></div>
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="rf"/></svg><span><b>라운드피겨</b>딱 떨어지는 가격. 매물이 모여요</span></div>
+      <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="rf"/></svg><span><b>라운드피겨</b>12만·175만처럼 딱 떨어지는 가격. 주문이 몰려 막히거나 받쳐줘요. 돌파 전엔 ‘넘을 라운드피겨’, 돌파 뒤엔 ‘가야 할 자리’</span></div>
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="st"/></svg><span><b>손절선</b>여기를 깨면 팔아요</span></div>
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><rect x="1" y="1" width="38" height="8" rx="2" class="bx"/></svg><span><b>베이스</b>고점 뒤 쉬는 구간</span></div>
+      <div><svg viewBox="0 0 40 10" aria-hidden="true"><rect x="1" y="1" width="38" height="8" rx="2" class="bx"/></svg><span><b>베이스</b>고점 근처에서 옆으로 쉬는 구간. 고점에서 40% 넘게 빠졌으면 베이스가 아니라 하락이라 안 그려요</span></div>
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><rect x="4" y="4" width="6" height="6" class="v"/><rect x="17" y="2" width="6" height="8" class="v"/><rect x="30" y="0" width="6" height="10" class="vh"/></svg><span><b>아래 막대</b>거래량. 돌파 날 커야 해요</span></div>
     </div>
 
