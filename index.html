@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-61">
+<meta name="app-version" content="2026-10-19-62">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1896,16 +1896,17 @@ async function loadDH(t){ const [d, tr] = await Promise.all([readJSON(DHM[t].fil
 /* 앞으로 기록: 엔진의 '돌파 자리'를 그날 종가에 산 것으로 치고, 판 날까지 같은 기간 지수와 비교 (tc/donghyun_track.py) */
 function dhTrackCard(t){
   const T = S.dhTrack; if (!T) return "";
-  const mk = t === "dhu" ? "미국" : "한국", sm = T.summary?.[mk + "_전체"] || { n: 0 };
+  const mk = t === "dhu" ? "미국" : "한국", sm = T.summary?.[mk + "_할때"] || { n: 0 }, all = T.summary?.[mk + "_전체"] || { n: 0 };   // 엔진이 사라고 하는 '할 때' 매매만 (쉴 때 기록은 참고)
   const open = (T.open || []).filter(x => x.mk === mk), md = d => String(d || "").slice(5).replace("-", "/");
   const pc = v => v == null ? "-" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%";
   return `<h2 class="sec-title">엔진 성적 <span class="lt-cnt">${md(T.start)}부터</span></h2>
     <section class="card">
-      ${sm.n ? `<div class="lt-mk2"><div><b class="${sm.ret > 0 ? "hot" : sm.ret < 0 ? "cold" : ""}">${pc(sm.ret)}</b><span>매매당 평균 (${sm.n}번)</span></div>
+      ${sm.n ? `<div class="lt-mk2"><div><b class="${sm.ret > 0 ? "hot" : sm.ret < 0 ? "cold" : ""}">${pc(sm.ret)}</b><span>매매당 평균 · 할 때 ${sm.n}번</span></div>
         <div><b>${pc(sm.idx)}</b><span>같은 기간 지수</span></div><div><b class="${sm.excess > 0 ? "hot" : sm.excess < 0 ? "cold" : ""}">${pc(sm.excess)}</b><span>차이 · 지수보다 나음 ${sm.beat}%</span></div></div>`
         : `<p class="n" style="margin:0">아직 끝난 매매가 없어요.</p>`}
+      ${all.n > sm.n ? `<p class="n" style="margin:12px 0 0">쉴 때 나온 돌파까지 넣으면 ${all.n}번 · 평균 ${pc(all.ret)} (지수 ${pc(all.idx)})</p>` : ""}
       ${open.length ? `<p class="n" style="margin:12px 0 0">들고 있는 기록 ${open.length}개: ${open.map(x => `${esc(x.name)} ${pc(x.now_ret != null ? x.now_ret * 100 : 0)}`).join(" · ")}</p>` : ""}
-      <p class="n" style="margin:12px 0 0;font-size:var(--t-detail);color:var(--fg2)">‘돌파 자리’를 그날 종가에 사서 손절선·3일 안 기준점 이탈·지수 급락에 판 것으로 쳐요. 같은 기간 지수와 비교해요.</p>
+      <p class="n" style="margin:12px 0 0;font-size:var(--t-detail);color:var(--fg2)">시장이 할 때 나온 ‘돌파 자리’를 그날 종가에 사서 손절선·3일 안 기준점 이탈·전량매도 경고에 판 것으로 쳐요. 같은 기간 지수와 비교해요.</p>
     </section>`;
 }
 function dhAll(d){ return [...(d?.sectors || []).flatMap(g => g.items), ...(d?.setups || []), ...(d?.counter || [])]; }
@@ -1978,7 +1979,7 @@ async function renderDH0(){
 }
 /* ───────── 분봉 (설정의 '분봉 중계 주소' = 내 Cloudflare 중계 relay/worker.js, 야후 1분·5분봉) ─────────
    엔진은 일봉으로 자리를 고르고, 사는 순간은 분봉으로 확인 (A69 '시장 > 일봉 > 분봉 > 호가'). 돌파 때 거래량이 실리는지 본다. */
-const relayBase = () => (LS.get("qurl", "") || "").trim().replace(/\/+$/, "");
+const relayBase = () => (LS.get("burl", "") || LS.get("qurl", "") || "").trim().replace(/\/+$/, "");   // 분봉 중계 (예전 실시간 시세 주소가 있으면 그걸 씀)
 async function fetchBars(sym, iv){
   const base = relayBase(); if (!base) throw new Error("설정에서 분봉 중계 주소를 넣어 주세요");
   let r; try{ r = await fetch(`${base}?bars=${encodeURIComponent(sym)}&i=${iv}`, { cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined }); }
@@ -1989,7 +1990,7 @@ async function fetchBars(sym, iv){
 }
 function drawIntraday(box, j, levels, mk){
   const TP = CP(), W = Math.max(280, box.clientWidth || 340), H0 = 230, HV = 54, L = 6, R = 64, T = 10, B = 22, H = H0 + HV + B;
-  const rows = j.rows, n = rows.length, tz = j.tz || (isKR(mk) ? "Asia/Seoul" : "America/New_York");
+  const rows = j.rows.filter(x => [1, 2, 3, 4].every(k => x[k] != null && isFinite(x[k]))), n = rows.length, tz = j.tz || (isKR(mk) ? "Asia/Seoul" : "America/New_York");
   const lo0 = Math.min(...rows.map(x => x[3])), hi0 = Math.max(...rows.map(x => x[2]));
   const near = levels.filter(v => v.v >= lo0 * 0.97 && v.v <= hi0 * 1.03);   // 화면 근처 선만 범위에 넣음
   const lo = Math.min(lo0, ...near.map(v => v.v)), hi = Math.max(hi0, ...near.map(v => v.v)), pad = (hi - lo) * 0.06 || hi * 0.01;
@@ -2414,7 +2415,7 @@ function renderGuide(){
 
     <h2 class="sec-title">시장 판정</h2>
     <div class="list">
-      ${[["buy", "할 때", "지수가 지난 20일 박스 상단을 종가로 넘었어요. 그 뒤로 경고가 없는 동안"], ["", "쉴 때", "전량매도 경고 뒤, 다시 박스 상단을 넘기 전까지. 현금도 포지션이에요"], ["sell", "전량매도 경고", "지수 −3% 이상 급락, 또는 소수 종목만 오르던 쏠림 뒤 첫 하락에 장중 고점에서 2.5% 넘게 밀림. 들고 있는 종목은 정리"]]
+      ${[["buy", "할 때", "지수가 지난 20일 박스 상단을 종가로 넘었어요. 그 뒤로 경고가 없는 동안"], ["", "쉴 때", "전량매도 경고 뒤, 다시 박스 상단을 넘기 전까지. 현금도 포지션이에요"], ["sell", "전량매도 경고", "지수 −3% 이상 급락, 또는 소수 종목만 오르던 쏠림 뒤 첫 하락에 장중 고점에서 2.25% 넘게 밀림. 들고 있는 종목은 정리"]]
         .map(([c, n, x]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${x}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
     </div>
     <p class="note" style="margin:8px var(--pad-card) 0">카투의 2026년 국내 매매와 맞춰 봤어요: 할 때 84% · 쉴 때 98% 일치, 전량매도 6번 중 5번 경고. 코스닥 종목은 코스닥 지수로 봐요 (J63). 미국은 그의 미국 매수일이 모두 ‘할 때’가 되게 맞췄어요.</p>
@@ -2431,8 +2432,8 @@ function renderGuide(){
 
     ${rule("buy", "buy", "살 때", "쉬었다가 직전 고점을 <b>거래대금 실어 종가로</b> 넘은 날", [
       "고점 뒤 5일 이상 쉰 뒤예요. 흔들림·거래대금이 줄었으면 더 좋지만(VCP, A54) 꼭은 아니에요 (C24)",
-      "돌파 날 거래대금이 평소(20일 평균)의 1.2배 이상 (카투가 산 돌파 중 가장 작은 게 1.23배)",
-      "직전 고점 바로 아래 라운드피겨를 넘어도 돌파예요 (직전 고점 112,100 → 11만 돌파, A48)",
+      "돌파 날 거래대금이 평소(20일 평균)의 1.1배 이상 (카투가 산 돌파 중 가장 작은 게 하이닉스 4/14 1.27배)",
+      "직전 고점 바로 아래(3% 안) 라운드피겨를 넘어도 돌파예요 (직전 고점 112,100 → 11만 돌파, A48)",
       "같은 업종이 같이 오르면 그 업종 <b>1등</b>만 사요"],
       "이럴 땐 안 사요: 쉬지 않고 급하게 오른 걸 쫓을 때 · 거래대금 없이 슬쩍 넘을 때")}
     ${rule("stop", "sell", "손절할 때", "사기 전에 정한 손절선을 <b>깨면 바로</b>", [
@@ -2443,7 +2444,7 @@ function renderGuide(){
     ${rule("sell", "soon", "팔 때", "가야 할 자리에서 <b>못 가고 밀리면</b>", [
       "산 지 1~3일 안에 다시 직전 고점 아래로 마감하면 팔아요 (J06 A72)",
       "라운드피겨·새 고점 앞에서 힘없이 밀리면 팔아요. 이건 엔진이 못 잡아요, 직접 봐요 (J97)",
-      "시장 전량매도 경고면 다 팔아요: 지수 −3% 급락 (J15 J16), 또는 쏠림 뒤 첫 하락에 장중 고점에서 2.5% 넘게 밀릴 때 (J53 J64)",
+      "시장 전량매도 경고면 다 팔아요: 지수 −3% 급락 (J15 J16), 또는 쏠림 뒤 첫 하락에 장중 고점에서 2.25% 넘게 밀릴 때 (J53 J64)",
       "+10% 넘게 오르거나 시장이 쉴 때면 손절선을 산 가격 위로 올려 수익을 지켜요 (J93 J94)"])}
     ${rule("add", "buy", "더 살 때", "맞았을 때만 더 사요 (불타기)", [
       "오른 뒤 다시 쉬었다가 새 고점을 넘을 때 더 사요",
@@ -2511,7 +2512,7 @@ function renderSettings(){
     <div class="sec-title" role="heading" aria-level="2">분봉</div>
     <div class="list">
       <div class="row"><div class="main"><label class="sub" for="qurl">분봉 중계 주소</label>
-        <input id="qurl" class="qurl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://....workers.dev" value="${esc(LS.get("qurl", ""))}"></div></div>
+        <input id="qurl" class="qurl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://....workers.dev" value="${esc(LS.get("burl", "") || LS.get("qurl", ""))}"></div></div>
       <button class="row press" id="qsave"><span class="main" style="color:var(--blue)">저장하고 시험하기</span></button>
     </div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">내 Cloudflare 중계(timing-app 저장소의 relay/worker.js)를 거쳐 야후 1분·5분봉을 받아요. 종목 화면의 차트 위에서 1분봉·5분봉을 고르면 보여요.</p>
@@ -2526,7 +2527,7 @@ function renderSettings(){
   const $qs = document.getElementById("qsave"); if ($qs) $qs.onclick = async () => {
     const v = document.getElementById("qurl").value.trim();
     if (v && !/^https:\/\/[\w.-]+(\/[\w./-]*)?$/.test(v)){ toast("https:// 로 시작하는 주소를 넣어 주세요"); return; }
-    LS.set("qurl", v);
+    LS.set("burl", v); LS.del("qurl");   // 분봉 전용 키 (실시간 시세 자동 갱신은 다시 켜지지 않게)
     if (!v){ toast("분봉 중계 주소를 지웠어요"); return; }
     try{ const j = await fetchBars("005930.KS", "1m"); toast(`연결됐어요 · 삼성전자 1분봉 ${j.rows.length}개`); }
     catch(e){ toast(e.message); }
@@ -2576,6 +2577,7 @@ addEventListener("visibilitychange", () => { if (document.visibilityState === "v
   if (v && ["dh", "dhu", "guide", "settings"].includes(v.tab)){ S.tab = v.tab;
     if (Date.now() - (v.t || 0) < 6e5){ S.dhd = v.dhd || null; }
     histTo((S.tab !== HOME ? 1 : 0) + (S.odd || S.ltd || S.dhd ? 1 : 0), S.odd || S.ltd || S.dhd ? "d" : "t"); } }   // 다시 열 때마다 기록이 쌓이지 않게 깊이를 맞춤
+try{ if (LS.get("qurl", "") && !LS.get("burl", "")){ LS.set("burl", LS.get("qurl", "")); LS.del("qurl"); } }catch(e){}   // 예전 주소는 분봉 전용 키로 옮김 (실시간 시세 자동 갱신은 끔)
 render("none");
 if (S.token) refresh();
 </script>
