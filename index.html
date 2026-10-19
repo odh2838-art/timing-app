@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-19-57">
+<meta name="app-version" content="2026-10-19-58">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1891,7 +1891,23 @@ const isDH = t => t === "dh" || t === "dhu";
 const dhTab = () => isDH(S.tab) ? S.tab : "dh";
 S.dhc = {}; S.dhL = {};
 const DH_TONE = {"돌파 자리": "buy", "2등주 돌파": "", "주도 후보": "soon", "셋업": "soon", "관찰": ""};
-async function loadDH(t){ S.dhc[t] = await readJSON(DHM[t].file, null); S.dhL[t] = true; return S.dhc[t]; }
+async function loadDH(t){ const [d, tr] = await Promise.all([readJSON(DHM[t].file, null), readJSON("상태/동현기록.json", null).catch(() => null)]);
+  S.dhc[t] = d; S.dhTrack = tr; S.dhL[t] = true; return S.dhc[t]; }
+/* 앞으로 기록: 엔진의 '돌파 자리'를 그날 종가에 산 것으로 치고, 판 날까지 같은 기간 지수와 비교 (tc/donghyun_track.py) */
+function dhTrackCard(t){
+  const T = S.dhTrack; if (!T) return "";
+  const mk = t === "dhu" ? "미국" : "한국", sm = T.summary?.[mk + "_전체"] || { n: 0 };
+  const open = (T.open || []).filter(x => x.mk === mk), md = d => String(d || "").slice(5).replace("-", "/");
+  const pc = v => v == null ? "-" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%";
+  return `<h2 class="sec-title">엔진 성적 <span class="lt-cnt">${md(T.start)}부터</span></h2>
+    <section class="card">
+      ${sm.n ? `<div class="lt-mk2"><div><b class="${sm.ret > 0 ? "hot" : sm.ret < 0 ? "cold" : ""}">${pc(sm.ret)}</b><span>매매당 평균 (${sm.n}번)</span></div>
+        <div><b>${pc(sm.idx)}</b><span>같은 기간 지수</span></div><div><b class="${sm.excess > 0 ? "hot" : sm.excess < 0 ? "cold" : ""}">${pc(sm.excess)}</b><span>차이 · 지수보다 나음 ${sm.beat}%</span></div></div>`
+        : `<p class="n" style="margin:0">아직 끝난 매매가 없어요.</p>`}
+      ${open.length ? `<p class="n" style="margin:12px 0 0">들고 있는 기록 ${open.length}개: ${open.map(x => `${esc(x.name)} ${pc(x.now_ret != null ? x.now_ret * 100 : 0)}`).join(" · ")}</p>` : ""}
+      <p class="n" style="margin:12px 0 0;font-size:var(--t-detail);color:var(--fg2)">‘돌파 자리’를 그날 종가에 사서 손절선·3일 안 기준점 이탈·지수 급락에 판 것으로 쳐요. 같은 기간 지수와 비교해요.</p>
+    </section>`;
+}
 function dhAll(d){ return [...(d?.sectors || []).flatMap(g => g.items), ...(d?.setups || []), ...(d?.counter || [])]; }
 /* 거래대금: 한국은 억 단위, 미국은 백만 달러 단위로 들어온다 */
 function dhMoney(v, t){
@@ -1951,6 +1967,7 @@ async function renderDH0(){
     ${(d.setups || []).length ? `<h2 class="sec-title">셋업 <span class="lt-cnt">${d.setups.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">최근 주도 후보였고, 고점 아래에서 흔들림·거래대금이 줄며 버티는 종목</p><div class="list">${d.setups.map(x => dhRow(x, t)).join("")}</div>` : ""}
     ${(d.counter || []).length ? `<h2 class="sec-title">역의 역 <span class="lt-cnt">${d.counter.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">지수가 빠진 날 안 빠지거나 오른 종목</p><div class="list">${d.counter.map(x => dhRow(x, t)).join("")}</div>` : ""}
     ${md ? `<p class="note lt-foot">${md} 종가 기준</p>` : ""}
+    ${dhTrackCard(t)}
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
   bind();
