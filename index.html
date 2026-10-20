@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-74">
+<meta name="app-version" content="2026-10-20-75">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1965,12 +1965,23 @@ const earnLine = e => { if (!e || !e.d) return "실적 발표일: 못 찾았어�
 const dhAbove = it => it.price != null && (it.round_pivot == null || it.price >= it.round_pivot || it.price > it.pivot || /돌파/.test(it.state || ""));   // 이미 넘었으면 '가야 할 자리'
 const dhPx = (v, t, raw) => (t === "dhu" && v != null && isFinite(v) ? "$" : "") + (raw && t !== "dhu" && v != null && isFinite(v) ? Math.round(v).toLocaleString("ko-KR") : num(v, DHM[t].mk));   // raw = 호가 단위로 반올림 안 함 (평균 매수가)
 const pct2 = v => { if (!isNum(v)) return "-"; const r = +v.toFixed(2); return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(2) + "%"; };
+// 그 종목의 시장 판정 (코스닥 종목은 코스닥). 할 때가 아니거나 경고가 있으면 새로 사지 않음 (A21 A1 '하락장은 쉼')
+const dhReg = (it, D) => (D && it && it.kq && D.regime_kq) ? D.regime_kq : (D && D.regime) || null;
+const dhOff = (it, D) => { const r = dhReg(it, D); return !!r && (r.state !== "할 때" || !!r.warn); };
+// 오늘 나와 있어야 할 종가 날짜 (한국: 16:30 뒤면 오늘, 미국: 한국 08:00 뒤면 어제 미국장). 주말은 금요일로. 휴장일은 모름
+function dhExpect(t){
+  const k = new Date(Date.now() + 9 * 3600e3), h = k.getUTCHours() * 60 + k.getUTCMinutes();
+  let d = new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate()));
+  d = new Date(d - (t === "dhu" ? (h >= 480 ? 1 : 2) : (h >= 990 ? 0 : 1)) * 864e5);
+  while ([0, 6].includes(d.getUTCDay())) d = new Date(d - 864e5);
+  return d.toISOString().slice(0, 10);
+}
 function dhRow(it, t){
   const sub = it.state === "셋업" ? `고점 ${dhPx(it.pivot, t)} 아래 ${it.base_len != null ? Math.round(it.base_len) + "일" : ""} · 거래대금 ${dhMoney(it.tv, t)}`
     : `${it.sector_lead ? "업종 1등 · " : ""}거래대금 ${dhMoney(it.tv, t)}${it.state === "돌파 자리" && it.pivot ? ` · ${dhPx(it.pivot, t)} 돌파` : ""}`;
   const sub2 = sub + earnTag(it.earn);
   return `<button class="row press lt-srow" data-dh="${esc(it.sym)}"><div class="main"><div class="lt-n">${esc(it.name)}</div><div class="lt-s">${esc(sub2)}</div></div>
-    <div class="lt-px"><b class="lt-chip ${DH_TONE[it.state] || ""}">${esc(it.state)}</b><span>${dhPx(it.price, t)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span></div>${CHEV}</button>`;
+    <div class="lt-px"><b class="lt-chip ${it.state === "돌파 자리" && dhOff(it, S.dhc[t]) ? "" : DH_TONE[it.state] || ""}">${esc(it.state)}${it.state === "돌파 자리" && dhOff(it, S.dhc[t]) ? " · 쉴 때" : ""}</b><span>${dhPx(it.price, t)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span></div>${CHEV}</button>`;
 }
 function renderDH(){ return renderDH0().catch(e => { console.error(e); toast("화면을 그리지 못했어요 · " + (e.message || e)); }); }   // 비동기 오류도 잡는다
 async function renderDH0(){
@@ -1994,14 +2005,16 @@ async function renderDH0(){
   const total = m.tv_total ?? m.tv_jo, thr = m.threshold ?? m.threshold_eok;
   const nC = (d.sectors || []).reduce((a, g) => a + g.n, 0);
   const secs = (d.sectors || []).map(g => `<p class="note" style="margin:var(--gap-sub) var(--pad-card) 6px">${esc(g.sector)}${g.together ? ` · ${g.n}종목 같이 오름` : ""}</p><div class="list">${g.items.map(x => dhRow(x, t)).join("")}</div>`).join("");
+  const late = d.date && d.date < dhExpect(t);   // 계산이 밀렸거나 실패해서 옛날 자료
   $app.innerHTML = `<div class="wrap ${t}">${head}
+    ${late ? `<div class="card" style="border:1px solid var(--sell,#D22F3C);color:var(--fg)"><b style="color:var(--sell,#D22F3C)">${md} 종가 자료예요</b><p class="note" style="margin:4px 0 0">${String(dhExpect(t)).slice(5).replace("-", "/")} 종가 계산이 아직 안 됐어요. 휴장일이었으면 괜찮아요. 아니면 위의 다시 계산을 눌러요.</p></div>` : ""}
     ${dhRegimeCard(d, t)}
     ${dhHoldSection(t)}
-    <h2 class="sec-title">오늘의 주도 후보 <span class="lt-cnt">${nC}</span></h2>
+    <h2 class="sec-title">${md ? md + " 종가 " : ""}주도 후보 <span class="lt-cnt">${nC}</span></h2>
     ${nC ? secs : `<div class="card empty" style="margin:0"><b>오늘은 없어요</b>거래대금 기준을 넘으면서 6개월 신고가를 낸 종목이 없어요. 주도주는 하루 몇 개 없는 게 정상이에요 (A1).</div>`}
     ${(d.setups || []).length ? `<h2 class="sec-title">셋업 <span class="lt-cnt">${d.setups.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">최근 주도 후보였고, 고점 아래에서 흔들림·거래대금이 줄며 버티는 종목</p><div class="list">${d.setups.map(x => dhRow(x, t)).join("")}</div>` : ""}
     ${(d.counter || []).length ? `<h2 class="sec-title">역의 역 <span class="lt-cnt">${d.counter.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">지수가 빠진 날 안 빠지거나 오른 종목</p><div class="list">${d.counter.map(x => dhRow(x, t)).join("")}</div>` : ""}
-    ${md ? `<p class="note lt-foot">${md} 종가 기준</p>` : ""}
+    ${md ? `<p class="note lt-foot">${md} 종가 기준${d.at ? ` · ${String(d.at).slice(5, 10).replace("-", "/")} ${String(d.at).slice(11, 16)} 계산` : ""}${d.coverage ? ` · ${d.coverage.n}종목${d.coverage.extra ? ` (거래대금 상위 ${d.coverage.extra} 포함)` : ""}` : ""}</p>` : ""}
     ${dhTrackCard(t)}
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
@@ -2164,7 +2177,8 @@ function mountPro(box, cfg){
     cs.setMarkers(show.sort((a, b) => a.time < b.time ? -1 : 1));
     const last = rows[rows.length - 1].close, gap = (last / L - 1) * 100, g = (gap >= 0 ? "+" : "") + gap.toFixed(1) + "%";
     const st = buy.state;
-    const [txt, tone] = st === "2등주 돌파" ? ["업종 1등이 아니라 안 사요", "wait"]
+    const [txt, tone] = buy.off ? [`시장이 쉴 때라 새로 사지 않아요 · 매수 기준 ${gap >= 0 ? "위 " + g : "까지 " + (-gap).toFixed(1) + "%"}`, "wait"]
+      : st === "2등주 돌파" ? ["업종 1등이 아니라 안 사요", "wait"]
       : gap > 5 ? [`매수 기준 ${g} · 쫓지 마세요`, "sell"]
       : st === "주도 후보" && gap > 0 ? [`이미 넘었어요 (${g}) · 쉬며 베이스를 만들 때까지 기다려요`, "wait"]
       : gap > 0 && lastX && !lastX.strong ? [`매수 기준 위 ${g} · 거래량 없이 넘었어요 (평균의 ${fx(lastX.x)}) · 버티는지 더 봐요`, "wait"]
@@ -2222,7 +2236,7 @@ function renderDHDetail(sym){
     loadDH(t).then(() => { if (S.dhd === sym) render("none"); }).catch(e => toast(e.message)); return; }
   const D = S.dhc[t], it = dhAll(D).find(x => x.sym === sym);
   if (!it){ S.dhd = null; return renderDH(); }
-  const P = v => dhPx(v, t), tone = DH_TONE[it.state] || "wait";
+  const off = dhOff(it, D), P = v => dhPx(v, t), tone = it.state === "돌파 자리" && off ? "wait" : DH_TONE[it.state] || "wait";
   const stops = it.stops || [];
   S.dhStop = Math.min(S.dhStop || 0, Math.max(0, stops.length - 1));
   const lowLv = it.brk_level != null && it.pivot != null && it.brk_level < it.pivot && it.price <= it.pivot;   // 직전 고점 바로 아래 라운드피겨를 넘은 돌파
@@ -2237,7 +2251,7 @@ function renderDHDetail(sym){
     <div class="title-block hero" data-anchor><h1 class="big">${esc(it.name)}</h1><div class="sub">${it.kq && D.regime_kq ? `코스닥 ${esc(D.regime_kq.state)} · ` : ""}${esc(String(D.date || "").slice(5).replace("-", "/"))} 종가 ${P(it.price)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span> · 거래대금 ${dhMoney(it.tv, t)}${it.sector ? " · " + esc(it.sector) : ""}</div></div>
     <section class="card lt-vd">
       <div class="w ${tone}">${esc(it.state)}${it.sector_lead ? ` <span class="lt-chip buy" style="vertical-align:middle;margin-left:6px">업종 1등</span>` : ""}</div>
-      <p class="l">${esc(line)}</p>
+      <p class="l">${off && ["돌파 자리", "셋업", "주도 후보"].includes(it.state) ? `<b>${esc(dhReg(it, D).state === "할 때" ? "시장 경고가 나온 날이라" : (it.kq && D.regime_kq ? "코스닥이" : "시장이") + " 쉴 때라")} 새로 사지 않아요 (A21 A1).</b> ` : ""}${esc(line)}</p>
       <div class="lt-mk2 od-st">
         <div><b>${P(it.pivot)}</b><span>직전 고점</span></div>
         ${dhAbove(it) ? `<div><b>${P(it.goal ?? it.round_next)}</b><span>가야 할 자리</span></div>` : `<div><b>${P(it.round_pivot ?? it.round_next)}</b><span>넘을 라운드피겨</span></div>`}
@@ -2274,7 +2288,7 @@ function renderDHDetail(sym){
   if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
   const box = $app.querySelector("#chartBox");
   if (box) S.chart = mountPro(box, { sym: it.sym, mk: DHM[t].mk, levels: lv.filter(v => v.v != null), daily: it.bars || [], box: it.box,
-    buy: bl && it.state !== "역의 역" ? { v: bl, state: it.state } : null });
+    buy: bl && it.state !== "역의 역" ? { v: bl, state: it.state, off } : null });
 }
 
 /* ───────── 동현 2단계: 시장 판정 카드 · 내 보유 ─────────
