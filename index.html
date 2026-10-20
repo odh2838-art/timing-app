@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-77">
+<meta name="app-version" content="2026-10-20-78">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -2083,7 +2083,8 @@ function weekly(daily){   // 일봉 → 주봉 (월요일 시작)
   if (cur) out.push(cur); return out;
 }
 function mountPro(box, cfg){
-  const { sym, mk, levels = [], daily = [], box: base, buy } = cfg, kr = isKR(mk), tz = kr ? "Asia/Seoul" : "America/New_York";
+  let levels = cfg.levels || [], plines = [];
+  const { sym, mk, daily = [], box: base, buy } = cfg, kr = isKR(mk), tz = kr ? "Asia/Seoul" : "America/New_York";
   let tf = LS.get("protf", "1d"); if (!relayBase() && !["1d", "1wk"].includes(tf)) tf = "1d";
   const ma = Object.assign({ 5: true, 20: true, 60: true, 120: false }, LS.get("proma", {}));
   box.innerHTML = `<div class="pro-tf" role="tablist" aria-label="차트 간격">${PRO_TF.map(([k, n]) => `<button role="tab" data-k="${k}" aria-selected="${k === tf}">${n}</button>`).join("")}</div>
@@ -2178,7 +2179,7 @@ function mountPro(box, cfg){
     chart.priceScale("vol").applyOptions({ scaleMargins: { top: 0.8, bottom: 0 }, visible: false });
     maS = {};
     bxS = base ? [0, 1].map(() => chart.addLineSeries({ color: "#8E8E93", lineWidth: 1, lineStyle: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false })) : [];
-    levels.filter(v => v.v != null && isFinite(v.v)).forEach(v => cs.createPriceLine({ price: v.v, color: LCOL[v.kind] || "#8E8E93", lineWidth: v.kind === "stop" || v.kind === "buy" ? 2 : 1, lineStyle: v.kind === "stop" || v.kind === "buy" ? 0 : 2, axisLabelVisible: true, title: v.label }));
+    drawLines();
     chart.subscribeCrosshairMove(p => { if (!p || p.time == null || !p.point){ legend(rows.length - 1); return; } const i = rows.findIndex(r => r.time === p.time); legend(i >= 0 ? i : rows.length - 1); });
   }
   const $now = box.querySelector('[data-a="now"]');
@@ -2251,8 +2252,15 @@ function mountPro(box, cfg){
   clearInterval(S.tfTimer);
   S.tfTimer = setInterval(() => { if (!box.isConnected){ alive = false; clearInterval(S.tfTimer); if (chart) chart.remove(); return; }
     if (tf !== "1wk" && relayBase() && !cfg.noRelayDaily && !document.hidden && marketOpenNow(kr)) show(true); }, 20000);   // 장중엔 20초마다 (보던 위치는 그대로, 일봉도)
-  return { redraw(){}, destroy(){ alive = false; clearInterval(S.tfTimer); if (chart){ try{ chart.remove(); }catch(e){} chart = null; } } };
+  function drawLines(){
+    plines.forEach(l => { try{ cs.removePriceLine(l); }catch(e){} });
+    plines = levels.filter(v => v.v != null && isFinite(v.v)).map(v => cs.createPriceLine({ price: v.v, color: LCOL[v.kind] || "#8E8E93", lineWidth: v.kind === "stop" || v.kind === "buy" ? 2 : 1, lineStyle: v.kind === "stop" || v.kind === "buy" ? 0 : 2, axisLabelVisible: true, title: v.label }));
+  }
+  return { redraw(){}, setLevels(nv){ levels = nv; if (chart && cs){ drawLines(); lvRow(); lvLater(); } }, destroy(){ alive = false; clearInterval(S.tfTimer); if (chart){ try{ chart.remove(); }catch(e){} chart = null; } } };
 }
+const dhWeight = (sp, P) => `<div><b>${P(sp.price)}</b><span>손절선 ${pct(sp.pct)}</span></div>
+        <div><b>1%</b><span>계좌 손실 한도</span></div>
+        <div><b class="${sp.weight >= 50 ? "hot" : ""}"${sp.weight >= 50 ? "" : ` style="color:var(--buy)"`}>${sp.weight}%</b><span>최대 비중</span></div>`;
 function renderDHDetail(sym){
   const t = dhTab();
   if (String(sym).startsWith("h:")){
@@ -2292,11 +2300,7 @@ function renderDHDetail(sym){
     ${stops.length && it.state !== "2등주 돌파" ? `<h2 class="sec-title">비중 계산</h2>
     <div class="card">
       <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
-      <div class="lt-mk2">
-        <div><b>${P(sp.price)}</b><span>손절선 ${pct(sp.pct)}</span></div>
-        <div><b>1%</b><span>계좌 손실 한도</span></div>
-        <div><b class="${sp.weight >= 50 ? "hot" : ""}"${sp.weight >= 50 ? "" : ` style="color:var(--buy)"`}>${sp.weight}%</b><span>최대 비중</span></div>
-      </div>
+      <div class="lt-mk2" id="dhW">${dhWeight(sp, P)}</div>
       <p class="n" style="margin:12px 0 0;font-size:var(--t-detail);color:var(--fg2)">비중 = 1% ÷ 손절폭 (A19 A52). 첫 진입은 5~10%로 시작하고, 맞으면 불타기로 키워요 (A18).</p>
     </div>` : ""}
     <h2 class="sec-title">근거</h2>
@@ -2307,13 +2311,19 @@ function renderDHDetail(sym){
   </div>`;
   document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
   document.getElementById("dhhow2").onclick = () => { S.guideAt = "chart"; S.guideFrom = { tab: S.tab, dhd: S.dhd }; hPush("t"); go("fade", () => { S.dhd = null; S.tab = "guide"; }); };
-  $app.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { S.dhStop = +b.dataset.st; render("none"); });
+  $app.querySelectorAll("[data-st]").forEach(b => b.onclick = () => {   // 손절선 바꾸기: 비중 칸과 차트 손절선만 바꿈 (화면 전체·차트 확대는 그대로)
+    S.dhStop = +b.dataset.st; const x = stops[S.dhStop]; if (!x) return;
+    $app.querySelectorAll("[data-st]").forEach(y => y.setAttribute("aria-selected", y === b));
+    const w = document.getElementById("dhW"); if (w) w.innerHTML = dhWeight(x, P);
+    if (it.state !== "2등주 돌파") S.chart?.setLevels?.(lvNow().filter(v => v.v != null));
+  });
   const lv = [], bl = it.brk_level ?? it.pivot;   // 매수 기준 = 넘어야 할 선 (직전 고점, 바로 아래 3% 안 라운드피겨면 그것, A48)
   const watch = ["관찰", "역의 역"].includes(it.state);   // 관찰 목록은 사는 자리가 아님 (리뷰 #4)
   if (bl && !watch) lv.push({ v: bl, kind: "buy", g: "main", label: "매수 기준", fit: true });
   if (it.pivot && it.pivot !== bl) lv.push({ v: it.pivot, kind: "res", g: "main", label: "직전 고점", fit: true });
   const rf = dhAbove(it) ? (it.goal ?? it.round_next) : (it.round_pivot ?? it.round_next);
   if (rf && rf !== it.pivot) lv.push({ v: rf, kind: "fib", g: "main", label: dhAbove(it) ? "가야 할 자리" : "넘을 라운드피겨" });   // 직전 고점과 같으면 선 하나만
+  const lvNow = () => { const sx = stops[S.dhStop]; return lv.filter(v => v.kind !== "stop").concat(sx && it.state !== "2등주 돌파" ? [{ v: sx.price, kind: "stop", g: "main", label: "손절선 · " + sx.name, fit: true }] : []); };
   if (sp && it.state !== "2등주 돌파") lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
   if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
   const box = $app.querySelector("#chartBox");
