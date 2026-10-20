@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-78">
+<meta name="app-version" content="2026-10-20-79">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -524,6 +524,7 @@ h2.sec-title{font-size:var(--t-heading)}
 
 /* 동현 탭 국기 · 사용법 */
 .wrap.dhu .lt-mk2 b{font-size:var(--t-heading);white-space:nowrap}
+.lt-mk2 b{white-space:nowrap;font-size:min(var(--t-title), 5vw)}   /* 7자리 원화 가격이 줄바꿈되지 않게 */
 .tabbar .tf{font-size:21px;line-height:24px;height:24px;display:block}
 .gi{width:100%;height:auto;display:block;overflow:visible}
 .gi .p{fill:none;stroke:var(--fg);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
@@ -611,7 +612,8 @@ async function gh(path, opt={}){
               "Accept": opt.raw ? "application/vnd.github.raw+json" : "application/vnd.github+json",
               ...(opt.body ? {"Content-Type":"application/json"} : {}) }
   }); }catch(e){ throw new Error("연결할 수 없어요 · 인터넷을 확인해 주세요"); }
-  if (res.status === 401) throw new Error("토큰이 맞지 않거나 만료됐어요");
+  if (res.status === 429 || (res.status === 403 && res.headers.get("x-ratelimit-remaining") === "0")) throw new Error("요청이 많아요 · 잠시 뒤 다시 해 주세요");
+  if (res.status === 401){ const e = new Error("토큰이 맞지 않거나 만료됐어요"); e.auth = true; throw e; }
   if (res.status === 403) throw new Error("토큰 권한이 부족해요 · Contents·Actions 읽기/쓰기 허용");
   if (res.status === 404) { const e = new Error("없음"); e.nf = true; throw e; }
   if (res.status === 409) throw new Error("다른 곳에서 먼저 바뀌었어요 · 다시 시도해 주세요");
@@ -650,12 +652,12 @@ async function dispatch(cmd, symbol){
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function waitRun(since, label){
   S.busy = label; toast(label + " · 1분 정도", true); syncBusy();
-  let id = null;
+  let id = null, errs = 0;
   for (let i=0;i<60;i++){
     await sleep(i < 6 ? 3000 : 5000);
     try{
-      const j = await gh("/actions/runs?event=workflow_dispatch&per_page=5");
-      const run = id ? j.workflow_runs.find(r => r.id === id) : j.workflow_runs.find(r => Date.parse(r.created_at) >= since);
+      const j = await gh("/actions/runs?event=workflow_dispatch&per_page=5"); errs = 0;
+      const run = id ? j.workflow_runs.find(r => r.id === id) : j.workflow_runs.find(r => Date.parse(r.created_at) >= since - 60000);   // 폰 시계가 조금 빨라도 찾게
       if (!run) continue;
       id = run.id;
       if (run.status === "completed"){
@@ -664,7 +666,7 @@ async function waitRun(since, label){
         else toast("계산하지 못했어요. 설정 > 고급 > 실행 기록을 확인해 주세요.");
         return;
       }
-    }catch(e){}
+    }catch(e){ if (++errs >= 3){ S.busy = null; syncBusy(); toast(e.message); return; } }   // 계속 실패하면 5분 기다리지 않고 알림
   }
   S.busy = null; syncBusy(); toast("아직 계산 중이에요. 잠시 뒤 새로고침해 주세요.");
 }
@@ -672,10 +674,17 @@ function syncBusy(){ document.querySelectorAll("[data-busy]").forEach(b => b.dis
 
 /* ───────── 데이터 ───────── */
 async function refresh(){
-  if (isDH(S.tab) && S.dhd && !String(S.dhd).startsWith("h:")){   // 종목 상세를 보던 중이면: 뒤에서 받아 보고 바뀐 게 있을 때만 다시 그림 (차트 확대·위치 유지, 리뷰 #6)
+  if (isDH(S.tab) && S.dhd && !String(S.dhd).startsWith("h:") && S.dhL[dhTab()]){   // 종목 상세를 보던 중이면: 뒤에서 받아 보고 바뀐 게 있을 때만 다시 그림 (차트 확대·위치 유지, 리뷰 #6)
     const t = dhTab(), key = o => o ? `${o.date || ""}|${o.at || ""}` : "", a = key(S.dhc[t]), b = key(S.dhPre[t]);
     try{ await loadDH(t); }catch(e){ return; }
     if ((key(S.dhc[t]) !== a || key(S.dhPre[t]) !== b) && !S.dirty && !document.querySelector(".sheet-bg")) render("none");
+    return;
+  }
+  if (isDH(S.tab)){   // 동현 목록·보유: 화면의 자료는 그대로 두고 뒤에서 받아서, 성공했을 때만 바꿈 (오프라인이면 그대로, 리뷰 #4)
+    const t = dhTab(), sheet = !!document.querySelector(".sheet-bg");
+    try{ await Promise.all([loadDH(t), sheet ? null : loadHold()]); S.holdErr = null; }
+    catch(e){ if (S.dhc[t]) toast(e.message); else { S.dhL = {}; render("none"); } return; }
+    if (!S.dirty && !sheet) render("none");
     return;
   }
   S.err = ""; S.lt = null; S.loading = false; S.dhL = {}; S.holdErr = null; if (!document.querySelector(".sheet-bg")) S.hold = null;
@@ -1446,7 +1455,7 @@ async function openSearch(o){
     const aliases = new Set(Object.entries(ALIAS).filter(([k]) => k.startsWith(qk)).map(([,v]) => v));
     const scored = [];
     for (const r of rows){
-      const [m, c, n] = r; const nl = n.toLowerCase().replace(/\s/g, ""), cl = c.toLowerCase();
+      const [m, c, n] = r; if (o.only && (o.only === "us") !== (m === "미국")) continue;   // 보유 추가: 그 탭의 시장만 const nl = n.toLowerCase().replace(/\s/g, ""), cl = c.toLowerCase();
       let sc = 0;
       if (m === "미국" && aliases.has(c)) sc = ALIAS[qk] === c ? 100 : 80;
       else if (KALIAS[qk] === c) sc = 100;
@@ -2018,7 +2027,12 @@ async function renderDH0(){
   };
   if (!S.dhL[t]){
     $app.innerHTML = `<div class="wrap">${head}<div class="card"><div class="sk" style="width:40%;height:16px"></div><div class="sk" style="width:70%;height:12px;margin-top:12px"></div></div></div>`; bind();
-    try{ await loadDH(t); }catch(e){ const w = $app.querySelector(".wrap"); if (w) w.insertAdjacentHTML("beforeend", `<div class="err" style="margin-top:var(--gap-block)">${esc(e.message)}</div>`); return; }
+    try{ await loadDH(t); }catch(e){ const w = $app.querySelector(".wrap"); if (!w) return;
+      w.querySelector(".card")?.remove();
+      w.insertAdjacentHTML("beforeend", `<div class="err" style="margin-top:var(--gap-block)">${esc(e.message)}</div><div class="stack" style="margin-top:12px">${e.auth ? `<button class="btn primary press" id="dhtok">토큰 다시 넣기</button>` : ""}<button class="btn press" id="dhretry">다시 받기</button></div>`);
+      const rt = document.getElementById("dhretry"); if (rt) rt.onclick = () => { S.dhL[t] = false; render("none"); };
+      const tk = document.getElementById("dhtok"); if (tk) tk.onclick = () => { LS.del("tok"); S.token = ""; render("none"); };
+      return; }
     if (S.tab === t && !S.dhd) renderDH(); return;
   }
   const d = S.dhc[t];
@@ -2357,8 +2371,11 @@ async function saveHold(msg, mutate){
   const r = await gh("/contents/" + enc(HOLD_SRC), { method: "PUT", body: JSON.stringify(body) });
   if (!S.hold) S.hold = { sha: null, items: [], res: null };
   S.hold.sha = r.content.sha; S.hold.items = items; S.holdErr = null;
-  try{ const t = await dispatch("동현보유"); waitRun(t, "보유 점검 중").then(async () => { try{ S.hold.res = await readJSON(HOLD_RES, null); }catch(e){} if (isDH(S.tab)) render("none"); }); }catch(e){ toast(e.message); }
+  try{ const t = await dispatch("동현보유"); waitRun(t, "보유 점검 중").then(async () => { try{ S.hold.res = await readJSON(HOLD_RES, null); }catch(e){}
+      if (isDH(S.tab) && (!S.dhd || String(S.dhd).startsWith("h:")) && !document.querySelector(".sheet-bg")) render("none"); });   // 종목 차트를 보던 중이면 다시 그리지 않음
+    return true; }catch(e){ return false; }
 }
+const savedMsg = ok => ok ? "저장했어요 · 점검 중" : "저장했어요 · 점검은 못 시작했어요 (다음 계산 때 반영)";
 const lotSig = ls => JSON.stringify((ls || []).map(x => [x.d, +x.px, +x.w, x.stop == null ? null : +x.stop, x.kind]).sort());
 const holdFresh = (h, r) => !!r && lotSig(r.lots) === lotSig(h.lots);
 const holdRes = id => (S.hold?.res?.items || []).find(x => x.id === id);
@@ -2411,7 +2428,7 @@ function dhHoldSection(t){
   const mine = H.items.filter(h => (h.mk || "kr") === holdMk(t));
   const add = `<button class="pill-btn primary press" id="hadd">+ 추가</button>`;
   if (!mine.length) return `<div class="sec-row"><h2 class="sec-title">내 보유</h2>${add}</div>
-    <div class="card empty" style="margin:0"><b>들고 있는 종목이 없어요</b>산 종목을 넣으면 손절·불타기·정리할 때를 알려 드려요.</div>`;
+    <div class="card empty" style="margin:0"><b>들고 있는 종목이 없어요</b>산 종목을 넣으면 손절·불타기·정리할 때를 매일 판정해서 보여 드려요.</div>`;
   return `<div class="sec-row"><h2 class="sec-title">내 보유 <span class="lt-cnt">${mine.length}</span></h2>${add}</div>
     <div class="list">${mine.map(h => {
       const r = holdRes(h.id), fresh = holdFresh(h, r);
@@ -2457,7 +2474,7 @@ function renderHoldDetail(id){
   sold.onclick = async () => {
     if (!sold.dataset.ok){ sold.dataset.ok = 1; sold.textContent = "한 번 더 누르면 빠져요"; setTimeout(() => { if (sold.isConnected){ delete sold.dataset.ok; sold.textContent = "다 팔았어요 · 목록에서 빼기"; } }, 4000); return; }
     sold.disabled = true; sold.innerHTML = `<span class="spin"></span>빼는 중`;
-    try{ await saveHold(`앱: 보유 ${h.name} 정리`, items => { const k = items.findIndex(x => x.id === id); if (k >= 0) items.splice(k, 1); }); toast("목록에서 뺐어요"); BACK_ANIM = true; history.back(); }
+    try{ await saveHold(`앱: 보유 ${h.name} 정리`, items => { const k = items.findIndex(x => x.id === id); if (k >= 0) items.splice(k, 1); }); toast("목록에서 뺐어요"); if (S.dhd === "h:" + id){ BACK_ANIM = true; history.back(); } }   // 저장 중에 이미 나갔으면 한 번 더 뒤로 가지 않음
     catch(e){ toast(e.message); sold.disabled = false; sold.textContent = "다 팔았어요 · 목록에서 빼기"; }
   };
   if (nb){
@@ -2471,7 +2488,7 @@ function renderHoldDetail(id){
 }
 /* 보유 추가: 종목 찾기 → 산 기록 입력 */
 function openHoldAdd(t){
-  openSearch({ title: "보유 추가", have: new Set((S.hold?.items || []).map(h => h.sym)), add: async (m, c, n) => {
+  openSearch({ title: "보유 추가", only: t === "dhu" ? "us" : "kr", have: new Set((S.hold?.items || []).map(h => h.sym)), add: async (m, c, n) => {
     if ((m === "미국") !== (t === "dhu")){ throw new Error(t === "dhu" ? "미국 종목만 넣을 수 있어요 · 한국은 🇰🇷 탭에서" : "한국 종목만 넣을 수 있어요 · 미국은 🇺🇸 탭에서"); }
     const name = m === "미국" ? (Object.entries(ALIAS).find(([k, v]) => v === c)?.[0] || shortName(n, c, m)) : n;
     document.querySelector(".sheet-bg:not(.closing)")?._close?.();
@@ -2499,7 +2516,7 @@ function openLotForm(o){
     <button class="btn primary press" id="lsave" style="margin-top:16px" disabled>저장</button>
     <p class="note" style="margin:12px 4px">저장하면 엔진이 1~2분 안에 상태를 점검해요.</p></div>`);
   const $ = s => bg.querySelector(s), num0 = s => parseFloat($(s).value);
-  let acct = "", force = false;
+  let acct = "", force = false; const cid = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), newId = "h" + Date.now().toString(36);
   bg.querySelectorAll("#lacct button").forEach(b => b.onclick = () => { acct = b.dataset.a === "안 나눔" ? "" : b.dataset.a; bg.querySelectorAll("#lacct button").forEach(x => x.setAttribute("aria-selected", x === b)); });
   bg.querySelectorAll("#lsc [data-v]").forEach(b => b.onclick = () => { $("#ls").value = b.dataset.v; calc(); });
   const calc = () => {
@@ -2528,12 +2545,12 @@ function openLotForm(o){
   ["#lp", "#lw", "#ls", "#ld"].forEach(s => $(s).oninput = calc); calc();
   $("#lsave").onclick = async () => {
     const b = $("#lsave"); b.disabled = true; b.innerHTML = `<span class="spin"></span>저장 중`;
-    const lot = { d: $("#ld").value || todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul"), px: num0("#lp"), w: num0("#lw"), stop: num0("#ls"), kind };
+    const lot = { d: $("#ld").value || todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul"), px: num0("#lp"), w: num0("#lw"), stop: num0("#ls"), kind, cid };
     try{
-      await saveHold(`앱: 보유 ${name} ${kind}`, items => {
-        if (h){ const x = items.find(y => y.id === h.id); if (!x) throw new Error("다른 기기에서 이 종목을 뺐어요 · 새로고침해 주세요"); (x.lots = x.lots || []).push(lot); x.lots.sort((a, c) => a.d < c.d ? -1 : a.d > c.d ? 1 : 0); }
-        else items.push({ id: "h" + Date.now().toString(36), sym, name, mk: holdMk(t), acct, lots: [lot] });
-      }); close(); toast("저장했어요 · 점검 중"); render("none");
+      const ok = await saveHold(`앱: 보유 ${name} ${kind}`, items => {   // cid: 응답이 늦어 다시 눌러도 같은 기록이 두 번 들어가지 않게
+        if (h){ const x = items.find(y => y.id === h.id); if (!x) throw new Error("다른 기기에서 이 종목을 뺐어요 · 새로고침해 주세요"); if ((x.lots || []).some(l => l.cid === cid)) return; (x.lots = x.lots || []).push(lot); x.lots.sort((a, c) => a.d < c.d ? -1 : a.d > c.d ? 1 : 0); }
+        else if (!items.some(y => y.id === newId)) items.push({ id: newId, sym, name, mk: holdMk(t), acct, lots: [lot] });
+      }); close(); toast(savedMsg(ok)); render("none");
     }catch(e){ toast(e.message); b.disabled = false; b.textContent = "저장"; }
   };
 }
@@ -2553,7 +2570,7 @@ function openLotEdit(h, key, t){
     const v = parseFloat(bg.querySelector("#es").value); if (!(v > 0)){ toast("손절선을 넣어 주세요"); return; }
     if (x.stop != null && v < x.stop && !sv.dataset.ok){ sv.dataset.ok = 1; sv.textContent = "손절선을 내려요? 한 번 더 누르면 저장"; return; }
     sv.disabled = true; sv.innerHTML = `<span class="spin"></span>저장 중`;
-    try{ await saveHold(`앱: 보유 ${h.name} 손절선`, items => { find(items)[1].stop = v; }); close(); render("none"); }
+    try{ const ok = await saveHold(`앱: 보유 ${h.name} 손절선`, items => { find(items)[1].stop = v; }); close(); toast(savedMsg(ok)); render("none"); }
     catch(e){ toast(e.message); sv.disabled = false; sv.textContent = "손절선 저장"; delete sv.dataset.ok; }
   };
   dl.onclick = async () => {
@@ -2563,7 +2580,7 @@ function openLotEdit(h, key, t){
       await saveHold(`앱: 보유 ${h.name} 매도 기록`, items => { const [it, l] = find(items);
         if (it.lots.length > 1) it.lots.splice(it.lots.indexOf(l), 1); else items.splice(items.indexOf(it), 1); });
       close();
-      if (!S.hold.items.find(y => y.id === h.id)) setTimeout(() => { BACK_ANIM = true; history.back(); }, 320);   // 시트의 기록이 먼저 빠진 뒤에
+      if (!S.hold.items.find(y => y.id === h.id)) setTimeout(() => { if (S.dhd === "h:" + h.id){ BACK_ANIM = true; history.back(); } }, 320);   // 시트의 기록이 먼저 빠진 뒤에
       else render("none");
     }catch(e){ toast(e.message); dl.disabled = false; delete dl.dataset.ok; dl.textContent = delTxt; }
   };
@@ -2632,16 +2649,17 @@ function renderGuide(){
       ${dont ? `<p class="gd-dont">${dont}</p>` : ""}
     </section>`;
   $app.innerHTML = `<div class="wrap gd">
-    <div class="navbar"><div class="side"></div><span class="mini">사용법</span><div class="side r"></div></div>
+    <div class="navbar"><div class="side">${S.guideFrom ? `<button class="icon-btn press" id="gback" aria-label="뒤로">${BACK}<span>${S.guideFrom.dhd ? "종목" : "동현"}</span></button>` : ""}</div><span class="mini">사용법</span><div class="side r"></div></div>
     <div class="title-block" data-anchor><h1 class="big">사용법</h1><div class="sub">카투 규칙으로 주도주를 고르고, 살 자리·손절선·비중을 계산해요. 결정은 직접 해요.</div></div>
 
     <h2 class="sec-title">하루 순서</h2>
     <ol class="card gd-steps">
       <li><b>시장부터 보기</b><span>맨 위 카드가 ‘할 때’면 종목을 찾고, ‘쉴 때’면 쉬어요. 빨간 전량매도 경고가 뜨면 들고 있는 걸 정리해요.</span></li>
+      <li><b>장 마감 전에 예비 카드 보기</b><span>🇰🇷는 14:20·14:45에 지금 값으로 한 번 미리 계산해서 맨 위에 ‘마감 전 예비’ 카드가 떠요. 지금 매수 기준선을 넘어 있는 종목이 나오고, 종가까지 버티면 15:20~15:30 동시호가 때 종가에 사요 (카투는 종가에 사요, A28). 🇺🇸는 미국 15:10.</span></li>
       <li><b>장 끝나고 목록 보기</b><span>🇰🇷는 평일 16:05, 🇺🇸는 아침 07:20에 새로 계산돼요. 초록 ‘돌파 자리’부터 봐요.</span></li>
       <li><b>사기 전에 손절선·비중 정하기</b><span>종목을 눌러 손절선을 고르면 최대 비중이 나와요. 사고 나서 정하지 않아요.</span></li>
       <li><b>확인하고 사기</b><span>직전 고점을 거래대금 실어 넘는 걸 확인한 뒤 사요. 늦고 비싸도 확인 후 (A11). 카투는 종가·NXT 종가에도 사요 (A28). 5~10%만 먼저 (A18).</span></li>
-      <li><b>산 걸 ‘내 보유’에 넣기</b><span>산 가격·비중·손절선을 넣으면 매일 상태를 알려 줘요. 더 사면 ‘불타기’로 따로 넣어요.</span></li>
+      <li><b>산 걸 ‘내 보유’에 넣기</b><span>산 가격·비중·손절선을 넣으면 매일 장 마감 뒤 상태(정리·불타기·수익 보존 등)를 판정해서 보여 줘요. 휴대폰 알림은 아직 꺼져 있어요. 더 사면 ‘불타기’로 따로 넣어요.</span></li>
     </ol>
 
     <h2 class="sec-title">시장 판정</h2>
@@ -2722,6 +2740,7 @@ function renderGuide(){
     </ul>
   </div>`;
   bindNavbar(); guideImages();
+  const gb = document.getElementById("gback"); if (gb) gb.onclick = () => { BACK_ANIM = true; history.back(); };   // 연 곳(종목·목록)으로 (아이폰 홈 화면 앱엔 시스템 뒤로가 없어서)
   if (S.guideAt){ const el = document.getElementById("g-" + S.guideAt); S.guideAt = null; if (el) requestAnimationFrame(() => scrollTo(0, el.getBoundingClientRect().top + scrollY - 60)); }
 }
 
@@ -2748,7 +2767,7 @@ function renderSettings(){
         <input id="qurl" class="qurl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://....workers.dev" value="${esc(LS.get("burl", "") || LS.get("qurl", ""))}"></div></div>
       <button class="row press" id="qsave"><span class="main" style="color:var(--blue)">저장하고 시험하기</span></button>
     </div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">내 Cloudflare 중계(timing-app 저장소의 relay/worker.js)를 거쳐 야후 1분·5분봉을 받아요. 종목 화면의 차트 위에서 1분봉·5분봉을 고르면 보여요.</p>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">내 Cloudflare 중계(timing-app 저장소의 relay/worker.js)를 거쳐 분봉을 받아요 (한국 최근 6거래일은 네이버, 그 전·미국은 야후). 종목 화면의 차트 위에서 1분·5분·15분·1시간봉을 고르면 보여요.</p>
     <div class="list" style="margin-top:var(--gap-block)">
       <button class="row press" id="out"><span class="main" style="color:var(--sell)">토큰 지우기</span></button>
     </div>
@@ -2785,7 +2804,9 @@ async function checkVersion(){
     const mine = document.querySelector('meta[name="app-version"]')?.content;
     const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"})).text();
     const v = (t.match(/name="app-version" content="([^"]+)"/) || [])[1];
-    if (v && mine && v !== mine && !S.dirty){ toast("새 버전으로 바꾸는 중"); setTimeout(() => location.reload(), 600); }
+    const busy = S.dirty || S.busy || document.querySelector(".sheet-bg");   // 입력 중·계산 기다리는 중엔 미룸 (다음에 돌아올 때 바꿈)
+    let tried = ""; try{ tried = sessionStorage.getItem("verTry") || ""; }catch(e){}
+    if (v && mine && v !== mine && !busy && tried !== v){ try{ sessionStorage.setItem("verTry", v); }catch(e){} toast("새 버전으로 바꾸는 중"); setTimeout(() => location.replace(location.pathname + "?v=" + encodeURIComponent(v)), 600); }   // 같은 버전으로 한 번만 (캐시가 늦어도 계속 새로고침하지 않게)
   }catch(e){}
 }
 addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
@@ -2811,8 +2832,7 @@ addEventListener("visibilitychange", () => { if (document.visibilityState === "v
     if (Date.now() - (v.t || 0) < 6e5){ S.dhd = v.dhd || null; }
     histTo((S.tab !== HOME ? 1 : 0) + (S.odd || S.ltd || S.dhd ? 1 : 0), S.odd || S.ltd || S.dhd ? "d" : "t"); } }   // 다시 열 때마다 기록이 쌓이지 않게 깊이를 맞춤
 try{ if (LS.get("qurl", "") && !LS.get("burl", "")){ LS.set("burl", LS.get("qurl", "")); LS.del("qurl"); } }catch(e){}   // 예전 주소는 분봉 전용 키로 옮김 (실시간 시세 자동 갱신은 끔)
-render("none");
-if (S.token) refresh();
+render("none");   // 첫 화면이 자료를 받으니 시작할 때 refresh는 따로 안 함 (같은 요청 두 번, 오류 두 번 나오던 것)
 </script>
 </body>
 </html>
