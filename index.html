@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-73">
+<meta name="app-version" content="2026-10-20-74">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -2155,14 +2155,20 @@ function mountPro(box, cfg){
       const r = rows[i], p = rows[i - 1]; if (!(p.close <= L && r.close > L)) continue;
       let av = 0; for (let k = i - 20; k < i; k++) av += rows[k].vol || 0; av /= 20;
       const strong = av > 0 && (r.vol || 0) >= av * mult;
-      mk.push({ time: r.time, strong });
+      mk.push({ time: r.time, strong, x: av > 0 ? (r.vol || 0) / av : 0 });
     }
-    cs.setMarkers(mk.filter(m => m.strong).slice(-4).map(m => ({ time: m.time, position: "belowBar", color: LCOL.buy, shape: "arrowUp", text: "돌파" })));   // 거래량 실린 돌파만, 최근 4개
+    // 거래량 실린 돌파 ▲ (최근 4개) + 마지막으로 넘은 봉이 거래량 없이 넘었으면 작은 회색 점 하나 (카투: 거래대금 없이 슬쩍 넘으면 안 사요)
+    const fx = x => x >= 10 ? Math.round(x) + "배" : x.toFixed(1) + "배", lastX = mk[mk.length - 1];
+    const show = mk.filter(m => m.strong).slice(-4).map(m => ({ time: m.time, position: "belowBar", color: LCOL.buy, shape: "arrowUp", text: "돌파 " + fx(m.x) }));
+    if (lastX && !lastX.strong) show.push({ time: lastX.time, position: "belowBar", color: DARK() ? "#8E8E93" : "#AEAEB2", shape: "circle", size: 0.6, text: fx(lastX.x) });
+    cs.setMarkers(show.sort((a, b) => a.time < b.time ? -1 : 1));
     const last = rows[rows.length - 1].close, gap = (last / L - 1) * 100, g = (gap >= 0 ? "+" : "") + gap.toFixed(1) + "%";
     const st = buy.state;
     const [txt, tone] = st === "2등주 돌파" ? ["업종 1등이 아니라 안 사요", "wait"]
       : gap > 5 ? [`매수 기준 ${g} · 쫓지 마세요`, "sell"]
       : st === "주도 후보" && gap > 0 ? [`이미 넘었어요 (${g}) · 쉬며 베이스를 만들 때까지 기다려요`, "wait"]
+      : gap > 0 && lastX && !lastX.strong ? [`매수 기준 위 ${g} · 거래량 없이 넘었어요 (평균의 ${fx(lastX.x)}) · 버티는지 더 봐요`, "wait"]
+      : gap > 0 && lastX ? [`매수 기준 위 ${g} · 거래량 실린 돌파 (${fx(lastX.x)}) · 손절선은 그날 저점`, "buy"]
       : gap > 0 ? [`매수 기준 위 ${g} · 거래량 실린 돌파면 손절선은 그날 저점`, "buy"]
       : [`매수 기준까지 ${(-gap).toFixed(1)}% · 거래량 실어 넘으면 사요`, "wait"];
     $chip.textContent = txt; $chip.dataset.tone = tone; $chip.hidden = false;
@@ -2592,7 +2598,7 @@ function renderGuide(){
     <p class="note" style="margin:0 var(--pad-card) 10px;line-height:1.5">위 버튼으로 봉 간격을 골라요 (1분·5분·15분·1시간·일·주). 자리는 <b>일봉</b>으로 보고, 사는 순간은 분봉으로 돌파 때 거래량이 실렸는지 확인해요 (A69). 옆으로 끌면 지난 봉, 두 손가락으로 벌리면 확대, 누르고 있으면 그 봉의 시·고·저·종이 위에 나와요. 지난 봉을 보다가 ‘최근으로’를 누르면 돌아와요. 1분~1시간봉은 설정의 분봉 중계 주소가 있어야 보여요.</p>
     <div class="card gd-legend">
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" stroke="#0B9B8A" stroke-width="2.5"/></svg><span><b>매수 기준</b>이 선을 거래량 실어 넘으면 사요. 직전 고점이고, 바로 아래(3% 안)에 라운드피겨가 있으면 그 라운드피겨예요 (A48)</span></div>
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><path d="M20 1 L26 9 L14 9 Z" fill="#0B9B8A"/></svg><span><b>▲ 돌파</b>매수 기준을 넘은 봉 중 거래량이 앞 20봉 평균보다 큰 봉 (일·주봉 1.1배, 분봉 2배). 거래량 없이 넘은 봉엔 표시가 없어요</span></div>
+      <div><svg viewBox="0 0 40 10" aria-hidden="true"><path d="M20 1 L26 9 L14 9 Z" fill="#0B9B8A"/></svg><span><b>▲ 돌파</b>매수 기준을 넘은 봉 중 거래량이 앞 20봉 평균보다 큰 봉 (일·주봉 1.1배, 분봉 2배). 옆 숫자는 거래량이 평균의 몇 배였는지예요. 작은 회색 점은 거래량 없이 넘은 봉 (마지막 것 하나만)</span></div>
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="pv"/></svg><span><b>직전 고점</b>매수 기준이 라운드피겨일 때 따로 보여요</span></div>
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="rf"/></svg><span><b>라운드피겨</b>12만·175만처럼 딱 떨어지는 가격. 주문이 몰려 막히거나 받쳐줘요. 돌파 전엔 ‘넘을 라운드피겨’, 돌파 뒤엔 ‘가야 할 자리’</span></div>
       <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="st"/></svg><span><b>손절선</b>여기를 깨면 팔아요</span></div>
