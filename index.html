@@ -1455,7 +1455,7 @@ async function openSearch(o){
     const aliases = new Set(Object.entries(ALIAS).filter(([k]) => k.startsWith(qk)).map(([,v]) => v));
     const scored = [];
     for (const r of rows){
-      const [m, c, n] = r; if (o.only && (o.only === "us") !== (m === "미국")) continue;   // 보유 추가: 그 탭의 시장만 const nl = n.toLowerCase().replace(/\s/g, ""), cl = c.toLowerCase();
+      const [m, c, n] = r; if (o.only && (o.only === "us") !== (m === "미국")) continue;   /* 보유 추가: 그 탭의 시장만 */ const nl = n.toLowerCase().replace(/\s/g, ""), cl = c.toLowerCase();
       let sc = 0;
       if (m === "미국" && aliases.has(c)) sc = ALIAS[qk] === c ? 100 : 80;
       else if (KALIAS[qk] === c) sc = 100;
