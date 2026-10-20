@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-21-80">
+<meta name="app-version" content="2026-10-21-81">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -470,6 +470,9 @@ details.more>summary::-webkit-details-marker{display:none}
 .pro-ma button{font-size:.76rem;font-weight:600;min-height:36px;padding:6px 12px;border-radius:999px;background:var(--fill);color:var(--fg2)}
 .pro-ma button[aria-pressed="true"]{color:var(--fg)}
 .pro-ma button i{display:inline-block;width:10px;height:2px;border-radius:1px;vertical-align:middle;margin-right:5px}
+.lq-now{font-size:.7rem;font-weight:600;color:var(--fg2);margin-right:2px}
+.lq-hint{display:block;font-size:.7rem;font-weight:600;color:var(--wait,#B7791F);text-align:right}
+.lq-hint:empty{display:none}
 .pro-chip{margin:2px 12px 4px;font-size:.8rem;font-weight:600;line-height:1.45;color:var(--fg)}
 .pro-chip[data-tone="buy"]{color:#0B9B8A}.pro-chip[data-tone="sell"]{color:var(--sell,#D22F3C)}.pro-chip[data-tone="wait"]{color:var(--fg2)}
 .pro-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--fg2);font-size:var(--t-small)}
@@ -1945,6 +1948,47 @@ S.dhc = {}; S.dhL = {}; S.dhPre = {};
 const DH_TONE = {"돌파 자리": "buy", "2등주 돌파": "", "주도 후보": "soon", "셋업": "soon", "관찰": ""};
 async function loadDH(t){ const [d, tr, pre] = await Promise.all([readJSON(DHM[t].file, null), readJSON("상태/동현기록.json", null).catch(() => null), readJSON(DHM[t].pre, null).catch(() => null)]);
   S.dhc[t] = d; S.dhTrack = tr; S.dhPre[t] = pre; S.dhL[t] = true; return S.dhc[t]; }
+/* ───────── 동현 실시간 시세 (장중 1분마다, 내 중계 ?s=): 목록·보유·상세의 가격만 지금 값으로. 판정(후보·셋업·정리)은 엔진이 종가로 (카투 '종가로 확인') ─────────
+   표시만: 셋업·주도 후보가 지금 매수 기준선 위면 '장중 기준선 위', 돌파 자리가 기준선 아래면 '기준선 아래', 보유가 손절선 아래면 '지금 손절선 아래' */
+S.dq = {};
+async function dhLive(force){
+  if (document.hidden || !S.token || !relayBase() || !isDH(S.tab)) return;
+  const t = dhTab(), kr = t !== "dhu"; if (!force && !marketOpenNow(kr)) return;
+  const syms = new Set([...dhAll(S.dhc[t]), ...(dhPreOn(t) ? dhAll(S.dhPre[t]) : [])].map(x => x.sym));
+  (S.hold?.items || []).filter(h => (h.mk || "kr") === holdMk(t)).forEach(h => syms.add(h.sym));
+  const list = [...syms].filter(x => /^\^?[A-Z0-9.-]{1,15}$/.test(x)).slice(0, 40); if (!list.length) return;
+  try{ const r = await fetch(relayBase() + "?s=" + encodeURIComponent(list.join(",")), { cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined });
+    if (!r.ok) return; const j = await r.json(); for (const [k, v] of Object.entries(j || {})) if (v && v.p) S.dq[k] = { ...v, at: Date.now() }; }catch(e){ return; }
+  dhPaint();
+}
+let dhLiveT = 0;
+const dhLiveSoon = () => { const now = Date.now(); if (now - dhLiveT > 55000){ dhLiveT = now; dhLive(true); } else dhPaint(); };   // 화면을 그릴 때: 1분 안에 받은 게 있으면 그걸로
+setInterval(() => { dhLiveT = Date.now(); dhLive(false); }, 60000);
+function dhPaint(){
+  const live = (q, base, d) => q && q.p && base > 0 && q.d && (!d || q.d > d);   // 엔진 종가 날짜보다 새 시세만
+  const tag = (t, kr) => marketOpenNow(kr) ? "지금" : "오늘 종가";
+  document.querySelectorAll("[data-lq]").forEach(el => {
+    const sym = el.dataset.lq, q = S.dq[sym], base = +el.dataset.base, t = el.dataset.t, kr = t !== "dhu", h = document.querySelector(`[data-lqh="${CSS.escape(sym)}"]`);
+    if (!live(q, base, el.dataset.d)) return;
+    const ch = (q.p / base - 1) * 100;
+    el.innerHTML = `<span class="lq-now">${tag(t, kr)}</span> ${dhPx(q.p, t)} <span class="${ch > 0 ? "up" : ch < 0 ? "down" : ""}">${pct(ch)}</span>`;
+    const lv = +el.dataset.lv, st = el.dataset.st;
+    if (h) h.textContent = lv > 0 && ["셋업", "주도 후보"].includes(st) && base <= lv && q.p > lv ? "장중 기준선 위" : lv > 0 && st === "돌파 자리" && q.p < lv ? "기준선 아래" : "";
+  });
+  document.querySelectorAll("[data-lh]").forEach(el => {
+    const sym = el.dataset.lh, q = S.dq[sym], avg = +el.dataset.avg, stop = +el.dataset.stop, t = el.dataset.t, kr = t !== "dhu", h = document.querySelector(`[data-lhh="${CSS.escape(sym)}"]`);
+    if (!q || !q.p || !(avg > 0) || (el.dataset.d && q.d && q.d <= el.dataset.d)) return;
+    const pn = (q.p / avg - 1) * 100;
+    el.innerHTML = `<span class="lq-now">${tag(t, kr)}</span> ${dhPx(q.p, t)} <span class="${pn > 0 ? "up" : pn < 0 ? "down" : ""}">수익 ${pct(pn)}</span>`;
+    if (h) h.textContent = stop > 0 && (q.l ?? q.p) < stop ? (kr ? (q.p < stop ? "지금 손절선 아래 · 종가로 깨면 정리" : "장중 손절선 닿음") : "장중 손절선 이탈 · 정리") : "";
+  });
+  document.querySelectorAll("[data-lqs]").forEach(el => {
+    const sym = el.dataset.lqs, q = S.dq[sym], base = +el.dataset.base, t = el.dataset.t, kr = t !== "dhu";
+    if (!live(q, base, el.dataset.d)) return;
+    const ch = (q.p / base - 1) * 100;
+    el.innerHTML = `${tag(t, kr)} ${dhPx(q.p, t)} <span class="${ch > 0 ? "up" : ch < 0 ? "down" : ""}">${pct(ch)}</span> · `;
+  });
+}
 /* 마감 전 예비 (14:20·14:45 KST, 미국 15:10 ET): 지금 값으로 돌린 엔진. 장 마감 뒤 결과가 나오기 전까지만 보여요 */
 const dhPreOn = t => { const P = S.dhPre[t], D = S.dhc[t];   // 오늘(그 시장 날짜) 예비만 — 장 마감 뒤 계산이 실패해도 다음 날까지 남지 않게 (리뷰 #3)
   return !!(P && P.date && P.date === todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul") && (!D || !D.date || P.date > D.date)); };
@@ -2017,7 +2061,7 @@ function dhRow(it, t, D0, pfx = ""){
     : `${it.sector_lead ? "업종 1등 · " : ""}거래대금 ${dhMoney(it.tv, t)}${it.state === "돌파 자리" && (it.brk_level ?? it.pivot) ? ` · ${dhPx(it.brk_level ?? it.pivot, t)} 돌파` : ""}`;   // 상세의 '매수 기준'과 같은 값
   const sub2 = sub + earnTag(it.earn);
   return `<button class="row press lt-srow" data-dh="${esc(pfx + it.sym)}"><div class="main"><div class="lt-n">${esc(it.name)}</div><div class="lt-s">${esc(sub2)}</div></div>
-    <div class="lt-px"><b class="lt-chip ${it.state === "돌파 자리" && dhOff(it, D1) ? "" : DH_TONE[it.state] || ""}">${esc(it.state === "관찰" ? "역의 역" : it.state)}${it.state === "돌파 자리" && dhOff(it, D1) ? (dhReg(it, D1)?.warn ? " · 경고" : " · 쉴 때") : ""}</b><span>${dhPx(it.price, t)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span></div>${CHEV}</button>`;
+    <div class="lt-px"><b class="lt-chip ${it.state === "돌파 자리" && dhOff(it, D1) ? "" : DH_TONE[it.state] || ""}">${esc(it.state === "관찰" ? "역의 역" : it.state)}${it.state === "돌파 자리" && dhOff(it, D1) ? (dhReg(it, D1)?.warn ? " · 경고" : " · 쉴 때") : ""}</b><span data-lq="${esc(it.sym)}" data-base="${it.price ?? ""}" data-d="${esc(D1?.date || "")}" data-lv="${it.brk_level ?? it.pivot ?? ""}" data-st="${esc(it.state)}" data-t="${t}">${dhPx(it.price, t)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span><span class="lq-hint" data-lqh="${esc(it.sym)}"></span></div>${CHEV}</button>`;
 }
 function renderDH(){ return renderDH0().catch(e => { console.error(e); toast("화면을 그리지 못했어요 · " + (e.message || e)); }); }   // 비동기 오류도 잡는다
 async function renderDH0(){
@@ -2062,6 +2106,7 @@ async function renderDH0(){
   </div>`;
   bind();
   $app.querySelectorAll("[data-dh]").forEach(b => b.onclick = () => go("push", () => { S.dhd = b.dataset.dh; S.dhStop = 0; }));
+  dhLiveSoon();
   const ha = document.getElementById("hadd"); if (ha) ha.onclick = () => openHoldAdd(t);
   const hr = document.getElementById("hretry"); if (hr) hr.onclick = () => { S.holdErr = null; render("none"); };
   if (!S.hold && !S.holdP && !S.holdErr){ S.holdP = loadHold().catch(e => { S.holdErr = e.message; }).finally(() => { S.holdP = null; if (isDH(S.tab) && !S.dhd) render("none"); }); }   // 실패하면 멈추고 '다시 받기' 버튼 (계속 다시 받지 않게)
@@ -2325,7 +2370,7 @@ function renderDHDetail(sym){
   const heldNow = (S.hold?.items || []).find(x => x.sym === it.sym), heldRes = heldNow ? holdRes(heldNow.id) : null;   // 들고 있으면 보유 판정을 같이 (같은 종목 다른 말 막기)
   $app.innerHTML = `<div class="wrap ${t}">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현 ${DHM[t].flag}</span></button></div><span class="mini">${esc(it.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(it.name)}</h1><div class="sub">${it.kq && D.regime_kq ? `코스닥 ${esc(D.regime_kq.state)} · ` : ""}${isPre ? `마감 전 예비 ${esc(String(D.at || "").slice(5, 10).replace("-", "/"))} ${esc(String(D.at || "").slice(11, 16))} (한국 시간)` : esc(String(D.date || "").slice(5).replace("-", "/")) + " 종가"} ${P(it.price)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span> · 거래대금 ${dhMoney(it.tv, t)}${it.sector ? " · " + esc(it.sector) : ""}</div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(it.name)}</h1><div class="sub"><span class="lq-sub" data-lqs="${esc(it.sym)}" data-base="${it.price ?? ""}" data-d="${esc(D.date || "")}" data-t="${t}"></span>${it.kq && D.regime_kq ? `코스닥 ${esc(D.regime_kq.state)} · ` : ""}${isPre ? `마감 전 예비 ${esc(String(D.at || "").slice(5, 10).replace("-", "/"))} ${esc(String(D.at || "").slice(11, 16))} (한국 시간)` : esc(String(D.date || "").slice(5).replace("-", "/")) + " 종가"} ${P(it.price)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span> · 거래대금 ${dhMoney(it.tv, t)}${it.sector ? " · " + esc(it.sector) : ""}</div></div>
     <section class="card lt-vd">
       <div class="w ${tone}">${esc(it.state)}${it.sector_lead ? ` <span class="lt-chip buy" style="vertical-align:middle;margin-left:6px">업종 1등</span>` : ""}</div>
       <p class="l">${off && ["돌파 자리", "셋업", "주도 후보"].includes(it.state) ? `<b>${esc(dhOffWhy(it, D))} 새로 사지 않아요 (A21 A1).</b> ` : ""}${esc(line)}</p>
@@ -2354,6 +2399,7 @@ function renderDHDetail(sym){
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
   document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
+  dhLiveSoon();
   const hb = document.getElementById("dhheld"); if (hb && heldNow) hb.onclick = () => go("push", () => { S.dhd = "h:" + heldNow.id; });
   const bb = document.getElementById("dhbuy"); if (bb) bb.onclick = () => openLotForm({ t, sym: it.sym, name: it.name, kind: "첫 진입", stop: stops[S.dhStop]?.price, px: it.price });
   document.getElementById("dhhow2").onclick = () => { S.guideAt = "chart"; S.guideFrom = { tab: S.tab, dhd: S.dhd }; hPush("t"); go("fade", () => { S.dhd = null; S.tab = "guide"; }); };
@@ -2466,7 +2512,7 @@ function dhHoldSection(t){
       const st = fresh ? r.status : "점검 중", { w, avg } = holdCalc(h);
       const sub = `평균 ${dhPx(fresh && isNum(r.avg) ? r.avg : avg, t, true)} · 비중 ${Math.round(w * 10) / 10}%${fresh && isNum(r.acct) ? ` · 계좌 ${pct2(r.acct)}` : ""}${h.acct ? " · " + esc(h.acct) : ""}${fresh ? earnTag(r.earn) : ""}`;
       return `<button class="row press lt-srow" data-dh="h:${esc(h.id)}"><div class="main"><div class="lt-n">${esc(h.name)}</div><div class="lt-s">${sub}</div></div>
-        <div class="lt-px"><b class="lt-chip ${HOLD_TONE[st] || ""}">${esc(st)}${fresh && r.date && r.date < dhExpect(t) ? ` <span style="font-weight:500">${esc(String(r.date).slice(5).replace("-", "/"))}</span>` : ""}</b><span>${fresh && isNum(r.price) ? dhPx(r.price, t) + ` <span class="${r.pnl > 0 ? "up" : r.pnl < 0 ? "down" : ""}">수익 ${pct(r.pnl)}</span>` : ""}</span></div>${CHEV}</button>`; }).join("")}</div>`;
+        <div class="lt-px"><b class="lt-chip ${HOLD_TONE[st] || ""}">${esc(st)}${fresh && r.date && r.date < dhExpect(t) ? ` <span style="font-weight:500">${esc(String(r.date).slice(5).replace("-", "/"))}</span>` : ""}</b><span data-lh="${esc(h.sym)}" data-avg="${fresh && isNum(r.avg) ? r.avg : avg}" data-stop="${Math.max(...(h.lots || []).map(x => +x.stop || 0))}" data-d="${esc(fresh ? r.date || "" : "")}" data-t="${t}">${fresh && isNum(r.price) ? dhPx(r.price, t) + ` <span class="${r.pnl > 0 ? "up" : r.pnl < 0 ? "down" : ""}">수익 ${pct(r.pnl)}</span>` : ""}</span><span class="lq-hint" data-lhh="${esc(h.sym)}"></span></div>${CHEV}</button>`; }).join("")}</div>`;
 }
 function renderHoldDetail(id){
   const t = dhTab(), h = S.hold?.items.find(x => x.id === id);
@@ -2477,7 +2523,7 @@ function renderHoldDetail(id){
   const nb = r && isNum(r.price);   // 숫자가 있는 판정 ('자료 없음'이면 숫자 없음)
   $app.innerHTML = `<div class="wrap ${t}">
     <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현 ${DHM[t].flag}</span></button></div><span class="mini">${esc(h.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(h.name)}</h1><div class="sub">${nb ? `${esc(String(r.date || "").slice(5).replace("-", "/"))} 종가 ${P(r.price)} <span class="${r.chg > 0 ? "up" : r.chg < 0 ? "down" : ""}">${pct(r.chg)}</span> · ` : ""}내 보유${h.acct ? " · " + esc(h.acct) : ""}${r ? earnTag(r.earn) : ""}</div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(h.name)}</h1><div class="sub">${nb ? `<span data-lqs="${esc(h.sym)}" data-base="${r.price}" data-d="${esc(r.date || "")}" data-t="${t}"></span>` : ""}${nb ? `${esc(String(r.date || "").slice(5).replace("-", "/"))} 종가 ${P(r.price)} <span class="${r.chg > 0 ? "up" : r.chg < 0 ? "down" : ""}">${pct(r.chg)}</span> · ` : ""}내 보유${h.acct ? " · " + esc(h.acct) : ""}${r ? earnTag(r.earn) : ""}</div></div>
     <section class="card lt-vd">
       <div class="w ${HOLD_TONE[st] === "sell" ? "sell" : HOLD_TONE[st] === "buy" ? "buy" : HOLD_TONE[st] === "soon" ? "soon" : HOLD_TONE[st] === "wait" ? "amber" : "hold"}">${esc(st)}</div>
       <p class="l">${esc(r ? (st === "정리" && (r.why || []).some(w => /J15|J28|J53|J64/.test(w.src || "")) ? "시장 전량매도 경고예요. 카투는 이런 날 다 팔았어요" : HOLD_LINE[st] || "") : "방금 바뀌었어요. 엔진이 점검하는 중이에요 (1~2분).")}</p>
@@ -2498,7 +2544,7 @@ function renderHoldDetail(id){
     <div class="stack" style="margin-top:var(--gap-section)"><button class="btn danger press" id="hsold">다 팔았어요 · 목록에서 빼기</button></div>
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 사고파는 결정은 직접 하세요.</p>
   </div>`;
-  document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
+  document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar(); dhLiveSoon();
   document.getElementById("hmore").onclick = () => openLotForm({ h, t, kind: "불타기" });
   $app.querySelectorAll("[data-lot]").forEach(b => b.onclick = () => openLotEdit(h, b.dataset.lot, t));
   const sold = document.getElementById("hsold");
