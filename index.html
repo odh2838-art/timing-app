@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-69">
+<meta name="app-version" content="2026-10-20-70">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -2045,7 +2045,7 @@ function weekly(daily){   // 일봉 → 주봉 (월요일 시작)
   if (cur) out.push(cur); return out;
 }
 function mountPro(box, cfg){
-  const { sym, mk, levels = [], daily = [] } = cfg, kr = isKR(mk), tz = kr ? "Asia/Seoul" : "America/New_York";
+  const { sym, mk, levels = [], daily = [], box: base } = cfg, kr = isKR(mk), tz = kr ? "Asia/Seoul" : "America/New_York";
   let tf = LS.get("protf", "1d"); if (!relayBase() && !["1d", "1wk"].includes(tf)) tf = "1d";
   const ma = Object.assign({ 5: true, 20: true, 60: true, 120: false }, LS.get("proma", {}));
   box.innerHTML = `<div class="pro-tf" role="tablist" aria-label="차트 간격">${PRO_TF.map(([k, n]) => `<button role="tab" data-k="${k}" aria-selected="${k === tf}">${n}</button>`).join("")}</div>
@@ -2055,7 +2055,7 @@ function mountPro(box, cfg){
     <div class="pro-ma">${MA_DEF.map(([n, c]) => `<button class="press" data-ma="${n}" aria-pressed="${!!ma[n]}" aria-label="${n}일 이동평균"><i style="background:${c}"></i>${n}</button>`).join("")}<div class="pro-tools"><button class="press" data-a="now" hidden>최근으로</button><button class="press" data-a="big">크게</button></div></div>
     <p class="note pro-src"></p>`;
   const $box = box.querySelector(".pro-box"), $leg = box.querySelector(".pro-leg"), $src = box.querySelector(".pro-src");
-  let chart = null, cs = null, vs = null, maS = {}, rows = [], timer = null, alive = true, gen = 0;
+  let chart = null, cs = null, vs = null, maS = {}, bxS = [], rows = [], timer = null, alive = true, gen = 0;
   const P = v => num(v, mk), fmtV = v => v == null ? "-" : v >= 1e8 ? (v / 1e8).toFixed(1) + "억" : v >= 1e4 ? Math.round(v / 1e4).toLocaleString("ko-KR") + "만" : Math.round(v).toLocaleString("ko-KR");
   const intraday = () => !["1d", "1wk"].includes(tf);
   const label = t => { if (typeof t === "string") return `${+t.slice(5, 7)}/${+t.slice(8, 10)}`;
@@ -2066,8 +2066,16 @@ function mountPro(box, cfg){
     const mav = MA_DEF.filter(([n]) => ma[n] && i >= n - 1).map(([n, c]) => { let sm = 0; for (let k = i - n + 1; k <= i; k++) sm += rows[k].close; return `<span style="color:${c}">${n} <b style="color:${c}">${P(sm / n)}</b></span>`; }).join("");
     $leg.innerHTML = `<div><span class="t">${label(r.time)}</span><span>종 <b class="${cl}">${P(r.close)}</b> <span class="${cl}">${pct(ch)}</span></span><span>고 <b>${P(r.high)}</b></span><span>저 <b>${P(r.low)}</b></span><span>시 <b>${P(r.open)}</b></span></div><div><span>거래량 <b>${fmtV(r.vol)}</b></span>${mav}</div>`; };
   const $lv = box.querySelector(".pro-lv");
-  const lvRow = () => { const lo = Math.min(...rows.map(r => r.low)), hi = Math.max(...rows.map(r => r.high));   // 선 목록: 차트 밖이면 위/아래 표시
-    $lv.innerHTML = levels.filter(v => v.v != null && isFinite(v.v)).map(v => `<span style="color:${LCOL[v.kind] || "#8E8E93"}"><i></i>${esc(v.label)} <b>${P(v.v)}</b>${v.v > hi ? "<em>↑ 차트 위</em>" : v.v < lo ? "<em>↓ 차트 아래</em>" : ""}</span>`).join(""); };
+  const lvRow = () => {   // 선 목록: 지금 보이는 가격 범위 밖이면 위/아래 표시
+    let lo = Math.min(...rows.map(r => r.low)), hi = Math.max(...rows.map(r => r.high));
+    if (chart && cs){ const h = $box.clientHeight - 30, a = cs.coordinateToPrice(0), b = cs.coordinateToPrice(h); if (a != null && b != null){ hi = Math.max(a, b); lo = Math.min(a, b); } }
+    $lv.innerHTML = levels.filter(v => v.v != null && isFinite(v.v)).map(v => `<span style="color:${LCOL[v.kind] || "#8E8E93"}"><i></i>${esc(v.label)} <b>${P(v.v)}</b>${v.v > hi ? "<em>↑ 차트 위</em>" : v.v < lo ? "<em>↓ 차트 아래</em>" : ""}</span>`).join("")
+      + (base ? `<span style="color:#8E8E93"><i></i>베이스 <b>${P(base.lo)} ~ ${P(base.hi)}</b>${intraday() ? "<em>일·주봉에 표시</em>" : ""}</span>` : ""); };
+  const mon = s => { const x = new Date(s + "T00:00:00Z"); return new Date(x - ((x.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10); };
+  const setBox = () => {   // 베이스: 시작~끝 날짜 사이에 위·아래 점선 (일봉·주봉)
+    const on = base && !intraday(), a = base && (tf === "1wk" ? mon(base.from) : base.from), z = base && base.to;
+    const pts = on ? rows.filter(r => r.time >= a && r.time <= z) : [];
+    bxS.forEach((se, k) => se.setData(pts.map(r => ({ time: r.time, value: k ? base.lo : base.hi })))); };
   const sma = (n) => { const o = []; let sum = 0; rows.forEach((r, i) => { sum += r.close; if (i >= n) sum -= rows[i - n].close; if (i >= n - 1) o.push({ time: r.time, value: sum / n }); }); return o; };
   const setMA = () => MA_DEF.forEach(([n, c]) => { if (!maS[n]) maS[n] = chart.addLineSeries({ color: c, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
     maS[n].setData(ma[n] ? sma(n) : []); });
@@ -2100,7 +2108,7 @@ function mountPro(box, cfg){
       const dk = t => new Date(t * 1000).toISOString().slice(0, 10), last = dk(m[m.length - 1].time), d = m.filter(r => dk(r.time) === last);
       const b = { time: last, open: d[0].open, high: Math.max(...d.map(r => r.high)), low: Math.min(...d.map(r => r.low)), close: d[d.length - 1].close, vol: d.reduce((a, r) => a + (r.vol || 0), 0) };
       const L = out[out.length - 1]; if (!L) return;
-      if (tf === "1d"){ if (last > L.time) out.push(b); return; }
+      if (tf === "1d"){ if (last > L.time) out.push(b); else if (last === L.time && kr && j.src === "naver") Object.assign(L, b); return; }   // 한국 오늘 봉: 야후는 20분 늦어서 네이버 값으로
       const mon = s => { const x = new Date(s + "T00:00:00Z"); return new Date(x - ((x.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10); };   // 주봉: 같은 주면 늘리고, 새 주면 추가
       if (mon(last) === mon(L.time)){   // 이미 들어 있어도 같은 값이 돼요
         L.high = Math.max(L.high, b.high); L.low = Math.min(L.low, b.low); L.close = b.close; }
@@ -2120,17 +2128,22 @@ function mountPro(box, cfg){
       crosshair: { mode: 0, vertLine: { labelBackgroundColor: dark ? "#3A3A3C" : "#1D1D1F" }, horzLine: { labelBackgroundColor: dark ? "#3A3A3C" : "#1D1D1F" } },
       localization: { locale: "ko-KR", priceFormatter: P, timeFormatter: t => label(t) },
       handleScale: { axisPressedMouseMove: true, pinch: true, mouseWheel: true }, handleScroll: { horzTouchDrag: true, vertTouchDrag: false, mouseWheel: true, pressedMouseMove: true } });
-    cs = chart.addCandlestickSeries({ upColor: up, downColor: dn, borderVisible: false, wickUpColor: up, wickDownColor: dn, priceLineColor: up, priceFormat: { type: "custom", formatter: P, minMove: kr ? 1 : 0.01 } });
+    cs = chart.addCandlestickSeries({ upColor: up, downColor: dn, borderVisible: false, wickUpColor: up, wickDownColor: dn, priceLineColor: up, priceFormat: { type: "custom", formatter: P, minMove: kr ? 1 : 0.01 },
+      autoscaleInfoProvider: orig => { const r = orig(); if (!r || intraday() || !rows.length) return r;   // 일·주봉: 가까운(15% 안) 엔진 선은 화면 안에 들어오게
+        const last = rows[rows.length - 1].close, near = levels.map(v => v.v).concat(base ? [base.lo, base.hi] : []).filter(v => v != null && isFinite(v) && Math.abs(v / last - 1) <= 0.15);
+        if (!near.length) return r; return { ...r, priceRange: { minValue: Math.min(r.priceRange.minValue, ...near), maxValue: Math.max(r.priceRange.maxValue, ...near) } }; } });
     vs = chart.addHistogramSeries({ priceScaleId: "vol", priceFormat: { type: "volume" }, lastValueVisible: false, priceLineVisible: false });
     chart.priceScale("vol").applyOptions({ scaleMargins: { top: 0.8, bottom: 0 }, visible: false });
     maS = {};
+    bxS = base ? [0, 1].map(() => chart.addLineSeries({ color: "#8E8E93", lineWidth: 1, lineStyle: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false })) : [];
     levels.filter(v => v.v != null && isFinite(v.v)).forEach(v => cs.createPriceLine({ price: v.v, color: LCOL[v.kind] || "#8E8E93", lineWidth: v.kind === "stop" ? 2 : 1, lineStyle: v.kind === "stop" ? 0 : 2, axisLabelVisible: true, title: v.label }));
     chart.subscribeCrosshairMove(p => { if (!p || p.time == null || !p.point){ legend(rows.length - 1); return; } const i = rows.findIndex(r => r.time === p.time); legend(i >= 0 ? i : rows.length - 1); });
   }
   const $now = box.querySelector('[data-a="now"]');
   $now.onclick = () => { if (!chart) return; const k = PRO_SHOW[tf] || 120; chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, rows.length - k), to: rows.length + 4 }); };
   box.querySelector('[data-a="big"]').onclick = e => { box.classList.toggle("big"); e.currentTarget.textContent = box.classList.contains("big") ? "작게" : "크게"; if (box.classList.contains("big")) box.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" }); };
-  function tools(){ $now.hidden = true; chart.timeScale().subscribeVisibleLogicalRangeChange(r => { if (r) $now.hidden = r.to >= rows.length - 2; }); }
+  let lvRaf = 0; const lvLater = () => { cancelAnimationFrame(lvRaf); lvRaf = requestAnimationFrame(() => requestAnimationFrame(() => { if (chart) lvRow(); })); };
+  function tools(){ $now.hidden = true; chart.timeScale().subscribeVisibleLogicalRangeChange(r => { if (r) $now.hidden = r.to >= rows.length - 2; lvLater(); }); }
   function prevClose(){   // 지금 가격선 색의 기준 = 전날 종가 (분봉이면 앞 거래일 마지막 봉)
     if (rows.length < 2) return null; if (!intraday()) return rows[rows.length - 2].close;
     for (let i = rows.length - 2; i >= 0; i--) if (rows[i + 1].time - rows[i].time > 3 * 3600) return rows[i].close;   // 장 사이 빈 시간 = 앞 거래일 끝 (미국은 한국 시간으로 자정을 넘어서)
@@ -2140,7 +2153,7 @@ function mountPro(box, cfg){
     const range = keepView ? chart.timeScale().getVisibleLogicalRange() : null;
     cs.setData(rows.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })));
     vs.setData(rows.map(r => ({ time: r.time, value: r.vol || 0, color: (r.close >= r.open ? COL.up : COL.down) + "66" })));
-    setMA(); legend(rows.length - 1); lvRow();
+    setMA(); setBox(); legend(rows.length - 1); lvRow(); lvLater();
     const lst = rows[rows.length - 1], pv = prevClose();
     cs.applyOptions({ priceLineColor: pv != null && lst.close < pv ? COL.down : COL.up });   // 지금 가격선 색 = 오늘 오르면 빨강, 내리면 파랑
     if (range) chart.timeScale().setVisibleLogicalRange(range);
@@ -2200,7 +2213,7 @@ function renderDHDetail(sym){
       </div>
     </section>
     <div class="card chart pro" id="chartBox" style="margin-top:var(--gap-block)"></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선 · 아래 버튼은 이동평균선 (A49) · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
+    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선${it.box ? " · 회색 점 두 줄 베이스" : ""} · 아래 버튼은 이동평균선 (A49) · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
     ${stops.length && it.state !== "2등주 돌파" ? `<h2 class="sec-title">비중 계산</h2>
     <div class="card">
       <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
@@ -2227,7 +2240,7 @@ function renderDHDetail(sym){
   if (sp && it.state !== "2등주 돌파") lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
   if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
   const box = $app.querySelector("#chartBox");
-  if (box) S.chart = mountPro(box, { sym: it.sym, mk: DHM[t].mk, levels: lv.filter(v => v.v != null), daily: it.bars || [] });
+  if (box) S.chart = mountPro(box, { sym: it.sym, mk: DHM[t].mk, levels: lv.filter(v => v.v != null), daily: it.bars || [], box: it.box });
 }
 
 /* ───────── 동현 2단계: 시장 판정 카드 · 내 보유 ─────────
