@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-70">
+<meta name="app-version" content="2026-10-20-71">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -2070,11 +2070,12 @@ function mountPro(box, cfg){
     let lo = Math.min(...rows.map(r => r.low)), hi = Math.max(...rows.map(r => r.high));
     if (chart && cs){ const h = $box.clientHeight - 30, a = cs.coordinateToPrice(0), b = cs.coordinateToPrice(h); if (a != null && b != null){ hi = Math.max(a, b); lo = Math.min(a, b); } }
     $lv.innerHTML = levels.filter(v => v.v != null && isFinite(v.v)).map(v => `<span style="color:${LCOL[v.kind] || "#8E8E93"}"><i></i>${esc(v.label)} <b>${P(v.v)}</b>${v.v > hi ? "<em>↑ 차트 위</em>" : v.v < lo ? "<em>↓ 차트 아래</em>" : ""}</span>`).join("")
-      + (base ? `<span style="color:#8E8E93"><i></i>베이스 <b>${P(base.lo)} ~ ${P(base.hi)}</b>${intraday() ? "<em>일·주봉에 표시</em>" : ""}</span>` : ""); };
+      + (base ? `<span style="color:#8E8E93"><i></i>베이스 <b>${P(base.lo)} ~ ${P(base.hi)}</b></span>` : ""); };
   const mon = s => { const x = new Date(s + "T00:00:00Z"); return new Date(x - ((x.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10); };
   const setBox = () => {   // 베이스: 시작~끝 날짜 사이에 위·아래 점선 (일봉·주봉)
-    const on = base && !intraday(), a = base && (tf === "1wk" ? mon(base.from) : base.from), z = base && base.to;
-    const pts = on ? rows.filter(r => r.time >= a && r.time <= z) : [];
+    const a = base && (tf === "1wk" ? mon(base.from) : base.from), z = base && base.to;
+    const day = r => typeof r.time === "string" ? r.time : new Date(r.time * 1000).toISOString().slice(0, 10);   // 분봉은 그날 날짜로
+    const pts = base ? rows.filter(r => day(r) >= a && day(r) <= z) : [];
     bxS.forEach((se, k) => se.setData(pts.map(r => ({ time: r.time, value: k ? base.lo : base.hi })))); };
   const sma = (n) => { const o = []; let sum = 0; rows.forEach((r, i) => { sum += r.close; if (i >= n) sum -= rows[i - n].close; if (i >= n - 1) o.push({ time: r.time, value: sum / n }); }); return o; };
   const setMA = () => MA_DEF.forEach(([n, c]) => { if (!maS[n]) maS[n] = chart.addLineSeries({ color: c, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
@@ -2089,7 +2090,7 @@ function mountPro(box, cfg){
     if (j.iv !== tf && ["1d", "1wk"].includes(tf)){ cfg.noRelayDaily = true; return getRows(); }   // 예전 중계 코드면 일·주는 엔진 자료로
     const out = toRows(j);
     if (j.iv !== tf){ $src.textContent = `중계가 예전 코드라 ${j.iv}만 와요 · 설정 › 분봉 중계를 새 코드로 바꿔 주세요`; tf = j.iv; return out; }
-    $src.textContent = !intraday() ? "야후 자료" : kr ? (j.src === "naver" ? "네이버 자료 (최근 6거래일, 그 전은 야후) · 한국 시간" : "야후 자료 · 15:00 뒤 봉이 빠져요 · 설정 › 분봉 중계를 새 코드로 바꾸면 네이버로 채워요") : "야후 자료 · 시각은 한국 시간 (미국 장 22:30~05:00, 서머타임 끝나면 23:30~06:00)";
+    $src.textContent = !intraday() ? "야후 자료" : kr ? (j.src === "naver" ? "네이버 자료 (최근 6거래일, 그 전은 야후) · 한국 시간" : "야후 자료 · 15:00 뒤 봉이 빠져요 · 설정 › 분봉 중계를 새 코드로 바꾸면 네이버로 채워요") : `야후 자료 · 한국 시간 (미국 장 ${tzOffset(Date.now() / 1000, "America/New_York") === -14400 ? "22:30~05:00" : "23:30~06:00"})`;
     if (!intraday()) await patchToday(out);
     return out;
   }
@@ -2129,8 +2130,8 @@ function mountPro(box, cfg){
       localization: { locale: "ko-KR", priceFormatter: P, timeFormatter: t => label(t) },
       handleScale: { axisPressedMouseMove: true, pinch: true, mouseWheel: true }, handleScroll: { horzTouchDrag: true, vertTouchDrag: false, mouseWheel: true, pressedMouseMove: true } });
     cs = chart.addCandlestickSeries({ upColor: up, downColor: dn, borderVisible: false, wickUpColor: up, wickDownColor: dn, priceLineColor: up, priceFormat: { type: "custom", formatter: P, minMove: kr ? 1 : 0.01 },
-      autoscaleInfoProvider: orig => { const r = orig(); if (!r || intraday() || !rows.length) return r;   // 일·주봉: 가까운(15% 안) 엔진 선은 화면 안에 들어오게
-        const last = rows[rows.length - 1].close, near = levels.map(v => v.v).concat(base ? [base.lo, base.hi] : []).filter(v => v != null && isFinite(v) && Math.abs(v / last - 1) <= 0.15);
+      autoscaleInfoProvider: orig => { const r = orig(); if (!r || !rows.length) return r;   // 가까운 엔진 선은 화면 안에 (일·주봉 15%, 분봉 10% 안)
+        const last = rows[rows.length - 1].close, k = intraday() ? 0.10 : 0.15, near = levels.map(v => v.v).concat(base ? [base.lo, base.hi] : []).filter(v => v != null && isFinite(v) && Math.abs(v / last - 1) <= k);
         if (!near.length) return r; return { ...r, priceRange: { minValue: Math.min(r.priceRange.minValue, ...near), maxValue: Math.max(r.priceRange.maxValue, ...near) } }; } });
     vs = chart.addHistogramSeries({ priceScaleId: "vol", priceFormat: { type: "volume" }, lastValueVisible: false, priceLineVisible: false });
     chart.priceScale("vol").applyOptions({ scaleMargins: { top: 0.8, bottom: 0 }, visible: false });
