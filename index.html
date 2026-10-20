@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-20-71">
+<meta name="app-version" content="2026-10-20-72">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -469,6 +469,8 @@ details.more>summary::-webkit-details-marker{display:none}
 .pro-ma button{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--fill);color:var(--fg2)}
 .pro-ma button[aria-pressed="true"]{color:var(--fg)}
 .pro-ma button i{display:inline-block;width:10px;height:2px;border-radius:1px;vertical-align:middle;margin-right:5px}
+.pro-chip{margin:2px 12px 4px;font-size:12px;font-weight:600;line-height:1.45;color:var(--fg)}
+.pro-chip[data-tone="buy"]{color:#0B9B8A}.pro-chip[data-tone="sell"]{color:var(--sell,#D22F3C)}.pro-chip[data-tone="wait"]{color:var(--fg2)}
 .pro-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--fg2);font-size:var(--t-small)}
 h2.sec-title{font-size:var(--t-heading)}
 .lt-head{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;margin-top:2px} .lt-head.hot{color:var(--sell)} .lt-head.cold{color:var(--blue)}
@@ -910,7 +912,7 @@ const IND_G = IND, LT_CI = Object.assign({ma:true, vol:true, rsi:true}, LS.get("
 const LT_IND_LIST = [["ma","평균선"],["vol","거래량"],["rsi","RSI"]];
 const OD_CI = Object.assign({main:true, fib:true, tl:true, box:true, more:false, vol:true}, LS.get("odind2", {}), {ma:false, rsi:false, sig:false});   // 오동엔진 차트: 글의 근거만
 const OD_IND_LIST = [["main","자리·나갈 자리"],["fib","피보나치 0.618"],["tl","추세선"],["box","박스"],["more","다른 자리"],["vol","거래량"]];
-const LCOL = {tr:"#1B64DA", ok:"#1B8A4A", sp:"#1B8A4A", zone:"#1B8A4A", stop:"#D22F3C", fib:"#8E5CF6", res:"#8E8E93"};   // 선·이름표 색
+const LCOL = {tr:"#1B64DA", ok:"#1B8A4A", sp:"#1B8A4A", zone:"#1B8A4A", stop:"#D22F3C", fib:"#8E5CF6", res:"#8E8E93", buy:"#0B9B8A"};   // 선·이름표 색
 if (!LS.get("patOn4")){ IND.pat = true; LS.set("patOn4", 1); LS.set("ind", IND); }   // 보조 표시(분할청산·과열·TP 등)는 작은 ▲▼로 보이고, 이름표는 매수·매도 신호 먼저 (1개월은 보조 2개까지)   // 지표견처럼 청산·패턴 표시를 기본으로 켬 (한 번만) IND.bb = false; IND.rsi = false;
 const DARK = () => { try { return matchMedia("(prefers-color-scheme: dark)").matches; } catch(e){ return false; } };
 const COL = {up:"#F04452", down:"#3182F6", e14:"#30B0C7", e21:"#FF9F0A", e55:"#8E8E93", s50:"#8E8E93", s200:"#AF52DE", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
@@ -2045,7 +2047,7 @@ function weekly(daily){   // 일봉 → 주봉 (월요일 시작)
   if (cur) out.push(cur); return out;
 }
 function mountPro(box, cfg){
-  const { sym, mk, levels = [], daily = [], box: base } = cfg, kr = isKR(mk), tz = kr ? "Asia/Seoul" : "America/New_York";
+  const { sym, mk, levels = [], daily = [], box: base, buy } = cfg, kr = isKR(mk), tz = kr ? "Asia/Seoul" : "America/New_York";
   let tf = LS.get("protf", "1d"); if (!relayBase() && !["1d", "1wk"].includes(tf)) tf = "1d";
   const ma = Object.assign({ 5: true, 20: true, 60: true, 120: false }, LS.get("proma", {}));
   box.innerHTML = `<div class="pro-tf" role="tablist" aria-label="차트 간격">${PRO_TF.map(([k, n]) => `<button role="tab" data-k="${k}" aria-selected="${k === tf}">${n}</button>`).join("")}</div>
@@ -2137,12 +2139,38 @@ function mountPro(box, cfg){
     chart.priceScale("vol").applyOptions({ scaleMargins: { top: 0.8, bottom: 0 }, visible: false });
     maS = {};
     bxS = base ? [0, 1].map(() => chart.addLineSeries({ color: "#8E8E93", lineWidth: 1, lineStyle: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false })) : [];
-    levels.filter(v => v.v != null && isFinite(v.v)).forEach(v => cs.createPriceLine({ price: v.v, color: LCOL[v.kind] || "#8E8E93", lineWidth: v.kind === "stop" ? 2 : 1, lineStyle: v.kind === "stop" ? 0 : 2, axisLabelVisible: true, title: v.label }));
+    levels.filter(v => v.v != null && isFinite(v.v)).forEach(v => cs.createPriceLine({ price: v.v, color: LCOL[v.kind] || "#8E8E93", lineWidth: v.kind === "stop" || v.kind === "buy" ? 2 : 1, lineStyle: v.kind === "stop" || v.kind === "buy" ? 0 : 2, axisLabelVisible: true, title: v.label }));
     chart.subscribeCrosshairMove(p => { if (!p || p.time == null || !p.point){ legend(rows.length - 1); return; } const i = rows.findIndex(r => r.time === p.time); legend(i >= 0 ? i : rows.length - 1); });
   }
   const $now = box.querySelector('[data-a="now"]');
   $now.onclick = () => { if (!chart) return; const k = PRO_SHOW[tf] || 120; chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, rows.length - k), to: rows.length + 4 }); };
   box.querySelector('[data-a="big"]').onclick = e => { box.classList.toggle("big"); e.currentTarget.textContent = box.classList.contains("big") ? "작게" : "크게"; if (box.classList.contains("big")) box.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" }); };
+  /* 매수 기준 돌파 표시: 직전 봉 종가가 선 아래 → 이번 봉 종가가 선 위 + 거래량이 앞 20봉 평균의 N배 이상이면 ▲.
+     일·주봉은 카투 돌파 규칙의 1.1배 (거래대금 대신 거래량), 분봉은 2배 (A69 '분봉으로 돌파 때 거래량 확인' — 배수는 화면 표시용으로 정함) */
+  const $chip = document.createElement("div"); $chip.className = "pro-chip"; $chip.hidden = true;
+  function setBuy(){
+    if (!buy || !cs){ cs && cs.setMarkers([]); return; }
+    const L = buy.v, mult = intraday() ? 2 : 1.1, from = intraday() ? 1 : Math.max(1, rows.length - 60), mk = [];
+    for (let i = Math.max(from, 20); i < rows.length; i++){
+      const r = rows[i], p = rows[i - 1]; if (!(p.close <= L && r.close > L)) continue;
+      let av = 0; for (let k = i - 20; k < i; k++) av += rows[k].vol || 0; av /= 20;
+      const strong = av > 0 && (r.vol || 0) >= av * mult;
+      mk.push({ time: r.time, strong });
+    }
+    const ups = mk.filter(m => m.strong).slice(-4), lastX = mk[mk.length - 1];   // 거래량 실린 돌파 최근 4개 + 마지막 돌파가 약하면 그것 하나
+    const show = ups.map(m => ({ time: m.time, position: "belowBar", color: LCOL.buy, shape: "arrowUp", text: "돌파" }));
+    if (lastX && !lastX.strong) show.push({ time: lastX.time, position: "belowBar", color: "#8E8E93", shape: "circle", text: "약한 돌파" });
+    cs.setMarkers(show.sort((a, b) => a.time < b.time ? -1 : 1));
+    const last = rows[rows.length - 1].close, gap = (last / L - 1) * 100, g = (gap >= 0 ? "+" : "") + gap.toFixed(1) + "%";
+    const st = buy.state;
+    const [txt, tone] = st === "2등주 돌파" ? ["업종 1등이 아니라 안 사요", "wait"]
+      : gap > 5 ? [`매수 기준 ${g} · 쫓지 마세요`, "sell"]
+      : st === "주도 후보" && gap > 0 ? [`이미 넘었어요 (${g}) · 쉬며 베이스를 만들 때까지 기다려요`, "wait"]
+      : gap > 0 ? [`매수 기준 위 ${g} · 거래량 실린 돌파면 손절선은 그날 저점`, "buy"]
+      : [`매수 기준까지 ${(-gap).toFixed(1)}% · 거래량 실어 넘으면 사요`, "wait"];
+    $chip.textContent = txt; $chip.dataset.tone = tone; $chip.hidden = false;
+    if (!$chip.isConnected) $box.before($chip);
+  }
   let lvRaf = 0; const lvLater = () => { cancelAnimationFrame(lvRaf); lvRaf = requestAnimationFrame(() => requestAnimationFrame(() => { if (chart) lvRow(); })); };
   function tools(){ $now.hidden = true; chart.timeScale().subscribeVisibleLogicalRangeChange(r => { if (r) $now.hidden = r.to >= rows.length - 2; lvLater(); }); }
   function prevClose(){   // 지금 가격선 색의 기준 = 전날 종가 (분봉이면 앞 거래일 마지막 봉)
@@ -2154,7 +2182,7 @@ function mountPro(box, cfg){
     const range = keepView ? chart.timeScale().getVisibleLogicalRange() : null;
     cs.setData(rows.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })));
     vs.setData(rows.map(r => ({ time: r.time, value: r.vol || 0, color: (r.close >= r.open ? COL.up : COL.down) + "66" })));
-    setMA(); setBox(); legend(rows.length - 1); lvRow(); lvLater();
+    setMA(); setBox(); legend(rows.length - 1); lvRow(); lvLater(); setBuy();
     const lst = rows[rows.length - 1], pv = prevClose();
     cs.applyOptions({ priceLineColor: pv != null && lst.close < pv ? COL.down : COL.up });   // 지금 가격선 색 = 오늘 오르면 빨강, 내리면 파랑
     if (range) chart.timeScale().setVisibleLogicalRange(range);
@@ -2214,7 +2242,7 @@ function renderDHDetail(sym){
       </div>
     </section>
     <div class="card chart pro" id="chartBox" style="margin-top:var(--gap-block)"></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선${it.box ? " · 회색 점 두 줄 베이스" : ""} · 아래 버튼은 이동평균선 (A49) · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
+    <p class="note" style="margin:8px var(--pad-card) 0">청록 굵은 선 매수 기준 · ▲ 거래량 실린 돌파 · 회색 점선 직전 고점 · 보라 점선 라운드피겨 · 빨간 선 손절선${it.box ? " · 회색 점 두 줄 베이스" : ""} · 아래 버튼은 이동평균선 (A49) · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
     ${stops.length && it.state !== "2등주 돌파" ? `<h2 class="sec-title">비중 계산</h2>
     <div class="card">
       <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
@@ -2234,14 +2262,16 @@ function renderDHDetail(sym){
   document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
   document.getElementById("dhhow2").onclick = () => { S.guideAt = "chart"; S.guideFrom = { tab: S.tab, dhd: S.dhd }; hPush("t"); go("fade", () => { S.dhd = null; S.tab = "guide"; }); };
   $app.querySelectorAll("[data-st]").forEach(b => b.onclick = () => { S.dhStop = +b.dataset.st; render("none"); });
-  const lv = [];
-  if (it.pivot) lv.push({ v: it.pivot, kind: "res", g: "main", label: "직전 고점", fit: true });
+  const lv = [], bl = it.brk_level ?? it.pivot;   // 매수 기준 = 넘어야 할 선 (직전 고점, 바로 아래 3% 안 라운드피겨면 그것, A48)
+  if (bl && it.state !== "역의 역") lv.push({ v: bl, kind: "buy", g: "main", label: "매수 기준", fit: true });
+  if (it.pivot && it.pivot !== bl) lv.push({ v: it.pivot, kind: "res", g: "main", label: "직전 고점", fit: true });
   const rf = dhAbove(it) ? (it.goal ?? it.round_next) : (it.round_pivot ?? it.round_next);
   if (rf && rf !== it.pivot) lv.push({ v: rf, kind: "fib", g: "main", label: dhAbove(it) ? "가야 할 자리" : "넘을 라운드피겨" });   // 직전 고점과 같으면 선 하나만
   if (sp && it.state !== "2등주 돌파") lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
   if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
   const box = $app.querySelector("#chartBox");
-  if (box) S.chart = mountPro(box, { sym: it.sym, mk: DHM[t].mk, levels: lv.filter(v => v.v != null), daily: it.bars || [], box: it.box });
+  if (box) S.chart = mountPro(box, { sym: it.sym, mk: DHM[t].mk, levels: lv.filter(v => v.v != null), daily: it.bars || [], box: it.box,
+    buy: bl && it.state !== "역의 역" ? { v: bl, state: it.state } : null });
 }
 
 /* ───────── 동현 2단계: 시장 판정 카드 · 내 보유 ─────────
