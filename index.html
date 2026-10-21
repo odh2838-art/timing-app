@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-21-87">
+<meta name="app-version" content="2026-10-21-88">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -2029,14 +2029,14 @@ function dhPaint(){
     el.innerHTML = `${tag(t, kr, q)} ${dhPx(q.p, t)} <span class="${ch > 0 ? "up" : ch < 0 ? "down" : ""}">${pct(ch)}</span> · `;
   });
 }
-/* 마감 전 예비 (14:30~15:10쯤 두 번 KST, 미국 15:10 ET): 지금 값으로 돌린 엔진. 장 마감 뒤 결과가 나오기 전까지만 보여요 */
+/* 마감 전 예비 (14:30~15:10쯤 두 번 KST, 미국 15:00~15:30쯤 ET): 지금 값으로 돌린 엔진. 장 마감 뒤 결과가 나오기 전까지만 보여요 */
 const dhPreOn = t => { const P = S.dhPre[t], D = S.dhc[t];   // 오늘(그 시장 날짜) 예비만 — 장 마감 뒤 계산이 실패해도 다음 날까지 남지 않게 (리뷰 #3)
   return !!(P && P.date && P.date === todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul") && (!D || !D.date || P.date > D.date)); };
 function dhPreWait(t){   // 예비 계산 시간인데 아직 안 왔으면 알려줌 (안 오는 건지 고장인지 몰라서 헷갈림)
   const tz = t === "dhu" ? "America/New_York" : "Asia/Seoul", p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: tz, hour12: false, weekday: "short", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date()).map(x => [x.type, x.value]));
-  const m = (+p.hour % 24) * 60 + +p.minute, [a, b] = t === "dhu" ? [15 * 60 + 15, 16 * 60] : [14 * 60 + 25, 15 * 60 + 30];
+  const m = (+p.hour % 24) * 60 + +p.minute, [a, b] = t === "dhu" ? [15 * 60, 16 * 60] : [14 * 60 + 25, 15 * 60 + 30];
   if (["Sat", "Sun"].includes(p.weekday) || m < a || m >= b) return "";
-  return `<div class="card" style="margin:0 0 var(--gap-block)"><b>마감 전 예비 계산을 기다리는 중이에요</b><p class="note" style="margin:4px 0 0">${t === "dhu" ? "미국 15:10에 계산해요" : "14:30~15:10쯤 두 번 계산해요"} (5~10분 걸려요). 휴장일이면 안 나와요.</p></div>`;
+  return `<div class="card" style="margin:0 0 var(--gap-block)"><b>마감 전 예비 계산을 기다리는 중이에요</b><p class="note" style="margin:4px 0 0">${t === "dhu" ? "미국 15:00~15:30쯤 (한국 새벽 4시대, 겨울엔 5시대) 계산해요" : "14:30~15:10쯤 두 번 계산해요"} (5~10분 걸려요). 휴장일이면 안 나와요.</p></div>`;
 }
 function dhPreCard(t){
   if (!dhPreOn(t)) return dhPreWait(t);
@@ -2828,7 +2828,7 @@ function renderGuide(){
     <h2 class="sec-title">하루 순서</h2>
     <ol class="card gd-steps">
       <li><b>시장부터 보기</b><span>맨 위 카드가 ‘할 때’면 종목을 찾고, ‘쉴 때’면 쉬어요. 빨간 전량매도 경고가 뜨면 들고 있는 걸 정리해요.</span></li>
-      <li><b>장 마감 전에 예비 카드 보기</b><span>🇰🇷는 14:30~15:10쯤 두 번 지금 값으로 미리 계산해서 맨 위에 ‘마감 전 예비’ 카드가 떠요. 지금 매수 기준선을 넘어 있는 종목이 나오고, 종가까지 버티면 15:20~15:30 동시호가 때 종가에 사요. 🇺🇸는 미국 15:10.</span></li>
+      <li><b>장 마감 전에 예비 카드 보기</b><span>🇰🇷는 14:30~15:10쯤 두 번 지금 값으로 미리 계산해서 맨 위에 ‘마감 전 예비’ 카드가 떠요. 지금 매수 기준선을 넘어 있는 종목이 나오고, 종가까지 버티면 15:20~15:30 동시호가 때 종가에 사요. 🇺🇸는 미국 15:00~15:30쯤 (한국 새벽 4시대, 11월부터 5시대).</span></li>
       <li><b>장 끝나고 목록 보기</b><span>🇰🇷는 평일 16:05, 🇺🇸는 아침 07:20에 새로 계산돼요. 초록 ‘돌파 자리’부터 봐요.</span></li>
       <li><b>사기 전에 손절선·비중 정하기</b><span>종목을 눌러 손절선을 고르면 최대 비중이 나와요. 사고 나서 정하지 않아요.</span></li>
       <li><b>확인하고 사기</b><span>직전 고점을 거래대금 실어 넘는 걸 확인한 뒤 사요. 늦고 비싸도 확인 후. 종가·NXT 종가에도 사요. 5~10%만 먼저.</span></li>
