@@ -32,7 +32,7 @@ async function naverMany(syms) {
     const s = syms[codes.indexOf(String(x.itemCode || ""))], p = num(x.closePrice);
     if (!s || !p) continue;
     const t = x.localTradedAt || new Date().toISOString();
-    out[s] = { p, o: num(x.openPrice), h: num(x.highPrice), l: num(x.lowPrice), v: num(x.accumulatedTradingVolume), d: t.slice(0, 10), t, st: x.marketStatus || "" };
+    out[s] = { p, o: num(x.openPrice), h: num(x.highPrice), l: num(x.lowPrice), v: num(x.accumulatedTradingVolume), tv: num(x.accumulatedTradingValueRaw), d: t.slice(0, 10), t, st: x.marketStatus || "" };
   }
   return out;
 }
@@ -57,7 +57,7 @@ async function krxCloses(qs) {
   await Promise.all(ks.slice(1).map(async s => { const p = await close1530(s.split(".")[0], day).catch(() => null); if (p) set(s, p, day); }));
   function set(s, p, c) { const q = qs[s], dd = `${c.slice(0, 4)}-${c.slice(4, 6)}-${c.slice(6)}`;
     Object.assign(q, { p, d: dd, t: `${dd}T15:30:00+09:00`, h: q.d === dd && q.h ? Math.max(q.h, p) : p, l: q.d === dd && q.l ? Math.min(q.l, p) : p, src: "krx" });
-    if (q.d !== dd) { q.o = p; q.v = null; } }
+    if (q.d !== dd) { q.o = p; q.v = null; q.tv = null; } }
 }
 
 async function yahoo(sym) {
