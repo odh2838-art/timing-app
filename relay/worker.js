@@ -23,6 +23,43 @@ async function naver(sym) {
            d: t.slice(0, 10), t, st: x.marketStatus || "" };
 }
 
+// 한국 종목 여러 개를 한 번에 (요청 수 절약). 장이 닫혀 있으면 네이버 시세 값이 NXT 시간외(~20:00) 가격으로 바뀌어서
+// 한국거래소 종가와 달라진다 (10/20 삼성전자 209,000 vs 거래소 211,500) → 그때는 1분봉 정규장 마지막 봉(15:30)을 종가로.
+async function naverMany(syms) {
+  const codes = syms.map(s => s.split(".")[0]), out = {};
+  const r = await fetch(`https://polling.finance.naver.com/api/realtime/domestic/stock/${codes.join(",")}`, { headers: { "User-Agent": UA, "Referer": "https://m.stock.naver.com/" } });
+  for (const x of ((await r.json()).datas || [])) {
+    const s = syms[codes.indexOf(String(x.itemCode || ""))], p = num(x.closePrice);
+    if (!s || !p) continue;
+    const t = x.localTradedAt || new Date().toISOString();
+    out[s] = { p, o: num(x.openPrice), h: num(x.highPrice), l: num(x.lowPrice), v: num(x.accumulatedTradingVolume), d: t.slice(0, 10), t, st: x.marketStatus || "" };
+  }
+  return out;
+}
+// 그날 15:30 마감 봉 하나만 받음 (응답이 작아서 여러 종목도 가벼움). 없으면 null
+async function close1530(code, day) {
+  const r = await fetch(`https://api.stock.naver.com/chart/domestic/item/${code}/minute?startDateTime=${day}1530&endDateTime=${day}1530`,
+                        { headers: { "User-Agent": UA, "Referer": "https://m.stock.naver.com/" } });
+  const xs = await r.json();
+  const x = Array.isArray(xs) ? xs.find(y => String(y.localDateTime || "").slice(0, 12) === day + "1530") : null;
+  return x ? num(x.currentPrice) : null;
+}
+// 장이 닫혀 있을 때 한국 종목들의 거래소 종가: 마지막 거래일을 첫 종목으로 찾고 (오늘 15:30 뒤면 오늘, 아니면 그 전 평일들), 나머지는 그날 것만
+async function krxCloses(qs) {
+  const ks = Object.keys(qs); if (!ks.length) return;
+  const now = new Date(Date.now() + 9 * 3600e3), ymd = d => d.toISOString().slice(0, 10).replace(/-/g, "");
+  const cand = []; const d = new Date(now);
+  if (now.toISOString().slice(11, 16) < "15:31") d.setUTCDate(d.getUTCDate() - 1);
+  while (cand.length < 3) { if (d.getUTCDay() % 6) cand.push(ymd(d)); d.setUTCDate(d.getUTCDate() - 1); }
+  let day = null;
+  for (const c of cand) { const p = await close1530(ks[0].split(".")[0], c).catch(() => null); if (p) { day = c; set(ks[0], p, c); break; } }
+  if (!day) return;
+  await Promise.all(ks.slice(1).map(async s => { const p = await close1530(s.split(".")[0], day).catch(() => null); if (p) set(s, p, day); }));
+  function set(s, p, c) { const q = qs[s], dd = `${c.slice(0, 4)}-${c.slice(4, 6)}-${c.slice(6)}`;
+    Object.assign(q, { p, d: dd, t: `${dd}T15:30:00+09:00`, h: q.d === dd && q.h ? Math.max(q.h, p) : p, l: q.d === dd && q.l ? Math.min(q.l, p) : p, src: "krx" });
+    if (q.d !== dd) { q.o = p; q.v = null; } }
+}
+
 async function yahoo(sym) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1m&range=1d`;
   const r = await fetch(url, { headers: { "User-Agent": UA } });
@@ -111,10 +148,16 @@ export default {
     }
     const syms = (u.searchParams.get("s") || "").split(",").map(s => s.trim().toUpperCase())
       .filter(s => /^\^?[A-Z0-9.-]{1,15}$/.test(s)).slice(0, 40);
-    const out = {};
-    await Promise.all(syms.map(async s => {
+    const out = {}, kr = syms.filter(s => /\.(KS|KQ)$/.test(s));
+    if (kr.length) {
+      let m = {}; try { m = await naverMany(kr); } catch (e) { m = {}; }
+      const shut = {};
+      for (const s of kr) { out[s] = m[s] || null; if (out[s] && out[s].st !== "OPEN") shut[s] = out[s]; }
+      try { await krxCloses(shut); } catch (e) {}
+    }
+    await Promise.all(syms.filter(s => !kr.includes(s)).map(async s => {
       try {
-        out[s] = (/\.(KS|KQ)$/.test(s) || KR_INDEX[s]) ? await naver(s) : await yahoo(s);
+        out[s] = KR_INDEX[s] ? await naver(s) : await yahoo(s);
         if (out[s] && s.startsWith("^")) { try { out[s].day = await intraday(s); } catch (e) {} }
       } catch (e) { out[s] = null; }
     }));
