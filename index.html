@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-21-90">
+<meta name="app-version" content="2026-10-21-91">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -471,7 +471,8 @@ details.more>summary::-webkit-details-marker{display:none}
 .pro-ma button[aria-pressed="true"]{color:var(--fg)}
 .pro-ma button i{display:inline-block;width:10px;height:2px;border-radius:1px;vertical-align:middle;margin-right:5px}
 .lq-big{margin:2px 0 4px;font-size:1.35rem;font-variant-numeric:tabular-nums;min-height:0} .lq-big b{font-weight:700} .lq-big small{font-size:.72rem;color:var(--fg2);margin-left:4px} .lq-big:empty{display:none}
-.lq-line:empty{display:none} .mk-live{margin:6px 0 0;font-size:var(--t-detail);color:var(--fg2);font-variant-numeric:tabular-nums} .mk-live b{color:var(--buy)} .lq-now{font-size:.7rem;font-weight:600;color:var(--fg2);margin-right:2px}
+.lq-line:empty{display:none} .mk-macro{display:flex;flex-wrap:wrap;gap:4px 12px;margin:10px 0 2px;font-size:var(--t-detail);color:var(--fg2)} .mk-macro .h{flex-basis:100%;font-size:var(--t-small);color:var(--fg3)} .mk-macro b{font-weight:600}
+.mk-live{margin:6px 0 0;font-size:var(--t-detail);color:var(--fg2);font-variant-numeric:tabular-nums} .mk-live b{color:var(--buy)} .lq-now{font-size:.7rem;font-weight:600;color:var(--fg2);margin-right:2px}
 .lq-hint{display:block;font-size:.7rem;font-weight:600;color:var(--wait,#B7791F);text-align:right}
 .lq-hint:empty{display:none}
 .pro-chip{margin:2px 12px 4px;font-size:.8rem;font-weight:600;line-height:1.45;color:var(--fg)}
@@ -2108,7 +2109,8 @@ function dhRow(it, t, D0, pfx = ""){
   const D1 = D0 || S.dhc[t];
   const l1 = ([it.state === "셋업" ? `고점 ${dhPx(it.pivot, t)} 아래 ${it.base_len != null ? Math.round(it.base_len) + "일" : ""}` : "", it.state !== "셋업" && it.sector_lead ? "업종 1등" : "",
     it.state === "돌파 자리" && (it.brk_level ?? it.pivot) ? `${dhPx(it.brk_level ?? it.pivot, t)} 돌파` : ""].filter(Boolean).join(" · ") + earnTag(it.earn)).replace(/^ · /, "");   // 상세의 '매수 기준'과 같은 값
-  const subH = (l1 ? esc(l1) + "<br>" : "") + dhTvSpan(it, t, D1, pfx, true);
+  const cs = dhCheckSummary(it);
+  const subH = (l1 || cs ? esc([l1, cs].filter(Boolean).join(" · ")) + "<br>" : "") + dhTvSpan(it, t, D1, pfx, true);
   return `<button class="row press lt-srow" data-dh="${esc(pfx + it.sym)}"><div class="main"><div class="lt-n">${esc(it.name)}</div><div class="lt-s">${subH}</div></div>
     <div class="lt-px"><b class="lt-chip ${it.state === "돌파 자리" && dhOff(it, D1) ? "" : DH_TONE[it.state] || ""}">${esc(it.state === "관찰" ? "역의 역" : it.state)}${it.state === "돌파 자리" && dhOff(it, D1) ? (dhReg(it, D1)?.warn ? " · 경고" : " · 쉴 때") : ""}</b><span data-lq="${esc(it.sym)}" data-base="${pfx && it.price && it.chg != null ? it.price / (1 + it.chg / 100) : it.price ?? ""}" data-d="${pfx ? "" : esc(D1?.date || "")}" data-lv="${it.brk_level ?? it.pivot ?? ""}" data-st="${esc(it.state)}" data-t="${t}">${dhPx(it.price, t)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span><span class="lq-hint" data-lqh="${esc(it.sym)}"></span></div>${CHEV}</button>`;
 }
@@ -2395,6 +2397,32 @@ function mountPro(box, cfg){
   }
   return { redraw(){}, setLevels(nv){ levels = nv; if (chart && cs){ drawLines(); lvRow(); lvLater(); } }, destroy(){ alive = false; clearInterval(S.tfTimer); if (chart){ try{ chart.remove(); }catch(e){} chart = null; } } };
 }
+/* 엔진 점검: 그가 사기 전에 직접 보는 것을 엔진이 계산 (tc/donghyun_check.py). 분봉·뉴스는 과거 자료가 없어 성적 검증은 못 한 참고 */
+function dhCheckRows(ck, t){
+  const r = [];
+  if (!ck || !ck.at) return r;
+  if (ck.brk_time) r.push([ck.brk_vol_ok, "분봉 돌파 거래량", `${ck.brk_time}에 매수 기준을 넘은 5분봉 거래량이 앞 20봉 평균의 ${ck.brk_vol_x ?? "-"}배 (2배 이상이면 좋음)`]);
+  r.push([ck.late_ok, "막판 강세", `마지막 30분 ${pct(ck.late_ret)} · 종가가 그날 고가보다 ${pct(ck.close_vs_high).replace("+", "")} (밀리지 않고 고가 2% 안이면 좋음)`]);
+  r.push([ck.wick_ok, "윗꼬리", `그날 움직인 폭의 ${Math.round((ck.wick || 0) * 100)}%가 윗꼬리 (30% 넘으면 위에서 밀린 것)`]);
+  return r;
+}
+function dhCheckSummary(it){   // 목록에 붙일 짧은 요약
+  const r = dhCheckRows(it.check); if (!r.length) return "";
+  return `점검 ${r.filter(x => x[0]).length}/${r.length}`;
+}
+function dhCheckHTML(it, t){
+  const ck = it.check, rows = dhCheckRows(ck, t), N = ck?.news || [];
+  const icon = ok => `<b class="lt-chip ${ok ? "buy" : ""}" style="min-width:2.2em;text-align:center">${ok ? "좋음" : "약함"}</b>`;
+  const md = d => String(d || "").slice(5, 16).replace("-", "/");
+  return `<h2 class="sec-title">엔진 점검 ${rows.length ? `<span class="lt-cnt">${esc(ck.at)} 기준</span>` : ""}</h2>
+    <div class="list">${rows.map(([ok, n, x]) => `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(n)}</div><div class="lt-s">${esc(x)}</div></div><div class="lt-px">${icon(ok)}</div></div>`).join("")}
+      ${N.length ? N.map(x => `<a class="row lt-srow press" href="${esc(x.u)}" target="_blank" rel="noopener"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">${esc(x.t)}</div><div class="lt-s">${esc(x.src)} · ${esc(md(x.d))}</div></div>${CHEV}</a>`).join("")
+        : `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">재료: 왜 오르는지 뉴스·공시로 확인</div></div></div>`}
+      ${!rows.length ? `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">분봉: 돌파 때 거래량이 실렸나 (차트 5분봉에서 ▲)</div></div></div>` : ""}
+      <div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">호가: 한 호가에 큰 주문이 쌓였나 (직접)</div></div></div>
+      <div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">${esc(earnLine(it.earn))}</div></div></div></div>
+    <p class="note" style="margin:8px var(--pad-card) 0">분봉·뉴스는 과거 자료가 없어 성적을 검증하지 못한 참고예요. 엔진 판정(돌파 자리 등)은 바꾸지 않아요.</p>`;
+}
 const dhWeight = (sp, P) => `<div><b>${P(sp.price)}</b><span>손절선 ${pct(sp.pct)}</span></div>
         <div><b>1%</b><span>계좌 손실 한도</span></div>
         <div><b class="${sp.weight >= 50 ? "hot" : ""}"${sp.weight >= 50 ? "" : ` style="color:var(--buy)"`}>${sp.weight}%</b><span>최대 비중</span></div>`;
@@ -2452,8 +2480,7 @@ function renderDHDetail(sym){
     </div>` : ""}
     <h2 class="sec-title">근거</h2>
     <div class="list">${(it.why || []).map(w => `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(cl(w.t))}</div></div></div>`).join("") || `<div class="row"><div class="main sub">근거 없음</div></div>`}</div>
-    <h2 class="sec-title">직접 확인</h2>
-    <div class="list">${["분봉: 돌파 때 거래량이 실렸나", "호가: 한 호가에 큰 주문이 쌓였나", "재료: 왜 오르는지 (뉴스·공시)", earnLine(it.earn)].map(x => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${esc(x)}</div></div></div>`).join("")}</div>
+    ${dhCheckHTML(it, t)}
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
   document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
@@ -2586,6 +2613,7 @@ function dhRegimeCard(d, t){
     ${g.warn ? `<div class="mk-warn"><b>전량매도 경고 · ${esc(String(g.date || "").slice(5).replace("-", "/"))}</b>${esc(cl(g.warn.t))}</div>` : ""}
     ${(g.notes || []).map(n => `<p class="mk-note">${esc(cl(n.t))}</p>`).join("")}
     ${t === "dh" && d.regime_kq ? `<p class="mk-note">코스닥 <b>${esc(d.regime_kq.state)}</b>${d.regime_kq.warn ? ` · ${d.regime_kq.warn.kind === "crash" ? "급락" : "첫 하락"} 경고` : ""} · 코스닥 종목은 이걸로 봐요</p>` : ""}
+    ${(d.macro || []).length ? `<div class="mk-macro"><span class="h">미국 시황 (엔진 계산 때)</span>${d.macro.map(m => `<span>${esc(m.name)} <b class="${m.chg > 0 ? "up" : m.chg < 0 ? "down" : ""}">${m.sym === "^TNX" ? (+m.p).toFixed(2) + "%" : pct(m.chg)}</b></span>`).join("")}</div>` : ""}
     ${spark}
     ${stats}
   </section>`;
