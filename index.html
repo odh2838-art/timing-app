@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-21-91">
+<meta name="app-version" content="2026-10-22-92">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1984,7 +1984,7 @@ setInterval(() => { dhLiveT = Date.now(); dhLive(false); }, 60000);
 function dhPaint(){
   const live = (q, base, d) => q && q.p && base > 0 && q.d && (!d || q.d > d);   // 엔진 종가 날짜보다 새 시세만
   const tag = (t, kr, q) => {   // 한국은 시세의 장 상태, 3분 넘게 묵은 값은 그 시각을 보여줌
-    const open = (kr && q && q.st ? q.st === "OPEN" : marketOpenNow(kr)) && !(kr && /T15:3\d/.test(q?.t || ""));   // 15:30 동시호가 뒤 값은 종가
+    const open = marketOpenNow(kr) && (kr && q && q.st ? q.st === "OPEN" : true) && !(kr && /T15:3\d/.test(q?.t || ""));   // 15:30 동시호가 뒤 값은 종가. 정규장 밖 'OPEN'은 NXT 시간외 (10/22)
     if (!open) return `${String(q?.d || "").slice(5).replace("-", "/")} 종가`;
     const ts = Date.parse(q?.t || ""); if (ts && Date.now() - ts > 180000){ const k = new Date(ts + 9 * 3600e3); return `${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`; }
     return "지금"; };
@@ -2017,7 +2017,7 @@ function dhPaint(){
     const q = S.dq[el.dataset.ltv], t = el.dataset.t, kr = t !== "dhu", d = el.dataset.d, a = +el.dataset.tv20;
     if (!q || !q.p || (d && !(q.d > d))) return;
     const v = liveTv(q, t); if (!(v > 0)) return;
-    const open = (kr && q.st ? q.st === "OPEN" : marketOpenNow(kr)) && !(kr && /T15:3\d/.test(q.t || "")), x = a > 0 ? v / (open ? dayProg(kr) : 1) / a : null;
+    const open = marketOpenNow(kr) && (kr && q.st ? q.st === "OPEN" : true) && !(kr && /T15:3\d/.test(q.t || "")), x = a > 0 ? v / (open ? dayProg(kr) : 1) / a : null;
     const xs = x != null ? `<b class="${x >= 1.1 ? "up" : ""}" style="font-weight:600">평소 ${x >= 10 ? Math.round(x) : x.toFixed(1)}배${open && !el.dataset.short ? " 페이스" : ""}</b>` : "";
     el.innerHTML = el.dataset.short ? `거래대금 ${dhMoney(v, t)}${xs ? " · " + xs : ""}` : `${open ? "지금 " : ""}거래대금 ${dhMoney(v, t)}${xs ? " · " + xs : ""}`;
   });

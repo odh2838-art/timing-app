@@ -37,26 +37,36 @@ async function naverMany(syms) {
   return out;
 }
 // 그날 15:30 마감 봉 하나만 받음 (응답이 작아서 여러 종목도 가벼움). 없으면 null
+// 수능 날은 10:00~16:30 (엔진 app.py KR_LATE와 같게, 해마다 추가)
+const KR_LATE = ["20261119"];
+const krClose = day => KR_LATE.includes(day) ? "1630" : "1530";
+// 지금(한국 시간)이 거래소 정규장 안인지. 정규장 밖이면 네이버 값이 NXT 프리·애프터마켓(08:00~20:00) 가격이라 'OPEN'이어도 거래소 종가를 씀 (10/22 확인: 18:31에 OPEN·NXT 가격)
+function krRegular() {
+  const now = new Date(Date.now() + 9 * 3600e3), day = now.toISOString().slice(0, 10).replace(/-/g, ""), hm = now.toISOString().slice(11, 16).replace(":", "");
+  if (!(now.getUTCDay() % 6)) return false;
+  return hm >= (KR_LATE.includes(day) ? "1000" : "0900") && hm < krClose(day);
+}
 async function close1530(code, day) {
-  const r = await fetch(`https://api.stock.naver.com/chart/domestic/item/${code}/minute?startDateTime=${day}1530&endDateTime=${day}1530`,
+  const hm = krClose(day);
+  const r = await fetch(`https://api.stock.naver.com/chart/domestic/item/${code}/minute?startDateTime=${day}${hm}&endDateTime=${day}${hm}`,
                         { headers: { "User-Agent": UA, "Referer": "https://m.stock.naver.com/" } });
   const xs = await r.json();
-  const x = Array.isArray(xs) ? xs.find(y => String(y.localDateTime || "").slice(0, 12) === day + "1530") : null;
+  const x = Array.isArray(xs) ? xs.find(y => String(y.localDateTime || "").slice(0, 12) === day + hm) : null;
   return x ? num(x.currentPrice) : null;
 }
 // 장이 닫혀 있을 때 한국 종목들의 거래소 종가: 마지막 거래일을 첫 종목으로 찾고 (오늘 15:30 뒤면 오늘, 아니면 그 전 평일들), 나머지는 그날 것만
 async function krxCloses(qs) {
   const ks = Object.keys(qs); if (!ks.length) return;
   const now = new Date(Date.now() + 9 * 3600e3), ymd = d => d.toISOString().slice(0, 10).replace(/-/g, "");
-  const cand = []; const d = new Date(now);
-  if (now.toISOString().slice(11, 16) < "15:31") d.setUTCDate(d.getUTCDate() - 1);
+  const cand = []; const d = new Date(now), today = ymd(now);
+  if (now.toISOString().slice(11, 16).replace(":", "") <= krClose(today)) d.setUTCDate(d.getUTCDate() - 1);
   while (cand.length < 3) { if (d.getUTCDay() % 6) cand.push(ymd(d)); d.setUTCDate(d.getUTCDate() - 1); }
   let day = null;
   for (const c of cand) { const p = await close1530(ks[0].split(".")[0], c).catch(() => null); if (p) { day = c; set(ks[0], p, c); break; } }
   if (!day) return;
   await Promise.all(ks.slice(1).map(async s => { const p = await close1530(s.split(".")[0], day).catch(() => null); if (p) set(s, p, day); }));
   function set(s, p, c) { const q = qs[s], dd = `${c.slice(0, 4)}-${c.slice(4, 6)}-${c.slice(6)}`;
-    Object.assign(q, { p, d: dd, t: `${dd}T15:30:00+09:00`, h: q.d === dd && q.h ? Math.max(q.h, p) : p, l: q.d === dd && q.l ? Math.min(q.l, p) : p, src: "krx" });
+    Object.assign(q, { p, d: dd, t: `${dd}T${krClose(c).slice(0, 2)}:${krClose(c).slice(2)}:00+09:00`, st: "CLOSE", h: q.d === dd && q.h ? Math.max(q.h, p) : p, l: q.d === dd && q.l ? Math.min(q.l, p) : p, src: "krx" });
     if (q.d !== dd) { q.o = p; q.v = null; q.tv = null; } }
 }
 
@@ -152,7 +162,8 @@ export default {
     if (kr.length) {
       let m = {}; try { m = await naverMany(kr); } catch (e) { m = {}; }
       const shut = {};
-      for (const s of kr) { out[s] = m[s] || null; if (out[s] && out[s].st !== "OPEN") shut[s] = out[s]; }
+      const reg = krRegular();
+      for (const s of kr) { out[s] = m[s] || null; if (out[s] && (!reg || out[s].st !== "OPEN")) shut[s] = out[s]; }
       try { await krxCloses(shut); } catch (e) {}
     }
     await Promise.all(syms.filter(s => !kr.includes(s)).map(async s => {
