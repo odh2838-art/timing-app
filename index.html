@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-5">
+<meta name="app-version" content="2026-10-24-6">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -933,12 +933,14 @@ function macSignal(){
   if (v && v.state === "믿기 어려운 상승") sell.push({ t: "증시 단독 상승", n: "금리·유가 동반 하락 없음" });
   else if (v && v.us10 !== "하락" && v.wti !== "하락") warn.unshift({ t: "장기금리·유가", n: "하락 전환 없음" });
   let label, tone, line;
-  if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "현금 비중 확대 · 신규 매수 보류"; }
+  const miss0 = it.core.filter(x => x.status === "자료 없음" || x.value == null).map(x => SHORT_NAME[x.key] || x.name);
+  if (miss0.length){ label = "판정 보류"; tone = "none"; line = `${miss0.join("·")} 자료를 받지 못해 판정을 보류해요. 핵심 6개가 모두 있어야 신호를 내요.`; }
+  else if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "현금 비중 확대 · 신규 매수 보류"; }
   else if (buy.length && !warn.length && !sell.length){ label = "분할매수"; tone = "buy"; line = "계획한 가격대에서 분할매수 · 현금 30% 유지"; }
   else if (buy.length){ label = "1차 분할매수"; tone = "info"; line = "1차만 진입 · 현금 30~50% 유지"; }
   else if (warn.length){ label = "관망"; tone = "wait"; line = "신규 매수 보류 · 현금 30% 이상 유지"; }
   else { label = "중립"; tone = "none"; line = "현금 30% 유지 · 기존 계획대로"; }
-  const miss = all.filter(x => x.status === "자료 없음").map(x => SHORT_NAME[x.key] || x.name);
+  const miss = label === "판정 보류" ? [] : all.filter(x => x.status === "자료 없음").map(x => SHORT_NAME[x.key] || x.name);
   return { label, tone, line, buy, warn, sell, miss };
 }
 function signalCard(){
@@ -948,7 +950,7 @@ function signalCard(){
     <div class="mc-sig-l" style="color:${TONE_COL[g.tone]}">${esc(g.label)}</div>
     <p class="mc-sig-s">${esc(g.line)}</p>
     ${grp("매수 신호", g.buy, "var(--info)")}${grp("경계 신호", g.warn, "var(--wait)")}${grp("매도 신호", g.sell, "var(--sell)")}
-    ${g.miss.length ? `<p class="sub" style="margin:12px 0 0">자료 없음: ${esc(g.miss.join(" · "))} · 판정에서 빠졌어요</p>` : ""}</div>`;
+    ${g.miss.length ? `<p class="sub" style="margin:12px 0 0">자료 없음: ${esc(g.miss.join(" · "))} (보조 지표라 판정은 유지)</p>` : ""}</div>`;
 }
 function briefCard(){
   const b = S.brief, m = S.mac;
