@@ -1,5 +1,5 @@
 // rooru.invest 실시간 시세 중계 (Cloudflare Worker, 무료)
-// 한국: 네이버 증권 실시간 · 미국: 야후 파이낸스 1분봉 · 차트 봉(?bars=종목&i=1m|5m|15m|60m|1d|1wk): 야후 파이낸스 (한국 분봉 최근 6거래일은 네이버)
+// 한국: 네이버 증권 실시간 · 미국·지수·선물(CL=F)·환율(KRW=X): 야후 파이낸스 1분봉 · 차트 봉(?bars=종목&i=1m|5m|15m|60m|1d|1wk): 야후 파이낸스 (한국 분봉 최근 6거래일은 네이버)
 // 정해진 두 곳만 대신 불러오고, rooru.invest 앱 주소에서만 읽을 수 있다 (아무 주소나 대신 여는 중계가 아님).
 // 개인 정보는 오가지 않는다: 앱이 보내는 것은 종목 코드뿐.
 
@@ -157,7 +157,7 @@ export default {
       return new Response(JSON.stringify(out), { headers: cors });
     }
     const syms = (u.searchParams.get("s") || "").split(",").map(s => s.trim().toUpperCase())
-      .filter(s => /^\^?[A-Z0-9.-]{1,15}$/.test(s)).slice(0, 40);
+      .filter(s => /^\^?[A-Z0-9.-]{1,15}(=[A-Z])?$/.test(s)).slice(0, 40);   // =F 선물(CL=F) · =X 환율(KRW=X)
     const out = {}, kr = syms.filter(s => /\.(KS|KQ)$/.test(s));
     if (kr.length) {
       let m = {}; try { m = await naverMany(kr); } catch (e) { m = {}; }
