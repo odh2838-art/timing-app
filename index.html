@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-23-94">
+<meta name="app-version" content="2026-10-23-95">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -1146,7 +1146,7 @@ async function renderDH0(){
 }
 /* ───────── 수학엔진 (tc/math_engine.py · 한국 추세추종) ─────────
    거래대금 폭발 장대양봉으로 발굴 → 10거래일 넘게 조정·흔들림·거래대금이 줄면 → 다음 날 박스 상단에 자동 매수.
-   손절 −10% 또는 박스 저점, 20일선 아래 마감 절반 · 60일선 아래 마감 전부. 코스피가 60일선 아래면 쉼(들고 있는 것도 정리). */
+   손절 −10% 또는 박스 저점, 20일선 아래 마감 이틀 절반 · 60일선 아래 마감 이틀 전부. 코스피가 60일선 아래면 쉼(들고 있는 것도 정리). */
 const MATH_FILE = "상태/수학엔진.json";
 const M_TONE = {"자리": "buy", "자리(쉴 때)": "wait", "지켜보기": "soon", "조정 기다림": ""};
 const mWon = v => v == null || !isFinite(v) ? "-" : num(v, "코스피") + "원";
@@ -1160,7 +1160,8 @@ function mRow(x){
     <div class="lt-px"><b class="lt-chip ${M_TONE[x.state] || ""}">${esc(x.state)}</b><span>${mWon(x.price)}${x.chg != null ? ` <span class="${x.chg >= 0 ? "up" : "down"}">${pct(x.chg)}</span>` : ""}</span></div></button>`;
 }
 function mHoldRow(h){
-  const nx = h.next ? `내일 시가에 팔기 · ${h.next}` : h.half ? "절반 팔았어요 · 60일선 아래면 나머지" : `20일선 ${mWon(h.ma20)} 아래면 절반 · 60일선 ${mWon(h.ma60)} 아래면 전부`;
+  const warn = h.b60 ? " · 오늘 60일선 아래 — 내일도 아래 마감이면 전부" : (h.b20 && !h.half) ? " · 오늘 20일선 아래 — 내일도 아래 마감이면 절반" : "";
+  const nx = h.next ? `내일 시가에 팔기 · ${h.next}` : (h.half ? "절반 팔았어요 · 60일선 아래 이틀이면 나머지" : `20일선 ${mWon(h.ma20)} 아래 이틀이면 절반 · 60일선 ${mWon(h.ma60)} 아래 이틀이면 전부`) + warn;
   return `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(h.name)}</div><div class="lt-s">${esc(mMd(h.d))} ${esc(mWon(h.px))}에 산 것으로 · 손절 ${esc(mWon(h.stop))}<br>${esc(nx)}</div></div>
     <div class="lt-px"><b class="${(h.ret ?? 0) >= 0 ? "up" : "down"}">${pct(h.ret)}</b><span>코스피 ${pct(h.idx)}</span></div></div>`;
 }
@@ -1197,7 +1198,7 @@ async function renderMath0(){
     ${cw.length ? `<h2 class="sec-title">발굴 · 조정 기다림 <span class="lt-cnt">${cw.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">거래대금이 평소 5배 넘게 터진 장대양봉 · 10거래일 넘게 쉬는지 봐요</p><div class="list">${cw.map(mRow).join("")}</div>` : ""}
     <p class="note lt-foot">${md} 종가 기준${d.at ? ` · ${mMd(String(d.at).slice(0, 10))} ${String(d.at).slice(11, 16)} 계산` : ""}${d.new ? ` · 오늘 새로 발굴 ${d.new}` : ""}</p>
     ${tr.n ? `<div class="card"><b>앞으로 기록</b><p class="note" style="margin:4px 0 0">끝난 매매 ${tr.n}번 · 평균 ${pct(tr.ret)} (같은 기간 코스피 ${pct(tr.idx)}) · 이긴 비율 ${tr.win}%</p></div>` : ""}
-    <div class="card"><b>규칙</b><p class="note" style="margin:6px 0 0;line-height:1.6">① 발굴: 그날 시장 전체 거래대금 1~20위 · 평소 5배 넘게 터진 +8% 이상 양봉 · 거래대금 2,000억 이상 · 200일선 우상향<br>② 자리: 발굴 뒤 10거래일 넘게 조정, 최근 10일 범위 15% 안, 거래대금이 발굴일의 40% 아래, 20일선 위 → 다음 날 최근 10일 고가에 자동 매수<br>③ 손절: 매수가 −10%와 박스 저점 중 높은 쪽 (장중 자동)<br>④ 팔기: 20일선 아래 마감 → 절반, 60일선 아래 마감 → 전부 (다음 날 시가)<br>⑤ 시장: 코스피 60일선 아래면 새로 안 사고 들고 있는 것도 정리<br>⑥ 한 번에 최대 10종목 · 종목당 계좌의 10% (자리가 많으면 거래대금 큰 순)<br>10번 중 7번은 손절이 정상이에요. 이길 때 크게 이기는 구조예요.</p></div>
+    <div class="card"><b>규칙</b><p class="note" style="margin:6px 0 0;line-height:1.6">① 발굴: 그날 시장 전체 거래대금 1~20위 · 평소 5배 넘게 터진 +8% 이상 양봉 · 거래대금 2,000억 이상 · 200일선 우상향<br>② 자리: 발굴 뒤 10거래일 넘게 조정, 최근 10일 범위 15% 안, 거래대금이 발굴일의 40% 아래, 20일선 위 → 다음 날 최근 10일 고가에 자동 매수<br>③ 손절: 매수가 −10%와 박스 저점 중 높은 쪽 (장중 자동)<br>④ 팔기: 20일선 아래 마감 이틀 연속 → 절반, 60일선 아래 마감 이틀 연속 → 전부 (다음 날 시가, 걸쳐 있으면 하루 더 봐요)<br>⑤ 시장: 코스피 60일선 아래면 새로 안 사고 들고 있는 것도 정리<br>⑥ 한 번에 최대 10종목 · 종목당 계좌의 10% (자리가 많으면 거래대금 큰 순)<br>10번 중 7번은 손절이 정상이에요. 이길 때 크게 이기는 구조예요.</p></div>
     <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
   bind();
@@ -1218,7 +1219,7 @@ function renderMathDetail(sym){
     <div id="chartBox" class="pro"></div>
     <div class="card"><b>발굴</b><p class="note" style="margin:4px 0 0">${esc(mMd(ig.d))} · ${pct(ig.ret)} 양봉 · 거래대금 ${Math.round(ig.tv || 0).toLocaleString("ko-KR")}억 (평소 ${ig.x}배) · 그날 저가 ${mWon(ig.low)} 아래로 마감하면 빼요 · ${x.days}거래일 지남</p></div>
     ${x.box ? `<div class="card"><b>최근 10일 박스</b><p class="note" style="margin:4px 0 0">${mWon(x.box.lo)} ~ ${mWon(x.box.hi)} (흔들림 ${x.box.rng}%) · 최근 5일 거래대금 = 발굴일의 ${x.dry}%</p></div>` : ""}
-    <div class="card"><b>팔 선</b><p class="note" style="margin:4px 0 0">20일선 ${mWon(x.ma20)} 아래 마감 → 절반 · 60일선 ${mWon(x.ma60)} 아래 마감 → 전부${zr ? ` · 손절 ${mWon(x.stop)}` : ""}</p></div>
+    <div class="card"><b>팔 선</b><p class="note" style="margin:4px 0 0">20일선 ${mWon(x.ma20)} 아래 마감 이틀 → 절반 · 60일선 ${mWon(x.ma60)} 아래 마감 이틀 → 전부${zr ? ` · 손절 ${mWon(x.stop)}` : ""}</p></div>
   </div>`;
   document.getElementById("back").onclick = () => history.back();
   const lv = [];
