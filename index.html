@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-1">
+<meta name="app-version" content="2026-10-24-2">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -546,7 +546,6 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .mc-chip{background:var(--fill);border-radius:999px;padding:4px 10px;font-size:var(--t-small);font-weight:600;color:var(--fg2)}
 .mc-ul{margin:8px 0 0;padding-left:1.1em;line-height:1.55} .mc-ul li+li{margin-top:4px}
-.mc-notes{margin-top:12px;border-top:.5px solid var(--line);padding-top:10px}
 .mc-link{display:block;color:var(--blue);text-decoration:none;font-size:var(--t-detail);padding:4px 0;overflow-wrap:anywhere}
 .mc-src{margin-top:8px} .mc-src summary{list-style:none;cursor:pointer;padding:6px 0} .mc-src summary::-webkit-details-marker{display:none}
 .mc-row{gap:10px;border-top:.5px solid var(--line)} .list .mc-row:first-child{border-top:0}
@@ -585,7 +584,7 @@ const LS = {
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
-/* 2026-10-23: 매크로 앱 (오동엔진 점검표). 탭 = 오늘 · 일정 · 기준 · 설정. 동현·수학·오동 엔진은 없앰 */
+/* 2026-10-23: 매크로 앱 (오동엔진). 탭 = 오늘 · 일정 · 기준 · 설정. 동현·수학·오동 엔진은 없앰 */
 const HOME = "today";
 const S = { token: LS.get("tok", ""), repo: LS.get("repo", "odh2838-art/timing-agent"),
   tab: HOME, detail: null, dash: LS.get("dash"), csv: null, alerts: null, err: "", busy: null, loading: true, dirty: false };
@@ -660,7 +659,7 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIn
 /* ───────── 공통 ───────── */
 const $app = document.getElementById("app");
 // 엔진 문장에서 사람 이름·규칙 번호는 화면에 안 보여요 (예전 결과 파일 대비)
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const esc = s => String(s ?? "").replace(/\u0044ONS|\uB3C8\uC2A4|@?\u0064ons_korea/gi, "오동엔진").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pct = v => { if (v == null || !isFinite(v)) return "-"; const r = +(+v).toFixed(1); return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(1) + "%"; };
 const CHEV = `<svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>`;
 const BACK = `<svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>`;
@@ -759,7 +758,7 @@ function bindNavbar(){
 function renderSetup(msg){
   $app.innerHTML = `<div class="wrap" style="padding-top:48px">
     <h1 class="big">rooru.invest</h1>
-    <p class="note" style="margin:var(--gap-sub) 0 var(--gap-section)">금리·유가·물가·신용·심리로 지금 시장이 어떤지 알려 드려요 (오동엔진 점검표). 이 앱은 내 GitHub 저장소(timing-agent, 숫자를 계산해 두는 곳)에 연결해서 써요.</p>
+    <p class="note" style="margin:var(--gap-sub) 0 var(--gap-section)">금리·유가·물가·신용·심리로 지금 시장이 어떤지 알려 드려요 (오동엔진). 이 앱은 내 GitHub 저장소(timing-agent, 숫자를 계산해 두는 곳)에 연결해서 써요.</p>
     <div class="card stack">
       <div class="field"><label for="tok">GitHub 토큰</label><input id="tok" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…" enterkeyhint="go" value="${esc(S.tokDraft || "")}">${msg ? `<p class="ferr" role="alert">${esc(msg)}</p>` : ""}</div>
       <button class="btn primary press" id="go" disabled>연결</button>
@@ -850,8 +849,8 @@ function openSheet(label, inner){
 }
 
 /* ───────── 매크로 (tc/macro.py · 오동엔진 점검표) ─────────
-   자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST) · 상태/브리핑.json (평일 아침, Claude가 BofA·CPI 예상·FedWatch·오동엔진 글을 찾아 씀).
-   오동엔진가 직접 보는 것만: 미국 10년물 · WTI · 근원 CPI · 연준 · 하이일드 스프레드 · 공포탐욕 + 과열 신호 + 한국 최소(환율·외국인). */
+   자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST) · 상태/브리핑.json (평일 아침, Claude가 BofA·CPI 예상·FedWatch를 찾아 씀).
+   참고 계정가 직접 보는 것만: 미국 10년물 · WTI · 근원 CPI · 연준 · 하이일드 스프레드 · 공포탐욕 + 과열 신호 + 한국 최소(환율·외국인). */
 const MAC_FILE = "상태/매크로.json", BRIEF_FILE = "상태/브리핑.json";
 S.mac = null; S.brief = null; S.macL = false; S.macErr = null;
 const ST_TONE = {"우호": "buy", "기회": "info", "경계": "sell", "중립": "none", "확인": "wait", "자료 없음": "none"};
@@ -913,7 +912,6 @@ function briefCard(){
   return `<div class="card mc-brief"><div class="mc-reg-h"><b>아침 브리핑</b><span class="sub">${esc(mDay(b.date))}${old ? " · 지난 브리핑" : ""}</span></div>
     ${b.headline ? `<p class="mc-head">${esc(b.headline)}</p>` : ""}
     <ul class="mc-ul">${b.lines.map(l => `<li>${esc(l)}</li>`).join("")}</ul>
-    ${(b.notes || []).length ? `<div class="mc-notes"><div class="sub" style="margin-bottom:4px">오동엔진 최근 글</div>${b.notes.slice(0, 3).map(d => `<a class="mc-link" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(mMD(d.d))} · ${esc(d.t)}</a>`).join("")}</div>` : ""}
     ${(b.sources || []).length ? `<details class="mc-src"><summary class="sub press">출처 ${b.sources.length}개</summary>${b.sources.map(s => `<a class="mc-link" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.t)}</a>`).join("")}</details>` : ""}</div>`;
 }
 function renderMac(){ return renderMac0().catch(e => { console.error(e); toast("화면을 그리지 못했어요 · " + (e.message || e)); }); }
@@ -956,7 +954,7 @@ async function renderMac0(){
     ${it.kr.length ? `<div class="sec-title" role="heading" aria-level="2">한국</div><div class="list">${it.kr.map(mcRow).join("")}</div>` : ""}
     ${cal.length ? `<div class="sec-title" role="heading" aria-level="2">다가오는 일정<button class="text-btn press" id="tocal">전체</button></div><div class="list">${cal.map(calRow).join("")}</div>` : ""}
     ${(m.errors || []).length ? `<details class="adv"><summary class="press">못 받은 자료 ${m.errors.length}개 ›</summary><p class="note" style="margin:8px 4px">${m.errors.map(esc).join("<br>")}</p></details>` : ""}
-    <p class="note" style="margin:18px 4px">오동엔진가 공개한 기준으로 계산한 결과예요. 투자 판단은 직접 하세요.</p></div>`;
+    <p class="note" style="margin:18px 4px">오동엔진 기준으로 계산한 결과예요. 투자 판단은 직접 하세요.</p></div>`;
   const tc = document.getElementById("tocal"); if (tc) tc.onclick = () => { histTo(1, "t"); go("fade", () => { S.tab = "cal"; }); };
   macBind();
 }
@@ -972,21 +970,21 @@ async function renderCal(){
   const cal = (S.mac?.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i).sort((a, b) => a.d < b.d ? -1 : 1);
   $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">일정</h1><div class="sub">앞으로 3주 · 한국 시간</div></div>
     ${cal.length ? `<div class="list">${cal.map(calRow).join("")}</div>` : `<div class="empty"><b>앞으로 3주 안에 큰 일정이 없어요</b></div>`}
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">FOMC는 연준 발표 일정, 경제지표는 FRED 발표 일정이에요. 오동엔진는 CPI처럼 큰 발표 전에 쏠린 쪽 포지션을 미리 줄여요.</p></div>`;
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">FOMC는 연준 발표 일정, 경제지표는 FRED 발표 일정이에요. CPI처럼 큰 발표 전에는 한쪽으로 쏠린 포지션을 미리 줄여요.</p></div>`;
   macBind();
 }
-/* 지표 설명 (오동엔진 원문 기준) */
+/* 지표 설명 (참고 계정 원문 기준) */
 const MC_ABOUT = {
-  us10y: "오동엔진가 가장 먼저 보는 숫자예요. 장기금리가 오르면 주식 값(특히 비싼 성장주)이 눌려요. 10년물이 1%이던 2020년과 4%대인 지금의 밸류가 같다면 고밸류 압박을 받는 게 당연하다고 봤어요.",
-  wti: "유가가 오르면 물가가 다시 오르고, 연준이 금리를 못 내려요. 오동엔진는 장기금리와 유가가 같이 내려와야 증시 상승을 믿어요.",
+  us10y: "오동엔진이 가장 먼저 보는 숫자예요. 장기금리가 오르면 주식 값(특히 비싼 성장주)이 눌려요. 10년물이 1%이던 2020년과 4%대인 지금의 밸류가 같다면 고밸류 압박을 받는 게 당연하다고 봤어요.",
+  wti: "유가가 오르면 물가가 다시 오르고, 연준이 금리를 못 내려요. 장기금리와 유가가 같이 내려와야 증시 상승을 믿어요.",
   core_cpi: "식품·에너지를 뺀 물가예요. 발표 숫자가 시장 예상보다 낮으면 우호, 2개월 연속 예상보다 높으면 경계예요. 예상치는 아침 브리핑이 채워요.",
   fed: "기준금리와 2년물 금리를 같이 봐요. 2년물이 기준금리보다 많이 낮으면 시장은 인하를 기대하는 거예요. 인상 확률이 오르면 경계예요.",
-  hy: "신용이 나쁜 회사 채권이 국채보다 얼마나 더 이자를 받는지예요. 오동엔진는 '채권·신용시장이 주식보다 먼저 말한다'고 봐요. 400bp에 가까워지면 위험 신호예요.",
-  fg: "CNN 공포탐욕 지수예요. 오동엔진는 공포 구간(25 이하)부터 나눠서 사요. 75 이상 탐욕은 과열이에요.",
+  hy: "신용이 나쁜 회사 채권이 국채보다 얼마나 더 이자를 받는지예요. '채권·신용시장이 주식보다 먼저 말한다'고 봐요. 400bp에 가까워지면 위험 신호예요.",
+  fg: "CNN 공포탐욕 지수예요. 공포 구간(25 이하)부터 나눠서 사요. 75 이상 탐욕은 과열이에요.",
   breadth: "S&P 500 종목 중 200일선 아래에 있는 비율이에요. 하트넷 기준으로 60% 이상이 이평선 아래로 내려가면 매수 쪽 신호예요.",
-  sox: "반도체지수가 200일선보다 얼마나 위에 있는지예요. 오동엔진는 62%까지 벌어졌을 때 닷컴 정점(55%)을 넘었다며 버블 신호로 봤어요.",
-  vix: "시장이 앞으로 얼마나 흔들릴 거라고 보는지예요. 오동엔진는 불확실성이 큰 이벤트 앞에서 헤지 수단으로 써요.",
-  bb: "BofA 하트넷의 Bull & Bear 지표예요. 8 이상이면 매도 신호(주식 줄이고 현금 늘림), 2 이하면 매수 신호예요. 오동엔진가 가장 자주 인용하는 시장 전체 신호예요.",
+  sox: "반도체지수가 200일선보다 얼마나 위에 있는지예요. 62%까지 벌어졌을 때 닷컴 정점(55%)을 넘었다고 버블 신호로 봐요.",
+  vix: "시장이 앞으로 얼마나 흔들릴 거라고 보는지예요. 불확실성이 큰 이벤트 앞에서 헤지 수단으로 써요.",
+  bb: "BofA 하트넷의 Bull & Bear 지표예요. 8 이상이면 매도 신호(주식 줄이고 현금 늘림), 2 이하면 매수 신호예요. 시장 전체를 보는 가장 중요한 신호예요.",
   fms: "BofA 펀드매니저 서베이의 현금 비중이에요. 4% 아래면 다들 주식을 가득 샀다는 뜻(과열), 5% 이상이면 매수 신호예요.",
   krw: "환율이 빠르게 오르면(원화 약세) 외국인이 한국 주식을 팔기 쉬워요.",
   foreign: "코스피에서 외국인이 산 금액에서 판 금액을 뺀 값이에요. 5일·20일 합이 같은 방향이면 흐름으로 봐요."
@@ -1014,10 +1012,10 @@ function renderMacDetail(key){
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
   bindNavbar();
 }
-/* 기준 (오동엔진 규칙 요약) */
+/* 기준 (참고 계정 규칙 요약) */
 function renderRules(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">기준</span><div class="side r"></div></div>
-    <div class="title-block" data-anchor><h1 class="big">기준</h1><div class="sub">오동엔진가 공개한 원칙 · 2025.2~2026.10 글</div></div>
+    <div class="title-block" data-anchor><h1 class="big">기준</h1><div class="sub">오동엔진이 보는 것과 판정 기준</div></div>
     <div class="card"><b>한 줄 원칙</b><p style="margin:6px 0 0">장기금리와 유가가 내려오지 않는데 오르는 증시는 믿지 않는다. 채권·신용시장이 주식보다 먼저 말한다.</p></div>
     <div class="sec-title" role="heading" aria-level="2">매크로 점검표</div>
     <div class="list">${[["미국 10년물 금리", "하락 추세", "5% 이상 유지·상승"], ["WTI 유가", "하락 추세", "고점 장기화"], ["근원 CPI", "예상 하회", "2개월 연속 예상 상회"], ["연준", "인하·동결 기대", "인상 확률 상승"], ["하이일드 스프레드", "안정", "급등 · 400bp 근접"], ["CNN 공포탐욕", "25 이하 공포 → 분할매수 시작", "75 이상 탐욕"]]
@@ -1027,10 +1025,10 @@ function renderRules(){
       .map(([n, r, f]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub">${esc(r)} · ${esc(f)}</div></div></div>`).join("")}</div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">하트넷 결합 매수 조건: 현금 비중 4% 초과 + 하이일드 400bp 접근 + 주식 자금 유출 가속이 동시에 나올 때. 2025년 3월 이 조건으로 S&P 5,300을 제시했고 4월 저점은 4,835였어요.</p>
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
-    <div class="card"><p class="note" style="margin:0;color:var(--fg)">일반 기준이에요 (오동엔진 기준 아님).<br><b style="color:var(--buy)">상승장</b> 지수가 200일선 위 + 200일선 오르는 중<br><b style="color:var(--wait)">조정</b> 1년 고점보다 10~20% 아래<br><b style="color:var(--sell)">하락장</b> 1년 고점보다 20% 넘게 아래, 또는 200일선 아래 + 200일선 내리는 중<br><b>방향 탐색</b> 그 밖</p></div>
+    <div class="card"><p class="note" style="margin:0;color:var(--fg)">일반 기준이에요.<br><b style="color:var(--buy)">상승장</b> 지수가 200일선 위 + 200일선 오르는 중<br><b style="color:var(--wait)">조정</b> 1년 고점보다 10~20% 아래<br><b style="color:var(--sell)">하락장</b> 1년 고점보다 20% 넘게 아래, 또는 200일선 아래 + 200일선 내리는 중<br><b>방향 탐색</b> 그 밖</p></div>
     <div class="sec-title" role="heading" aria-level="2">현금과 헤지</div>
     <div class="card"><p class="note" style="margin:0;color:var(--fg)">현금 기본 30% (20~50%, 위험할 때 더). 헤지 1순위는 현금 늘리기, 그다음 VIX·숏 (합쳐서 현금의 30% 이하). 공포 구간에선 서둘러 바닥을 잡지 않고 나눠서 사요.</p></div>
-    <p class="note" style="margin:18px 4px">공개 글을 정리한 참고 자료예요. 투자 권유가 아니에요.</p></div>`;
+    <p class="note" style="margin:18px 4px">참고 자료예요. 투자 권유가 아니에요.</p></div>`;
   bindNavbar();
 }
 
@@ -1040,7 +1038,7 @@ function renderSettings(){
     <div class="sec-title" role="heading" aria-level="2">자동 계산 (한국 시간)</div>
     <div class="list">
       <div class="row"><div class="main"><b>매크로 숫자</b><div class="sub">06:40 (미국장 마감 뒤) · 16:10 (한국장 마감 뒤) · 22:50 (미국 지표 발표 뒤) · 평일</div></div></div>
-      <div class="row"><div class="main"><b>아침 브리핑</b><div class="sub">평일 07:30쯤 · BofA 지표·CPI 예상·FedWatch·오동엔진 최근 글</div></div></div>
+      <div class="row"><div class="main"><b>아침 브리핑</b><div class="sub">평일 07:40쯤 · BofA 지표·CPI 예상·FedWatch</div></div></div>
     </div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">알림은 꺼져 있어요. 앱을 열면 최신 숫자를 받아요.</p>
     <details class="adv"><summary class="press">고급 설정 ›</summary>
@@ -1053,7 +1051,7 @@ function renderSettings(){
     </div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">토큰은 이 기기에만 저장돼요. 지워도 다시 넣으면 그대로 돌아와요.</p>
     </details>
-    <p class="note" style="margin:18px 4px">오동엔진가 공개한 기준으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
+    <p class="note" style="margin:18px 4px">오동엔진 기준으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
   document.getElementById("out").onclick = () => { LS.del("tok"); LS.del("dash"); S.token = ""; render("fade"); };
   bindNavbar();
