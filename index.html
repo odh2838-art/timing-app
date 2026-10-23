@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-23-93">
+<meta name="app-version" content="2026-10-23-94">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -540,6 +540,7 @@ h2.sec-title{font-size:var(--t-heading)}
 <nav class="tabbar" id="tabbar" hidden aria-label="탭">
   <button data-tab="dh" aria-label="동현 한국"><span class="tf" aria-hidden="true">🇰🇷</span>동현</button>
   <button data-tab="dhu" aria-label="동현 미국"><span class="tf" aria-hidden="true">🇺🇸</span>동현</button>
+  <button data-tab="math" aria-label="수학 한국"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M4 16l5-6 4 3 7-9"/><path d="M15 4h5v5"/></svg>수학</button>
   <button data-tab="guide" aria-label="사용법"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V5.5M9 8h7M9 12h5"/></svg>사용법</button>
   <button data-tab="settings" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
 </nav>
@@ -685,6 +686,7 @@ function render(how = "fade"){
     if (!S.token) renderSetup();
     else if (S.dhd) renderDHDetail(S.dhd);
     else if (isDH(S.tab)) renderDH();
+    else if (S.tab === "math") renderMath();
     else if (S.tab === "guide") renderGuide();
     else if (S.tab === "settings") renderSettings();
     else renderDH();
@@ -1142,6 +1144,92 @@ async function renderDH0(){
   const hr = document.getElementById("hretry"); if (hr) hr.onclick = () => { S.holdErr = null; render("none"); };
   if (!S.hold && !S.holdP && !S.holdErr){ S.holdP = loadHold().catch(e => { S.holdErr = e.message; }).finally(() => { S.holdP = null; if (isDH(S.tab) && !S.dhd) render("none"); }); }   // 실패하면 멈추고 '다시 받기' 버튼 (계속 다시 받지 않게)
 }
+/* ───────── 수학엔진 (tc/math_engine.py · 한국 추세추종) ─────────
+   거래대금 폭발 장대양봉으로 발굴 → 10거래일 넘게 조정·흔들림·거래대금이 줄면 → 다음 날 박스 상단에 자동 매수.
+   손절 −10% 또는 박스 저점, 20일선 아래 마감 절반 · 60일선 아래 마감 전부. 코스피가 60일선 아래면 쉼(들고 있는 것도 정리). */
+const MATH_FILE = "상태/수학엔진.json";
+const M_TONE = {"자리": "buy", "자리(쉴 때)": "wait", "지켜보기": "soon", "조정 기다림": ""};
+const mWon = v => v == null || !isFinite(v) ? "-" : num(v, "코스피") + "원";
+const mMd = d => String(d || "").slice(5).replace("-", "/");
+async function loadMath(){ S.mth = await readJSON(MATH_FILE, null); S.mthL = true; return S.mth; }
+function mRow(x){
+  const sub = x.state === "자리" || x.state === "자리(쉴 때)" ? `내일 ${mWon(x.level)} 자동 매수 · 손절 ${mWon(x.stop)} (${pct(x.stop_pct)})`
+    : x.state === "조정 기다림" ? `발굴 ${mMd(x.ign.d)} · ${x.days}거래일째 조정`
+    : `발굴 ${mMd(x.ign.d)} · 흔들림 ${x.box?.rng ?? "-"}% · 거래대금 ${x.dry ?? "-"}%`;
+  return `<button class="row press lt-srow" data-m="${esc(x.sym)}"><div class="main"><div class="lt-n">${esc(x.name)}</div><div class="lt-s">${esc(sub)}</div></div>
+    <div class="lt-px"><b class="lt-chip ${M_TONE[x.state] || ""}">${esc(x.state)}</b><span>${mWon(x.price)}${x.chg != null ? ` <span class="${x.chg >= 0 ? "up" : "down"}">${pct(x.chg)}</span>` : ""}</span></div></button>`;
+}
+function mHoldRow(h){
+  const nx = h.next ? `내일 시가에 팔기 · ${h.next}` : h.half ? "절반 팔았어요 · 60일선 아래면 나머지" : `20일선 ${mWon(h.ma20)} 아래면 절반 · 60일선 ${mWon(h.ma60)} 아래면 전부`;
+  return `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(h.name)}</div><div class="lt-s">${esc(mMd(h.d))} ${esc(mWon(h.px))}에 산 것으로 · 손절 ${esc(mWon(h.stop))}<br>${esc(nx)}</div></div>
+    <div class="lt-px"><b class="${(h.ret ?? 0) >= 0 ? "up" : "down"}">${pct(h.ret)}</b><span>코스피 ${pct(h.idx)}</span></div></div>`;
+}
+function renderMath(){ return renderMath0().catch(e => { console.error(e); toast("화면을 그리지 못했어요 · " + (e.message || e)); }); }
+async function renderMath0(){
+  const head = `<div class="navbar"><div class="side"></div><span class="mini">수학</span><div class="side r"><button class="icon-btn press" id="mre" aria-label="다시 계산" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></button></div></div>
+    <div class="title-block" data-anchor><h1 class="big">수학 🇰🇷</h1><div class="sub">추세추종 · 터진 뒤 쉬었다 다시 갈 때 산다</div></div>`;
+  const bind = () => { const r = document.getElementById("mre");
+    if (r) r.onclick = async () => { if (S.busy) return; S.busy = "계산 시작"; syncBusy(); toast("계산을 시작하는 중", true);
+      try{ const k = await dispatch("수학엔진"); await waitRun(k, "수학엔진 계산"); S.mthL = false; if (S.tab === "math" && !S.dhd) render("none"); }catch(e){ toast(e.message); } finally{ S.busy = null; syncBusy(); } };
+    bindNavbar(); };
+  if (!S.mthL){
+    $app.innerHTML = `<div class="wrap">${head}<div class="card"><div class="sk" style="width:40%;height:16px"></div><div class="sk" style="width:70%;height:12px;margin-top:12px"></div></div></div>`; bind();
+    try{ await loadMath(); }catch(e){ const w = $app.querySelector(".wrap"); if (!w) return; w.querySelector(".card")?.remove();
+      w.insertAdjacentHTML("beforeend", `<div class="err" style="margin-top:var(--gap-block)">${esc(e.message)}</div><div class="stack" style="margin-top:12px"><button class="btn press" id="mretry">다시 받기</button></div>`);
+      document.getElementById("mretry").onclick = () => { S.mthL = false; render("none"); }; return; }
+    if (S.tab === "math" && !S.dhd) renderMath(); return;
+  }
+  const d = S.mth;
+  if (!d || !d.date){ $app.innerHTML = `<div class="wrap">${head}<div class="card empty"><b>아직 계산 전이에요</b>한국 장 마감 뒤(16:05·17:05)에 계산해요. 지금 계산하려면 오른쪽 위 ↻ 버튼을 누르세요.</div></div>`; bind(); return; }
+  const m = d.market || {}, md = mMd(d.date), it = d.items || [];
+  const grp = s => it.filter(x => x.state === s);
+  const zr = grp("자리").concat(grp("자리(쉴 때)")), wt = grp("지켜보기"), cw = grp("조정 기다림");
+  const late = d.date < dhExpect("dh");
+  const tr = d.track || {};
+  $app.innerHTML = `<div class="wrap math">${head}
+    ${late ? `<div class="card" style="color:var(--fg)"><b>${md} 종가 자료예요</b><p class="note" style="margin:4px 0 0">${mMd(dhExpect("dh"))} 종가 계산을 기다리는 중이에요. 휴장일이면 안 나와요.</p></div>` : ""}
+    <div class="card"><div class="lt-n" style="font-weight:600">${m.on ? "할 때" : "쉴 때"} <span class="lt-chip ${m.on ? "buy" : "wait"}" style="margin-left:6px">${m.on ? "새로 사도 돼요" : "새로 안 사요"}</span></div>
+      <p class="note" style="margin:6px 0 0">${esc(m.line || "")}</p></div>
+    ${d.hold?.length ? `<h2 class="sec-title">엔진이 들고 있는 것 <span class="lt-cnt">${d.hold.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">자리를 다음 날 자동 매수했다고 치고 규칙대로 들고 있는 기록이에요</p><div class="list">${d.hold.map(mHoldRow).join("")}</div>` : ""}
+    <h2 class="sec-title">내일 자동 매수 자리 <span class="lt-cnt">${zr.length}</span></h2>
+    ${zr.length ? `<div class="list">${zr.map(mRow).join("")}</div>` : `<div class="card empty" style="margin:0"><b>${m.on ? "오늘은 없어요" : "쉴 때라 없어요"}</b>${m.on ? "발굴한 종목이 10거래일 넘게 쉬면서 흔들림·거래대금이 줄고 20일선 위에 있을 때 나와요." : "코스피가 60일선 위로 올라오면 다시 찾아요."}</div>`}
+    ${wt.length ? `<h2 class="sec-title">지켜보기 <span class="lt-cnt">${wt.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">발굴 뒤 조정 중 · 흔들림(최근 10일 범위)과 거래대금(발굴일 대비)이 더 줄어야 해요</p><div class="list">${wt.map(mRow).join("")}</div>` : ""}
+    ${cw.length ? `<h2 class="sec-title">발굴 · 조정 기다림 <span class="lt-cnt">${cw.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">거래대금이 평소 5배 넘게 터진 장대양봉 · 10거래일 넘게 쉬는지 봐요</p><div class="list">${cw.map(mRow).join("")}</div>` : ""}
+    <p class="note lt-foot">${md} 종가 기준${d.at ? ` · ${mMd(String(d.at).slice(0, 10))} ${String(d.at).slice(11, 16)} 계산` : ""}${d.new ? ` · 오늘 새로 발굴 ${d.new}` : ""}</p>
+    ${tr.n ? `<div class="card"><b>앞으로 기록</b><p class="note" style="margin:4px 0 0">끝난 매매 ${tr.n}번 · 평균 ${pct(tr.ret)} (같은 기간 코스피 ${pct(tr.idx)}) · 이긴 비율 ${tr.win}%</p></div>` : ""}
+    <div class="card"><b>규칙</b><p class="note" style="margin:6px 0 0;line-height:1.6">① 발굴: 그날 시장 전체 거래대금 1~20위 · 평소 5배 넘게 터진 +8% 이상 양봉 · 거래대금 2,000억 이상 · 200일선 우상향<br>② 자리: 발굴 뒤 10거래일 넘게 조정, 최근 10일 범위 15% 안, 거래대금이 발굴일의 40% 아래, 20일선 위 → 다음 날 최근 10일 고가에 자동 매수<br>③ 손절: 매수가 −10%와 박스 저점 중 높은 쪽 (장중 자동)<br>④ 팔기: 20일선 아래 마감 → 절반, 60일선 아래 마감 → 전부 (다음 날 시가)<br>⑤ 시장: 코스피 60일선 아래면 새로 안 사고 들고 있는 것도 정리<br>⑥ 한 번에 최대 10종목 · 종목당 계좌의 10% (자리가 많으면 거래대금 큰 순)<br>10번 중 7번은 손절이 정상이에요. 이길 때 크게 이기는 구조예요.</p></div>
+    <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
+  </div>`;
+  bind();
+  $app.querySelectorAll("[data-m]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "m:" + b.dataset.m; }));
+}
+function renderMathDetail(sym){
+  if (!S.mthL){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
+    loadMath().then(() => { if (S.dhd === "m:" + sym) render("none"); }).catch(e => toast(e.message)); return; }
+  const x = (S.mth?.items || []).find(y => y.sym === sym);
+  if (!x){ S.dhd = null; return render("none"); }
+  const zr = x.state === "자리" || x.state === "자리(쉴 때)";
+  const ig = x.ign || {};
+  $app.innerHTML = `<div class="wrap">
+    <div class="navbar"><div class="side"><button class="back press" id="back" aria-label="뒤로">${BACK}<span>수학</span></button></div><span class="mini">${esc(x.name)}</span><div class="side r"></div></div>
+    <div class="title-block hero" data-anchor><h1 class="big">${esc(x.name)}</h1><div class="sub">${esc(x.code)} · ${mWon(x.price)}${x.chg != null ? ` <span class="${x.chg >= 0 ? "up" : "down"}">${pct(x.chg)}</span>` : ""}</div></div>
+    <div class="card"><div class="lt-n" style="font-weight:600"><span class="lt-chip ${M_TONE[x.state] || ""}">${esc(x.state)}</span></div>
+      <ul class="note" style="margin:8px 0 0;padding-left:18px;line-height:1.6">${(x.why || []).map(w => `<li>${esc(w)}</li>`).join("")}</ul></div>
+    <div id="chartBox" class="pro"></div>
+    <div class="card"><b>발굴</b><p class="note" style="margin:4px 0 0">${esc(mMd(ig.d))} · ${pct(ig.ret)} 양봉 · 거래대금 ${Math.round(ig.tv || 0).toLocaleString("ko-KR")}억 (평소 ${ig.x}배) · 그날 저가 ${mWon(ig.low)} 아래로 마감하면 빼요 · ${x.days}거래일 지남</p></div>
+    ${x.box ? `<div class="card"><b>최근 10일 박스</b><p class="note" style="margin:4px 0 0">${mWon(x.box.lo)} ~ ${mWon(x.box.hi)} (흔들림 ${x.box.rng}%) · 최근 5일 거래대금 = 발굴일의 ${x.dry}%</p></div>` : ""}
+    <div class="card"><b>팔 선</b><p class="note" style="margin:4px 0 0">20일선 ${mWon(x.ma20)} 아래 마감 → 절반 · 60일선 ${mWon(x.ma60)} 아래 마감 → 전부${zr ? ` · 손절 ${mWon(x.stop)}` : ""}</p></div>
+  </div>`;
+  document.getElementById("back").onclick = () => history.back();
+  const lv = [];
+  if (zr) lv.push({ v: x.level, kind: "buy", g: "main", label: "자동 매수", fit: true }, { v: x.stop, kind: "stop", g: "main", label: "손절선", fit: true });
+  lv.push({ v: ig.low, kind: "res", g: "main", label: "발굴일 저가" });
+  const last = (x.bars || []).slice(-1)[0];
+  const bx = x.box && last ? { from: x.box.from, to: last[0], lo: x.box.lo, hi: x.box.hi } : null;
+  if (bx) lv.push({ d0: bx.from, d1: bx.to, lo: bx.lo, hi: bx.hi, kind: "box", g: "box", label: "최근 10일" });
+  const box = $app.querySelector("#chartBox");
+  if (box) S.chart = mountPro(box, { sym: x.sym, mk: x.kq ? "코스닥" : "코스피", levels: lv.filter(v => v.v != null || v.kind === "box"), daily: x.bars || [], box: bx });
+}
 /* ───────── 분봉 (설정의 '분봉 중계 주소' = 내 Cloudflare 중계 relay/worker.js, 야후 1분·5분봉) ─────────
    엔진은 일봉으로 자리를 고르고, 사는 순간은 분봉으로 확인. 돌파 때 거래량이 실리는지 본다. */
 const relayBase = () => (LS.get("burl", "") || LS.get("qurl", "") || "").trim().replace(/\/+$/, "");   // 분봉 중계 (예전 실시간 시세 주소가 있으면 그걸 씀)
@@ -1407,6 +1495,7 @@ const dhWeight = (sp, P) => `<div><b>${P(sp.price)}</b><span>손절선 ${pct(sp.
         <div><b>1%</b><span>계좌 손실 한도</span></div>
         <div><b class="${sp.weight >= 50 ? "hot" : ""}"${sp.weight >= 50 ? "" : ` style="color:var(--buy)"`}>${sp.weight}%</b><span>최대 비중</span></div>`;
 function renderDHDetail(sym){
+  if (String(sym).startsWith("m:")) return renderMathDetail(String(sym).slice(2));
   const t = dhTab();
   if (String(sym).startsWith("h:")){
     if (!S.hold){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
@@ -2014,7 +2103,7 @@ document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => {
 let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (S.dhd && S.chart) S.chart.redraw(); }, 150); });
 addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.token && !S.busy) refresh(); });
 { const v = LS.get("view");   // 보던 탭은 늘, 상세 화면은 10분 안에 다시 열었을 때만
-  if (v && ["dh", "dhu", "guide", "settings"].includes(v.tab)){ S.tab = v.tab;
+  if (v && ["dh", "dhu", "math", "guide", "settings"].includes(v.tab)){ S.tab = v.tab;
     if (Date.now() - (v.t || 0) < 6e5){ S.dhd = v.dhd || null; }
     histTo((S.tab !== HOME ? 1 : 0) + (S.dhd ? 1 : 0), S.dhd ? "d" : "t"); } }   // 다시 열 때마다 기록이 쌓이지 않게 깊이를 맞춤
 try{ if (LS.get("qurl", "") && !LS.get("burl", "")){ LS.set("burl", LS.get("qurl", "")); LS.del("qurl"); } }catch(e){}   // 예전 주소는 분봉 전용 키로 옮김 (실시간 시세 자동 갱신은 끔)
