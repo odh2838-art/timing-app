@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-8">
+<meta name="app-version" content="2026-10-24-9">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -971,7 +971,7 @@ function macSignal(){
   if (miss0.length){ label = "판정 보류"; tone = "none"; line = `${miss0.join("·")} 자료를 받지 못해 판정을 보류해요. 핵심 6개가 모두 있어야 신호를 내요.`; }
   else if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "현금 비중 확대 · 신규 매수 보류"; }
   else if (buy.length && !warn.length && !sell.length){ label = "분할매수"; tone = "buy"; line = "계획한 가격대에서 분할매수 · 현금 30% 유지"; }
-  else if (buy.length){ label = "1차 분할매수"; tone = "info"; line = "1차만 진입 · 현금 30~50% 유지"; }
+  else if (buy.length){ label = "분할매수"; tone = "info"; line = "공포 구간 진입 · 경계 신호가 남아 현금 30~50% 유지"; }
   else if (warn.length){ label = "관망"; tone = "wait"; line = "신규 매수 보류 · 현금 30% 이상 유지"; }
   else { label = "중립"; tone = "none"; line = "현금 30% 유지 · 기존 계획대로"; }
   const miss = label === "판정 보류" ? [] : all.filter(x => x.status === "자료 없음").map(x => SHORT_NAME[x.key] || x.name);
