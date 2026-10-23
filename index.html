@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-6">
+<meta name="app-version" content="2026-10-24-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -542,6 +542,13 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-reg .mc-spark{width:100%;height:40px;display:block;margin:2px 0 6px}
 .mc-reg-w{line-height:1.45}
 .mc-brief{margin-top:var(--gap-block)}
+.mc-bh{margin:6px 0 0;font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
+.mc-bp{margin-top:12px}
+.mc-bpr{display:grid;grid-template-columns:8px minmax(0,auto) minmax(0,1fr);align-items:baseline;column-gap:10px;padding:9px 0;border-top:.5px solid var(--line);font-size:var(--t-detail)}
+.mc-bpr .mc-dot{align-self:center} .mc-bk{font-weight:600;white-space:nowrap} .mc-bv{text-align:right}
+@media (max-width:380px){ .mc-bpr{grid-template-columns:8px 1fr} .mc-bv{grid-column:2;text-align:left} .mc-bk{white-space:normal} }
+.mc-wk{margin-top:14px;background:var(--fill);border-radius:12px;padding:10px 12px}
+.mc-wkr{display:flex;gap:12px;font-size:var(--t-detail);padding:3px 0} .mc-wkr b{min-width:40px;font-variant-numeric:tabular-nums}
 .mc-sig{padding:20px}
 .mc-sig-l{font-size:var(--t-display);font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-top:2px}
 .mc-sig-s{margin:6px 0 0;color:var(--fg2);font-size:var(--t-detail)}
@@ -871,6 +878,25 @@ const tag = (t, tone) => `<span class="mc-tag t-${tone || "none"}">${esc(t)}</sp
 const mMD = d => d ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : "";
 const WD = ["일", "월", "화", "수", "목", "금", "토"];
 const mDay = d => d ? `${mMD(d)} (${WD[new Date(String(d).slice(0, 10) + "T12:00:00Z").getUTCDay()]})` : "";
+/* 실시간 시세 (내 Cloudflare 중계 relay/worker.js): 숫자만 지금 값으로. 판정·신호는 계산 시점 기준 그대로 */
+const LIVE = { "^TNX": "us10y", "CL=F": "wti", "^VIX": "vix", "KRW=X": "krw", "^GSPC": "spx", "^KS11": "kospi" };
+const RELAY = () => LS.get("burl", "") || "https://rooru-quote.odh2838.workers.dev";
+S.live = null; S.liveAt = null;
+async function pullLive(){
+  try{
+    const r = await fetch(RELAY() + "?s=" + Object.keys(LIVE).map(encodeURIComponent).join(","), {cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined});
+    if (!r.ok) return false;
+    const j = await r.json(), out = {};
+    for (const [sym, k] of Object.entries(LIVE)) if (j[sym] && j[sym].p != null) out[k] = j[sym];
+    if (!Object.keys(out).length) return false;
+    S.live = out; S.liveAt = Date.now(); return true;
+  }catch(e){ return false; }
+}
+let liveT = null;
+function liveTick(){
+  clearInterval(liveT);
+  liveT = setInterval(async () => { if (document.hidden || S.tab !== "today" || S.dhd || S.busy) return; if (await pullLive()) render("none"); }, 60000);
+}
 async function loadMac(){
   const [m, b] = await Promise.all([readJSON(MAC_FILE, null), readJSON(BRIEF_FILE, null).catch(() => null)]);
   S.mac = m; S.brief = b; S.macL = true; S.macErr = null;
@@ -878,7 +904,14 @@ async function loadMac(){
 /* 브리핑이 덮어쓰는 판정 (예: 근원 CPI 예상치 비교) + BofA 지표 */
 function macItems(){
   const m = S.mac || {}, b = S.brief || {}, ov = b.override || {};
-  const fix = x => ov[x.key] ? {...x, ...ov[x.key]} : x;
+  const lv = S.live || {};
+  const fix = x => { let y = ov[x.key] ? {...x, ...ov[x.key]} : x; const q = lv[x.key];
+    if (q && q.p != null && y.value != null && (!y.asof || (q.d || "") >= y.asof)){
+      y = {...y, value: +q.p, liveT: q.t, liveChg: q.prev ? (x.key === "us10y" ? (q.p - q.prev) * 100 : (q.p / q.prev - 1) * 100) : null};
+      if (x.key === "us10y" && q.p >= 5 && y.status !== "경계") y.status = "경계";   // 실시간 값이 기준선을 넘으면 바로 반영 (5% 이상)
+      if (x.key === "vix") y.status = q.p >= 25 ? "경계" : "중립";
+    }
+    return y; };
   const heat = (m.heat || []).map(fix);
   const bo = b.bofa || {};
   if (bo.bb != null) heat.unshift({key: "bb", name: "BofA Bull & Bear", value: bo.bb, unit: "", asof: bo.bb_d, status: bo.bb >= 8 ? "경계" : bo.bb <= 2 ? "기회" : "중립",
@@ -908,7 +941,8 @@ function mcRow(x){
   return `<button class="row press mc-row" data-mk="${esc(x.key)}"><div class="main"><div class="mc-n"><span>${esc(x.name)}</span>${tag(ST_WORD[x.status] || x.status || "-", tone)}</div><div class="sub mc-why">${esc(x.why || "")}</div></div>
     <div class="mc-r"><div class="mc-v">${esc(fmtV(x))}</div>${spark(x.spark, {w: 64, h: 22, color: TONE_COL[tone]})}</div>${CHEV}</button>`;
 }
-function regTile(r, flag){
+function regTile(r0, flag, key){
+  const q = S.live?.[key], r = q && r0 && q.p != null && (q.d || "") >= r0.date ? {...r0, close: +q.p, dd: (q.p / Math.max(r0.hi, q.p) - 1) * 100} : r0;
   if (!r) return `<div class="card mc-reg"><div class="sub">${flag}</div><b>자료 없음</b></div>`;
   const tone = RG_TONE[r.state] || "none";
   return `<div class="card mc-reg"><div class="mc-reg-h"><span class="mc-reg-n">${flag} ${esc(r.name)}</span></div>
@@ -952,16 +986,22 @@ function signalCard(){
     ${grp("매수 신호", g.buy, "var(--info)")}${grp("경계 신호", g.warn, "var(--wait)")}${grp("매도 신호", g.sell, "var(--sell)")}
     ${g.miss.length ? `<p class="sub" style="margin:12px 0 0">자료 없음: ${esc(g.miss.join(" · "))} (보조 지표라 판정은 유지)</p>` : ""}</div>`;
 }
+/* 아침 브리핑: 한 줄 결론 + '지표 — 의미' 줄 + 이번 주 일정 (오늘의 신호와 같은 모양) */
+const BR_TONE = {buy: "var(--info)", warn: "var(--wait)", sell: "var(--sell)", good: "var(--buy)", info: "var(--fg3)"};
+function briefPoints(b){
+  if (Array.isArray(b.points) && b.points.length) return b.points.slice(0, 4);
+  return (b.lines || []).slice(0, 3).map(l => { const m = String(l).split(/\s+[—–-]\s+/); return m.length > 1 ? { k: m[0], v: m.slice(1).join(" — "), tone: "info" } : { k: l, v: "", tone: "info" }; });
+}
 function briefCard(){
   const b = S.brief, m = S.mac;
-  if (!b || !b.lines || !b.lines.length) return "";
+  if (!b || !(b.points || b.lines || []).length) return "";
   const old = m && b.date && (Date.parse(m.date) - Date.parse(b.date)) > 3 * 864e5;
-  const lines = b.lines.slice(0, 4), watch = (b.watch || []).slice(0, 2);
-  return `<div class="card mc-brief"><div class="mc-reg-h"><b>아침 브리핑</b><span class="sub">${esc(mDay(b.date))}${old ? " · 지난 것" : ""}</span></div>
-    ${b.headline ? `<p class="mc-head"><b>${esc(b.headline)}</b></p>` : ""}
-    <ul class="mc-ul mc-ul2">${lines.map(l => `<li>${esc(l)}</li>`).join("")}</ul>
-    ${watch.length ? `<div class="mc-todo" style="margin-top:10px"><b>이번 주 볼 것</b> ${watch.map(esc).join(" · ")}</div>` : ""}
-    ${(b.sources || []).length ? `<details class="mc-src"><summary class="sub press">출처 ${b.sources.length}개</summary>${b.sources.map(s => `<a class="mc-link" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.t)}</a>`).join("")}</details>` : ""}</div>`;
+  const pts = briefPoints(b), wk = (b.watch || []).slice(0, 3).map(w => { const x = /^(\d{1,2}\/\d{1,2})\s*(.*)$/.exec(w); return x ? [x[1], x[2]] : ["", w]; });
+  return `<div class="card mc-brief"><div class="sub">아침 브리핑 · ${esc(mDay(b.date))}${old ? " · 지난 것" : ""}</div>
+    ${b.headline ? `<p class="mc-bh">${esc(b.headline)}</p>` : ""}
+    <div class="mc-bp">${pts.map(p => `<div class="mc-bpr"><span class="mc-dot" style="background:${BR_TONE[p.tone] || BR_TONE.info}"></span><span class="mc-bk">${esc(p.k)}</span><span class="sub mc-bv">${esc(p.v || "")}</span></div>`).join("")}</div>
+    ${wk.length ? `<div class="mc-wk"><div class="sub" style="margin-bottom:4px">다가오는 일정</div>${wk.map(([d, t]) => `<div class="mc-wkr"><b>${esc(d)}</b><span>${esc(t)}</span></div>`).join("")}</div>` : ""}
+    ${(b.sources || []).length ? `<details class="mc-src"><summary class="sub press">출처 ${b.sources.length}개</summary>${b.sources.map(x => `<a class="mc-link" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.t)}</a>`).join("")}</details>` : ""}</div>`;
 }
 function renderMac(){ return renderMac0().catch(e => { console.error(e); toast("화면을 그리지 못했어요 · " + (e.message || e)); }); }
 const macHead = title => `<div class="navbar"><div class="side"></div><span class="mini">${title}</span><div class="side r"><button class="icon-btn press" id="mre" aria-label="다시 계산" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></button></div></div>`;
@@ -984,16 +1024,18 @@ async function renderMac0(){
   if (S.tab !== "today" || S.dhd) return;
   const m = S.mac;
   if (!m){ $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">오늘</h1></div>${S.macErr ? `<div class="err">${esc(S.macErr)}</div>` : ""}<div class="empty"><b>아직 계산한 적이 없어요</b>오른쪽 위 ↻ 를 누르면 1분쯤 걸려요.</div></div>`; macBind(); return; }
+  if (!S.liveAt || Date.now() - S.liveAt > 60000){ pullLive().then(ok => { if (ok && S.tab === "today" && !S.dhd && !S.dirty) render("none"); }); }
+  liveTick();
   const it = macItems(), rg = m.regime || {};
   const cnt = arr => { const c = {}; arr.forEach(x => c[x.status] = (c[x.status] || 0) + 1); return c; };
   const cc = cnt(it.core);
   const summ = [["기회", "매수 구간"], ["우호", "우호"], ["경계", "경계"], ["중립", "중립"], ["확인", "확인 중"]].filter(([k]) => cc[k]).map(([k, w]) => `${w} ${cc[k]}`).join(" · ");
   const cal = (m.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; }).slice(0, 3);
   $app.innerHTML = `<div class="wrap">${head}
-    <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">${esc(mDay(m.date))} · ${esc((m.at || "").slice(11, 16))} 계산</div></div>
+    <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">${esc(mDay(m.date))} · 판정 ${esc((m.at || "").slice(11, 16))} 계산${S.liveAt ? ` · 시세 ${new Date(S.liveAt).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"})}` : ""}</div></div>
     ${signalCard()}
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
-    <div class="mc-regs">${regTile(rg.spx, "🇺🇸")}${regTile(rg.kospi, "🇰🇷")}</div>
+    <div class="mc-regs">${regTile(rg.spx, "🇺🇸", "spx")}${regTile(rg.kospi, "🇰🇷", "kospi")}</div>
     ${briefCard() ? `<div style="margin-top:var(--gap-block)">${briefCard()}</div>` : ""}
     <div class="sec-title" role="heading" aria-level="2">핵심 6<span class="sub">${esc(summ)}</span></div>
     <div class="list">${it.core.map(mcRow).join("")}</div>
@@ -1059,7 +1101,7 @@ function renderMacDetail(key){
   $app.innerHTML = `<div class="wrap">${back}
     <div class="title-block" data-anchor><div class="sub">${esc(x.asof ? (x.monthly ? `${x.asof.slice(0, 4)}년 ${+x.asof.slice(5, 7)}월분` : mDay(x.asof) + " 기준") : "")}</div><h1 class="big">${esc(x.name)}</h1></div>
     <div class="card"><div class="mc-reg-h"><span class="mc-big">${esc(fmtV(x))}</span>${tag(ST_WORD[x.status] || x.status || "-", tone)}</div>
-      <p class="note" style="margin:6px 0 12px">${esc(x.why || "")}</p>
+      <p class="note" style="margin:6px 0 12px">${x.liveT ? `<span style="color:var(--fg)">지금 ${esc(new Date(x.liveT).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}))} 시세${x.liveChg != null ? " · 전일 대비 " + (key === "us10y" ? `${x.liveChg >= 0 ? "+" : "−"}${Math.abs(x.liveChg).toFixed(0)}bp` : esc(pct(x.liveChg))) : ""}</span><br>` : ""}${esc(x.why || "")}</p>
       ${pts.length > 1 ? `<div class="mc-chart">${spark(pts, {w: 600, h: 180, color: TONE_COL[tone], refs, pts2: x.spark2})}</div>
       <div class="mc-axis sub"><span>${esc(dAx(pts[0][0], x.monthly))}</span><span>최저 ${nf(lo)} · 최고 ${nf(hi)}${UNIT_AX[key] ? " " + UNIT_AX[key] : ""}</span><span>${esc(dAx(pts[pts.length - 1][0], x.monthly))}</span></div>
       ${refs.length ? `<p class="sub" style="margin:6px 0 0">점선 = 기준선 ${refs.join(" · ")}</p>` : ""}${x.spark2 ? `<p class="sub" style="margin:4px 0 0">회색 선 = 미국 2년물 금리</p>` : ""}` : ""}</div>
