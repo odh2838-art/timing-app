@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-10">
+<meta name="app-version" content="2026-10-24-12">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -22,10 +22,10 @@
   --buy:#167A40; --buy-bg:#E8F7EE; --sell:#D22F3C; --sell-bg:#FDEBEC;
   --wait:#975A00; --wait-bg:#FFF4E0; --info:#1B64DA; --info-bg:#EAF2FE;
   /* 글자: 6단계 · 굵기 700/600/400 · 기준 17px(rem이라 시스템 글자 크기를 따라감) */
-  --t-display:calc(36rem/17); --t-title:calc(24rem/17); --t-heading:calc(20rem/17); --t-body:1rem; --t-detail:calc(16rem/17); --t-small:calc(15rem/17);
+  --t-display:calc(34rem/17); --t-title:calc(28rem/17); --t-title2:calc(22rem/17); --t-heading:calc(20rem/17); --t-foot:calc(13rem/17); --t-body:1rem; --t-detail:calc(16rem/17); --t-small:calc(15rem/17);
   /* 간격 */
   --gap-eyebrow:4px; --gap-sub:8px; --gap-text:4px; --gap-inner:16px;
-  --pad-card:18px; --gap-caption:8px; --gap-block:20px; --gap-section:28px; --gutter:22px;
+  --pad-card:16px; --gap-caption:8px; --gap-block:20px; --gap-section:28px; --gutter:20px;
   --r-card:20px; --r-control:12px; --r:var(--r-card);
   --ease:cubic-bezier(.32,.72,0,1);      /* 시트·화면 전환 곡선 (튕기지 않음) */
   --ease-back:cubic-bezier(.34,1.4,.64,1); /* 끌다 놓아 제자리로 돌아올 때만 살짝 튕김 */
@@ -45,8 +45,9 @@
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+@supports (font: -apple-system-body){ html{font:-apple-system-body} }
 html{font-size:106.25%;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior-y:none}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:var(--t-body);line-height:1.45;word-break:keep-all;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;font-size:var(--t-body);line-height:1.45;word-break:keep-all;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
 html,body{touch-action:manipulation}   /* 두 번 탭 확대 막기 */
 button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
 input,select,textarea{font-size:max(16px,1em)}   /* 16px보다 작으면 iOS가 입력할 때 화면을 확대한다 */
@@ -100,7 +101,7 @@ body.sheet-open{background:#1D1D1F}
 .dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
 .list{background:var(--card);border-radius:var(--r-card);overflow:hidden}
 .row{display:flex;align-items:center;gap:12px;padding:var(--pad-card);width:100%;text-align:left;min-height:44px}
-.row+.row{box-shadow:0 -1px 0 var(--line)}
+.row+.row{position:relative} .row+.row::before{content:"";position:absolute;top:0;left:var(--pad-card);right:0;height:1px;transform:scaleY(.5);transform-origin:top;background:var(--line);pointer-events:none}
 /* 밀어서 삭제 · 편집 */
 .swipe{position:relative;overflow:hidden;background:var(--card)}
 .swipe+.swipe::before{content:"";position:absolute;top:0;left:var(--pad-card,18px);right:0;height:1px;background:var(--line);z-index:2;pointer-events:none}
@@ -538,9 +539,9 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-regs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .mc-reg{padding:16px;min-width:0}
 .mc-reg-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
-.mc-reg-s{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;margin:6px 0 4px}
+.mc-reg-s{font-size:var(--t-title2);font-weight:700;letter-spacing:-.01em;margin:2px 0 4px}
 .mc-reg .mc-spark{width:100%;height:40px;display:block;margin:2px 0 6px}
-.mc-reg-w{line-height:1.45}
+.mc-kv{display:flex;justify-content:space-between;gap:8px;font-size:var(--t-small);padding:2px 0} .mc-kv span{color:var(--fg2)} .mc-kv b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .mc-brief{margin-top:var(--gap-block)}
 .mc-bh{margin:6px 0 0;font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
 .mc-bp{margin-top:12px}
@@ -550,17 +551,18 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-wk{margin-top:14px;background:var(--fill);border-radius:12px;padding:10px 12px}
 .mc-wkr{display:flex;gap:12px;font-size:var(--t-detail);padding:3px 0} .mc-wkr b{min-width:40px;font-variant-numeric:tabular-nums}
 .mc-sig{padding:20px}
-.mc-sig-l{font-size:var(--t-display);font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-top:2px}
-.mc-sig-s{margin:6px 0 0;color:var(--fg);font-size:var(--t-detail)}
+.mc-sig-l{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-top:2px}
+.mc-sig-s{margin:4px 0 0;color:var(--fg2);font-size:var(--t-detail)}
 .mc-why2{margin:4px 0 0}
 .mc-rule{display:flex;gap:8px;align-items:baseline;margin-top:14px;padding-top:12px;border-top:.5px solid var(--line);font-size:var(--t-detail)} .mc-rule .mc-dot{align-self:center}
-.mc-more{margin-top:10px;padding:0}
+.mc-more{margin-top:6px;padding:0}
 .mc-leg{margin-top:8px} .mc-legr{display:flex;align-items:center;gap:10px;padding:5px 0}
-.mc-sg-r{display:flex;justify-content:space-between;gap:12px;padding:7px 0 7px 14px;font-size:var(--t-detail);border-top:.5px solid var(--line)} .mc-sg-h+.mc-sg-r{border-top:0}
+.mc-sg-r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;margin-left:14px;font-size:var(--t-detail);border-top:.5px solid var(--line)} .mc-sg-h+.mc-sg-r{border-top:0;padding-top:4px}
+.mc-sg-r .sub{text-align:right;flex:none;max-width:55%}
 .mc-sg-r span:first-child{font-weight:500}
 .mc-todo{margin-top:12px;background:var(--fill);border-radius:12px;padding:10px 12px;font-size:var(--t-detail);line-height:1.5}
 .mc-todo b{margin-right:6px}
-.mc-sg{margin-top:16px} .mc-sg-h{display:flex;align-items:center;gap:6px;font-weight:600;font-size:var(--t-small);color:var(--fg2);margin-bottom:2px}
+.mc-sg{margin-top:18px} .mc-sg-h{display:flex;align-items:center;gap:6px;font-weight:600;font-size:var(--t-small);color:var(--fg2)}
 .mc-sg .mc-ul{margin-top:4px;font-size:var(--t-detail);color:var(--fg2)}
 .mc-dot{width:8px;height:8px;border-radius:50%;flex:none}
 .mc-ul2 li{font-size:var(--t-detail)}
@@ -570,25 +572,25 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-chip{background:var(--fill);border-radius:999px;padding:4px 10px;font-size:var(--t-small);font-weight:600;color:var(--fg2)}
 .mc-ul{margin:8px 0 0;padding-left:1.1em;line-height:1.55} .mc-ul li+li{margin-top:4px}
 .mc-link{display:block;color:var(--blue);text-decoration:none;font-size:var(--t-detail);padding:4px 0;overflow-wrap:anywhere}
-.mc-src{margin-top:8px} .mc-src summary{list-style:none;cursor:pointer;padding:6px 0} .mc-src summary::-webkit-details-marker{display:none}
-.mc-row{gap:10px;border-top:.5px solid var(--line)} .list .mc-row:first-child{border-top:0}
+.mc-src{margin-top:4px} .mc-src summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center} .mc-src summary::-webkit-details-marker{display:none}
+.mc-row{gap:10px}
 .mc-row .main{min-width:0}
 .mc-n{font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .mc-reg-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mc-why{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.mc-why{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty;margin-top:2px}
 .mc-r{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none}
 .mc-v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .mc-row .mc-spark{flex:none}
 @media (max-width:340px){ .mc-row .mc-spark{display:none} }
-.mc-tag{display:inline-flex;font-size:calc(13rem/17);font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+.mc-tag{display:inline-flex;font-size:var(--t-foot);font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
 .mc-tag.t-buy{background:var(--buy-bg);color:var(--buy)} .mc-tag.t-sell{background:var(--sell-bg);color:var(--sell)}
 .mc-tag.t-info{background:var(--info-bg);color:var(--info)} .mc-tag.t-wait{background:var(--wait-bg);color:var(--wait)}
 .mc-tag.t-none{background:var(--fill);color:var(--fg2)}
 .mc-big{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums}
 .mc-chart{overflow:hidden} .mc-chart svg{width:100%;height:auto;display:block}
-.mc-axis{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:calc(13rem/17)}
+.mc-axis{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:var(--t-foot)}
 .mc-ci{font-size:20px;width:28px;text-align:center;flex:none}
-.text-btn{color:var(--blue);font-size:var(--t-detail);font-weight:600;min-height:32px}
+.text-btn{color:var(--blue);font-size:var(--t-detail);font-weight:600;min-height:44px;display:inline-flex;align-items:center}
 </style>
 </head>
 <body>
@@ -948,10 +950,11 @@ function mcRow(x){
 function regTile(r0, flag, key){
   const q = S.live?.[key], r = q && r0 && q.p != null && (q.d || "") >= r0.date ? {...r0, close: +q.p, dd: (q.p / Math.max(r0.hi, q.p) - 1) * 100} : r0;
   if (!r) return `<div class="card mc-reg"><div class="sub">${flag}</div><b>자료 없음</b></div>`;
-  return `<div class="card mc-reg"><div class="mc-reg-h"><span class="mc-reg-n">${flag} ${esc(r.name)}</span></div>
+  const kv = (k, v) => `<div class="mc-kv"><span>${k}</span><b>${v}</b></div>`;
+  return `<div class="card mc-reg"><div class="sub mc-reg-n">${flag} ${esc(r.name)}</div>
     <div class="mc-reg-s">${esc(r.state)}</div>
     ${spark(r.spark, {w: 140, h: 40, color: "var(--fg)", pts2: r.ma_spark})}
-    <div class="sub mc-reg-w"><b style="color:var(--fg)">${(+r.close).toLocaleString("en-US", {maximumFractionDigits: 0})}</b> · 고점 대비 ${pct(r.dd)}<br>200일선 ${r.above ? "위" : "아래"} · 200일선 ${r.ma200up ? "상승" : "하락"} 중</div></div>`;
+    ${kv("지수", (+r.close).toLocaleString("en-US", {maximumFractionDigits: 0}))}${kv("고점 대비", pct(r.dd))}${kv("200일선", `${r.above ? "위" : "아래"} · ${r.ma200up ? "상승" : "하락"}`)}</div>`;
 }
 /* 오늘의 신호: 지표 판정을 오동엔진 원칙대로 묶은 결론 하나 (매수 · 경계 · 매도 신호) */
 const ST_WORD = {"우호": "우호", "경계": "경계", "기회": "매수 구간", "중립": "중립", "확인": "확인 중", "자료 없음": "자료 없음"};
@@ -977,7 +980,7 @@ function macSignal(){
   if (miss0.length){ label = "판정 보류"; tone = "none"; line = `${miss0.join("·")} 자료를 받지 못해 판정을 보류해요. 핵심 6개가 모두 있어야 신호를 내요.`; }
   else if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "현금 비중 확대 · 신규 매수 보류"; }
   else if (buy.length && !warn.length && !sell.length && rule?.tone !== "wait"){ label = "분할매수"; tone = "buy"; line = "계획한 가격대에서 분할매수 · 현금 비중 30% 유지"; }
-  else if (buy.length){ label = "분할매수"; tone = "info"; line = "분할매수 시작 · 경계 신호가 남아 있어 현금 비중 30~50% 유지"; }
+  else if (buy.length){ label = "분할매수"; tone = "info"; line = "분할매수 시작 · 현금 비중 30~50% 유지"; }
   else if (warn.length || rule?.tone === "wait"){ label = "관망"; tone = "wait"; line = "신규 매수 보류 · 현금 비중 30% 이상 유지"; }
   else { label = "중립"; tone = "none"; line = "현금 비중 30% 유지 · 기존 계획대로"; }
   const miss = label === "판정 보류" ? [] : all.filter(x => x.status === "자료 없음").map(x => SHORT_NAME[x.key] || x.name);
@@ -989,7 +992,6 @@ function signalCard(){
   return `<div class="card mc-sig"><div class="sub">오늘의 신호</div>
     <div class="mc-sig-l" style="color:${TONE_COL[g.tone]}">${esc(g.label)}</div>
     <p class="mc-sig-s">${esc(g.line)}</p>
-    ${g.label !== "판정 보류" ? `<p class="sub mc-why2">근거 · 매수 신호 ${g.buy.length} · 경계 ${g.warn.length} · 과열·매도 ${g.sell.filter(x => x.t !== "원칙").length}</p>` : ""}
     ${grp("매수 신호", g.buy, "var(--info)")}${grp("경계", g.warn, "var(--wait)")}${grp("과열·매도 신호", g.sell.filter(x => x.t !== "원칙"), "var(--sell)")}
     ${g.rule ? `<div class="mc-rule"><span class="mc-dot" style="background:${TONE_COL[g.rule.tone]}"></span><span>${esc(g.rule.t)}</span></div>` : ""}
     ${g.miss.length ? `<p class="sub" style="margin:12px 0 0">자료 없음: ${esc(g.miss.join(" · "))} (보조 지표라 판정은 유지)</p>` : ""}
