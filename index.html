@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-4">
+<meta name="app-version" content="2026-10-24-5">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -938,7 +938,8 @@ function macSignal(){
   else if (buy.length){ label = "1차 분할매수"; tone = "info"; line = "1차만 진입 · 현금 30~50% 유지"; }
   else if (warn.length){ label = "관망"; tone = "wait"; line = "신규 매수 보류 · 현금 30% 이상 유지"; }
   else { label = "중립"; tone = "none"; line = "현금 30% 유지 · 기존 계획대로"; }
-  return { label, tone, line, buy, warn, sell };
+  const miss = all.filter(x => x.status === "자료 없음").map(x => SHORT_NAME[x.key] || x.name);
+  return { label, tone, line, buy, warn, sell, miss };
 }
 function signalCard(){
   const g = macSignal();
@@ -946,7 +947,8 @@ function signalCard(){
   return `<div class="card mc-sig"><div class="sub">오늘의 신호</div>
     <div class="mc-sig-l" style="color:${TONE_COL[g.tone]}">${esc(g.label)}</div>
     <p class="mc-sig-s">${esc(g.line)}</p>
-    ${grp("매수 신호", g.buy, "var(--info)")}${grp("경계 신호", g.warn, "var(--wait)")}${grp("매도 신호", g.sell, "var(--sell)")}</div>`;
+    ${grp("매수 신호", g.buy, "var(--info)")}${grp("경계 신호", g.warn, "var(--wait)")}${grp("매도 신호", g.sell, "var(--sell)")}
+    ${g.miss.length ? `<p class="sub" style="margin:12px 0 0">자료 없음: ${esc(g.miss.join(" · "))} · 판정에서 빠졌어요</p>` : ""}</div>`;
 }
 function briefCard(){
   const b = S.brief, m = S.mac;
@@ -984,7 +986,7 @@ async function renderMac0(){
   const cnt = arr => { const c = {}; arr.forEach(x => c[x.status] = (c[x.status] || 0) + 1); return c; };
   const cc = cnt(it.core);
   const summ = [["기회", "매수 구간"], ["우호", "우호"], ["경계", "경계"], ["중립", "중립"], ["확인", "확인 중"]].filter(([k]) => cc[k]).map(([k, w]) => `${w} ${cc[k]}`).join(" · ");
-  const cal = (m.cal || []).slice(0, 3);
+  const cal = (m.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; }).slice(0, 3);
   $app.innerHTML = `<div class="wrap">${head}
     <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">${esc(mDay(m.date))} · ${esc((m.at || "").slice(11, 16))} 계산</div></div>
     ${signalCard()}
@@ -1003,37 +1005,49 @@ async function renderMac0(){
   macBind();
 }
 const CAL_ICON = {fed: "🏛", data: "📊", kr: "🇰🇷", earn: "💼"};
+/* 일정 한 줄: 한국 시간 날짜·시각 하나로 (발표 시각이 있으면 그 날짜) */
+function calKst(c){
+  const m = /^(\d{1,2})\/(\d{1,2}) (\d{1,2}:\d{2})/.exec(c.time || "");
+  if (!m) return { d: c.d, hm: "" };
+  const y = +c.d.slice(0, 4) + (+m[1] < +c.d.slice(5, 7) ? 1 : 0);
+  return { d: `${y}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`, hm: m[3] };
+}
 function calRow(c){
-  const today = (S.mac?.date || "").slice(0, 10), dd = Math.round((Date.parse(c.d) - Date.parse(today)) / 864e5);
-  return `<div class="row"><span class="mc-ci" aria-hidden="true">${CAL_ICON[c.kind] || "📅"}</span><div class="main"><div class="mc-n">${esc(c.name)}</div><div class="sub">${esc(mDay(c.d))}${c.time ? " · " + esc(c.time) : ""}${c.note ? " · " + esc(c.note) : ""}</div></div><span class="sub">${dd === 0 ? "오늘" : dd === 1 ? "내일" : dd > 0 ? dd + "일 뒤" : ""}</span></div>`;
+  const k = calKst(c), today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date()), dd = Math.round((Date.parse(k.d) - Date.parse(today)) / 864e5);
+  return `<div class="row"><span class="mc-ci" aria-hidden="true">${CAL_ICON[c.kind] || "📅"}</span><div class="main"><div class="mc-n">${esc(c.name)}</div><div class="sub">${esc(mDay(k.d))}${k.hm ? " " + esc(k.hm) : ""}${c.note ? " · " + esc(c.note) : ""}</div></div><span class="sub">${dd === 0 ? "오늘" : dd === 1 ? "내일" : dd > 0 ? dd + "일 뒤" : ""}</span></div>`;
 }
 async function renderCal(){
-  const head = macHead("일정");
+  const head = `<div class="navbar"><div class="side"></div><span class="mini">일정</span><div class="side r"></div></div>`;
   if (!(await ensureMac(head)) && S.tab !== "cal") return;
   if (S.tab !== "cal" || S.dhd) return;
-  const cal = (S.mac?.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i).sort((a, b) => a.d < b.d ? -1 : 1);
-  $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">일정</h1><div class="sub">앞으로 3주 · 한국 시간</div></div>
+  const cal = (S.mac?.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; });
+  $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">일정</h1><div class="sub">앞으로 3주 · 한국 시간 기준</div></div>
     ${cal.length ? `<div class="list">${cal.map(calRow).join("")}</div>` : `<div class="empty"><b>앞으로 3주 안에 큰 일정이 없어요</b></div>`}
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">FOMC는 연준 발표 일정, 경제지표는 FRED 발표 일정이에요. CPI처럼 큰 발표 전에는 한쪽으로 쏠린 포지션을 미리 줄여요.</p></div>`;
   macBind();
 }
 /* 지표 설명 (참고 계정 원문 기준) */
 const MC_ABOUT = {
-  us10y: "오동엔진이 가장 먼저 보는 숫자예요. 장기금리가 오르면 주식 값(특히 비싼 성장주)이 눌려요. 10년물이 1%이던 2020년과 4%대인 지금의 밸류가 같다면 고밸류 압박을 받는 게 당연하다고 봤어요.",
-  wti: "유가가 오르면 물가가 다시 오르고, 연준이 금리를 못 내려요. 장기금리와 유가가 같이 내려와야 증시 상승을 믿어요.",
-  core_cpi: "식품·에너지를 뺀 물가예요. 발표 숫자가 시장 예상보다 낮으면 우호, 2개월 연속 예상보다 높으면 경계예요. 예상치는 아침 브리핑이 채워요.",
-  fed: "기준금리와 2년물 금리를 같이 봐요. 2년물이 기준금리보다 많이 낮으면 시장은 인하를 기대하는 거예요. 인상 확률이 오르면 경계예요.",
-  hy: "신용이 나쁜 회사 채권이 국채보다 얼마나 더 이자를 받는지예요. '채권·신용시장이 주식보다 먼저 말한다'고 봐요. 400bp에 가까워지면 위험 신호예요.",
-  fg: "CNN 공포탐욕 지수예요. 공포 구간(25 이하)부터 분할매수를 시작해요. 75 이상 탐욕은 과열이에요.",
-  breadth: "S&P 500 종목 중 200일선 아래에 있는 비율이에요. 하트넷 기준으로 60% 이상이 이평선 아래로 내려가면 매수 쪽 신호예요.",
-  sox: "반도체지수가 200일선보다 얼마나 위에 있는지예요. 62%까지 벌어졌을 때 닷컴 정점(55%)을 넘었다고 버블 신호로 봐요.",
-  vix: "시장이 앞으로 얼마나 흔들릴 거라고 보는지예요. 불확실성이 큰 이벤트 앞에서 헤지 수단으로 써요.",
-  bb: "BofA 하트넷의 Bull & Bear 지표예요. 8 이상이면 매도 신호(주식 줄이고 현금 늘림), 2 이하면 매수 신호예요. 시장 전체를 보는 가장 중요한 신호예요.",
-  fms: "BofA 펀드매니저 서베이의 현금 비중이에요. 4% 아래면 다들 주식을 가득 샀다는 뜻(과열), 5% 이상이면 매수 신호예요.",
-  krw: "환율이 빠르게 오르면(원화 약세) 외국인이 한국 주식을 팔기 쉬워요.",
-  foreign: "코스피에서 외국인이 산 금액에서 판 금액을 뺀 값이에요. 5일·20일 합이 같은 방향이면 흐름으로 봐요."
+  us10y: "가장 먼저 보는 지표예요. 장기금리가 오르면 밸류에이션, 특히 성장주가 압박을 받아요. 금리가 높은데 밸류가 그대로면 고밸류 부담이 커져요.",
+  wti: "유가 상승은 인플레이션 재가속과 금리 인하 지연으로 이어져요. 장기금리와 유가가 함께 내려와야 증시 상승을 신뢰해요.",
+  core_cpi: "식품·에너지를 뺀 물가예요. 발표치가 예상치를 밑돌면 우호, 2개월 연속 웃돌면 경계예요. 예상치는 아침 브리핑에서 반영해요.",
+  fed: "기준금리와 2년물 금리를 함께 봐요. 2년물이 기준금리를 크게 밑돌면 시장은 인하를 반영하는 중이에요. 인상 확률이 오르면 경계예요.",
+  hy: "투기등급 회사채와 국채의 금리 차이예요. 채권·신용시장은 주식보다 먼저 위험을 반영해요. 400bp에 가까워지면 위험 신호예요.",
+  fg: "CNN 공포탐욕 지수예요. 25 이하 공포 구간부터 분할매수를 시작하고, 75 이상 탐욕은 과열로 봐요.",
+  breadth: "S&P 500 종목 중 200일선 아래에 있는 비율이에요. 60% 이상이 이평선을 밑돌면 과매도, 매수 쪽 신호예요.",
+  sox: "반도체지수의 200일선 대비 이격도예요. 닷컴 정점은 55%였고, 62%까지 벌어졌을 때 버블 신호로 봤어요.",
+  vix: "S&P 500 옵션으로 본 예상 변동성이에요. 불확실성이 큰 이벤트 앞에서는 헤지 수단으로 써요.",
+  bb: "BofA 하트넷의 Bull & Bear 지표예요. 8 이상이면 매도 신호(주식 비중 축소, 현금 확대), 2 이하면 매수 신호예요.",
+  fms: "BofA 펀드매니저 서베이의 현금 비중이에요. 4% 미만은 투자자들이 주식을 가득 채운 과열, 5% 이상은 매수 신호예요.",
+  krw: "원화가 빠르게 약해지면 외국인 자금이 빠져나가기 쉬워요.",
+  foreign: "코스피 외국인 순매수 금액이에요. 5일·20일 누적이 같은 방향이면 추세로 판단해요."
 };
+const nf = v => v == null ? "-" : (+v).toLocaleString("ko-KR", {maximumFractionDigits: 2});
+const dAx = (d, mo) => { const t = String(d).slice(0, 10), yr = t.slice(0, 4); return mo || yr !== String(new Date().getFullYear()) ? `${yr}.${+t.slice(5, 7)}` : mMD(t); };
+const UNIT_AX = {us10y: "%", core_cpi: "% (전년비)", fed: "%", hy: "bp", breadth: "%", sox: "%", krw: "원", foreign: "억원", wti: "$"};
 function renderMacDetail(key){
+  if (!S.macL){ $app.innerHTML = `<div class="wrap"><div class="navbar"></div><div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div><div class="card"><div class="sk" style="width:70%;height:16px"></div></div></div>`;
+    loadMac().then(() => { if (S.dhd === "m:" + key) renderMacDetail(key); }).catch(e => toast(e.message)); return; }
   const it = macItems(), all = [...it.core, ...it.heat, ...it.kr], x = all.find(a => a.key === key);
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>오늘</span></button></div><span class="mini">${esc(x?.name || "")}</span><div class="side r"></div></div>`;
   if (!x){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>이 지표를 찾지 못했어요</b></div></div>`; document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); }; return; }
@@ -1041,16 +1055,16 @@ function renderMacDetail(key){
   const refs = {us10y: [5], hy: [400], fg: [25, 75], breadth: [60], sox: [55], vix: [25]}[key] || [];
   const lo = pts.length ? Math.min(...pts.map(p => p[1])) : null, hi = pts.length ? Math.max(...pts.map(p => p[1])) : null;
   $app.innerHTML = `<div class="wrap">${back}
-    <div class="title-block" data-anchor><div class="sub">${esc(x.asof ? mDay(x.asof) + " 기준" : "")}</div><h1 class="big">${esc(x.name)}</h1></div>
+    <div class="title-block" data-anchor><div class="sub">${esc(x.asof ? (x.monthly ? `${x.asof.slice(0, 4)}년 ${+x.asof.slice(5, 7)}월분` : mDay(x.asof) + " 기준") : "")}</div><h1 class="big">${esc(x.name)}</h1></div>
     <div class="card"><div class="mc-reg-h"><span class="mc-big">${esc(fmtV(x))}</span>${tag(ST_WORD[x.status] || x.status || "-", tone)}</div>
       <p class="note" style="margin:6px 0 12px">${esc(x.why || "")}</p>
-      <div class="mc-chart">${spark(pts, {w: 600, h: 180, color: TONE_COL[tone], refs, pts2: x.spark2})}</div>
-      <div class="mc-axis sub"><span>${esc(pts.length ? mDay(pts[0][0]) : "")}</span><span>최저 ${lo != null ? (+lo).toLocaleString("ko-KR", {maximumFractionDigits: 2}) : "-"} · 최고 ${hi != null ? (+hi).toLocaleString("ko-KR", {maximumFractionDigits: 2}) : "-"}</span><span>${esc(pts.length ? mDay(pts[pts.length - 1][0]) : "")}</span></div>
-      ${refs.length ? `<p class="sub" style="margin:6px 0 0">점선 = 기준선 ${refs.join(" · ")}</p>` : ""}${x.spark2 ? `<p class="sub" style="margin:4px 0 0">옅은 선 = 미국 2년물 금리</p>` : ""}</div>
+      ${pts.length > 1 ? `<div class="mc-chart">${spark(pts, {w: 600, h: 180, color: TONE_COL[tone], refs, pts2: x.spark2})}</div>
+      <div class="mc-axis sub"><span>${esc(dAx(pts[0][0], x.monthly))}</span><span>최저 ${nf(lo)} · 최고 ${nf(hi)}${UNIT_AX[key] ? " " + UNIT_AX[key] : ""}</span><span>${esc(dAx(pts[pts.length - 1][0], x.monthly))}</span></div>
+      ${refs.length ? `<p class="sub" style="margin:6px 0 0">점선 = 기준선 ${refs.join(" · ")}</p>` : ""}${x.spark2 ? `<p class="sub" style="margin:4px 0 0">회색 선 = 미국 2년물 금리</p>` : ""}` : ""}</div>
     <div class="sec-title" role="heading" aria-level="2">오동엔진 기준</div>
     <div class="card"><p style="margin:0">${esc(x.rule || "")}</p></div>
-    ${MC_ABOUT[key] ? `<div class="sec-title" role="heading" aria-level="2">무엇을 보나요</div><div class="card"><p class="note" style="margin:0;color:var(--fg)">${esc(MC_ABOUT[key])}</p></div>` : ""}
-    ${x.mom ? `<div class="sec-title" role="heading" aria-level="2">지난달 대비 (최근 6개월)</div><div class="list">${x.mom.slice().reverse().map(p => `<div class="row"><div class="main">${esc(p[0].slice(0, 7).replace("-", "년 "))}월</div><b>${p[1] > 0 ? "+" : ""}${p[1]}%</b></div>`).join("")}</div>` : ""}
+    ${MC_ABOUT[key] ? `<div class="sec-title" role="heading" aria-level="2">설명</div><div class="card"><p class="note" style="margin:0;color:var(--fg)">${esc(MC_ABOUT[key])}</p></div>` : ""}
+    ${x.mom ? `<div class="sec-title" role="heading" aria-level="2">전월비 (최근 6개월)</div><div class="list">${x.mom.slice().reverse().map(p => `<div class="row"><div class="main">${esc(p[0].slice(0, 4))}년 ${+p[0].slice(5, 7)}월</div><b>${p[1] > 0 ? "+" : ""}${p[1]}%</b></div>`).join("")}</div>` : ""}
     ${x.src ? `<p class="note" style="margin:12px 4px"><a class="mc-link" href="${esc(x.src)}" target="_blank" rel="noopener">출처 보기</a></p>` : ""}
   </div>`;
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
