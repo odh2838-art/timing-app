@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-23-95">
+<meta name="app-version" content="2026-10-24-1">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -533,15 +533,48 @@ h2.sec-title{font-size:var(--t-heading)}
 .gd-real ol{margin:12px 0 0;padding:0;list-style:none;counter-reset:n;display:flex;flex-direction:column;gap:10px}
 .gd-real li{counter-increment:n;display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:var(--t-detail);line-height:1.5}
 .gd-real li::before{content:counter(n);width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;margin-top:1px}
+
+/* 매크로 */
+.mc-regs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mc-reg{padding:16px;min-width:0}
+.mc-reg-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
+.mc-reg-s{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;margin:6px 0 4px}
+.mc-reg .mc-spark{width:100%;height:40px;display:block;margin:2px 0 6px}
+.mc-reg-w{line-height:1.45}
+.mc-vd,.mc-brief{margin-top:var(--gap-block)}
+.mc-head{margin:8px 0 0;font-size:var(--t-body);line-height:1.5}
+.mc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.mc-chip{background:var(--fill);border-radius:999px;padding:4px 10px;font-size:var(--t-small);font-weight:600;color:var(--fg2)}
+.mc-ul{margin:8px 0 0;padding-left:1.1em;line-height:1.55} .mc-ul li+li{margin-top:4px}
+.mc-notes{margin-top:12px;border-top:.5px solid var(--line);padding-top:10px}
+.mc-link{display:block;color:var(--blue);text-decoration:none;font-size:var(--t-detail);padding:4px 0;overflow-wrap:anywhere}
+.mc-src{margin-top:8px} .mc-src summary{list-style:none;cursor:pointer;padding:6px 0} .mc-src summary::-webkit-details-marker{display:none}
+.mc-row{gap:10px;border-top:.5px solid var(--line)} .list .mc-row:first-child{border-top:0}
+.mc-row .main{min-width:0}
+.mc-n{font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mc-reg-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-why{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.mc-r{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none}
+.mc-v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mc-row .mc-spark{flex:none}
+@media (max-width:340px){ .mc-row .mc-spark{display:none} }
+.mc-tag{display:inline-flex;font-size:calc(13rem/17);font-weight:700;border-radius:6px;padding:1px 7px;white-space:nowrap}
+.mc-tag.t-buy{background:var(--buy-bg);color:var(--buy)} .mc-tag.t-sell{background:var(--sell-bg);color:var(--sell)}
+.mc-tag.t-info{background:var(--info-bg);color:var(--info)} .mc-tag.t-wait{background:var(--wait-bg);color:var(--wait)}
+.mc-tag.t-none{background:var(--fill);color:var(--fg2)}
+.mc-big{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums}
+.mc-chart{overflow:hidden} .mc-chart svg{width:100%;height:auto;display:block}
+.mc-axis{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:calc(13rem/17)}
+.mc-ci{font-size:20px;width:28px;text-align:center;flex:none}
+.text-btn{color:var(--blue);font-size:var(--t-detail);font-weight:600;min-height:32px}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <nav class="tabbar" id="tabbar" hidden aria-label="탭">
-  <button data-tab="dh" aria-label="동현 한국"><span class="tf" aria-hidden="true">🇰🇷</span>동현</button>
-  <button data-tab="dhu" aria-label="동현 미국"><span class="tf" aria-hidden="true">🇺🇸</span>동현</button>
-  <button data-tab="math" aria-label="수학 한국"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M4 16l5-6 4 3 7-9"/><path d="M15 4h5v5"/></svg>수학</button>
-  <button data-tab="guide" aria-label="사용법"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V5.5M9 8h7M9 12h5"/></svg>사용법</button>
+  <button data-tab="today" aria-label="오늘"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>오늘</button>
+  <button data-tab="cal" aria-label="일정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>일정</button>
+  <button data-tab="rules" aria-label="기준"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V5.5M9 8h7M9 12h5"/></svg>기준</button>
   <button data-tab="settings" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
 </nav>
 <script>
@@ -552,8 +585,8 @@ const LS = {
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
-/* 2026-10-17: 탭 = 신호(시장 지표·종목별 매수·매도) · 오동엔진(차트 자리) · 설정. 예전 오동엔진(종목·발견·알림)은 뺐다 */
-const HOME = "dh";
+/* 2026-10-23: 매크로 앱 (오동엔진 점검표). 탭 = 오늘 · 일정 · 기준 · 설정. 동현·수학·오동 엔진은 없앰 */
+const HOME = "today";
 const S = { token: LS.get("tok", ""), repo: LS.get("repo", "odh2838-art/timing-agent"),
   tab: HOME, detail: null, dash: LS.get("dash"), csv: null, alerts: null, err: "", busy: null, loading: true, dirty: false };
 let REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -578,11 +611,8 @@ async function gh(path, opt={}){
   if (res.status === 204) return null;
   return opt.raw ? (opt.blob ? res.blob() : res.text()) : res.json();
 }
-const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,"")), c => c.charCodeAt(0)));
-const b64enc = s => { const b = new TextEncoder().encode(s); let x=""; for (let i=0;i<b.length;i+=0x8000) x += String.fromCharCode.apply(null, b.subarray(i,i+0x8000)); return btoa(x); };
 async function readJSON(path, d){ try{ return JSON.parse(await gh("/contents/" + enc(path) + "?ref=main", {raw:true})); }catch(e){ if (e.nf) return d; throw e; } }
 
-const symOf = (mk, tk) => mk === "코스피" ? tk + ".KS" : mk === "코스닥" ? tk + ".KQ" : tk;
 
 /* ───────── 점검 실행 ───────── */
 async function dispatch(cmd, symbol){
@@ -614,29 +644,10 @@ async function waitRun(since, label){
 function syncBusy(){ document.querySelectorAll("[data-busy]").forEach(b => b.disabled = !!S.busy); }
 
 /* ───────── 데이터 ───────── */
-async function refresh(){
-  if (isDH(S.tab) && S.dhd && !String(S.dhd).startsWith("h:") && S.dhL[dhTab()]){   // 종목 상세를 보던 중이면: 뒤에서 받아 보고 바뀐 게 있을 때만 다시 그림 (차트 확대·위치 유지, 리뷰 #6)
-    const t = dhTab(), key = o => o ? `${o.date || ""}|${o.at || ""}` : "", a = key(S.dhc[t]), b = key(S.dhPre[t]);
-    try{ await loadDH(t); }catch(e){ return; }
-    if ((key(S.dhc[t]) !== a || key(S.dhPre[t]) !== b) && !S.dirty && !document.querySelector(".sheet-bg")) render("none");
-    return;
-  }
-  if (isDH(S.tab)){   // 동현 목록·보유: 화면의 자료는 그대로 두고 뒤에서 받아서, 성공했을 때만 바꿈 (오프라인이면 그대로, 리뷰 #4)
-    const t = dhTab(), sheet = !!document.querySelector(".sheet-bg");
-    try{ await Promise.all([loadDH(t), sheet ? null : loadHold()]); S.holdErr = null; }
-    catch(e){ if (S.dhc[t]) toast(e.message); else { S.dhL = {}; render("none"); } return; }
-    if (!S.dirty && !sheet) render("none");
-    return;
-  }
-  S.err = ""; S.loading = false; S.dhL = {}; S.holdErr = null; if (!document.querySelector(".sheet-bg")) S.hold = null;
-  if (!S.dirty) render("none");   // 입력 중이면 화면을 덮어쓰지 않는다 (목록 화면이 자료를 다시 받음)
-}
-/* 장 시간 (한국 09:00~15:30 · 미국 09:30~16:00, 현지 시간) */
-function marketOpenNow(kr){
-  const tz = kr ? "Asia/Seoul" : "America/New_York";
-  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {timeZone: tz, weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false}).formatToParts(new Date()).map(x => [x.type, x.value]));
-  const m = (+p.hour % 24) * 60 + +p.minute, wd = !["Sat", "Sun"].includes(p.weekday);
-  return wd && (kr ? m >= 540 && m < 930 : m >= 570 && m < 960);
+async function refresh(){   // 화면의 자료는 그대로 두고 뒤에서 받아서, 성공했을 때만 바꿈 (오프라인이면 그대로)
+  S.err = ""; S.loading = false;
+  try{ await loadMac(); }catch(e){ if (S.mac) toast(e.message); else { S.macL = false; } }
+  if (!S.dirty && !document.querySelector(".sheet-bg")) render("none");
 }
 /* 화면 확대 막기 (iOS는 user-scalable=no를 무시하므로 손가락 두 개 확대를 직접 막는다). 차트 안의 확대·축소는 그대로 */
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => { if (!e.target.closest?.(".plot, .pro-box")) e.preventDefault(); }, {passive: false}));
@@ -645,29 +656,12 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIn
   document.addEventListener("touchstart", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
   document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
 }
-async function catalog(){
-  const c = LS.get("catalog");
-  if (c && Date.now() - c.t < 7*864e5) return c.rows;
-  const rows = await readJSON("상태/종목사전.json", []);
-  if (rows.length) LS.set("catalog", {t:Date.now(), rows});
-  return rows;
-}
-const KALIAS = {"네이버":"035420", "삼전":"005930", "하이닉스":"000660", "하닉":"000660", "엘지전자":"066570", "현대차":"005380", "엘지엔솔":"373220", "포스코":"005490"};   // 한국 종목 별칭 (영문 이름·줄임말)
-const ALIAS = {"엔비디아":"NVDA","애플":"AAPL","테슬라":"TSLA","마이크로소프트":"MSFT","마소":"MSFT","아마존":"AMZN","알파벳":"GOOGL","구글":"GOOGL","메타":"META","페이스북":"META","넷플릭스":"NFLX","브로드컴":"AVGO","에이엠디":"AMD","팔란티어":"PLTR","티에스엠씨":"TSM","대만반도체":"TSM","코스트코":"COST","일라이릴리":"LLY","릴리":"LLY","노보노디스크":"NVO","버크셔":"BRK-B","제이피모건":"JPM","비자":"V","마스터카드":"MA","월마트":"WMT","오라클":"ORCL","어도비":"ADBE","세일즈포스":"CRM","인텔":"INTC","퀄컴":"QCOM","마이크론":"MU","에이에스엠엘":"ASML","슈퍼마이크로":"SMCI","코인베이스":"COIN","스타벅스":"SBUX","나이키":"NKE","디즈니":"DIS","코카콜라":"KO","펩시":"PEP","맥도날드":"MCD","아이온큐":"IONQ","로켓랩":"RKLB","유니티":"U","쇼피파이":"SHOP","우버":"UBER","에어비앤비":"ABNB","로빈후드":"HOOD","소파이":"SOFI","리비안":"RIVN","루시드":"LCID","크라우드스트라이크":"CRWD","스노우플레이크":"SNOW","팔로알토":"PANW","암":"ARM","델":"DELL","아이비엠":"IBM","시스코":"CSCO","보잉":"BA","캐터필러":"CAT","엑슨모빌":"XOM","셰브론":"CVX","화이자":"PFE","모더나":"MRNA","존슨앤존슨":"JNJ","유나이티드헬스":"UNH","버티브":"VRT","비스트라":"VST","컨스텔레이션":"CEG","마이크로스트래티지":"MSTR","스트래티지":"MSTR","앱러빈":"APP","써클":"CRCL"};
 
 /* ───────── 공통 ───────── */
 const $app = document.getElementById("app");
 // 엔진 문장에서 사람 이름·규칙 번호는 화면에 안 보여요 (예전 결과 파일 대비)
-const cl = t => String(t ?? "").replace(/카투는 이런 날 다 팔았어요/g, "이런 날은 다 팔아요").replace(/\(카투는 ([^)]*)\)/g, "($1)").replace(/카투(는|가|도|의) ?/g, "").replace(/ ?\((?:[AJC][0-9]{1,3}[ ,·]*)+\)/g, "");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const isKR = m => m === "코스피" || m === "코스닥";
-const tick = v => v < 2000 ? 1 : v < 5000 ? 5 : v < 20000 ? 10 : v < 50000 ? 50 : v < 200000 ? 100 : v < 500000 ? 500 : 1000;   // 한국 호가 단위 (2023~)
-const num = (v, mk) => v == null || !isFinite(v) ? "-" : (isKR(mk) ? (Math.round(v / tick(v)) * tick(v)).toLocaleString("ko-KR") : Math.abs(v) < 1 ? (+v).toPrecision(4) : (+v).toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}));
 const pct = v => { if (v == null || !isFinite(v)) return "-"; const r = +(+v).toFixed(1); return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(1) + "%"; };
-const strip = s => String(s).replace(/\*\*/g, "");
-const TONE_DOT = {buy:"var(--buy)", sell:"var(--sell)", wait:"var(--wait)", hold:"var(--fg3)"};
-const REG_DOT = {"양호":"var(--buy)", "보통":"var(--wait)", "약세":"var(--sell)"};
-const GRADE_ICON = {"진입 좋음":"🎯", "진입 보통":"👀", "진입 대기":"⏳", "진입 나쁨":"✋"};
 const CHEV = `<svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg>`;
 const BACK = `<svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>`;
 
@@ -684,14 +678,13 @@ function render(how = "fade"){
   const ghost = slide ? snapshot() : null;
   try{
     if (!S.token) renderSetup();
-    else if (S.dhd) renderDHDetail(S.dhd);
-    else if (isDH(S.tab)) renderDH();
-    else if (S.tab === "math") renderMath();
-    else if (S.tab === "guide") renderGuide();
+    else if (S.dhd && String(S.dhd).startsWith("m:")) renderMacDetail(String(S.dhd).slice(2));
+    else if (S.tab === "cal") renderCal();
+    else if (S.tab === "rules") renderRules();
     else if (S.tab === "settings") renderSettings();
-    else renderDH();
+    else { S.tab = "today"; S.dhd = null; renderMac(); }
   }catch(e){   // 자료 한 곳이 이상해도 앱 전체가 멈추지 않게: 전환 화면을 걷고 홈으로
-    console.error(e); ghost?.remove(); S.dhd = null; S.tab = HOME; try{ renderDH(); }catch(_){} toast("이 화면을 열지 못했어요");
+    console.error(e); ghost?.remove(); S.dhd = null; S.tab = HOME; try{ renderMac(); }catch(_){} toast("이 화면을 열지 못했어요");
     bindNavbar(); return;
   }
   $app.classList.remove("v-push","v-pop","v-fade");
@@ -766,15 +759,15 @@ function bindNavbar(){
 function renderSetup(msg){
   $app.innerHTML = `<div class="wrap" style="padding-top:48px">
     <h1 class="big">rooru.invest</h1>
-    <p class="note" style="margin:var(--gap-sub) 0 var(--gap-section)">시장 신호와 차트 자리로 살 때와 나갈 때를 알려 드려요. 이 앱은 내 GitHub 저장소(timing-agent, 엔진이 계산해 두는 곳)에 연결해서 써요. 저장소가 없으면 먼저 만들어야 해요.</p>
+    <p class="note" style="margin:var(--gap-sub) 0 var(--gap-section)">금리·유가·물가·신용·심리로 지금 시장이 어떤지 알려 드려요 (오동엔진 점검표). 이 앱은 내 GitHub 저장소(timing-agent, 숫자를 계산해 두는 곳)에 연결해서 써요.</p>
     <div class="card stack">
       <div class="field"><label for="tok">GitHub 토큰</label><input id="tok" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…" enterkeyhint="go" value="${esc(S.tokDraft || "")}">${msg ? `<p class="ferr" role="alert">${esc(msg)}</p>` : ""}</div>
       <button class="btn primary press" id="go" disabled>연결</button>
       <a class="tlink" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">토큰 만들기 ›</a>
     </div>
-    <p class="note" style="margin:12px 4px 0;line-height:1.5">토큰 = 앱이 내 엔진 저장소를 읽고 고칠 수 있게 하는 열쇠예요.<br>① 토큰 만들기 › Fine-grained token<br>② 저장소: timing-agent 하나만 선택<br>③ 권한: Contents · Actions 읽기/쓰기</p>
+    <p class="note" style="margin:12px 4px 0;line-height:1.5">토큰 = 앱이 내 저장소를 읽고 계산을 시작할 수 있게 하는 열쇠예요.<br>① 토큰 만들기 › Fine-grained token<br>② 저장소: timing-agent 하나만 선택<br>③ 권한: Contents · Actions 읽기/쓰기</p>
     <p class="note" style="margin:16px 4px">이 기기에만 저장돼요.</p>
-    <details class="adv"><summary class="press">고급 설정 ›</summary><div class="card stack" style="margin-top:var(--gap-sub)"><div class="field"><label for="repo">엔진 저장소</label><input id="repo" value="${esc(S.repo)}" autocapitalize="off" spellcheck="false"></div></div></details>
+    <details class="adv"><summary class="press">고급 설정 ›</summary><div class="card stack" style="margin-top:var(--gap-sub)"><div class="field"><label for="repo">자료 저장소</label><input id="repo" value="${esc(S.repo)}" autocapitalize="off" spellcheck="false"></div></div></details>
   </div>`;
   const $go = document.getElementById("go"), $t = document.getElementById("tok");
   $t.onkeydown = e => { if (e.key === "Enter") $go.click(); };
@@ -789,23 +782,6 @@ function renderSetup(msg){
   };
 }
 
-const SHORT = {"Space Exploration Technologies": "SpaceX", "Space Exploration Technologies Corp.": "SpaceX"};
-function shortName(name, sym, market){
-  if (!name || market !== "미국") return name;
-  if (SHORT[name]) return SHORT[name];
-  const al = typeof ALIAS !== "undefined" && Object.entries(ALIAS).find(([, v]) => v === sym)?.[0];
-  return al || name.replace(/\s+/g, " ").replace(/,?\s+(Inc\.?|Incorporated|Corporation|Corp\.?|Ltd\.?|Limited|Holdings?|plc|PLC|N\.V\.|Co\.?|Company|& Co\.?)$/i, "").replace(/,?\s+(Inc\.?|Corporation|Holdings?|plc|PLC)$/i, "").trim();
-}
-const LCOL = {tr:"#1B64DA", ok:"#1B8A4A", sp:"#1B8A4A", zone:"#1B8A4A", stop:"#D22F3C", fib:"#7048E8", res:"#8E8E93", buy:"#0A7F72"};   // 선·이름표 색 (흰 글씨 대비 4.5:1 넘게)
-const LCOL_D = {stop:"#FF6B6B", fib:"#B197FC", buy:"#2DD4BF", res:"#AEAEB2"};   // 어두운 화면: 밝은 선 + 검은 글씨
-const lcol = k => (DARK() && LCOL_D[k]) || LCOL[k] || "#8E8E93";
-const DARK = () => { try { return matchMedia("(prefers-color-scheme: dark)").matches; } catch(e){ return false; } };
-const COL = {up:"#F04452", down:"#3182F6", e14:"#30B0C7", e21:"#FF9F0A", e55:"#8E8E93", s50:"#8E8E93", s200:"#AF52DE", bb:"#1B64DA", grid:"#E5E5EA", axis:"#8E8E93"};
-/* 차트 색: 밝은·어두운 화면 (SVG 속성에는 CSS 변수가 안 먹어서 그릴 때 고른다) */
-const CP = () => DARK() ? {grid:"#38383A", ink:"#F5F5F7", inkOn:"#000", halo:"#1C1C1E", zone:"#30D158",
-    chip:{buy:["#0F2E1B","#30D158"], sell:["#3A1416","#FF6961"], info:["#132A4A","#64A8FF"], trim:["#3A2A0E","#FFB340"], none:["#2C2C2E","#A1A1A6"]}}
-  : {grid:"#E5E5EA", ink:"#1D1D1F", inkOn:"#fff", halo:"#fff", zone:"#1B8A4A",
-    chip:{buy:["#E8F7EE","#1B8A4A"], sell:["#FDEBEC","#D22F3C"], info:["#EAF2FE","#1B64DA"], trim:["#FFF1DC","#B26A00"], none:["#EFEFF2","#68686E"]}};
 
 
 /* 왼쪽 가장자리에서 밀면 뒤로: 손가락을 따라 앞 화면이 밀리고 뒤 화면이 드러남.
@@ -873,1207 +849,218 @@ function openSheet(label, inner){
   return { bg, sheet, close };
 }
 
-/* 내 종목에 추가 (검색·발견 공용): 종목.csv에 한 줄 더하고 그 종목만 바로 계산 */
-async function openSearch(o){
-  if (!o || o instanceof Event) o = {};   // 버튼 onclick으로 바로 부르면 이벤트가 들어옴
-  const { bg } = openSheet(o.title || "종목 추가", `<div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="삼성전자, 엔비디아, NVDA, 005930" autocomplete="off" enterkeyhint="search" aria-label="기업 검색"></div>
-    <div class="results" id="res"><div class="list">${[0,1,2,3].map(() => `<div class="row"><div class="main"><div class="sk" style="width:45%;height:16px"></div><div class="sk" style="width:30%;height:12px;margin-top:8px"></div></div></div>`).join("")}</div></div>`);
-  const $q = bg.querySelector("#q"), $r = bg.querySelector("#res");
-  setTimeout(() => $q.focus(), REDUCED ? 0 : 300);
-  let rows = [];
-  try{ rows = await catalog(); }catch(e){ $r.innerHTML = `<div class="err">${esc(e.message)}</div>`; return; }
-  const have = o.have || new Set();
-  const run = () => {
-    if (!rows.length){ $r.innerHTML = `<div class="empty"><b>종목 목록이 아직 없어요</b>잠시 뒤 다시 열어 주세요</div>`; return; }
-    const q = $q.value.trim(); if (!q){ $r.innerHTML = `<div class="empty">이름이나 코드로 찾으세요<br><span class="note">미국 주식도 한글로 찾아요 · 엔비디아, 애플</span></div>`; return; }
-    const qk = q.replace(/\s/g,""), ql = qk.toLowerCase();
-    const aliases = new Set(Object.entries(ALIAS).filter(([k]) => k.startsWith(qk)).map(([,v]) => v));
-    const scored = [];
-    for (const r of rows){
-      const [m, c, n] = r; if (o.only && (o.only === "us") !== (m === "미국")) continue;   /* 보유 추가: 그 탭의 시장만 */ const nl = n.toLowerCase().replace(/\s/g, ""), cl = c.toLowerCase();
-      let sc = 0;
-      if (m === "미국" && aliases.has(c)) sc = ALIAS[qk] === c ? 100 : 80;
-      else if (KALIAS[qk] === c) sc = 100;
-      else if (cl === ql) sc = 90; else if (nl === ql) sc = 85;
-      else if (nl.startsWith(ql)) sc = 70; else if (cl.startsWith(ql)) sc = 60; else if (nl.includes(ql)) sc = 40;
-      if (sc){ if (m !== "미국") sc += 3; scored.push([sc, r]); }
-    }
-    scored.sort((a,b) => b[0]-a[0] || a[1][2].length - b[1][2].length);
-    const top = scored.slice(0, 40).map(v => v[1]);
-    $r.innerHTML = top.length ? `<div class="list">${top.map((r,i) => { const s = symOf(r[0], r[1]); const on = have.has(s);
-      return `<button class="row press" data-i="${i}" ${on?"disabled":""}><div class="main"><div class="name">${esc((r[0] === "미국" && Object.entries(ALIAS).find(([k, v]) => v === r[1] && k.startsWith(qk))?.[0]) || shortName(r[2], r[1], r[0]))}</div><div class="sub">${esc(r[0])} · ${esc(r[1])}</div></div><span class="pill-btn ${on?"":"primary"}" style="padding:6px 14px">${on?"등록됨":"추가"}</span></button>`; }).join("")}</div>` : `<div class="empty"><b>찾는 기업이 없습니다</b>종목코드(005930)나 영문 티커(NVDA)로도 찾아보세요.</div>`;
-    $r.querySelectorAll(".row:not([disabled])").forEach(b => b.onclick = () => add(top[+b.dataset.i], b));
-  };
-  const add = async (r, b) => {
-    const pill = b.querySelector(".pill-btn");
-    b.disabled = true; pill.innerHTML = `<span class="spin"></span>`;
-    try{ await o.add(r[0], r[1], r[2]); have.add(symOf(r[0], r[1])); pill.textContent = "추가됨"; pill.classList.remove("primary"); }
-    catch(e){ toast(e.message); b.disabled = false; pill.textContent = "추가"; }
-  };
-  let tm; $q.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { run(); $r.scrollTop = 0; }, 120); };
-  $q.onfocus = () => { $r.scrollTop = 0; requestAnimationFrame(() => $q.scrollIntoView({block: "nearest"})); };
-  $r.addEventListener("touchmove", () => { if (document.activeElement === $q) $q.blur(); }, {passive: true});   // 결과를 넘기면 키보드를 내린다
-  const vv = window.visualViewport;
-  if (vv){ const fit = () => { bg.style.height = vv.height + "px"; bg.style.top = vv.offsetTop + "px"; bg.style.bottom = "auto"; };
-    vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); fit();
-    const stop = new MutationObserver(() => { if (!bg.isConnected){ vv.removeEventListener("resize", fit); vv.removeEventListener("scroll", fit); stop.disconnect(); } }); stop.observe(document.body, {childList: true}); }
-  run();
+/* ───────── 매크로 (tc/macro.py · 오동엔진 점검표) ─────────
+   자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST) · 상태/브리핑.json (평일 아침, Claude가 BofA·CPI 예상·FedWatch·오동엔진 글을 찾아 씀).
+   오동엔진가 직접 보는 것만: 미국 10년물 · WTI · 근원 CPI · 연준 · 하이일드 스프레드 · 공포탐욕 + 과열 신호 + 한국 최소(환율·외국인). */
+const MAC_FILE = "상태/매크로.json", BRIEF_FILE = "상태/브리핑.json";
+S.mac = null; S.brief = null; S.macL = false; S.macErr = null;
+const ST_TONE = {"우호": "buy", "기회": "info", "경계": "sell", "중립": "none", "확인": "wait", "자료 없음": "none"};
+const RG_TONE = {"상승장": "buy", "조정": "wait", "하락장": "sell", "방향 탐색": "none"};
+const VD_TONE = {"근거 있는 상승": "buy", "바닥 다지기 후보": "info", "믿기 어려운 상승": "sell", "조심": "wait"};
+const tag = (t, tone) => `<span class="mc-tag t-${tone || "none"}">${esc(t)}</span>`;
+const mMD = d => d ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : "";
+const WD = ["일", "월", "화", "수", "목", "금", "토"];
+const mDay = d => d ? `${mMD(d)} (${WD[new Date(String(d).slice(0, 10) + "T12:00:00Z").getUTCDay()]})` : "";
+async function loadMac(){
+  const [m, b] = await Promise.all([readJSON(MAC_FILE, null), readJSON(BRIEF_FILE, null).catch(() => null)]);
+  S.mac = m; S.brief = b; S.macL = true; S.macErr = null;
 }
-
-/* ───────── 동현엔진 (tc/donghyun.py · Katoo 규칙) ─────────
-   🇰🇷 한국 거래대금 상위 300 · 🇺🇸 S&P500에서 오늘 주도 후보(거래대금·신고가·상승률) → 업종별로 묶고 업종 1등 표시.
-   셋업 = 최근 60일 안에 주도 후보였던 종목이 고점 아래에서 흔들림·거래대금 줄며 버팀. 역의 역 = 지수 빠진 날 버틴 종목.
-   자료: 상태/동현엔진.json (평일 16:05) · 상태/동현엔진_미국.json (화~토 07:20). */
-const DHM = {
-  dh:  { file: "상태/동현엔진.json",      pre: "상태/동현예비.json",      run: "동현엔진",      mk: "코스피", flag: "🇰🇷", idx: "코스피", when: "평일 16:05", floor: "500억" },
-  dhu: { file: "상태/동현엔진_미국.json", pre: "상태/동현예비_미국.json", run: "동현엔진-미국", mk: "미국",   flag: "🇺🇸", idx: "S&P500", when: "화~토 07:20", floor: "$35M" },
+/* 브리핑이 덮어쓰는 판정 (예: 근원 CPI 예상치 비교) + BofA 지표 */
+function macItems(){
+  const m = S.mac || {}, b = S.brief || {}, ov = b.override || {};
+  const fix = x => ov[x.key] ? {...x, ...ov[x.key]} : x;
+  const heat = (m.heat || []).map(fix);
+  const bo = b.bofa || {};
+  if (bo.bb != null) heat.unshift({key: "bb", name: "BofA Bull & Bear", value: bo.bb, unit: "", asof: bo.bb_d, status: bo.bb >= 8 ? "경계" : bo.bb <= 2 ? "기회" : "중립",
+    why: `${bo.bb} · ${mMD(bo.bb_d)} 발표` + (bo.bb_note ? ` · ${bo.bb_note}` : ""), rule: "8 이상 매도 신호 (8 아래로 내려오면 해제) · 2 이하 매수 신호 (하트넷, 매주)", src: bo.bb_src});
+  if (bo.fms_cash != null) heat.splice(bo.bb != null ? 1 : 0, 0, {key: "fms", name: "펀드매니저 현금 비중", value: bo.fms_cash, unit: "%", asof: bo.fms_d, status: bo.fms_cash < 4 ? "경계" : bo.fms_cash >= 5 ? "기회" : "중립",
+    why: `${bo.fms_cash}% · ${mMD(bo.fms_d)} BofA 서베이` + (bo.fms_note ? ` · ${bo.fms_note}` : ""), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src});
+  return { core: (m.core || []).map(fix), heat, kr: (m.kr || []).map(fix) };
+}
+/* 작은 선 그래프 (SVG). pts = [[날짜, 값], ...] */
+function spark(pts, o = {}){
+  pts = (pts || []).filter(p => p[1] != null);
+  if (pts.length < 2) return "";
+  const W = o.w || 92, H = o.h || 30, vs = pts.map(p => p[1]).concat(o.refs || []).concat((o.pts2 || []).map(p => p[1]).filter(v => v != null));
+  let lo = Math.min(...vs), hi = Math.max(...vs); if (hi === lo){ hi += 1; lo -= 1; }
+  const X = i => (i / (pts.length - 1)) * W, Y = v => H - 2 - ((v - lo) / (hi - lo)) * (H - 4);
+  const line = (ps, n) => ps.map((p, i) => `${i ? "L" : "M"}${X(i * (pts.length - 1) / (n - 1)).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
+  const p2 = o.pts2 && o.pts2.filter(p => p[1] != null);
+  const refs = (o.refs || []).map(r => `<line x1="0" x2="${W}" y1="${Y(r).toFixed(1)}" y2="${Y(r).toFixed(1)}" stroke="var(--fg3)" stroke-width="1" stroke-dasharray="3 3"/>`).join("");
+  return `<svg class="mc-spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${refs}${p2 && p2.length > 1 ? `<path d="${line(p2, p2.length)}" fill="none" stroke="var(--fg3)" stroke-width="1.4"/>` : ""}<path d="${line(pts, pts.length)}" fill="none" stroke="${o.color || "var(--fg)"}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+const fmtV = x => x.value == null ? "-" : x.key === "fed" && x.lo != null ? `${(+x.lo).toFixed(2)}~${(+x.hi).toFixed(2)}%` : x.unit === "$" ? "$" + (+x.value).toLocaleString("en-US", {maximumFractionDigits: 1})
+  : x.unit === "원" ? (+x.value).toLocaleString("ko-KR") + "원" : x.unit === "억원" ? ((x.value > 0 ? "+" : "") + (+x.value).toLocaleString("ko-KR") + "억")
+  : (+x.value).toLocaleString("ko-KR", {maximumFractionDigits: 2}) + (x.unit && !x.unit.startsWith("%") ? (x.unit === "bp" ? "bp" : "") : x.unit ? "%" : "");
+const TONE_COL = {buy: "var(--buy)", sell: "var(--sell)", info: "var(--info)", wait: "var(--wait)", none: "var(--fg2)"};
+function mcRow(x){
+  const tone = ST_TONE[x.status] || "none";
+  return `<button class="row press mc-row" data-mk="${esc(x.key)}"><div class="main"><div class="mc-n"><span>${esc(x.name)}</span>${tag(x.status || "-", tone)}</div><div class="sub mc-why">${esc(x.why || "")}</div></div>
+    <div class="mc-r"><div class="mc-v">${esc(fmtV(x))}</div>${spark(x.spark, {w: 64, h: 22, color: TONE_COL[tone]})}</div>${CHEV}</button>`;
+}
+function regTile(r, flag){
+  if (!r) return `<div class="card mc-reg"><div class="sub">${flag}</div><b>자료 없음</b></div>`;
+  const tone = RG_TONE[r.state] || "none";
+  return `<div class="card mc-reg"><div class="mc-reg-h"><span class="mc-reg-n">${flag} ${esc(r.name)}</span></div>
+    <div class="mc-reg-s" style="color:${TONE_COL[tone]}">${esc(r.state)}</div>
+    ${spark(r.spark, {w: 140, h: 40, color: TONE_COL[tone], pts2: r.ma_spark})}
+    <div class="sub mc-reg-w"><b style="color:var(--fg)">${(+r.close).toLocaleString("en-US", {maximumFractionDigits: 0})}</b> · 고점 ${pct(r.dd)}<br>200일선 ${r.above ? "위" : "아래"} · 선은 ${r.ma200up ? "오르는 중" : "내리는 중"}</div></div>`;
+}
+function briefCard(){
+  const b = S.brief, m = S.mac;
+  if (!b || !b.lines || !b.lines.length) return `<div class="card"><b>아침 브리핑</b><p class="note" style="margin:6px 0 0">평일 아침 7시 30분쯤 올라와요. 숫자는 아래에서 먼저 보세요.</p></div>`;
+  const old = m && b.date && b.date < m.date.slice(0, 10) && (Date.parse(m.date) - Date.parse(b.date)) > 3 * 864e5;
+  return `<div class="card mc-brief"><div class="mc-reg-h"><b>아침 브리핑</b><span class="sub">${esc(mDay(b.date))}${old ? " · 지난 브리핑" : ""}</span></div>
+    ${b.headline ? `<p class="mc-head">${esc(b.headline)}</p>` : ""}
+    <ul class="mc-ul">${b.lines.map(l => `<li>${esc(l)}</li>`).join("")}</ul>
+    ${(b.notes || []).length ? `<div class="mc-notes"><div class="sub" style="margin-bottom:4px">오동엔진 최근 글</div>${b.notes.slice(0, 3).map(d => `<a class="mc-link" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(mMD(d.d))} · ${esc(d.t)}</a>`).join("")}</div>` : ""}
+    ${(b.sources || []).length ? `<details class="mc-src"><summary class="sub press">출처 ${b.sources.length}개</summary>${b.sources.map(s => `<a class="mc-link" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.t)}</a>`).join("")}</details>` : ""}</div>`;
+}
+function renderMac(){ return renderMac0().catch(e => { console.error(e); toast("화면을 그리지 못했어요 · " + (e.message || e)); }); }
+const macHead = title => `<div class="navbar"><div class="side"></div><span class="mini">${title}</span><div class="side r"><button class="icon-btn press" id="mre" aria-label="다시 계산" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></button></div></div>`;
+function macBind(){
+  const r = document.getElementById("mre");
+  if (r) r.onclick = async () => { if (S.busy) return; S.busy = "계산 시작"; syncBusy(); toast("계산을 시작하는 중", true);
+    try{ const k = await dispatch("매크로"); await waitRun(k, "매크로 계산"); }catch(e){ toast(e.message); } finally{ S.busy = null; syncBusy(); } };
+  $app.querySelectorAll("[data-mk]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "m:" + b.dataset.mk; }));
+  bindNavbar();
+}
+async function ensureMac(head){
+  if (S.macL) return true;
+  $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><div class="sk" style="width:40%;height:34px"></div></div><div class="card"><div class="sk" style="width:60%;height:16px"></div><div class="sk" style="width:80%;height:12px;margin-top:12px"></div></div></div>`;
+  try{ await loadMac(); }catch(e){ S.macErr = e.message; S.macL = true; }
+  return false;
+}
+async function renderMac0(){
+  const head = macHead("오늘");
+  if (!(await ensureMac(head)) && S.tab !== "today") return;
+  if (S.tab !== "today" || S.dhd) return;
+  const m = S.mac;
+  if (!m){ $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">오늘</h1></div>${S.macErr ? `<div class="err">${esc(S.macErr)}</div>` : ""}<div class="empty"><b>아직 계산한 적이 없어요</b>오른쪽 위 ↻ 를 누르면 1분쯤 걸려요.</div></div>`; macBind(); return; }
+  const it = macItems(), v = m.verdict, rg = m.regime || {};
+  const cnt = arr => { const c = {}; arr.forEach(x => c[x.status] = (c[x.status] || 0) + 1); return c; };
+  const cc = cnt(it.core);
+  const summ = [cc["우호"] ? `우호 ${cc["우호"]}` : "", cc["경계"] ? `경계 ${cc["경계"]}` : "", cc["기회"] ? `기회 ${cc["기회"]}` : "", cc["중립"] ? `중립 ${cc["중립"]}` : "", cc["확인"] ? `확인 ${cc["확인"]}` : ""].filter(Boolean).join(" · ");
+  const cal = (m.cal || []).slice(0, 3);
+  $app.innerHTML = `<div class="wrap">${head}
+    <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">${esc(mDay(m.date))} · ${esc((m.at || "").slice(11, 16))} 계산</div></div>
+    <div class="mc-regs">${regTile(rg.spx, "🇺🇸")}${regTile(rg.kospi, "🇰🇷")}</div>
+    ${v ? `<div class="card mc-vd"><div class="mc-reg-h"><b>오동엔진 원칙</b>${tag(v.state, VD_TONE[v.state])}</div><p class="mc-head">${esc(v.line)}</p>
+      <div class="mc-chips">${[["장기금리", v.us10], ["유가", v.wti], ["S&P 500", v.spx]].map(([k, t]) => `<span class="mc-chip">${esc(k)} ${t === "상승" ? "↑" : t === "하락" ? "↓" : "→"} ${esc(t || "-")}</span>`).join("")}</div>
+      <p class="sub" style="margin:10px 0 0">"${esc(v.rule)}"</p></div>` : ""}
+    <div style="margin-top:var(--gap-block)">${briefCard()}</div>
+    <div class="sec-title" role="heading" aria-level="2">핵심 6<span class="sub">${esc(summ)}</span></div>
+    <div class="list">${it.core.map(mcRow).join("")}</div>
+    <div class="sec-title" role="heading" aria-level="2">과열 신호</div>
+    <div class="list">${it.heat.map(mcRow).join("")}</div>
+    ${it.kr.length ? `<div class="sec-title" role="heading" aria-level="2">한국</div><div class="list">${it.kr.map(mcRow).join("")}</div>` : ""}
+    ${cal.length ? `<div class="sec-title" role="heading" aria-level="2">다가오는 일정<button class="text-btn press" id="tocal">전체</button></div><div class="list">${cal.map(calRow).join("")}</div>` : ""}
+    ${(m.errors || []).length ? `<details class="adv"><summary class="press">못 받은 자료 ${m.errors.length}개 ›</summary><p class="note" style="margin:8px 4px">${m.errors.map(esc).join("<br>")}</p></details>` : ""}
+    <p class="note" style="margin:18px 4px">오동엔진가 공개한 기준으로 계산한 결과예요. 투자 판단은 직접 하세요.</p></div>`;
+  const tc = document.getElementById("tocal"); if (tc) tc.onclick = () => { histTo(1, "t"); go("fade", () => { S.tab = "cal"; }); };
+  macBind();
+}
+const CAL_ICON = {fed: "🏛", data: "📊", kr: "🇰🇷", earn: "💼"};
+function calRow(c){
+  const today = (S.mac?.date || "").slice(0, 10), dd = Math.round((Date.parse(c.d) - Date.parse(today)) / 864e5);
+  return `<div class="row"><span class="mc-ci" aria-hidden="true">${CAL_ICON[c.kind] || "📅"}</span><div class="main"><div class="mc-n">${esc(c.name)}</div><div class="sub">${esc(mDay(c.d))}${c.time ? " · " + esc(c.time) : ""}${c.note ? " · " + esc(c.note) : ""}</div></div><span class="sub">${dd === 0 ? "오늘" : dd === 1 ? "내일" : dd > 0 ? dd + "일 뒤" : ""}</span></div>`;
+}
+async function renderCal(){
+  const head = macHead("일정");
+  if (!(await ensureMac(head)) && S.tab !== "cal") return;
+  if (S.tab !== "cal" || S.dhd) return;
+  const cal = (S.mac?.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i).sort((a, b) => a.d < b.d ? -1 : 1);
+  $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">일정</h1><div class="sub">앞으로 3주 · 한국 시간</div></div>
+    ${cal.length ? `<div class="list">${cal.map(calRow).join("")}</div>` : `<div class="empty"><b>앞으로 3주 안에 큰 일정이 없어요</b></div>`}
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">FOMC는 연준 발표 일정, 경제지표는 FRED 발표 일정이에요. 오동엔진는 CPI처럼 큰 발표 전에 쏠린 쪽 포지션을 미리 줄여요.</p></div>`;
+  macBind();
+}
+/* 지표 설명 (오동엔진 원문 기준) */
+const MC_ABOUT = {
+  us10y: "오동엔진가 가장 먼저 보는 숫자예요. 장기금리가 오르면 주식 값(특히 비싼 성장주)이 눌려요. 10년물이 1%이던 2020년과 4%대인 지금의 밸류가 같다면 고밸류 압박을 받는 게 당연하다고 봤어요.",
+  wti: "유가가 오르면 물가가 다시 오르고, 연준이 금리를 못 내려요. 오동엔진는 장기금리와 유가가 같이 내려와야 증시 상승을 믿어요.",
+  core_cpi: "식품·에너지를 뺀 물가예요. 발표 숫자가 시장 예상보다 낮으면 우호, 2개월 연속 예상보다 높으면 경계예요. 예상치는 아침 브리핑이 채워요.",
+  fed: "기준금리와 2년물 금리를 같이 봐요. 2년물이 기준금리보다 많이 낮으면 시장은 인하를 기대하는 거예요. 인상 확률이 오르면 경계예요.",
+  hy: "신용이 나쁜 회사 채권이 국채보다 얼마나 더 이자를 받는지예요. 오동엔진는 '채권·신용시장이 주식보다 먼저 말한다'고 봐요. 400bp에 가까워지면 위험 신호예요.",
+  fg: "CNN 공포탐욕 지수예요. 오동엔진는 공포 구간(25 이하)부터 나눠서 사요. 75 이상 탐욕은 과열이에요.",
+  breadth: "S&P 500 종목 중 200일선 아래에 있는 비율이에요. 하트넷 기준으로 60% 이상이 이평선 아래로 내려가면 매수 쪽 신호예요.",
+  sox: "반도체지수가 200일선보다 얼마나 위에 있는지예요. 오동엔진는 62%까지 벌어졌을 때 닷컴 정점(55%)을 넘었다며 버블 신호로 봤어요.",
+  vix: "시장이 앞으로 얼마나 흔들릴 거라고 보는지예요. 오동엔진는 불확실성이 큰 이벤트 앞에서 헤지 수단으로 써요.",
+  bb: "BofA 하트넷의 Bull & Bear 지표예요. 8 이상이면 매도 신호(주식 줄이고 현금 늘림), 2 이하면 매수 신호예요. 오동엔진가 가장 자주 인용하는 시장 전체 신호예요.",
+  fms: "BofA 펀드매니저 서베이의 현금 비중이에요. 4% 아래면 다들 주식을 가득 샀다는 뜻(과열), 5% 이상이면 매수 신호예요.",
+  krw: "환율이 빠르게 오르면(원화 약세) 외국인이 한국 주식을 팔기 쉬워요.",
+  foreign: "코스피에서 외국인이 산 금액에서 판 금액을 뺀 값이에요. 5일·20일 합이 같은 방향이면 흐름으로 봐요."
 };
-const isDH = t => t === "dh" || t === "dhu";
-const dhTab = () => isDH(S.tab) ? S.tab : "dh";
-S.dhc = {}; S.dhL = {}; S.dhPre = {};
-const DH_TONE = {"돌파 자리": "buy", "2등주 돌파": "", "주도 후보": "soon", "셋업": "soon", "관찰": ""};
-async function loadDH(t){ const [d, tr, pre] = await Promise.all([readJSON(DHM[t].file, null), readJSON("상태/동현기록.json", null).catch(() => null), readJSON(DHM[t].pre, null).catch(() => null)]);
-  S.dhc[t] = d; S.dhTrack = tr; S.dhPre[t] = pre; S.dhL[t] = true; return S.dhc[t]; }
-/* ───────── 동현 실시간 시세 (장중 1분마다, 내 중계 ?s=): 목록·보유·상세의 가격만 지금 값으로. 판정(후보·셋업·정리)은 엔진이 종가로 ─────────
-   표시만: 셋업·주도 후보가 지금 매수 기준선 위면 '장중 기준선 위', 돌파 자리가 기준선 아래면 '기준선 아래', 보유가 손절선 아래면 '지금 손절선 아래' */
-S.dq = {};
-const dayProg = kr => { const tz = kr ? "Asia/Seoul" : "America/New_York", n = new Date(Date.now() + tzOffset(Date.now() / 1000, tz) * 1000), m = n.getUTCHours() * 60 + n.getUTCMinutes();
-  return Math.min(1, Math.max(0.15, (m - (kr ? 540 : 570)) / 390)); };   // 하루 거래대금 추정용 (차트 ▲와 같은 셈)
-const tv20 = (it, t) => { const td = todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul"), b = (it.bars || []).filter(x => x[4] > 0 && x[7] > 0 && String(x[0]) < td).slice(-20), u = t === "dhu" ? 1e6 : 1e8; return b.length >= 10 ? b.reduce((a, x) => a + x[4] * x[7], 0) / b.length / u : null; };
-const liveTv = (q, t) => !q ? null : t === "dhu" ? (q.v > 0 ? q.v * q.p / 1e6 : null) : q.tv > 0 ? q.tv / 1e8 : q.v > 0 ? q.v * q.p / 1e8 : null;   // 억 원 / 백만 달러 (엔진과 같은 단위)
-const dhTvSpan = (it, t, D, pfx, short) => `<span data-ltv="${esc(it.sym)}"${short ? ' data-short="1"' : ""} data-tv20="${tv20(it, t) ?? ""}" data-t="${t}" data-d="${pfx ? "" : esc(D?.date || "")}">거래대금 ${dhMoney(it.tv, t)}</span>`;
-async function dqGet(sym){   // 차트용: 1분 안에 받은 시세가 없으면 이 종목만 받아요
-  const q = S.dq[sym]; if (q && Date.now() - q.at < 60000) return q;
-  try{ const r = await fetch(relayBase() + "?s=" + encodeURIComponent(sym), { cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined });
-    const v = r.ok ? (await r.json())?.[sym] : null; if (v && v.p) S.dq[sym] = { ...v, at: Date.now() }; }catch(e){}
-  return S.dq[sym] || null;
-}
-const dqToday = (sym, t) => { const q = S.dq[sym]; return q && q.p && q.d === todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul") ? q : null; };
-async function dhLive(force){
-  if (document.hidden || !S.token || !relayBase() || !isDH(S.tab)) return;
-  const t = dhTab(), kr = t !== "dhu"; if (!force && !marketOpenNow(kr)) return;
-  const syms = new Set([...dhAll(S.dhc[t]), ...(dhPreOn(t) ? dhAll(S.dhPre[t]) : [])].map(x => x.sym));
-  (S.hold?.items || []).filter(h => (h.mk || "kr") === holdMk(t)).forEach(h => syms.add(h.sym));
-  (kr ? ["^KS11", "^KQ11"] : ["^GSPC"]).forEach(x => syms.add(x));   // 시장 카드의 지금 지수
-  const list = [...syms].filter(x => /^\^?[A-Z0-9.-]{1,15}$/.test(x)).slice(0, 40); if (!list.length) return;
-  try{ const r = await fetch(relayBase() + "?s=" + encodeURIComponent(list.join(",")), { cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined });
-    if (!r.ok) return; const j = await r.json(); for (const [k, v] of Object.entries(j || {})) if (v && v.p) S.dq[k] = { ...v, at: Date.now() }; }catch(e){ return; }
-  dhPaint();
-}
-let dhLiveT = 0;
-const dhLiveSoon = () => { const now = Date.now(); if (now - dhLiveT > 55000){ dhLiveT = now; dhLive(true); } else dhPaint(); };   // 화면을 그릴 때: 1분 안에 받은 게 있으면 그걸로
-setInterval(() => { dhLiveT = Date.now(); dhLive(false); }, 60000);
-function dhPaint(){
-  const live = (q, base, d) => q && q.p && base > 0 && q.d && (!d || q.d > d);   // 엔진 종가 날짜보다 새 시세만
-  const tag = (t, kr, q) => {   // 한국은 시세의 장 상태, 3분 넘게 묵은 값은 그 시각을 보여줌
-    const open = marketOpenNow(kr) && (kr && q && q.st ? q.st === "OPEN" : true) && !(kr && /T15:3\d/.test(q?.t || ""));   // 15:30 동시호가 뒤 값은 종가. 정규장 밖 'OPEN'은 NXT 시간외 (10/22)
-    if (!open) return `${String(q?.d || "").slice(5).replace("-", "/")} 종가`;
-    const ts = Date.parse(q?.t || ""); if (ts && Date.now() - ts > 180000){ const k = new Date(ts + 9 * 3600e3); return `${String(k.getUTCHours()).padStart(2, "0")}:${String(k.getUTCMinutes()).padStart(2, "0")}`; }
-    return "지금"; };
-  document.querySelectorAll("[data-lq]").forEach(el => {
-    const sym = el.dataset.lq, q = S.dq[sym], base = +el.dataset.base, t = el.dataset.t, kr = t !== "dhu", h = el.parentElement.querySelector("[data-lqh]");
-    if (!live(q, base, el.dataset.d)) return;
-    const ch = (q.p / base - 1) * 100;
-    const tg = tag(t, kr, q);   // 목록은 좁아서 '지금'은 빼고, 묵은 값·종가만 표시
-    el.innerHTML = `${tg === "지금" ? "" : `<span class="lq-now">${tg}</span> `}${dhPx(q.p, t)} <span class="${ch > 0 ? "up" : ch < 0 ? "down" : ""}">${pct(ch)}</span>`;
-    const lv = +el.dataset.lv, st = el.dataset.st;
-    if (h) h.textContent = lv > 0 && ["셋업", "주도 후보"].includes(st) && base <= lv && q.p > lv ? "장중 기준선 위" : lv > 0 && st === "돌파 자리" && q.p < lv ? "기준선 아래" : "";
-  });
-  document.querySelectorAll("[data-lh]").forEach(el => {
-    const sym = el.dataset.lh, q = S.dq[sym], avg = +el.dataset.avg, stop = +el.dataset.stop, t = el.dataset.t, kr = t !== "dhu", h = el.parentElement.querySelector("[data-lhh]");
-    if (!q || !q.p || !(avg > 0) || (el.dataset.d && q.d && q.d <= el.dataset.d)) return;
-    const pn = (q.p / avg - 1) * 100;
-    const ac = +el.dataset.w > 0 ? pn * +el.dataset.w / 100 : null;
-    el.innerHTML = `<span class="lq-now">${tag(t, kr, q)}</span> ${dhPx(q.p, t)} · 수익 <span class="${pn > 0 ? "up" : pn < 0 ? "down" : ""}">${pct(pn)}</span>${ac != null ? ` · 계좌 ${pct2(ac)}` : ""}`;
-    if (h) h.textContent = stop > 0 && (q.l ?? q.p) < stop ? (kr ? (q.p < stop ? "지금 손절선 아래 · 종가로 깨면 정리" : "장중 손절선 닿음") : "장중 손절선 이탈 · 정리") : "";
-  });
-  document.querySelectorAll("[data-lqi]").forEach(el => {   // 시장 카드: 지금 지수 · 20일 고점을 장중에 넘었는지 (판정은 종가로)
-    const q = S.dq[el.dataset.lqi], base = +el.dataset.base, t = el.dataset.t, kr = t !== "dhu", hi = +el.dataset.hi;
-    if (!live(q, base, el.dataset.d)) return;
-    const ch = (q.p / base - 1) * 100, f = v => kr ? Math.round(+v).toLocaleString("ko-KR") : Math.round(+v).toLocaleString("en-US");
-    const hint = hi > 0 && el.dataset.st !== "할 때" ? (q.p > hi ? ` · <b>박스 상단 ${f(hi)} 위</b> · 종가로 넘으면 할 때` : ` · 상단까지 ${Math.round((hi / q.p - 1) * 100)}%`) : "";
-    el.innerHTML = `<span class="lq-now">${tag(t, kr, q)}</span> ${esc(el.dataset.nm)} ${f(q.p)} <span class="${ch > 0 ? "up" : ch < 0 ? "down" : ""}">${pct(ch)}</span>${hint}`;
-    el.hidden = false;
-  });
-  document.querySelectorAll("[data-ltv]").forEach(el => {   // 지금까지 거래대금 · 평소(20일 평균) 대비 하루로 늘린 페이스
-    const q = S.dq[el.dataset.ltv], t = el.dataset.t, kr = t !== "dhu", d = el.dataset.d, a = +el.dataset.tv20;
-    if (!q || !q.p || (d && !(q.d > d))) return;
-    const v = liveTv(q, t); if (!(v > 0)) return;
-    const open = marketOpenNow(kr) && (kr && q.st ? q.st === "OPEN" : true) && !(kr && /T15:3\d/.test(q.t || "")), x = a > 0 ? v / (open ? dayProg(kr) : 1) / a : null;
-    const xs = x != null ? `<b class="${x >= 1.1 ? "up" : ""}" style="font-weight:600">평소 ${x >= 10 ? Math.round(x) : x.toFixed(1)}배${open && !el.dataset.short ? " 페이스" : ""}</b>` : "";
-    el.innerHTML = el.dataset.short ? `거래대금 ${dhMoney(v, t)}${xs ? " · " + xs : ""}` : `${open ? "지금 " : ""}거래대금 ${dhMoney(v, t)}${xs ? " · " + xs : ""}`;
-  });
-  document.querySelectorAll("[data-goal]").forEach(el => {
-    const q = S.dq[el.dataset.gsym], g = +el.dataset.goal;
-    if (q && q.p && g > 0 && (!el.dataset.d || q.d > el.dataset.d) && q.p > g){ const big = 10 ** Math.max(Math.floor(Math.log10(q.p)) - 1, 0), nx = Math.floor(q.p / big + 1e-9) * big + big;   // 엔진과 같은 셈: 앞 두 자리 단위의 바로 위 라운드피겨
-      const b = el.previousElementSibling; if (b) b.textContent = dhPx(nx, el.dataset.t); el.textContent = "가야 할 자리"; el.title = "처음 가야 할 자리를 넘어서 다음 라운드피겨"; }
-  });
-  document.querySelectorAll("[data-lqs]").forEach(el => {
-    const sym = el.dataset.lqs, q = S.dq[sym], base = +el.dataset.base, t = el.dataset.t, kr = t !== "dhu";
-    if (!live(q, base, el.dataset.d)) return;
-    const ch = (q.p / base - 1) * 100;
-    el.innerHTML = el.dataset.big ? `<b>${dhPx(q.p, t)}</b> <span class="${ch > 0 ? "up" : ch < 0 ? "down" : ""}">${pct(ch)}</span> <small>${tag(t, kr, q)}</small>` : `${tag(t, kr, q)} ${dhPx(q.p, t)} <span class="${ch > 0 ? "up" : ch < 0 ? "down" : ""}">${pct(ch)}</span> · `;
-  });
-}
-/* 마감 전 예비 (14:30~15:10쯤 두 번 KST, 미국 15:00~15:30쯤 ET): 지금 값으로 돌린 엔진. 장 마감 뒤 결과가 나오기 전까지만 보여요 */
-const dhPreOn = t => { const P = S.dhPre[t], D = S.dhc[t];   // 오늘(그 시장 날짜) 예비만 — 장 마감 뒤 계산이 실패해도 다음 날까지 남지 않게 (리뷰 #3)
-  return !!(P && P.date && P.date === todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul") && (!D || !D.date || P.date > D.date)); };
-function dhPreWait(t){   // 예비 계산 시간인데 아직 안 왔으면 알려줌 (안 오는 건지 고장인지 몰라서 헷갈림)
-  const tz = t === "dhu" ? "America/New_York" : "Asia/Seoul", p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: tz, hour12: false, weekday: "short", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date()).map(x => [x.type, x.value]));
-  const m = (+p.hour % 24) * 60 + +p.minute, [a, b] = t === "dhu" ? [15 * 60, 16 * 60] : [14 * 60 + 25, 15 * 60 + 30];
-  if (["Sat", "Sun"].includes(p.weekday) || m < a || m >= b) return "";
-  return `<div class="card" style="margin:0 0 var(--gap-block)"><b>마감 전 예비 계산을 기다리는 중이에요</b><p class="note" style="margin:4px 0 0">${t === "dhu" ? "미국 15:00~15:30쯤 (한국 새벽 4시대, 겨울엔 5시대) 계산해요" : "14:30~15:10쯤 두 번 계산해요"} (5~10분 걸려요). 휴장일이면 안 나와요.</p></div>`;
-}
-function dhPreCard(t){
-  if (!dhPreOn(t)) return dhPreWait(t);
-  const P = S.dhPre[t], at = String(P.at || "").slice(11, 16), rg = P.regime || {}, rk = P.regime_kq;
-  const brk = (P.sectors || []).flatMap(g => g.items).filter(x => x.state === "돌파 자리");
-  const off = brk.length && brk.every(x => dhOff(x, P));
-  const atd = String(P.at || "").slice(5, 10).replace("-", "/");   // 계산한 때 (한국 시간 날짜·시각 — 미국은 뉴욕 날짜와 하루 다를 수 있어서 계산 시각으로)
-  return `<h2 class="sec-title" style="white-space:nowrap">마감 전 예비 <span class="lt-cnt">${atd} ${at} 한국 시간</span></h2>
-    <section class="card" style="padding-bottom:6px">
-      <p class="n" style="margin:0 0 8px">시장 지금 <b>${esc(rg.state || "-")}</b>${rk ? ` · 코스닥 <b>${esc(rk.state || "-")}</b>` : ""}${rg.warn ? ` · <b style="color:var(--sell,#D22F3C)">${esc(cl(rg.warn.t))}</b>` : ""}</p>
-      ${brk.length ? `<div class="list" style="margin:0 calc(-1 * var(--pad-card))">${brk.map(x => dhRow(x, t, P, "pre:")).join("")}</div>` : `<p class="n" style="margin:0 0 8px;color:var(--fg2)">${marketOpenNow(t !== "dhu") ? "지금" : at + "에"} 돌파 중인 종목이 없었어요.</p>`}
-      <p class="n" style="margin:8px 0;font-size:var(--t-detail);color:var(--fg2)">${marketOpenNow(t !== "dhu") ? `${at} 값이에요. 종가까지 매수 기준 위에서 버티면 돌파예요.${brk.length && off ? " 다만 시장이 쉴 때라 새로 사지 않아요." : ""}` : "장이 끝났어요. 종가로 계산한 결과가 곧 나와요."}</p>
-    </section>`;
-}
-/* 앞으로 기록: 엔진의 '돌파 자리'를 그날 종가에 산 것으로 치고, 판 날까지 같은 기간 지수와 비교 (tc/donghyun_track.py) */
-function dhTrackCard(t){
-  const T = S.dhTrack; if (!T) return "";
-  const mk = t === "dhu" ? "미국" : "한국", sm = T.summary?.[mk + "_할때"] || { n: 0 }, all = T.summary?.[mk + "_전체"] || { n: 0 };   // 엔진이 사라고 하는 '할 때' 매매만 (쉴 때 기록은 참고)
-  const open = (T.open || []).filter(x => x.mk === mk), md = d => String(d || "").slice(5).replace("-", "/");
-  const pc = v => v == null ? "-" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%";
-  return `<h2 class="sec-title">엔진 성적 <span class="lt-cnt">${md(T.start)}부터</span></h2>
-    <section class="card">
-      ${sm.n ? `<div class="lt-mk2"><div><b class="${sm.ret > 0 ? "hot" : sm.ret < 0 ? "cold" : ""}">${pc(sm.ret)}</b><span>매매당 평균 · 할 때 ${sm.n}번</span></div>
-        <div><b>${pc(sm.idx)}</b><span>같은 기간 지수</span></div><div><b class="${sm.excess > 0 ? "hot" : sm.excess < 0 ? "cold" : ""}">${pc(sm.excess)}</b><span>차이 · 지수보다 나음 ${sm.beat}%</span></div></div>`
-        : `<p class="n" style="margin:0">아직 끝난 매매가 없어요.</p>`}
-      ${all.n > sm.n ? `<p class="n" style="margin:12px 0 0">쉴 때 나온 돌파까지 넣으면 ${all.n}번 · 평균 ${pc(all.ret)} (지수 ${pc(all.idx)})</p>` : ""}
-      ${open.length ? `<p class="n" style="margin:12px 0 0">들고 있는 기록 ${open.length}개: ${open.map(x => `${esc(x.name)} ${pc(x.now_ret != null ? x.now_ret * 100 : 0)}`).join(" · ")}</p>` : ""}
-      <p class="n" style="margin:12px 0 0;font-size:var(--t-detail);color:var(--fg2)">시장이 할 때 나온 ‘돌파 자리’를 그날 종가에 사서 손절선·3일 안 기준점 이탈·전량매도 경고에 판 것으로 쳐요. 같은 기간 지수와 비교해요.</p>
-    </section>`;
-}
-function dhAll(d){ return [...(d?.sectors || []).flatMap(g => g.items), ...(d?.setups || []), ...(d?.counter || [])]; }
-/* 거래대금: 한국은 억 단위, 미국은 백만 달러 단위로 들어온다 */
-function dhMoney(v, t){
-  if (v == null) return "-";
-  if (t === "dhu") return v >= 1000 ? "$" + (v / 1000).toFixed(1) + "B" : "$" + Math.round(v).toLocaleString("en-US") + "M";
-  return v >= 10000 ? (v / 10000).toFixed(1) + "조" : Math.round(v).toLocaleString("ko-KR") + "억";
-}
-const bizDays = d => {   // 오늘부터 그날까지 평일 수 (지난 날이면 음수)
-  const t = new Date(todayISO(S.tab === "dhu" ? "America/New_York" : "Asia/Seoul") + "T00:00:00Z"), x = new Date(String(d) + "T00:00:00Z"); let n = 0;
-  const step = x >= t ? 1 : -1;
-  for (let y = new Date(t); step > 0 ? y < x : y > x; ){ y.setUTCDate(y.getUTCDate() + step); if (y.getUTCDay() % 6) n += step; }
-  return n;
-};
-const earnN = e => e && e.d ? bizDays(e.d) : null;
-const earnTag = e => { const n = earnN(e); return !e || !e.d || e.kind === "발표됨" || n == null || n < 0 || n > 14 ? "" : e.kind === "마감" ? ` · 실적 ${String(e.d).slice(5).replace("-", "/")} 전` : ` · ${e.kind === "IR" ? "IR" : "실적"}\u00a0${n ? "D\u2011" + n : "D\u2011day"}`; };
-const earnLine = e => { if (!e || !e.d) return "실적 발표일: 못 찾았어요 · 직접 확인"; const md = String(e.d).slice(5).replace("-", "/"), n = earnN(e);
-  if (e.kind === "마감") return `실적 발표: 늦어도 ${md} (정기보고서 마감) · 날짜는 증권사 앱에서 확인`;
-  if (e.kind === "발표됨" || n < 0) return `실적 발표됨 ${md}${e.src ? ` (${e.src})` : ""}`;
-  return `${e.kind === "IR" ? "IR(실적 설명회일 수 있음)" : "실적 발표"} ${md}${e.kind === "추정" ? " 무렵 (작년 같은 분기로 추정)" : e.kind !== "IR" && e.src ? " (" + e.src + ")" : ""} · ${n ? n + "거래일 남음" : "오늘"}. 발표 전 급등했으면 셀온(발표 전에 미리 파는 매물) 주의`; };
-const dhAbove = it => it.price != null && (it.round_pivot == null || it.price >= it.round_pivot || it.price > it.pivot || /돌파/.test(it.state || ""));   // 이미 넘었으면 '가야 할 자리'
-const dhPx = (v, t, raw) => (t === "dhu" && v != null && isFinite(v) ? "$" : "") + (raw && t !== "dhu" && v != null && isFinite(v) ? Math.round(v).toLocaleString("ko-KR") : num(v, DHM[t].mk));   // raw = 호가 단위로 반올림 안 함 (평균 매수가)
-const pct2 = v => { if (!isNum(v)) return "-"; const r = +v.toFixed(2); return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(2) + "%"; };
-// 그 종목의 시장 판정 (코스닥 종목은 코스닥). 할 때가 아니거나 경고가 있으면 새로 사지 않음
-const dhReg = (it, D) => (D && it && it.kq && D.regime_kq) ? D.regime_kq : (D && D.regime) || null;
-const dhOff = (it, D) => { const r = dhReg(it, D); return !!r && (r.state !== "할 때" || !!r.warn); };
-const dhOffWhy = (it, D) => { const r = dhReg(it, D) || {}; return r.warn ? "시장 전량매도 경고가 나와서" : (it && it.kq && D && D.regime_kq ? "코스닥이 쉴 때라" : "시장이 쉴 때라"); };
-// 오늘 나와 있어야 할 종가 날짜 (한국: 16:30 뒤면 오늘, 미국: 한국 08:00 뒤면 어제 미국장). 주말은 금요일로. 휴장일은 모름
-function dhExpect(t){
-  const k = new Date(Date.now() + 9 * 3600e3), h = k.getUTCHours() * 60 + k.getUTCMinutes();
-  let d = new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate()));
-  d = new Date(d - (t === "dhu" ? (h >= 540 ? 1 : 2) : (h >= 1050 ? 0 : 1)) * 864e5);   // 정식 계산이 보통 한국 16:40~17:10, 미국 07:45~08:30에 끝남
-  while ([0, 6].includes(d.getUTCDay())) d = new Date(d - 864e5);
-  return d.toISOString().slice(0, 10);
-}
-function dhRow(it, t, D0, pfx = ""){
-  const D1 = D0 || S.dhc[t];
-  const l1 = ([it.state === "셋업" ? `고점 ${dhPx(it.pivot, t)} 아래 ${it.base_len != null ? Math.round(it.base_len) + "일" : ""}` : "", it.state !== "셋업" && it.sector_lead ? "업종 1등" : "",
-    it.state === "돌파 자리" && (it.brk_level ?? it.pivot) ? `${dhPx(it.brk_level ?? it.pivot, t)} 돌파` : ""].filter(Boolean).join(" · ") + earnTag(it.earn)).replace(/^ · /, "");   // 상세의 '매수 기준'과 같은 값
-  const cs = dhCheckSummary(it);
-  const subH = (l1 || cs ? esc([l1, cs].filter(Boolean).join(" · ")) + "<br>" : "") + dhTvSpan(it, t, D1, pfx, true);
-  return `<button class="row press lt-srow" data-dh="${esc(pfx + it.sym)}"><div class="main"><div class="lt-n">${esc(it.name)}</div><div class="lt-s">${subH}</div></div>
-    <div class="lt-px"><b class="lt-chip ${it.state === "돌파 자리" && dhOff(it, D1) ? "" : DH_TONE[it.state] || ""}">${esc(it.state === "관찰" ? "역의 역" : it.state)}${it.state === "돌파 자리" && dhOff(it, D1) ? (dhReg(it, D1)?.warn ? " · 경고" : " · 쉴 때") : ""}</b><span data-lq="${esc(it.sym)}" data-base="${pfx && it.price && it.chg != null ? it.price / (1 + it.chg / 100) : it.price ?? ""}" data-d="${pfx ? "" : esc(D1?.date || "")}" data-lv="${it.brk_level ?? it.pivot ?? ""}" data-st="${esc(it.state)}" data-t="${t}">${dhPx(it.price, t)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span></span><span class="lq-hint" data-lqh="${esc(it.sym)}"></span></div>${CHEV}</button>`;
-}
-function renderDH(){ return renderDH0().catch(e => { console.error(e); toast("화면을 그리지 못했어요 · " + (e.message || e)); }); }   // 비동기 오류도 잡는다
-async function renderDH0(){
-  const t = dhTab(), C = DHM[t];
-  const head = `<div class="navbar"><div class="side"></div><span class="mini">동현 ${C.flag}</span><div class="side r"><button class="icon-btn press" id="dhre" aria-label="다시 계산" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button></div></div>
-    <div class="title-block" data-anchor><h1 class="big">동현 ${C.flag}</h1><div class="sub">주도주를 확인하고 산다 · <button class="tlink press" id="dhhow" style="display:inline;padding:0">사용법</button></div></div>`;
-  const bind = () => {
-    const r = document.getElementById("dhre");
-    if (r) r.onclick = async () => { if (S.busy) return; S.busy = "계산 시작"; syncBusy(); toast("계산을 시작하는 중", true); try{ const k = await dispatch(C.run); await waitRun(k, "동현엔진 계산"); S.dhc[t] = null; S.dhL[t] = false; if (S.tab === t && !S.dhd) renderDH(); }catch(e){ S.busy = null; syncBusy(); toast(e.message); } };
-    const h = document.getElementById("dhhow"); if (h) h.onclick = () => { S.guideFrom = { tab: S.tab }; hPush("t"); go("fade", () => { S.tab = "guide"; }); };
-    bindNavbar();
-  };
-  if (!S.dhL[t]){
-    $app.innerHTML = `<div class="wrap">${head}<div class="card"><div class="sk" style="width:40%;height:16px"></div><div class="sk" style="width:70%;height:12px;margin-top:12px"></div></div></div>`; bind();
-    try{ await loadDH(t); }catch(e){ const w = $app.querySelector(".wrap"); if (!w) return;
-      w.querySelector(".card")?.remove();
-      w.insertAdjacentHTML("beforeend", `<div class="err" style="margin-top:var(--gap-block)">${esc(e.message)}</div><div class="stack" style="margin-top:12px">${e.auth ? `<button class="btn primary press" id="dhtok">토큰 다시 넣기</button>` : ""}<button class="btn press" id="dhretry">다시 받기</button></div>`);
-      const rt = document.getElementById("dhretry"); if (rt) rt.onclick = () => { S.dhL[t] = false; render("none"); };
-      const tk = document.getElementById("dhtok"); if (tk) tk.onclick = () => { LS.del("tok"); S.token = ""; render("none"); };
-      return; }
-    if (S.tab === t && !S.dhd) renderDH(); return;
-  }
-  const d = S.dhc[t] && S.dhc[t].date ? S.dhc[t] : null;   // 날짜가 없는 빈 결과는 '아직 계산 전'으로 (빈 목록을 '오늘은 없어요'로 보이지 않게)
-  if (!d){ $app.innerHTML = `<div class="wrap">${head}<div class="card empty"><b>아직 계산 전이에요</b>${C.when}에 계산해요. 지금 계산하려면 오른쪽 위 ↻ 버튼을 누르세요.</div></div>`; bind(); return; }
-  const m = d.market || {}, md = String(d.date || "").slice(5).replace("-", "/");
-  const total = m.tv_total ?? m.tv_jo, thr = m.threshold ?? m.threshold_eok;
-  const nC = (d.sectors || []).reduce((a, g) => a + g.n, 0);
-  const secs = (d.sectors || []).map(g => `<p class="note" style="margin:var(--gap-sub) var(--pad-card) 6px">${esc(g.sector)}${g.together ? ` · ${g.n}종목 같이 오름` : ""}</p><div class="list">${g.items.map(x => dhRow(x, t)).join("")}</div>`).join("");
-  const late = d.date && d.date < dhExpect(t);   // 계산이 밀렸거나 실패해서 옛날 자료
-  $app.innerHTML = `<div class="wrap ${t}">${head}
-    ${late ? `<div class="card" style="color:var(--fg)"><b>${md} 종가 자료예요</b><p class="note" style="margin:4px 0 0">${String(dhExpect(t)).slice(5).replace("-", "/")} 종가 계산을 기다리는 중이에요. 휴장일이면 안 나와요. 오래 안 바뀌면 오른쪽 위 ↻ 버튼을 눌러요.</p></div>` : ""}
-    ${dhPreCard(t)}
-    ${dhRegimeCard(d, t)}
-    ${dhHoldSection(t)}
-    <h2 class="sec-title">${md ? md + " 종가 " : ""}후보 <span class="lt-cnt">${nC}</span></h2>
-    ${nC ? secs : `<div class="card empty" style="margin:0"><b>오늘은 없어요</b>거래대금 기준을 넘으면서 6개월 신고가를 낸 종목이 없어요. 주도주는 하루 몇 개 없는 게 정상이에요.</div>`}
-    ${(d.setups || []).length ? `<h2 class="sec-title">셋업 <span class="lt-cnt">${d.setups.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">최근 주도 후보였고, 고점 아래에서 흔들림·거래대금이 줄며 버티는 종목</p><div class="list">${d.setups.map(x => dhRow(x, t)).join("")}</div>` : ""}
-    ${(d.counter || []).length ? `<h2 class="sec-title">역의 역 <span class="lt-cnt">${d.counter.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">지수가 빠진 날 안 빠지거나 오른 종목</p><div class="list">${d.counter.map(x => dhRow(x, t)).join("")}</div>` : ""}
-    ${md ? `<p class="note lt-foot">${md} 종가 기준${d.at ? ` · ${String(d.at).slice(5, 10).replace("-", "/")} ${String(d.at).slice(11, 16)} 계산 (한국 시간)` : ""}${d.coverage ? ` · ${d.coverage.n}종목${d.coverage.extra ? ` (거래대금 상위 ${d.coverage.extra} 포함)` : ""}` : ""}</p>` : ""}
-    ${dhTrackCard(t)}
-    <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
+function renderMacDetail(key){
+  const it = macItems(), all = [...it.core, ...it.heat, ...it.kr], x = all.find(a => a.key === key);
+  const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>오늘</span></button></div><span class="mini">${esc(x?.name || "")}</span><div class="side r"></div></div>`;
+  if (!x){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>이 지표를 찾지 못했어요</b></div></div>`; document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); }; return; }
+  const tone = ST_TONE[x.status] || "none", pts = (x.spark || []).filter(p => p[1] != null);
+  const refs = {us10y: [5], hy: [400], fg: [25, 75], breadth: [60], sox: [55], vix: [25]}[key] || [];
+  const lo = pts.length ? Math.min(...pts.map(p => p[1])) : null, hi = pts.length ? Math.max(...pts.map(p => p[1])) : null;
+  $app.innerHTML = `<div class="wrap">${back}
+    <div class="title-block" data-anchor><div class="sub">${esc(x.asof ? mDay(x.asof) + " 기준" : "")}</div><h1 class="big">${esc(x.name)}</h1></div>
+    <div class="card"><div class="mc-reg-h"><span class="mc-big">${esc(fmtV(x))}</span>${tag(x.status || "-", tone)}</div>
+      <p class="note" style="margin:6px 0 12px">${esc(x.why || "")}</p>
+      <div class="mc-chart">${spark(pts, {w: 600, h: 180, color: TONE_COL[tone], refs, pts2: x.spark2})}</div>
+      <div class="mc-axis sub"><span>${esc(pts.length ? mDay(pts[0][0]) : "")}</span><span>최저 ${lo != null ? (+lo).toLocaleString("ko-KR", {maximumFractionDigits: 2}) : "-"} · 최고 ${hi != null ? (+hi).toLocaleString("ko-KR", {maximumFractionDigits: 2}) : "-"}</span><span>${esc(pts.length ? mDay(pts[pts.length - 1][0]) : "")}</span></div>
+      ${refs.length ? `<p class="sub" style="margin:6px 0 0">점선 = 기준선 ${refs.join(" · ")}</p>` : ""}${x.spark2 ? `<p class="sub" style="margin:4px 0 0">옅은 선 = 미국 2년물 금리</p>` : ""}</div>
+    <div class="sec-title" role="heading" aria-level="2">오동엔진 기준</div>
+    <div class="card"><p style="margin:0">${esc(x.rule || "")}</p></div>
+    ${MC_ABOUT[key] ? `<div class="sec-title" role="heading" aria-level="2">무엇을 보나요</div><div class="card"><p class="note" style="margin:0;color:var(--fg)">${esc(MC_ABOUT[key])}</p></div>` : ""}
+    ${x.mom ? `<div class="sec-title" role="heading" aria-level="2">지난달 대비 (최근 6개월)</div><div class="list">${x.mom.slice().reverse().map(p => `<div class="row"><div class="main">${esc(p[0].slice(0, 7).replace("-", "년 "))}월</div><b>${p[1] > 0 ? "+" : ""}${p[1]}%</b></div>`).join("")}</div>` : ""}
+    ${x.src ? `<p class="note" style="margin:12px 4px"><a class="mc-link" href="${esc(x.src)}" target="_blank" rel="noopener">출처 보기</a></p>` : ""}
   </div>`;
-  bind();
-  $app.querySelectorAll("[data-dh]").forEach(b => b.onclick = () => go("push", () => { S.dhd = b.dataset.dh; S.dhStop = 0; }));
-  dhLiveSoon();
-  const ha = document.getElementById("hadd"); if (ha) ha.onclick = () => openHoldAdd(t);
-  const hr = document.getElementById("hretry"); if (hr) hr.onclick = () => { S.holdErr = null; render("none"); };
-  if (!S.hold && !S.holdP && !S.holdErr){ S.holdP = loadHold().catch(e => { S.holdErr = e.message; }).finally(() => { S.holdP = null; if (isDH(S.tab) && !S.dhd) render("none"); }); }   // 실패하면 멈추고 '다시 받기' 버튼 (계속 다시 받지 않게)
+  document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
+  bindNavbar();
 }
-/* ───────── 수학엔진 (tc/math_engine.py · 한국 추세추종) ─────────
-   거래대금 폭발 장대양봉으로 발굴 → 10거래일 넘게 조정·흔들림·거래대금이 줄면 → 다음 날 박스 상단에 자동 매수.
-   손절 −10% 또는 박스 저점, 20일선 아래 마감 이틀 절반 · 60일선 아래 마감 이틀 전부. 코스피가 60일선 아래면 쉼(들고 있는 것도 정리). */
-const MATH_FILE = "상태/수학엔진.json";
-const M_TONE = {"자리": "buy", "자리(쉴 때)": "wait", "지켜보기": "soon", "조정 기다림": ""};
-const mWon = v => v == null || !isFinite(v) ? "-" : num(v, "코스피") + "원";
-const mMd = d => String(d || "").slice(5).replace("-", "/");
-async function loadMath(){ S.mth = await readJSON(MATH_FILE, null); S.mthL = true; return S.mth; }
-function mRow(x){
-  const sub = x.state === "자리" || x.state === "자리(쉴 때)" ? `내일 ${mWon(x.level)} 자동 매수 · 손절 ${mWon(x.stop)} (${pct(x.stop_pct)})`
-    : x.state === "조정 기다림" ? `발굴 ${mMd(x.ign.d)} · ${x.days}거래일째 조정`
-    : `발굴 ${mMd(x.ign.d)} · 흔들림 ${x.box?.rng ?? "-"}% · 거래대금 ${x.dry ?? "-"}%`;
-  return `<button class="row press lt-srow" data-m="${esc(x.sym)}"><div class="main"><div class="lt-n">${esc(x.name)}</div><div class="lt-s">${esc(sub)}</div></div>
-    <div class="lt-px"><b class="lt-chip ${M_TONE[x.state] || ""}">${esc(x.state)}</b><span>${mWon(x.price)}${x.chg != null ? ` <span class="${x.chg >= 0 ? "up" : "down"}">${pct(x.chg)}</span>` : ""}</span></div></button>`;
-}
-function mHoldRow(h){
-  const warn = h.b60 ? " · 오늘 60일선 아래 — 내일도 아래 마감이면 전부" : (h.b20 && !h.half) ? " · 오늘 20일선 아래 — 내일도 아래 마감이면 절반" : "";
-  const nx = h.next ? `내일 시가에 팔기 · ${h.next}` : (h.half ? "절반 팔았어요 · 60일선 아래 이틀이면 나머지" : `20일선 ${mWon(h.ma20)} 아래 이틀이면 절반 · 60일선 ${mWon(h.ma60)} 아래 이틀이면 전부`) + warn;
-  return `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(h.name)}</div><div class="lt-s">${esc(mMd(h.d))} ${esc(mWon(h.px))}에 산 것으로 · 손절 ${esc(mWon(h.stop))}<br>${esc(nx)}</div></div>
-    <div class="lt-px"><b class="${(h.ret ?? 0) >= 0 ? "up" : "down"}">${pct(h.ret)}</b><span>코스피 ${pct(h.idx)}</span></div></div>`;
-}
-function renderMath(){ return renderMath0().catch(e => { console.error(e); toast("화면을 그리지 못했어요 · " + (e.message || e)); }); }
-async function renderMath0(){
-  const head = `<div class="navbar"><div class="side"></div><span class="mini">수학</span><div class="side r"><button class="icon-btn press" id="mre" aria-label="다시 계산" data-busy ${S.busy ? "disabled" : ""}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg></button></div></div>
-    <div class="title-block" data-anchor><h1 class="big">수학 🇰🇷</h1><div class="sub">추세추종 · 터진 뒤 쉬었다 다시 갈 때 산다</div></div>`;
-  const bind = () => { const r = document.getElementById("mre");
-    if (r) r.onclick = async () => { if (S.busy) return; S.busy = "계산 시작"; syncBusy(); toast("계산을 시작하는 중", true);
-      try{ const k = await dispatch("수학엔진"); await waitRun(k, "수학엔진 계산"); S.mthL = false; if (S.tab === "math" && !S.dhd) render("none"); }catch(e){ toast(e.message); } finally{ S.busy = null; syncBusy(); } };
-    bindNavbar(); };
-  if (!S.mthL){
-    $app.innerHTML = `<div class="wrap">${head}<div class="card"><div class="sk" style="width:40%;height:16px"></div><div class="sk" style="width:70%;height:12px;margin-top:12px"></div></div></div>`; bind();
-    try{ await loadMath(); }catch(e){ const w = $app.querySelector(".wrap"); if (!w) return; w.querySelector(".card")?.remove();
-      w.insertAdjacentHTML("beforeend", `<div class="err" style="margin-top:var(--gap-block)">${esc(e.message)}</div><div class="stack" style="margin-top:12px"><button class="btn press" id="mretry">다시 받기</button></div>`);
-      document.getElementById("mretry").onclick = () => { S.mthL = false; render("none"); }; return; }
-    if (S.tab === "math" && !S.dhd) renderMath(); return;
-  }
-  const d = S.mth;
-  if (!d || !d.date){ $app.innerHTML = `<div class="wrap">${head}<div class="card empty"><b>아직 계산 전이에요</b>한국 장 마감 뒤(16:05·17:05)에 계산해요. 지금 계산하려면 오른쪽 위 ↻ 버튼을 누르세요.</div></div>`; bind(); return; }
-  const m = d.market || {}, md = mMd(d.date), it = d.items || [];
-  const grp = s => it.filter(x => x.state === s);
-  const zr = grp("자리").concat(grp("자리(쉴 때)")), wt = grp("지켜보기"), cw = grp("조정 기다림");
-  const late = d.date < dhExpect("dh");
-  const tr = d.track || {};
-  $app.innerHTML = `<div class="wrap math">${head}
-    ${late ? `<div class="card" style="color:var(--fg)"><b>${md} 종가 자료예요</b><p class="note" style="margin:4px 0 0">${mMd(dhExpect("dh"))} 종가 계산을 기다리는 중이에요. 휴장일이면 안 나와요.</p></div>` : ""}
-    <div class="card"><div class="lt-n" style="font-weight:600">${m.on ? "할 때" : "쉴 때"} <span class="lt-chip ${m.on ? "buy" : "wait"}" style="margin-left:6px">${m.on ? "새로 사도 돼요" : "새로 안 사요"}</span></div>
-      <p class="note" style="margin:6px 0 0">${esc(m.line || "")}</p></div>
-    ${d.hold?.length ? `<h2 class="sec-title">엔진이 들고 있는 것 <span class="lt-cnt">${d.hold.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">자리를 다음 날 자동 매수했다고 치고 규칙대로 들고 있는 기록이에요</p><div class="list">${d.hold.map(mHoldRow).join("")}</div>` : ""}
-    <h2 class="sec-title">내일 자동 매수 자리 <span class="lt-cnt">${zr.length}</span></h2>
-    ${zr.length ? `<div class="list">${zr.map(mRow).join("")}</div>` : `<div class="card empty" style="margin:0"><b>${m.on ? "오늘은 없어요" : "쉴 때라 없어요"}</b>${m.on ? "발굴한 종목이 10거래일 넘게 쉬면서 흔들림·거래대금이 줄고 20일선 위에 있을 때 나와요." : "코스피가 60일선 위로 올라오면 다시 찾아요."}</div>`}
-    ${wt.length ? `<h2 class="sec-title">지켜보기 <span class="lt-cnt">${wt.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">발굴 뒤 조정 중 · 흔들림(최근 10일 범위)과 거래대금(발굴일 대비)이 더 줄어야 해요</p><div class="list">${wt.map(mRow).join("")}</div>` : ""}
-    ${cw.length ? `<h2 class="sec-title">발굴 · 조정 기다림 <span class="lt-cnt">${cw.length}</span></h2><p class="note" style="margin:0 var(--pad-card) 8px">거래대금이 평소 5배 넘게 터진 장대양봉 · 10거래일 넘게 쉬는지 봐요</p><div class="list">${cw.map(mRow).join("")}</div>` : ""}
-    <p class="note lt-foot">${md} 종가 기준${d.at ? ` · ${mMd(String(d.at).slice(0, 10))} ${String(d.at).slice(11, 16)} 계산` : ""}${d.new ? ` · 오늘 새로 발굴 ${d.new}` : ""}</p>
-    ${tr.n ? `<div class="card"><b>앞으로 기록</b><p class="note" style="margin:4px 0 0">끝난 매매 ${tr.n}번 · 평균 ${pct(tr.ret)} (같은 기간 코스피 ${pct(tr.idx)}) · 이긴 비율 ${tr.win}%</p></div>` : ""}
-    <div class="card"><b>규칙</b><p class="note" style="margin:6px 0 0;line-height:1.6">① 발굴: 그날 시장 전체 거래대금 1~20위 · 평소 5배 넘게 터진 +8% 이상 양봉 · 거래대금 2,000억 이상 · 200일선 우상향<br>② 자리: 발굴 뒤 10거래일 넘게 조정, 최근 10일 범위 15% 안, 거래대금이 발굴일의 40% 아래, 20일선 위 → 다음 날 최근 10일 고가에 자동 매수<br>③ 손절: 매수가 −10%와 박스 저점 중 높은 쪽 (장중 자동)<br>④ 팔기: 20일선 아래 마감 이틀 연속 → 절반, 60일선 아래 마감 이틀 연속 → 전부 (다음 날 시가, 걸쳐 있으면 하루 더 봐요)<br>⑤ 시장: 코스피 60일선 아래면 새로 안 사고 들고 있는 것도 정리<br>⑥ 한 번에 최대 10종목 · 종목당 계좌의 10% (자리가 많으면 거래대금 큰 순)<br>10번 중 7번은 손절이 정상이에요. 이길 때 크게 이기는 구조예요.</p></div>
-    <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
-  </div>`;
-  bind();
-  $app.querySelectorAll("[data-m]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "m:" + b.dataset.m; }));
-}
-function renderMathDetail(sym){
-  if (!S.mthL){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
-    loadMath().then(() => { if (S.dhd === "m:" + sym) render("none"); }).catch(e => toast(e.message)); return; }
-  const x = (S.mth?.items || []).find(y => y.sym === sym);
-  if (!x){ S.dhd = null; return render("none"); }
-  const zr = x.state === "자리" || x.state === "자리(쉴 때)";
-  const ig = x.ign || {};
-  $app.innerHTML = `<div class="wrap">
-    <div class="navbar"><div class="side"><button class="back press" id="back" aria-label="뒤로">${BACK}<span>수학</span></button></div><span class="mini">${esc(x.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(x.name)}</h1><div class="sub">${esc(x.code)} · ${mWon(x.price)}${x.chg != null ? ` <span class="${x.chg >= 0 ? "up" : "down"}">${pct(x.chg)}</span>` : ""}</div></div>
-    <div class="card"><div class="lt-n" style="font-weight:600"><span class="lt-chip ${M_TONE[x.state] || ""}">${esc(x.state)}</span></div>
-      <ul class="note" style="margin:8px 0 0;padding-left:18px;line-height:1.6">${(x.why || []).map(w => `<li>${esc(w)}</li>`).join("")}</ul></div>
-    <div id="chartBox" class="pro"></div>
-    <div class="card"><b>발굴</b><p class="note" style="margin:4px 0 0">${esc(mMd(ig.d))} · ${pct(ig.ret)} 양봉 · 거래대금 ${Math.round(ig.tv || 0).toLocaleString("ko-KR")}억 (평소 ${ig.x}배) · 그날 저가 ${mWon(ig.low)} 아래로 마감하면 빼요 · ${x.days}거래일 지남</p></div>
-    ${x.box ? `<div class="card"><b>최근 10일 박스</b><p class="note" style="margin:4px 0 0">${mWon(x.box.lo)} ~ ${mWon(x.box.hi)} (흔들림 ${x.box.rng}%) · 최근 5일 거래대금 = 발굴일의 ${x.dry}%</p></div>` : ""}
-    <div class="card"><b>팔 선</b><p class="note" style="margin:4px 0 0">20일선 ${mWon(x.ma20)} 아래 마감 이틀 → 절반 · 60일선 ${mWon(x.ma60)} 아래 마감 이틀 → 전부${zr ? ` · 손절 ${mWon(x.stop)}` : ""}</p></div>
-  </div>`;
-  document.getElementById("back").onclick = () => history.back();
-  const lv = [];
-  if (zr) lv.push({ v: x.level, kind: "buy", g: "main", label: "자동 매수", fit: true }, { v: x.stop, kind: "stop", g: "main", label: "손절선", fit: true });
-  lv.push({ v: ig.low, kind: "res", g: "main", label: "발굴일 저가" });
-  const last = (x.bars || []).slice(-1)[0];
-  const bx = x.box && last ? { from: x.box.from, to: last[0], lo: x.box.lo, hi: x.box.hi } : null;
-  if (bx) lv.push({ d0: bx.from, d1: bx.to, lo: bx.lo, hi: bx.hi, kind: "box", g: "box", label: "최근 10일" });
-  const box = $app.querySelector("#chartBox");
-  if (box) S.chart = mountPro(box, { sym: x.sym, mk: x.kq ? "코스닥" : "코스피", levels: lv.filter(v => v.v != null || v.kind === "box"), daily: x.bars || [], box: bx });
-}
-/* ───────── 분봉 (설정의 '분봉 중계 주소' = 내 Cloudflare 중계 relay/worker.js, 야후 1분·5분봉) ─────────
-   엔진은 일봉으로 자리를 고르고, 사는 순간은 분봉으로 확인. 돌파 때 거래량이 실리는지 본다. */
-const relayBase = () => (LS.get("burl", "") || LS.get("qurl", "") || "").trim().replace(/\/+$/, "");   // 분봉 중계 (예전 실시간 시세 주소가 있으면 그걸 씀)
-async function fetchBars(sym, iv){
-  const base = relayBase(); if (!base) throw new Error("설정에서 분봉 중계 주소를 넣어 주세요");
-  let r; try{ r = await fetch(`${base}?bars=${encodeURIComponent(sym)}&i=${iv}`, { cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined }); }
-  catch(e){ throw new Error("분봉을 받지 못했어요 · 인터넷이나 중계 주소를 확인해 주세요"); }
-  if (!r.ok) throw new Error("분봉을 받지 못했어요 · 중계를 최신 코드로 바꿨는지 확인해 주세요");
-  const j = await r.json(); if (!j || !j.rows?.length) throw new Error("분봉 자료가 없어요");
-  return j;
-}
-/* ───────── 거래소 같은 차트: 1분·5분·15분·1시간·일·주, 끌기·확대·십자선, 거래량, 이동평균(5·20·60·120), 엔진 선 ─────────
-   그리기는 TradingView Lightweight Charts 4.2.3 (Apache-2.0, 차트 안 로고 = 출처 표시). 봉은 내 중계(야후), 중계가 없으면 일·주만 엔진 자료로. */
-const LWC_URL = "https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js";
-let lwcP = null;
-const loadLWC = () => lwcP || (lwcP = new Promise((ok, no) => { if (window.LightweightCharts) return ok(window.LightweightCharts);
-  const sc = document.createElement("script"); sc.src = LWC_URL; sc.async = true; sc.onload = () => ok(window.LightweightCharts); sc.onerror = () => { lwcP = null; no(new Error("차트를 불러오지 못했어요")); }; document.head.appendChild(sc); }));
-const PRO_TF = [["1m", "1분"], ["5m", "5분"], ["15m", "15분"], ["60m", "1시간"], ["1d", "일"], ["1wk", "주"]];
-const PRO_SHOW = { "1m": 120, "5m": 80, "15m": 130, "60m": 140, "1d": 130, "1wk": 104 };   // 처음 보일 봉 수
-const MA_DEF = [[5, "#F5A623"], [20, "#E0457B"], [60, "#2BB673"], [120, "#8E5CF6"]];
-const TZF = {}, TZC = {};
-function tzOffset(t, tz){   // 그 시각의 시간대 차이(초). 아이폰 사파리에서도 되게 formatToParts로 (한 시간 단위로 기억)
-  const k = tz + "|" + Math.floor(t / 3600); if (k in TZC) return TZC[k];
-  try{ const f = TZF[tz] || (TZF[tz] = new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-    const s = Math.floor(t), p = {}; f.formatToParts(new Date(s * 1000)).forEach(x => p[x.type] = x.value);
-    return TZC[k] = (Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second) / 1000) - s;
-  }catch(e){ return TZC[k] = tz === "Asia/Seoul" ? 32400 : 0; }
-}
-function weekly(daily){   // 일봉 → 주봉 (월요일 시작)
-  const out = []; let cur = null, key = null;
-  for (const b of daily){ const d = new Date(b[0] + "T00:00:00Z"), mon = new Date(d - ((d.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10);
-    if (key !== mon){ if (cur) out.push(cur); key = mon; cur = [mon, b[1], b[2], b[3], b[4], null, null, b[7] || 0]; }
-    else { cur[2] = Math.max(cur[2], b[2]); cur[3] = Math.min(cur[3], b[3]); cur[4] = b[4]; cur[7] += b[7] || 0; } }
-  if (cur) out.push(cur); return out;
-}
-function mountPro(box, cfg){
-  let levels = cfg.levels || [], plines = [];
-  const { sym, mk, daily = [], box: base, buy } = cfg, kr = isKR(mk), tz = kr ? "Asia/Seoul" : "America/New_York";
-  let tf = LS.get("protf", "1d"); if (!relayBase() && !["1d", "1wk"].includes(tf)) tf = "1d";
-  const ma = Object.assign({ 5: true, 20: true, 60: true, 120: false }, LS.get("proma", {}));
-  box.innerHTML = `<div class="pro-tf" role="tablist" aria-label="차트 간격">${PRO_TF.map(([k, n]) => `<button role="tab" data-k="${k}" aria-selected="${k === tf}">${n}</button>`).join("")}</div>
-    <div class="pro-leg" aria-live="polite"></div>
-    <div class="pro-box"><div class="pro-msg"><div class="sk" style="width:60%;height:12px"></div></div></div>
-    <div class="pro-lv"></div>
-    <div class="pro-ma">${MA_DEF.map(([n, c]) => `<button class="press" data-ma="${n}" aria-pressed="${!!ma[n]}" aria-label="${n}봉 이동평균"><i style="background:${c}"></i>${n}</button>`).join("")}<div class="pro-tools"><button class="press" data-a="now" hidden>최근으로</button><button class="press" data-a="big">크게</button></div></div>
-    <p class="note pro-src"></p>`;
-  const $box = box.querySelector(".pro-box"), $leg = box.querySelector(".pro-leg"), $src = box.querySelector(".pro-src");
-  let chart = null, cs = null, vs = null, maS = {}, bxS = [], rows = [], timer = null, alive = true, gen = 0;
-  const P = v => (kr || v == null || !isFinite(v) ? "" : "$") + num(v, mk);   // 미국은 $ 붙임 (탭의 다른 숫자와 같게)
-  const fmtV = v => v == null ? "-" : kr ? (v >= 1e8 ? (v / 1e8).toFixed(1) + "억" : v >= 1e4 ? Math.round(v / 1e4).toLocaleString("ko-KR") + "만" : Math.round(v).toLocaleString("ko-KR"))
-    : (v >= 1e9 ? (v / 1e9).toFixed(1) + "B" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? (v / 1e3).toFixed(0) + "K" : Math.round(v).toString());   // 미국 거래량은 K·M
-  const intraday = () => !["1d", "1wk"].includes(tf);
-  const nyDay = t => { const u = t - 32400; return new Date((u + tzOffset(u, "America/New_York")) * 1000); };   // 미국 분봉: 날짜는 뉴욕 장 날짜 (한국 시간 자정을 넘어도 한 장은 한 날짜)
-  const label = t => { if (typeof t === "string") return `${+t.slice(5, 7)}/${+t.slice(8, 10)}`;
-    const d = new Date(t * 1000), n = kr ? d : nyDay(t), mo = n.getUTCMonth() + 1, da = n.getUTCDate(), hh = String(d.getUTCHours()).padStart(2, "0"), mm = String(d.getUTCMinutes()).padStart(2, "0");
-    return `${mo}/${da}${kr ? "" : " 장"} ${hh}:${mm}`; };
-  const legend = i => { const r = rows[i]; if (!r){ $leg.innerHTML = ""; return; }
-    const pc = i > 0 ? rows[i - 1].close : r.open, ch = pc ? (r.close / pc - 1) * 100 : 0, cl = ch > 0 ? "up" : ch < 0 ? "down" : "";
-    const mav = MA_DEF.filter(([n]) => ma[n] && i >= n - 1).map(([n, c]) => { let sm = 0; for (let k = i - n + 1; k <= i; k++) sm += rows[k].close; const tc = DARK() ? c : ({ 5: "#B26A00", 20: "#C2185B", 60: "#1A7F4B", 120: "#6B3FD4" }[n] || c); return `<span style="color:${tc}">${n} <b style="color:${tc}">${P(sm / n)}</b></span>`; }).join("");
-    $leg.innerHTML = `<div><span class="t">${label(r.time)}</span><span>종 <b class="${cl}">${P(r.close)}</b> <span class="${cl}">${pct(ch)}</span></span><span>고 <b>${P(r.high)}</b></span><span>저 <b>${P(r.low)}</b></span></div><div><span>시 <b>${P(r.open)}</b></span><span>거래량 <b>${fmtV(r.vol)}</b></span>${mav}</div>`; };
-  const $lv = box.querySelector(".pro-lv");
-  const lvRow = () => {   // 선 목록: 지금 보이는 가격 범위 밖이면 위/아래 표시
-    let lo = Math.min(...rows.map(r => r.low)), hi = Math.max(...rows.map(r => r.high));
-    if (chart && cs){ const h = $box.clientHeight - 30, a = cs.coordinateToPrice(0), b = cs.coordinateToPrice(h); if (a != null && b != null){ hi = Math.max(a, b); lo = Math.min(a, b); } }
-    $lv.innerHTML = levels.filter(v => v.v != null && isFinite(v.v)).map(v => `<span style="color:${lcol(v.kind)}"><i></i>${esc(v.label)} <b>${P(v.v)}</b>${v.v > hi ? "<em>↑ 차트 위</em>" : v.v < lo ? "<em>↓ 차트 아래</em>" : ""}</span>`).join("")
-      + (base ? `<span style="color:#8E8E93"><i></i>베이스 <b>${P(base.lo)} ~ ${P(base.hi)}</b></span>` : ""); };
-  const mon = s => { const x = new Date(s + "T00:00:00Z"); return new Date(x - ((x.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10); };
-  const setBox = () => {   // 베이스: 시작~끝 날짜 사이에 위·아래 점선 (일봉·주봉)
-    const a = base && (tf === "1wk" ? mon(base.from) : base.from), z = base && base.to;
-    const day = r => typeof r.time === "string" ? r.time : new Date(r.time * 1000).toISOString().slice(0, 10);   // 분봉은 그날 날짜로
-    const pts = base ? rows.filter(r => day(r) >= a && day(r) <= z) : [];
-    bxS.forEach((se, k) => se.setData(pts.map(r => ({ time: r.time, value: k ? base.lo : base.hi })))); };
-  const sma = (n) => { const o = []; let sum = 0; rows.forEach((r, i) => { sum += r.close; if (i >= n) sum -= rows[i - n].close; if (i >= n - 1) o.push({ time: r.time, value: sum / n }); }); return o; };
-  const setMA = () => MA_DEF.forEach(([n, c]) => { if (!maS[n]) maS[n] = chart.addLineSeries({ color: c, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
-    maS[n].setData(ma[n] ? sma(n) : []); });
-  async function getRows(want, my){   // want = 요청할 때의 간격. 늦게 온 응답이 지금 화면(간격·안내)을 바꾸지 않게 (리뷰 #1)
-    const day = ["1d", "1wk"].includes(want), stale = () => my !== gen || want !== tf || !alive;
-    const engineRows = () => { const src = want === "1wk" ? weekly(daily) : daily;
-      $src.textContent = `${want === "1wk" ? "주봉" : "일봉"} · 엔진 자료 (최근 ${src.length}개)`;
-      return src.filter(b => b[1] != null).map(b => ({ time: b[0], open: b[1], high: b[2], low: b[3], close: b[4], vol: b[7] })); };
-    if (day && (!relayBase() || cfg.noRelayDaily)) return engineRows();
-    let j;
-    try{ j = await fetchBars(sym, want); }
-    catch(e){ if (stale()) return null;
-      if (day && daily.length){ const r = engineRows(); $src.textContent += " · 지금 시세 연결이 안 돼서 엔진 자료로 보여요"; return r; }   // 일·주: 중계가 안 되면 엔진 일봉으로 (사용 시험: 빈 차트)
-      throw e; }
-    if (stale()) return null;
-    if (j.iv !== want && day){ cfg.noRelayDaily = true; return getRows(want, my); }   // 예전 중계 코드면 일·주는 엔진 자료로
-    const out = toRows(j);
-    if (j.iv !== want){ $src.textContent = `중계가 예전 코드라 ${j.iv}만 와요 · 설정 › 분봉 중계를 새 코드로 바꿔 주세요`; tf = j.iv; return out; }
-    $src.textContent = day ? "야후 자료" : kr ? (j.src === "naver" ? "네이버 자료 (최근 6거래일, 그 전은 야후) · 한국 시간" : "야후 자료 · 15:00 뒤 봉이 빠져요 · 설정 › 분봉 중계를 새 코드로 바꾸면 네이버로 채워요") : `야후 자료 · 한국 시간 (미국 장 ${tzOffset(Date.now() / 1000, "America/New_York") === -14400 ? "22:30~05:00" : "23:30~06:00"})`;
-    if (day){ await patchToday(out, want); if (stale()) return null; }
-    return out;
-  }
-  function toRows(j, zone){   // 봉 시각을 간격에 맞추고 (미국 마지막 봉은 초 단위로 옴), 같은 칸은 합침. 분봉 시각은 한국 시간 (내 시계와 같게)
-    const step = { "1m": 60, "5m": 300, "15m": 900, "60m": 3600 }[j.iv], day = ["1d", "1wk"].includes(j.iv), out = [], z = zone || (day ? j.tz || tz : "Asia/Seoul");
-    const monOf = s => { const x = new Date(s + "T00:00:00Z"); return new Date(x - ((x.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10); };
-    for (const x of j.rows){ if (![1, 2, 3, 4].every(k => x[k] != null && isFinite(x[k]))) continue;
-      if (!day && !x[5] && x[1] === x[4] && x[2] === x[3]) continue;   // 거래 없는 평평한 봉 (미국 장 마감 16:00 봉)
-      const lt = x[0] + tzOffset(x[0], z), ds = new Date(lt * 1000).toISOString().slice(0, 10), time = day ? (j.iv === "1wk" ? monOf(ds) : ds) : Math.floor(lt / step) * step, l = out[out.length - 1];
-      if (l && l.time === time){ l.high = Math.max(l.high, x[2]); l.low = Math.min(l.low, x[3]); l.close = x[4]; l.vol = (l.vol || 0) + (x[5] || 0); continue; }
-      if (l && !day && time < l.time) continue;
-      out.push({ time, open: x[1], high: x[2], low: x[3], close: x[4], vol: x[5] || 0 }); }
-    return out;
-  }
-  async function patchToday(out, want){   // 야후 일봉은 마지막 날이 늦게 붙어요 → 5분봉으로 그날 봉을 채움
-    try{
-      const j = await fetchBars(sym, "5m"), m = toRows(j, j.tz || tz);   // 날짜는 거래소 기준
-      if (!m.length) return;
-      const dk = t => new Date(t * 1000).toISOString().slice(0, 10), last = dk(m[m.length - 1].time), d = m.filter(r => dk(r.time) === last);
-      const b = { time: last, open: d[0].open, high: Math.max(...d.map(r => r.high)), low: Math.min(...d.map(r => r.low)), close: d[d.length - 1].close, vol: d.reduce((a, r) => a + (r.vol || 0), 0) };
-      const L = out[out.length - 1]; if (!L) return;
-      const q = await dqGet(sym); if (q && q.p && q.d === last) Object.assign(b, { open: q.o ?? b.open, high: Math.max(q.h ?? q.p, q.p), low: Math.min(q.l ?? q.p, q.p), close: q.p, vol: q.v ?? b.vol });   // 차트 끝 = 위의 '지금' 가격
-      if (want === "1d"){ if (last === L.time && !kr && q && q.p && q.d === last){ Object.assign(L, b); return; } if (last > L.time) out.push(b); else if (last === L.time && kr && j.src === "naver") Object.assign(L, b); return; }   // 한국 오늘 봉: 야후는 20분 늦어서 네이버 값으로
-      const mon = s => { const x = new Date(s + "T00:00:00Z"); return new Date(x - ((x.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10); };   // 주봉: 같은 주면 늘리고, 새 주면 추가
-      if (mon(last) === mon(L.time)){   // 이미 들어 있어도 같은 값이 돼요
-        L.high = Math.max(L.high, b.high); L.low = Math.min(L.low, b.low); L.close = b.close; }
-      else if (mon(last) > mon(L.time)) out.push({ ...b, time: mon(last) });
-    }catch(e){ /* 5분봉이 없으면 그대로 */ }
-  }
-  function build(L){
-    const dark = DARK(), TP = CP(), up = COL.up, dn = COL.down;
-    $box.innerHTML = "";
-    chart = L.createChart($box, { autoSize: true,
-      layout: { background: { color: "transparent" }, textColor: dark ? "#A1A1A6" : "#6E6E73", fontSize: 12, fontFamily: "Pretendard Variable,-apple-system,sans-serif" },
-      grid: { vertLines: { color: TP.grid }, horzLines: { color: TP.grid } },
-      rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.24 } },
-      timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false, rightOffset: 12, barSpacing: 7, minBarSpacing: 1.5,
-        tickMarkFormatter: (t, type) => { if (typeof t === "string" || typeof t === "object"){ const s = typeof t === "string" ? t : `${t.year}-${String(t.month).padStart(2, "0")}-${String(t.day).padStart(2, "0")}`; return type === 0 ? s.slice(0, 4) : type === 1 ? `${+s.slice(5, 7)}월` : `${+s.slice(5, 7)}/${+s.slice(8, 10)}`; }
-          const d = new Date(t * 1000), hm = `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
-          if (type <= 2 && !kr){ const u = t - 32400, n = new Date((u + tzOffset(u, "America/New_York")) * 1000); return `${n.getUTCMonth() + 1}/${n.getUTCDate()}`; }
-          return type <= 2 ? `${d.getUTCMonth() + 1}/${d.getUTCDate()}` : hm; } },   // 미국: 한국 자정에 날짜 눈금이 장 중간에 생겨서 시각만
-      crosshair: { mode: 0, vertLine: { labelBackgroundColor: dark ? "#3A3A3C" : "#1D1D1F" }, horzLine: { labelBackgroundColor: dark ? "#3A3A3C" : "#1D1D1F" } },
-      localization: { locale: "ko-KR", priceFormatter: v => v < 0 ? "" : P(v), timeFormatter: t => label(t) },
-      handleScale: { axisPressedMouseMove: true, pinch: true, mouseWheel: true }, handleScroll: { horzTouchDrag: true, vertTouchDrag: false, mouseWheel: true, pressedMouseMove: true } });
-    cs = chart.addCandlestickSeries({ upColor: up, downColor: dn, borderVisible: false, wickUpColor: up, wickDownColor: dn, priceLineColor: up, priceLineSource: 0, priceFormat: { type: "custom", formatter: v => v < 0 ? "" : P(v), minMove: kr ? 1 : 0.01 },
-      autoscaleInfoProvider: orig => { const r = orig(); if (!r || !rows.length) return r;   // 가까운 엔진 선은 화면 안에 (일·주봉 15%, 분봉 10% 안)
-        const last = rows[rows.length - 1].close, k = intraday() ? 0.10 : 0.15, near = levels.map(v => v.v).concat(base ? [base.lo, base.hi] : []).filter(v => v != null && isFinite(v) && Math.abs(v / last - 1) <= k);
-        if (!near.length) return r; return { ...r, priceRange: { minValue: Math.min(r.priceRange.minValue, ...near), maxValue: Math.max(r.priceRange.maxValue, ...near) } }; } });
-    vs = chart.addHistogramSeries({ priceScaleId: "vol", priceFormat: { type: "volume" }, lastValueVisible: false, priceLineVisible: false });
-    chart.priceScale("vol").applyOptions({ scaleMargins: { top: 0.8, bottom: 0 }, visible: false });
-    maS = {};
-    bxS = base ? [0, 1].map(() => chart.addLineSeries({ color: "#8E8E93", lineWidth: 1, lineStyle: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false })) : [];
-    drawLines();
-    chart.subscribeCrosshairMove(p => { if (!p || p.time == null || !p.point){ legend(rows.length - 1); return; } const i = rows.findIndex(r => r.time === p.time); legend(i >= 0 ? i : rows.length - 1); });
-  }
-  const $now = box.querySelector('[data-a="now"]');
-  $now.onclick = () => { if (!chart) return; const k = PRO_SHOW[tf] || 120; chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, rows.length - k), to: rows.length + Math.max(4, Math.round(Math.min(k, rows.length) * 0.28)) }); };
-  box.querySelector('[data-a="big"]').onclick = e => { box.classList.toggle("big"); e.currentTarget.textContent = box.classList.contains("big") ? "작게" : "크게"; if (box.classList.contains("big")) box.scrollIntoView({ block: "start", behavior: REDUCED ? "auto" : "smooth" }); };
-  /* 매수 기준 돌파 표시: 직전 봉 종가가 선 아래 → 이번 봉 종가가 선 위 + 거래량이 앞 20봉 평균의 N배 이상이면 ▲.
-     일·주봉은 돌파 규칙의 1.1배 (거래대금 대신 거래량), 분봉은 2배 (배수는 화면 표시용으로 정함) */
-  const $chip = document.createElement("div"); $chip.className = "pro-chip"; $chip.hidden = true;
-  function setBuy(){
-    if (!buy || !cs){ cs && cs.setMarkers([]); return; }
-    const L = buy.v, mult = intraday() ? 2 : 1.1, from = intraday() ? 1 : Math.max(1, rows.length - 60), mk = [];
-    const tv = r => (r.vol || 0) * r.close;   // 거래대금으로 (근거 목록의 '20일 평균의 n배'와 같은 잣대)
-    const lastLive = !intraday() && marketOpenNow(kr) && rows.length && rows[rows.length - 1].time === todayISO(tz);
-    const prog = (() => { const n = new Date(Date.now() + tzOffset(Date.now() / 1000, tz) * 1000), m = n.getUTCHours() * 60 + n.getUTCMinutes(); return Math.min(1, Math.max(0.15, (m - (kr ? 540 : 570)) / 390)); })();
-    const dOf = x => typeof x === "string" ? x : new Date(x * 1000).toISOString().slice(0, 10);
-    for (let i = Math.max(from, 20); i < rows.length && !buy.noBase; i++){
-      const r = rows[i], p = rows[i - 1]; if (!(p.close <= L && r.close > L)) continue;
-      if (buy.from && dOf(r.time) <= buy.from) continue;
-      let av = 0; for (let k = i - 20; k < i; k++) av += tv(rows[k]); av /= 20;
-      const live = lastLive && i === rows.length - 1, x = av > 0 ? tv(r) / (live ? prog : 1) / av : 0;   // 오늘 장중 봉은 지금까지 값을 하루치로 늘려서 비교 (추정)
-      mk.push({ time: r.time, strong: x >= mult, x, live });
-    }
-    // 거래량 실린 돌파 ▲ (최근 4개) + 마지막으로 넘은 봉이 거래량 없이 넘었으면 작은 회색 점 하나 (거래대금 없이 슬쩍 넘으면 안 사요)
-    const fx0 = x => x >= 10 ? Math.round(x) + "배" : x.toFixed(1) + "배", lastX = mk[mk.length - 1];
-    const fx = (x, m) => fx0(x) + (m && m.live ? " 장중 추정" : "");
-    const show = mk.filter(m => m.strong).slice(-4).map(m => ({ time: m.time, position: "belowBar", color: lcol("buy"), shape: "arrowUp", text: fx(m.x, m) }));   // ▲ = 돌파 (글자가 길면 가격 칸에 잘려서 배수만)
-    if (lastX && !lastX.strong) show.push({ time: lastX.time, position: "belowBar", color: DARK() ? "#8E8E93" : "#AEAEB2", shape: "circle", size: 0.6, text: fx(lastX.x, lastX) });
-    cs.setMarkers(show.sort((a, b) => a.time < b.time ? -1 : 1));
-    const last = rows[rows.length - 1].close, gap = (last / L - 1) * 100, g = (gap >= 0 ? "+" : "") + gap.toFixed(1) + "%", need = ((L / last - 1) * 100).toFixed(1);   // 아래면 올라야 할 폭
-    const st = buy.state, NM = buy.noBase ? "직전 고점" : "매수 기준";
-    const [txt, tone] = buy.noBase ? [`직전 고점 ${gap >= 0 ? "위 " + g : "까지 " + need + "%"} · 베이스 없이 오르는 중`, "wait"]
-      : buy.off ? [`${NM} ${gap >= 0 ? "위 " + g : "까지 " + need + "%"} · 시장이 쉴 때라 지켜보기만`, "wait"]
-      : st === "2등주 돌파" ? ["업종 1등이 아니라 안 사요", "wait"]
-      : st === "셋업" && gap > 0 && lastX ? [`매수 기준 위 ${g} · 넘었다면 업종 1등인지 확인해요 (1등이 아니면 안 사요)`, "wait"]
-      : gap > 5 ? (st === "돌파 자리" ? [`매수 기준보다 ${g} 위 · 손절폭이 커져요. 비중을 줄이거나 넘기는 것도 방법`, "wait"] : [`매수 기준 ${g} · 쫓지 마세요`, "sell"])
-      : st === "주도 후보" && gap > 0 ? [`이미 넘었어요 (${g}) · 쉬며 베이스를 만들 때까지 기다려요`, "wait"]
-      : gap > 0 && lastX && !lastX.strong ? [`매수 기준 위 ${g} · 거래대금 없이 넘었어요 (평균의 ${fx(lastX.x, lastX)}) · 버티는지 더 봐요`, "wait"]
-      : gap > 0 && lastX ? [`매수 기준 위 ${g} · 거래대금 실린 돌파 (${fx(lastX.x, lastX)}) · 손절선은 그날 저점`, "buy"]
-      : gap > 0 ? [`매수 기준 위 ${g} · 거래량 실린 돌파면 손절선은 그날 저점`, "buy"]
-      : [`매수 기준까지 ${need}% · 거래량 실어 넘으면 사요`, "wait"];
-    $chip.textContent = txt; $chip.dataset.tone = tone; $chip.hidden = false;
-    if (!$chip.isConnected) $box.before($chip);
-  }
-  let lvRaf = 0; const lvLater = () => { cancelAnimationFrame(lvRaf); lvRaf = requestAnimationFrame(() => requestAnimationFrame(() => { if (chart) lvRow(); })); };
-  function tools(){ $now.hidden = true; chart.timeScale().subscribeVisibleLogicalRangeChange(r => { if (r) $now.hidden = r.to >= rows.length - 2; lvLater(); }); }
-  function prevClose(){   // 지금 가격선 색의 기준 = 전날 종가 (분봉이면 앞 거래일 마지막 봉)
-    if (rows.length < 2) return null; if (!intraday()) return rows[rows.length - 2].close;
-    for (let i = rows.length - 2; i >= 0; i--) if (rows[i + 1].time - rows[i].time > 3 * 3600) return rows[i].close;   // 장 사이 빈 시간 = 앞 거래일 끝 (미국은 한국 시간으로 자정을 넘어서)
-    return rows[0].open;
-  }
-  function fill(keepView, oldLen){
-    let range = keepView ? chart.timeScale().getVisibleLogicalRange() : null;
-    if (range && oldLen && range.to >= oldLen - 2 && rows.length > oldLen){ const d = rows.length - oldLen; range = { from: range.from + d, to: range.to + d }; }   // 최근 봉을 보고 있었으면 새 봉을 따라감 (리뷰 #5)
-    cs.setData(rows.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })));
-    vs.setData(rows.map(r => ({ time: r.time, value: r.vol || 0, color: (r.close >= r.open ? COL.up : COL.down) + "66" })));
-    setMA(); setBox(); legend(rows.length - 1); lvRow(); lvLater(); setBuy();
-    const lst = rows[rows.length - 1], pv = prevClose();
-    cs.applyOptions({ priceLineColor: pv != null && lst.close < pv ? COL.down : COL.up });   // 지금 가격선 색 = 오늘 오르면 빨강, 내리면 파랑
-    if (range) chart.timeScale().setVisibleLogicalRange(range);
-    else { const k = PRO_SHOW[tf] || 120; chart.timeScale().setVisibleLogicalRange({ from: Math.max(0, rows.length - k), to: rows.length + Math.max(4, Math.round(Math.min(k, rows.length) * 0.28)) }); }
-  }
-  async function show(keepView){
-    const my = ++gen;
-    try{
-      const L = await loadLWC(); if (!alive || my !== gen) return;
-      const r = await getRows(tf, my); if (!r || !alive || my !== gen) return;
-      if (r.length < 2){ if (chart){ chart.remove(); chart = null; } $chip.hidden = true; $box.innerHTML = `<div class="pro-msg">봉 자료가 아직 없어요</div>`; return; }
-      const sameTf = keepView && chart, oldLen = rows.length; rows = r;
-      if (!sameTf){ if (chart) chart.remove(); build(L); tools(); }
-      fill(!!sameTf, sameTf ? oldLen : 0);
-    }catch(e){ if (alive && my === gen){ if (chart){ chart.remove(); chart = null; } $chip.hidden = true; $leg.innerHTML = ""; $lv.innerHTML = "";
-      const msg = /분봉|중계/.test(e.message) ? (intraday() ? "분봉을 받지 못했어요 · 인터넷이 느리거나 중계가 잠시 안 돼요" : "봉 자료를 받지 못했어요") : e.message;
-      $box.innerHTML = `<div class="pro-msg"><div>${esc(msg)}${!relayBase() ? "<br>설정 › 분봉 중계 주소를 넣으면 1분~1시간봉도 보여요" : ""}<div style="display:flex;gap:8px;justify-content:center;margin-top:12px"><button class="btn press" data-a="retry" style="min-height:44px;padding:0 18px">다시 받기</button>${intraday() && daily.length ? `<button class="btn press" data-a="day" style="min-height:44px;padding:0 18px">일봉 보기</button>` : ""}</div></div></div>`;
-      const rb = $box.querySelector('[data-a="retry"]'); if (rb) rb.onclick = () => { $box.innerHTML = `<div class="pro-msg"><div class="sk" style="width:60%;height:12px"></div></div>`; show(false); };
-      const db = $box.querySelector('[data-a="day"]'); if (db) db.onclick = () => box.querySelector('.pro-tf [data-k="1d"]')?.click();
-      if (intraday()) LS.set("protf", "1d"); } }   // 실패한 분봉 간격은 다음 종목에 남기지 않음
-  }
-  box.querySelectorAll(".pro-tf [data-k]").forEach(b => b.onclick = () => { if (b.dataset.k === tf && chart) return; tf = b.dataset.k; LS.set("protf", tf);   // 같은 간격도 차트가 없으면(실패) 다시 받기
-    box.querySelectorAll(".pro-tf [data-k]").forEach(x => x.setAttribute("aria-selected", x === b)); if (chart){ chart.remove(); chart = null; } $chip.hidden = true; $box.innerHTML = `<div class="pro-msg"><div class="sk" style="width:60%;height:12px"></div></div>`; show(false); });
-  box.querySelectorAll(".pro-ma [data-ma]").forEach(b => b.onclick = () => { const n = +b.dataset.ma; ma[n] = !ma[n]; LS.set("proma", ma); b.setAttribute("aria-pressed", ma[n]); if (chart) setMA(); });
-  show(false);
-  clearInterval(S.tfTimer);
-  S.tfTimer = setInterval(() => { if (!box.isConnected){ alive = false; clearInterval(S.tfTimer); if (chart) chart.remove(); return; }
-    if (tf !== "1wk" && relayBase() && !cfg.noRelayDaily && !document.hidden && marketOpenNow(kr)) show(true); }, 20000);   // 장중엔 20초마다 (보던 위치는 그대로, 일봉도)
-  function drawLines(){
-    plines.forEach(l => { try{ cs.removePriceLine(l); }catch(e){} });
-    plines = levels.filter(v => v.v != null && isFinite(v.v)).map(v => cs.createPriceLine({ price: v.v, color: lcol(v.kind), lineWidth: v.kind === "stop" || v.kind === "buy" ? 2 : 1, lineStyle: v.kind === "stop" || v.kind === "buy" ? 0 : 2, axisLabelVisible: true, title: v.label,
-      axisLabelTextColor: DARK() && LCOL_D[v.kind] ? "#111114" : "#FFFFFF" }));
-  }
-  return { redraw(){}, setLevels(nv){ levels = nv; if (chart && cs){ drawLines(); lvRow(); lvLater(); } }, destroy(){ alive = false; clearInterval(S.tfTimer); if (chart){ try{ chart.remove(); }catch(e){} chart = null; } } };
-}
-/* 엔진 점검: 그가 사기 전에 직접 보는 것을 엔진이 계산 (tc/donghyun_check.py). 분봉·뉴스는 과거 자료가 없어 성적 검증은 못 한 참고 */
-function dhCheckRows(ck, t){
-  const r = [];
-  if (!ck || !ck.at) return r;
-  if (ck.brk_time) r.push([ck.brk_vol_ok, "분봉 돌파 거래량", `${ck.brk_time}에 매수 기준을 넘은 5분봉 거래량이 앞 20봉 평균의 ${ck.brk_vol_x ?? "-"}배 (2배 이상이면 좋음)`]);
-  r.push([ck.late_ok, "막판 강세", `마지막 30분 ${pct(ck.late_ret)} · 종가가 그날 고가보다 ${pct(ck.close_vs_high).replace("+", "")} (밀리지 않고 고가 2% 안이면 좋음)`]);
-  r.push([ck.wick_ok, "윗꼬리", `그날 움직인 폭의 ${Math.round((ck.wick || 0) * 100)}%가 윗꼬리 (30% 넘으면 위에서 밀린 것)`]);
-  return r;
-}
-function dhCheckSummary(it){   // 목록에 붙일 짧은 요약
-  const r = dhCheckRows(it.check); if (!r.length) return "";
-  return `점검 ${r.filter(x => x[0]).length}/${r.length}`;
-}
-function dhCheckHTML(it, t){
-  const ck = it.check, rows = dhCheckRows(ck, t), N = ck?.news || [];
-  const icon = ok => `<b class="lt-chip ${ok ? "buy" : ""}" style="min-width:2.2em;text-align:center">${ok ? "좋음" : "약함"}</b>`;
-  const md = d => String(d || "").slice(5, 16).replace("-", "/");
-  return `<h2 class="sec-title">엔진 점검 ${rows.length ? `<span class="lt-cnt">${esc(ck.at)} 기준</span>` : ""}</h2>
-    <div class="list">${rows.map(([ok, n, x]) => `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(n)}</div><div class="lt-s">${esc(x)}</div></div><div class="lt-px">${icon(ok)}</div></div>`).join("")}
-      ${N.length ? N.map(x => `<a class="row lt-srow press" href="${esc(x.u)}" target="_blank" rel="noopener"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">${esc(x.t)}</div><div class="lt-s">${esc(x.src)} · ${esc(md(x.d))}</div></div>${CHEV}</a>`).join("")
-        : `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">재료: 왜 오르는지 뉴스·공시로 확인</div></div></div>`}
-      ${!rows.length ? `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">분봉: 돌파 때 거래량이 실렸나 (차트 5분봉에서 ▲)</div></div></div>` : ""}
-      <div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">호가: 한 호가에 큰 주문이 쌓였나 (직접)</div></div></div>
-      <div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;color:var(--fg);font-size:var(--t-body)">${esc(earnLine(it.earn))}</div></div></div></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">분봉·뉴스는 과거 자료가 없어 성적을 검증하지 못한 참고예요. 엔진 판정(돌파 자리 등)은 바꾸지 않아요.</p>`;
-}
-const dhWeight = (sp, P) => `<div><b>${P(sp.price)}</b><span>손절선 ${pct(sp.pct)}</span></div>
-        <div><b>1%</b><span>계좌 손실 한도</span></div>
-        <div><b class="${sp.weight >= 50 ? "hot" : ""}"${sp.weight >= 50 ? "" : ` style="color:var(--buy)"`}>${sp.weight}%</b><span>최대 비중</span></div>`;
-function renderDHDetail(sym){
-  if (String(sym).startsWith("m:")) return renderMathDetail(String(sym).slice(2));
-  const t = dhTab();
-  if (String(sym).startsWith("h:")){
-    if (!S.hold){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
-      loadHold().then(() => { if (S.dhd === sym) render("none"); }).catch(e => { toast(e.message); if (S.dhd === sym){ S.holdErr = e.message; history.back(); } }); return; }   // 기록도 한 칸 빼며 닫기
-    return renderHoldDetail(sym.slice(2));
-  }
-  if (!S.dhL[t]){ $app.innerHTML = `<div class="wrap"><div class="card" style="margin-top:60px"><div class="sk" style="width:40%;height:22px"></div></div></div>`;
-    loadDH(t).then(() => { if (S.dhd === sym) render("none"); }).catch(e => toast(e.message)); return; }
-  const isPre = String(sym).startsWith("pre:"), D = isPre ? S.dhPre[t] : S.dhc[t], it = dhAll(D).find(x => x.sym === (isPre ? sym.slice(4) : sym));
-  if (!it){ S.dhd = null; return render("none"); }   // 탭바도 다시 보이게 (리뷰 #2)
-  const off = dhOff(it, D), P = v => dhPx(v, t), tone = it.state === "돌파 자리" && off ? "wait" : DH_TONE[it.state] || "wait";
-  const bl0 = it.brk_level ?? it.pivot, g0 = it.box && it.box.lo && bl0 > it.box.lo ? 1 - it.box.lo / bl0 : null;
-  const stops = (it.stops || []).length ? it.stops : it.state === "셋업" && g0 ? [{ name: "박스 하단", price: it.box.lo, pct: -Math.round(g0 * 1000) / 10, weight: Math.round(Math.min(100, 1 / g0) * 10) / 10, pre: true }] : [];   // 셋업: 매수 기준에서 산다고 보고 미리 (사기 전에 정하기)
-  S.dhStop = Math.min(S.dhStop || 0, Math.max(0, stops.length - 1));
-  const lowLv = it.brk_level != null && it.pivot != null && it.brk_level < it.pivot && it.price <= it.pivot;   // 직전 고점 바로 아래 라운드피겨를 넘은 돌파
-  const upLv = it.brk_level != null && it.pivot != null && it.brk_level > it.pivot;   // 직전 고점 바로 위(0.5% 안) 라운드피겨가 기준선
-  const line = isPre && it.state === "돌파 자리" ? `지금 매수 기준 ${P(it.brk_level ?? it.pivot)} 위에 있고 거래대금도 이미 평소보다 많아요. 종가까지 이 선 위에서 버티면 돌파예요.`
-    : it.state === "돌파 자리" && upLv ? `직전 고점 ${P(it.pivot)} 바로 위 라운드피겨 ${P(it.brk_level)}를 거래대금 실어 종가로 넘었어요.`
-    : it.state === "돌파 자리" ? (lowLv ? `직전 고점 ${P(it.pivot)} 바로 아래 라운드피겨 ${P(it.brk_level)}를 거래대금 실어 종가로 넘었어요.` : `거래대금 실린 ${P(it.pivot)}(직전 고점) 돌파를 종가로 확인했어요.`)
-    : it.state === "주도 후보" ? (it.price > it.pivot && (it.base_len ?? 0) < 10 ? `베이스 없이 신고가가 이어지는 중이에요. 급하게 오른 자리를 쫓아 사면 손익비가 나빠요. 쉬면서 베이스를 만들면 셋업으로 다시 봐요.` : `거래대금·신고가·상승률 기준을 넘었어요. 거래대금 실린 직전 고점 돌파는 아직이에요.`)
-    : it.state === "2등주 돌파" ? `직전 고점 ${P(it.pivot)} 돌파는 맞지만 업종 1등이 아니에요. 2등주는 안 사요. 1등이 쉴 때를 기다려요.`
-    : it.state === "셋업" ? `고점 ${P(it.pivot)} 아래에서 버티는 중. 거래대금 실어 뚫으면 돌파 자리예요.`
-    : `지수가 빠진 날 버텼어요. 관찰 목록이에요.`;
-  const sp = stops[S.dhStop];
-  const watch = ["관찰", "역의 역"].includes(it.state);   // 관찰 목록은 사는 자리가 아님 (리뷰 #4)
-  const heldNow = (S.hold?.items || []).find(x => x.sym === it.sym), heldRes = heldNow ? holdRes(heldNow.id) : null;   // 들고 있으면 보유 판정을 같이 (같은 종목 다른 말 막기)
-  $app.innerHTML = `<div class="wrap ${t}">
-    <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현 ${DHM[t].flag}</span></button></div><span class="mini">${esc(it.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(it.name)}</h1><div class="lq-big" data-lqs="${esc(it.sym)}" data-big="1" data-base="${it.price ?? ""}" data-d="${esc(D.date || "")}" data-t="${t}"></div><div class="sub">${isPre ? `마감 전 예비 ${esc(String(D.at || "").slice(11, 16))}` : esc(String(D.date || "").slice(5).replace("-", "/")) + " 종가"} ${P(it.price)} <span class="${it.chg > 0 ? "up" : it.chg < 0 ? "down" : ""}">${pct(it.chg)}</span>${it.kq && D.regime_kq ? ` · 코스닥 ${esc(D.regime_kq.state)}` : t === "dh" && D.regime ? ` · 코스피 ${esc(D.regime.state)}` : ""}${it.sector ? " · " + esc(it.sector) : ""}<br>${dhTvSpan(it, t, D, isPre ? "pre:" : "")}</div></div>
-    <section class="card lt-vd">
-      <div class="w ${tone}">${esc(it.state === "관찰" ? "역의 역" : it.state)}${it.sector_lead ? ` <span class="lt-chip buy" style="vertical-align:middle;margin-left:6px">업종 1등</span>` : ""}</div>
-      <p class="l">${off && ["돌파 자리", "셋업", "주도 후보"].includes(it.state) ? `<b>${esc(dhOffWhy(it, D))} 새로 사지 않아요.</b> ` : ""}${esc(line)}</p>
-      <div class="lt-mk2 od-st">
-        ${dhAbove(it) ? `<div><b>${P(it.pivot)}</b><span>직전 고점</span></div><div><b>${P(it.goal ?? it.round_next)}</b><span data-goal="${it.goal ?? it.round_next ?? ""}" data-gsym="${esc(it.sym)}" data-t="${t}" data-d="${esc(D.date || "")}">가야 할 자리</span></div>`
-          : `<div><b>${P(it.brk_level ?? it.pivot)}</b><span>매수 기준</span></div>${it.brk_level != null && it.brk_level !== it.pivot ? `<div><b>${P(it.pivot)}</b><span>직전 고점</span></div>` : it.box && it.box.lo ? `<div><b>${P(it.box.lo)}</b><span>박스 하단</span></div>` : `<div><b>${P(it.round_pivot ?? it.round_next)}</b><span>그다음 라운드피겨</span></div>`}`}
-        <div><b>${it.base_len != null ? Math.round(it.base_len) + "일" : "-"}</b><span>고점 뒤</span></div>
-      </div>
-    </section>
-    ${heldNow ? `<button class="card press hold-link" id="dhheld" style="margin-top:var(--gap-block);display:block;width:100%;text-align:left"><b>내 보유 · ${esc(heldRes ? heldRes.status : "점검 중")}</b><span class="n" style="display:block;color:var(--fg2);font-size:var(--t-detail);margin-top:4px">${esc(heldRes ? (HOLD_LINE[heldRes.status] || "") : "엔진이 점검하는 중이에요")} · 눌러서 내 보유 보기</span></button>` : ""}
-    <div class="card chart pro" id="chartBox" style="margin-top:var(--gap-block)"></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">▲ 거래량 실린 돌파 · 선 이름은 차트 오른쪽 · <button class="tlink press" id="dhhow2" style="display:inline;padding:0">차트 보는 법</button></p>
-    ${stops.length && it.state !== "2등주 돌파" ? `<h2 class="sec-title">비중 계산</h2>
-    <div class="card">
-      <div class="seg" role="tablist" aria-label="손절선" style="margin-bottom:14px">${stops.map((x, i) => `<button role="tab" data-st="${i}" aria-selected="${i === S.dhStop}">${esc(x.name)}</button>`).join("")}</div>
-      ${off ? `<div class="mk-warn" style="margin-bottom:12px"><b>${esc(dhOffWhy(it, D))} 새로 사지 않아요</b>시장이 쉴 때·경고 날엔 사지 않아요. 아래 계산은 참고만 해요.</div>` : ""}
-      ${sp && sp.pre ? `<p class="n" style="margin:0 0 12px;font-size:var(--t-detail);color:var(--fg2)">아직 돌파 전이에요. 매수 기준 ${P(bl0)}에서 산다고 보고 미리 계산했어요. 돌파한 날 저점도 손절선 후보가 돼요 (그날 정해져요).${sp.pct < -10 ? ` 박스가 깊어서 박스 하단까지 ${pct(sp.pct)}예요. 돌파한 날 저점이 더 가까우면 그걸 써요.` : ""}</p>` : ""}
-      <div class="lt-mk2" id="dhW">${dhWeight(sp, P)}</div>
-      <p class="n" style="margin:12px 0 0;font-size:var(--t-detail);color:var(--fg2)">‘최대 비중’은 손절할 때 계좌가 1%만 줄어드는 한도예요 (1% ÷ 손절폭). 첫 진입은 그보다 작게 5~10%로 시작하고, 맞으면 불타기로 키워요.</p>
-      ${!off && it.state === "돌파 자리" ? `<p class="n" style="margin:10px 0 0;font-size:var(--t-detail)"><b>주문</b> ${t === "dhu" ? "미국 장 마감 전(한국 04:30~05:00, 겨울엔 05:30~06:00)에 매수 기준 위면 사요." : "15:20~15:30 동시호가에 매수 기준 " + P(it.brk_level ?? it.pivot) + " 위면 종가로 사요. 그때 기준 아래로 밀렸으면 안 사요."} 산 날 저점이 손절선이에요.</p>` : ""}
-      ${!heldNow && !watch ? `<button class="btn press" id="dhbuy" style="margin-top:14px;width:100%;min-height:48px;background:var(--fill);font-weight:600">샀어요 · 보유에 기록</button>` : ""}
-    </div>` : ""}
-    <h2 class="sec-title">근거</h2>
-    <div class="list">${(it.why || []).map(w => `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(cl(w.t))}</div></div></div>`).join("") || `<div class="row"><div class="main sub">근거 없음</div></div>`}</div>
-    ${dhCheckHTML(it, t)}
-    <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
-  </div>`;
-  document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar();
-  dhLiveSoon();
-  const hb = document.getElementById("dhheld"); if (hb && heldNow) hb.onclick = () => go("push", () => { S.dhd = "h:" + heldNow.id; });
-  const bb = document.getElementById("dhbuy"); if (bb) bb.onclick = () => openLotForm({ t, sym: it.sym, name: it.name, kind: "첫 진입", stop: stops[S.dhStop]?.price, px: it.price });
-  document.getElementById("dhhow2").onclick = () => { S.guideAt = "chart"; S.guideFrom = { tab: S.tab, dhd: S.dhd }; hPush("t"); go("fade", () => { S.dhd = null; S.tab = "guide"; }); };
-  $app.querySelectorAll("[data-st]").forEach(b => b.onclick = () => {   // 손절선 바꾸기: 비중 칸과 차트 손절선만 바꿈 (화면 전체·차트 확대는 그대로)
-    S.dhStop = +b.dataset.st; const x = stops[S.dhStop]; if (!x) return;
-    $app.querySelectorAll("[data-st]").forEach(y => y.setAttribute("aria-selected", y === b));
-    const w = document.getElementById("dhW"); if (w) w.innerHTML = dhWeight(x, P);
-    if (it.state !== "2등주 돌파") S.chart?.setLevels?.(lvNow().filter(v => v.v != null));
-  });
-  const noBase = it.state === "주도 후보" && (it.base_len ?? 0) < 5;   // 엔진 돌파 조건: 고점 뒤 5일 이상 쉰 베이스
-  const lv = [], bl = it.brk_level ?? it.pivot;   // 매수 기준 = 넘어야 할 선 (직전 고점, 바로 아래 3% 안 라운드피겨면 그것)
-  if (bl && !watch && !noBase) lv.push({ v: bl, kind: "buy", g: "main", label: "매수 기준", fit: true });
-  if (it.pivot && (it.pivot !== bl || noBase)) lv.push({ v: it.pivot, kind: "res", g: "main", label: "직전 고점", fit: true });
-  const rf = dhAbove(it) ? (it.goal ?? it.round_next) : (it.round_pivot ?? it.round_next);
-  if (rf && rf !== it.pivot && (rf !== bl || noBase || watch)) lv.push({ v: rf, kind: "fib", g: "main", label: dhAbove(it) ? "가야 할 자리" : "그다음 라운드피겨" });   // 직전 고점과 같으면 선 하나만
-  if (heldNow){ const hc = holdCalc(heldNow), hs = Math.max(0, ...(heldNow.lots || []).map(x => +x.stop || 0));   // 들고 있으면 엔진 손절 후보 대신 내 평균·내 손절선
-    if (hc.avg > 0) lv.push({ v: hc.avg, kind: "res", g: "main", label: "내 평균" });
-    if (hs > 0) lv.push({ v: hs, kind: "stop", g: "main", label: "내 손절선", fit: true }); }
-  const lvNow = () => { if (heldNow) return lv; const sx = stops[S.dhStop]; return lv.filter(v => v.kind !== "stop").concat(sx && it.state !== "2등주 돌파" ? [{ v: sx.price, kind: "stop", g: "main", label: "손절선 · " + sx.name, fit: true }] : []); };
-  if (sp && it.state !== "2등주 돌파" && !heldNow) lv.push({ v: sp.price, kind: "stop", g: "main", label: "손절선 · " + sp.name, fit: true });
-  if (it.box) lv.push({ d0: it.box.from, d1: it.box.to, lo: it.box.lo, hi: it.box.hi, kind: "box", g: "box", label: "베이스" });
-  const box = $app.querySelector("#chartBox");
-  if (box) S.chart = mountPro(box, { sym: it.sym, mk: DHM[t].mk, levels: lv.filter(v => v.v != null), daily: it.bars || [], box: it.box,
-    buy: bl && !watch ? { v: bl, state: it.state, off, offWhy: dhOffWhy(it, D), lead: !!it.sector_lead, noBase, from: it.box?.from || null } : null });
-}
-
-/* ───────── 동현 2단계: 시장 판정 카드 · 내 보유 ─────────
-   보유 입력은 저장소의 동현보유.json (이 저장소는 비공개). 엔진이 매일(또는 저장 직후) 상태/동현보유_판정.json을 만든다. */
-const HOLD_SRC = "동현보유.json", HOLD_RES = "상태/동현보유_판정.json";
-const HOLD_TONE = {"정리": "sell", "불타기분만 정리": "sell", "가야 할 자리 실패": "wait", "판정 대기": "", "매입가 위협": "wait", "실적일 주의": "wait", "불타기 자리": "buy", "수익 보존": "soon", "유지": "", "점검 중": "", "자료 없음": ""};
-const HOLD_LINE = {"정리": "정한 대로 팔아요", "불타기분만 정리": "더 산 만큼만 팔아요", "가야 할 자리 실패": "가야 할 자리에서 못 가고 있어요. 안 가면 팔아요", "판정 대기": "산 날 종가가 나오면 점검해요",
-  "매입가 위협": "평균 매수가 아래예요", "실적일 주의": "실적 발표가 코앞이에요", "불타기 자리": "더 살 자리예요", "수익 보존": "손절선을 매수가 위로 올려요", "유지": "잘 가고 있어요. 그대로 둬요"};
-async function loadHold(){
-  const [src, res] = await Promise.all([(async () => {
-    try{ const j = await gh("/contents/" + enc(HOLD_SRC) + "?ref=main"); return { sha: j.sha, data: JSON.parse(b64dec(j.content) || "{}") }; }
-    catch(e){ if (e.nf) return { sha: null, data: { items: [] } }; throw e; } })(), readJSON(HOLD_RES, null)]);
-  if (!Array.isArray(src.data.items)) src.data.items = [];
-  S.hold = { sha: src.sha, items: src.data.items, sold: src.data.sold || [], res: res };
-  return S.hold;
-}
-async function saveHold(msg, mutate){
-  // 저장 직전에 저장소의 최신 목록을 다시 받아 그 위에 이번 변경만 적용 (다른 기기에서 고친 걸 덮지 않게).
-  // 저장이 성공해야 화면의 목록을 바꾼다 (실패하면 화면은 그대로)
-  let sha = null, items = [], doc = {};
-  try{ const j = await gh("/contents/" + enc(HOLD_SRC) + "?ref=main"); sha = j.sha; doc = JSON.parse(b64dec(j.content) || "{}") || {}; items = Array.isArray(doc.items) ? doc.items : []; }
-  catch(e){ if (!e.nf) throw e; }
-  mutate(items, doc);
-  const body = { message: msg, content: b64enc(JSON.stringify({ ...doc, items }, null, 1) + "\n"), branch: "main" };
-  if (sha) body.sha = sha;
-  const r = await gh("/contents/" + enc(HOLD_SRC), { method: "PUT", body: JSON.stringify(body) });
-  if (!S.hold) S.hold = { sha: null, items: [], res: null };
-  S.hold.sha = r.content.sha; S.hold.items = items; S.hold.sold = doc.sold || []; S.holdErr = null;
-  try{ const t = await dispatch("동현보유"); waitRun(t, "보유 점검 중").then(async () => { try{ S.hold.res = await readJSON(HOLD_RES, null); }catch(e){}
-      if (isDH(S.tab) && (!S.dhd || String(S.dhd).startsWith("h:")) && !document.querySelector(".sheet-bg")) render("none"); });   // 종목 차트를 보던 중이면 다시 그리지 않음
-    return true; }catch(e){ return false; }
-}
-function openSell(h, t, lot){   // 다 팔았어요 / 이 묶음 팔았어요: 판 가격을 받아 '판 기록'에 남기고 목록에서 뺌
-  const lots = lot ? [lot] : (h.lots || []), w = lots.reduce((a, x) => a + (+x.w || 0), 0), inv = lots.reduce((a, x) => a + (+x.w || 0) / (+x.px || 1), 0), avg = inv > 0 ? w / inv : null;
-  const q = dqToday(h.sym, t) || S.dq[h.sym], r = holdRes(h.id), px0 = q?.p ?? r?.price ?? "", step = t === "dhu" ? "0.01" : "1";
-  const { bg, close } = openSheet(`${h.name} ${lot ? "이 묶음 " : ""}판 기록`, `<div class="results"><div id="form" class="form card">
-      <div class="field"><label for="sd">판 날</label><input id="sd" type="date" value="${todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul")}"></div>
-      <div class="field"><label for="sp">판 가격${t === "dhu" ? " ($)" : ""}</label><input id="sp" type="number" inputmode="decimal" step="${step}" value="${px0}"></div></div>
-    <p class="note" id="sres" style="margin:10px 4px"></p>
-    <button class="btn primary press" id="sok">판 기록 남기고 빼기</button>
-    <button class="btn press" id="sno" style="margin-top:10px;background:var(--fill)">잘못 넣은 기록이에요 · 그냥 빼기</button></div>`);
-  const $ = x => bg.querySelector(x), calc = () => { const p = parseFloat($("#sp").value); if (!(p > 0) || !avg){ $("#sres").textContent = ""; return; }
-    const pn = (p / avg - 1) * 100; $("#sres").innerHTML = `평균 ${dhPx(avg, t, true)} → 수익 <b class="${pn > 0 ? "up" : pn < 0 ? "down" : ""}">${pct(pn)}</b> · 계좌 ${pct2(pn * w / 100)} (비중 ${Math.round(w * 10) / 10}%)`; };
-  $("#sp").oninput = calc; calc();
-  const go = async keep => { const p = parseFloat($("#sp").value); if (keep && !(p > 0)){ toast("판 가격을 넣어 주세요"); return; }
-    bg.querySelectorAll("button").forEach(b => b.disabled = true);
-    const key = lot ? lotKey(lot) : null, rec = keep ? { sym: h.sym, name: h.name, mk: h.mk || "kr", d: $("#sd").value, px: p, avg: Math.round(avg * 100) / 100, w, pnl: Math.round((p / avg - 1) * 1000) / 10, buy: lots.map(x => ({ d: x.d, px: x.px, w: x.w, kind: x.kind })) } : null;
-    try{ await saveHold(`앱: 보유 ${h.name} ${lot ? "묶음 " : ""}매도${keep ? " " + p : " (기록 없이)"}`, (items, doc) => {
-        const it = items.find(y => y.id === h.id); if (!it) throw new Error("다른 기기에서 이 기록이 바뀌었어요 · 새로고침해 주세요");
-        if (lot && (it.lots || []).length > 1){ const k = it.lots.findIndex(y => lotKey(y) === key); if (k < 0) throw new Error("다른 기기에서 이 기록이 바뀌었어요 · 새로고침해 주세요"); it.lots.splice(k, 1); }
-        else items.splice(items.indexOf(it), 1);
-        if (rec) doc.sold = [rec, ...(doc.sold || [])].slice(0, 100); });
-      close(); toast(keep ? "판 기록을 남겼어요" : "목록에서 뺐어요");
-      setTimeout(() => { if (!S.hold.items.some(y => y.id === h.id) && S.dhd === "h:" + h.id){ BACK_ANIM = true; history.back(); } else render("none"); }, 320); }   // 시트 기록이 먼저 빠진 뒤에
-    catch(e){ toast(e.message); bg.querySelectorAll("button").forEach(b => b.disabled = false); } };
-  $("#sok").onclick = () => go(true); $("#sno").onclick = () => go(false);
-}
-function soldList(t){   // 판 기록 (최근 5개)
-  const L = (S.hold?.sold || []).filter(x => (x.mk || "kr") === holdMk(t)).slice(0, 5); if (!L.length) return "";
-  return `<h2 class="sec-title" style="margin-top:var(--gap-section)">판 기록</h2><div class="list">${L.map(x => `<div class="row lt-srow"><div class="main"><div class="lt-n">${esc(x.name)}</div><div class="lt-s">${esc(String(x.d).slice(5).replace("-", "/"))} ${dhPx(x.px, t, true)}에 팜 · 평균 ${dhPx(x.avg, t, true)} · 비중 ${x.w}%</div></div>
-    <div class="lt-px"><b class="${x.pnl > 0 ? "up" : x.pnl < 0 ? "down" : ""}">${pct(x.pnl)}</b><span class="lt-s">계좌 ${pct2(x.pnl * x.w / 100)}</span></div></div>`).join("")}</div>`;
-}
-const savedMsg = ok => ok ? "저장했어요 · 점검 중" : "저장했어요 · 점검은 못 시작했어요 (다음 계산 때 반영)";
-const lotSig = ls => JSON.stringify((ls || []).map(x => [x.d, +x.px, +x.w, x.stop == null ? null : +x.stop, x.kind]).sort());
-const holdFresh = (h, r) => !!r && lotSig(r.lots) === lotSig(h.lots);
-const holdRes = id => (S.hold?.res?.items || []).find(x => x.id === id);
-const holdMk = t => t === "dhu" ? "us" : "kr";
-function holdCalc(h){   // 판정 전(방금 추가)에도 숫자는 보이게. 평균 매수가 = 넣은 돈 ÷ 주식 수 = Σw ÷ Σ(w/가격) (엔진과 같은 식)
-  const lots = h.lots || [], w = lots.reduce((a, x) => a + (+x.w || 0), 0);
-  const sh = lots.reduce((a, x) => a + (+x.w || 0) / (+x.px || Infinity), 0);
-  const avg = w && sh ? w / sh : (lots[0]?.px ?? null);
-  return { w, avg };
-}
-const lotKey = x => JSON.stringify([String(x.d), +x.px, +x.w, x.kind || ""]);   // 묶음 찾기 (순서가 바뀌어도 같은 묶음)
-const isNum = v => typeof v === "number" && isFinite(v);
-function dhRegimeCard(d, t){
-  const g = d.regime, C = DHM[t], m = d.market || {};
-  const total = m.tv_total ?? m.tv_jo, thr = m.threshold ?? m.threshold_eok;
-  const stats = `<div class="lt-mk2" style="margin-top:16px">
-      <div><b>${total != null ? (t === "dhu" ? "$" + Math.round(total) + "B" : total + "조") : "-"}</b><span>시장 거래대금</span></div>
-      <div><b>${dhMoney(thr, t)}</b><span>주도주 기준</span></div>
-      <div><b class="${m.index_chg > 0 ? "hot" : m.index_chg < 0 ? "cold" : ""}">${m.index_chg != null ? pct(m.index_chg) : "-"}</b><span>${esc(String(g.date || "").slice(5).replace("-", "/"))} ${C.idx}</span></div>
-    </div>`;
-  if (!g) return `<section class="card lt-vd">${stats}<p class="n">기준 = 시장 거래대금의 0.3% (최소 ${C.floor}). 시장 판정은 다음 계산부터 보여요.</p></section>`;
-  const on = g.state === "할 때";
-  const H = g.hist || [], vals = H.map(x => x[1]).filter(v => v != null);
-  let spark = "";
-  if (vals.length > 5){
-    const lo = Math.min(...vals, g.box_hi ?? Infinity), hi = Math.max(...vals, g.box_hi ?? -Infinity), W = 300, Ht = 56;
-    const X = i => (i / (H.length - 1)) * W, Y = v => Ht - 4 - ((v - lo) / ((hi - lo) || 1)) * (Ht - 8);
-    let segs = "";
-    for (let i = 1; i < H.length; i++) if (H[i][1] != null && H[i - 1][1] != null)
-      segs += `<line x1="${X(i - 1).toFixed(1)}" y1="${Y(H[i - 1][1]).toFixed(1)}" x2="${X(i).toFixed(1)}" y2="${Y(H[i][1]).toFixed(1)}" class="${H[i][2] ? "on" : "off"}"/>`;
-    const bh = g.box_hi != null ? `<line x1="0" x2="${W}" y1="${Y(g.box_hi).toFixed(1)}" y2="${Y(g.box_hi).toFixed(1)}" class="bh"/>` : "";
-    spark = `<svg class="mk-spark" viewBox="0 0 ${W} ${Ht}" preserveAspectRatio="none" aria-hidden="true">${bh}${segs}</svg>
-      <div class="mk-leg"><span><i class="on"></i>할 때</span><span><i class="off"></i>쉴 때</span>${g.box_hi != null ? `<span><i class="bh"></i>20일 고점 ${t === "dhu" ? num(g.box_hi, "미국") : Math.round(g.box_hi).toLocaleString("ko-KR")}</span>` : ""}<span class="r">6개월 ${C.idx}</span></div>`;
-  }
-  return `<section class="card lt-vd mk-card">
-    <div class="mk-top"><span class="w ${on ? "buy" : "wait"}">${g.state}</span></div>
-    <p class="l">${esc(g.line || "")}</p>
-    ${[[t === "dhu" ? "^GSPC" : "^KS11", g, C.idx], ...(t === "dh" && d.regime_kq ? [["^KQ11", d.regime_kq, "코스닥"]] : [])].map(([sy, r, nm]) => r.close > 0 ? `<p class="mk-live" data-lqi="${sy}" data-base="${r.close}" data-d="${esc(r.date || "")}" data-t="${t}" data-nm="${esc(nm)}" data-hi="${r.box_hi ?? ""}" data-st="${esc(r.state || "")}" hidden></p>` : "").join("")}
-    ${g.warn ? `<div class="mk-warn"><b>전량매도 경고 · ${esc(String(g.date || "").slice(5).replace("-", "/"))}</b>${esc(cl(g.warn.t))}</div>` : ""}
-    ${(g.notes || []).map(n => `<p class="mk-note">${esc(cl(n.t))}</p>`).join("")}
-    ${t === "dh" && d.regime_kq ? `<p class="mk-note">코스닥 <b>${esc(d.regime_kq.state)}</b>${d.regime_kq.warn ? ` · ${d.regime_kq.warn.kind === "crash" ? "급락" : "첫 하락"} 경고` : ""} · 코스닥 종목은 이걸로 봐요</p>` : ""}
-    ${(d.macro || []).length ? `<div class="mk-macro"><span class="h">미국 시황 (엔진 계산 때)</span>${d.macro.map(m => `<span>${esc(m.name)} <b class="${m.chg > 0 ? "up" : m.chg < 0 ? "down" : ""}">${m.sym === "^TNX" ? (+m.p).toFixed(2) + "%" : pct(m.chg)}</b></span>`).join("")}</div>` : ""}
-    ${spark}
-    ${stats}
-  </section>`;
-}
-function dhHoldSection(t){
-  const H = S.hold;
-  if (!H && S.holdErr) return `<h2 class="sec-title">내 보유</h2><div class="card empty" style="margin:0"><b>보유 목록을 받지 못했어요</b>${esc(S.holdErr)}<button class="pill-btn primary press" id="hretry" style="margin-top:12px">다시 받기</button></div>`;
-  if (!H) return `<h2 class="sec-title">내 보유</h2><div class="card"><div class="sk" style="width:50%;height:14px"></div></div>`;
-  const mine = H.items.filter(h => (h.mk || "kr") === holdMk(t));
-  const add = `<button class="pill-btn primary press" id="hadd">+ 추가</button>`;
-  if (!mine.length) return `<div class="sec-row"><h2 class="sec-title">내 보유</h2>${add}</div>
-    <div class="card empty" style="margin:0"><b>들고 있는 종목이 없어요</b>산 종목을 넣으면 손절·불타기·정리할 때를 매일 판정해서 보여 드려요.</div>${soldList(t)}`;
-  return `<div class="sec-row"><h2 class="sec-title">내 보유 <span class="lt-cnt">${mine.length}</span></h2>${add}</div>
-    <div class="list">${mine.map(h => {
-      const r = holdRes(h.id), fresh = holdFresh(h, r);
-      const st = fresh ? r.status : r ? "점검 중" : "판정 전", { w, avg } = holdCalc(h);
-      const sub = `평균 ${dhPx(avg, t, true)} · 비중 ${Math.round(w * 10) / 10}%${fresh && isNum(r.acct) ? ` · 계좌 ${pct2(r.acct)}` : ""}${h.acct ? " · " + esc(h.acct) : ""}${fresh ? earnTag(r.earn) : ""}`;
-      return `<button class="row press lt-srow" data-dh="h:${esc(h.id)}"><div class="main"><div class="lt-n">${esc(h.name)}</div><div class="lt-s">${sub}</div><div class="lt-s lq-line" data-lh="${esc(h.sym)}" data-avg="${avg}" data-w="${w}" data-stop="${Math.max(...(h.lots || []).map(x => +x.stop || 0))}" data-d="${esc(fresh ? r.date || "" : "")}" data-t="${t}">${fresh && isNum(r.price) ? dhPx(r.price, t) + ` <span class="${r.pnl > 0 ? "up" : r.pnl < 0 ? "down" : ""}">수익 ${pct(r.pnl)}</span>` : ""}</div><div class="lq-hint" data-lhh="${esc(h.sym)}"></div></div>
-        <div class="lt-px"><b class="lt-chip ${HOLD_TONE[st] || ""}">${esc(st)}${fresh && r.date && r.date < dhExpect(t) ? ` <span style="font-weight:500">${esc(String(r.date).slice(5).replace("-", "/"))}</span>` : ""}</b></div>${CHEV}</button>`; }).join("")}</div>${soldList(t)}`;
-}
-function renderHoldDetail(id){
-  const t = dhTab(), h = S.hold?.items.find(x => x.id === id);
-  if (!h){ S.dhd = null; return render("none"); }
-  const r0 = holdRes(id), r = holdFresh(h, r0) ? r0 : null;
-  const P = v => dhPx(v, t), st = r ? r.status : r0 ? "점검 중" : "판정 전", { w, avg } = holdCalc(h);
-  const lots = (r?.lots || h.lots || []).map(x => ({ ...x, k: lotKey(x) }));
-  const nb = r && isNum(r.price);   // 숫자가 있는 판정 ('자료 없음'이면 숫자 없음)
-  $app.innerHTML = `<div class="wrap ${t}">
-    <div class="navbar"><div class="side"><button class="icon-btn press" id="back" aria-label="뒤로">${BACK}<span>동현 ${DHM[t].flag}</span></button></div><span class="mini">${esc(h.name)}</span><div class="side r"></div></div>
-    <div class="title-block hero" data-anchor><h1 class="big">${esc(h.name)}</h1>${nb ? `<div class="lq-big" data-lqs="${esc(h.sym)}" data-big="1" data-base="${r.price}" data-d="${esc(r.date || "")}" data-t="${t}"></div>` : ""}<div class="sub">${nb ? `${esc(String(r.date || "").slice(5).replace("-", "/"))} 종가 ${P(r.price)} <span class="${r.chg > 0 ? "up" : r.chg < 0 ? "down" : ""}">${pct(r.chg)}</span> · ` : ""}내 보유${h.acct ? " · " + esc(h.acct) : ""}${r ? earnTag(r.earn) : ""}</div></div>
-    <section class="card lt-vd">
-      <div class="w ${HOLD_TONE[st] === "sell" ? "sell" : HOLD_TONE[st] === "buy" ? "buy" : HOLD_TONE[st] === "soon" ? "soon" : HOLD_TONE[st] === "wait" ? "amber" : "hold"}">${esc(st)}</div>
-      <p class="l">${esc(r ? (st === "정리" && (r.why || []).some(w => /J15|J28|J53|J64/.test(w.src || "")) ? "시장 전량매도 경고예요. 이런 날은 다 팔아요" : HOLD_LINE[st] || "") : r0 ? "방금 바뀌었어요. 엔진이 점검하는 중이에요 (1~2분)." : "아직 판정 전이에요. 장 마감 뒤 계산 때 점검해요 (기록을 저장하면 바로 점검해요).")}</p>
-      ${r && r.why?.length ? `<ul>${r.why.map(x => `<li>${esc(cl(x.t))}</li>`).join("")}</ul>` : ""}
-      <div class="lt-mk2 od-st" style="margin-top:14px">
-        <div><b>${dhPx(avg, t, true)}</b><span>평균 매수가</span></div>
-        <div><b class="${nb && r.pnl > 0 ? "hot" : nb && r.pnl < 0 ? "cold" : ""}">${nb ? pct(r.pnl) : "-"}</b><span>${nb ? esc(String(r.date || "").slice(5).replace("-", "/")) + " 종가 " : ""}수익률</span></div>
-        <div><b>${nb ? pct2(r.acct) : "-"}</b><span>종가 계좌 영향 · 비중 ${Math.round(w * 10) / 10}%</span></div>
-      </div>
-      ${nb ? `<p class="n" style="margin:10px 0 0" data-lh="${esc(h.sym)}" data-avg="${avg}" data-w="${w}" data-stop="${Math.max(...(h.lots || []).map(x => +x.stop || 0))}" data-d="${esc(r.date || "")}" data-t="${t}"></p><p class="lq-hint" data-lhh="${esc(h.sym)}"></p>` : ""}
-    </section>
-    ${relayBase() || nb ? `<div class="card chart pro" id="chartBox" style="margin-top:var(--gap-block)"></div>
-    <p class="note" style="margin:8px var(--pad-card) 0">회색 점선 평균 매수가 · 보라 점선 가야 할 자리 · 빨간 실선 손절선 · 빨강·파랑 점선 지금 가격</p>` : ""}
-    <div class="sec-row"><h2 class="sec-title">산 기록</h2><button class="pill-btn primary press" id="hmore">+ 불타기</button></div>
-    <div class="list">${lots.map(x => `<button class="row press lt-srow" data-lot="${esc(x.k)}"><div class="main"><div class="lt-n">${esc(String(x.d).slice(5).replace("-", "/"))} ${esc(x.kind || "")} · ${P(x.px)}</div>
-      <div class="lt-s">비중 ${x.w}% · 손절선 ${x.stop != null ? P(x.stop) + " (" + pct((x.stop / x.px - 1) * 100) + ")" : "없음"}</div></div>
-      <div class="lt-px">${x.wait ? `<b class="lt-chip">판정 대기</b>` : x.hit ? `<b class="lt-chip sell">손절선 깸</b>` : x.pnl != null ? `<span class="${x.pnl > 0 ? "up" : x.pnl < 0 ? "down" : ""}">${pct(x.pnl)}</span>` : ""}</div>${CHEV}</button>`).join("")}</div>
-    <p class="note" style="margin:8px var(--pad-card) 0">줄을 누르면 손절선을 바꾸거나 판 묶음을 지울 수 있어요.</p>
-    <div class="stack" style="margin-top:var(--gap-section)"><button class="btn danger press" id="hsold">다 팔았어요 · 목록에서 빼기</button></div>
-    <p class="note lt-foot" style="text-align:center;margin-top:20px;text-wrap:balance">규칙으로 계산한 결과예요. 사고파는 결정은 직접 하세요.</p>
-  </div>`;
-  document.getElementById("back").onclick = () => { BACK_ANIM = true; history.back(); }; bindNavbar(); dhLiveSoon();
-  document.getElementById("hmore").onclick = () => openLotForm({ h, t, kind: "불타기" });
-  $app.querySelectorAll("[data-lot]").forEach(b => b.onclick = () => openLotEdit(h, b.dataset.lot, t));
-  const sold = document.getElementById("hsold");
-  sold.onclick = () => openSell(h, t);
-
-  { const lv = [];
-    lv.push({ v: avg, kind: "res", g: "main", label: "평균 매수가", fit: true });
-    if (nb && r.goal) lv.push({ v: r.goal, kind: "fib", g: "main", label: "가야 할 자리" });
-    (h.lots || []).forEach(x => { if (x.stop != null) lv.push({ v: x.stop, kind: "stop", g: "main", label: "손절선 · " + (x.kind || ""), fit: true }); });
-    const box = $app.querySelector("#chartBox");
-    if (box) S.chart = mountPro(box, { sym: h.sym, mk: DHM[t].mk, levels: lv.filter(v => v.v != null && isFinite(v.v)), daily: (nb && r.bars) || [] }); }
-}
-/* 보유 추가: 종목 찾기 → 산 기록 입력 */
-function openHoldAdd(t){
-  openSearch({ title: "보유 추가", only: t === "dhu" ? "us" : "kr", have: new Set((S.hold?.items || []).map(h => h.sym)), add: async (m, c, n) => {
-    if ((m === "미국") !== (t === "dhu")){ throw new Error(t === "dhu" ? "미국 종목만 넣을 수 있어요 · 한국은 🇰🇷 탭에서" : "한국 종목만 넣을 수 있어요 · 미국은 🇺🇸 탭에서"); }
-    const name = m === "미국" ? (Object.entries(ALIAS).find(([k, v]) => v === c)?.[0] || shortName(n, c, m)) : n;
-    document.querySelector(".sheet-bg:not(.closing)")?._close?.();
-    setTimeout(() => openLotForm({ t, sym: symOf(m, c), name, kind: "첫 진입" }), REDUCED ? 0 : 320);
-  } });
-}
-function dhKnown(sym, t){ return (dhPreOn(t) && dhAll(S.dhPre[t]).find(x => x.sym === sym)) || dhAll(S.dhc[t]).find(x => x.sym === sym); }   // 마감 전 예비가 있으면 그 값(오늘 지금 가격·손절선) 먼저
-const todayISO = tz => new Intl.DateTimeFormat("en-CA", { timeZone: tz || "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-function openLotForm(o){
-  const { t } = o, h = o.h, sym = h ? h.sym : o.sym, name = h ? h.name : o.name, kind = o.kind;
-  const known = dhKnown(sym, t), r = h ? holdRes(h.id) : null;
-  const lq = dqToday(sym, t), px0 = (lq && lq.p) ?? o.px ?? known?.price ?? r?.price ?? "";   // 오늘 산 기록이 기본 → 지금 가격 (어제 종가면 10% 넘게 어긋나기도 함)
-  const mkOff = !h && known && dhOff(known, dhPreOn(t) && dhAll(S.dhPre[t]).includes(known) ? S.dhPre[t] : S.dhc[t]);   // 시장이 쉴 때·경고 날 첫 진입
-  const exist = h ? (h.lots || []).filter(x => x.stop != null).reduce((a, x) => a + (+x.w || 0) * Math.max(0, (+x.px - +x.stop) / +x.px), 0) : 0;   // 이미 든 묶음들의 손절 때 계좌 손실(%)
-  const hi65 = r && isNum(r.hi65) ? r.hi65 : null;
-  const stops = kind === "불타기" && r && isNum(r.add_stop) ? [{ name: "박스 하단 (불타기 손절선)", price: r.add_stop }] : (known?.stops || []);
-  const { avg } = h ? holdCalc(h) : { avg: null };
-  const step = t === "dhu" ? "0.01" : "1";
-  const { bg, close } = openSheet(kind === "불타기" ? `${name} 불타기` : `${name} 산 기록`, `<div class="results"><div id="form" class="form card">
-      <div class="field"><label for="ld">산 날${t === "dhu" ? " (뉴욕)" : ""}</label><input id="ld" type="date" value="${todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul")}" max="${todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul")}"></div>
-      <div class="field"><label for="lp">산 가격${t === "dhu" ? " ($)" : ""}</label><input id="lp" type="number" inputmode="decimal" step="${step}" value="${px0}" placeholder="0"></div>
-      <div class="field"><label for="lw">계좌 대비 비중 (%)</label><input id="lw" type="number" inputmode="decimal" step="0.5" placeholder="예: ${kind === "불타기" ? "5" : "10"}"></div>
-      <div class="field"><label for="ls">손절선${t === "dhu" ? " ($)" : ""}</label><input id="ls" type="number" inputmode="decimal" step="${step}" placeholder="사기 전에 정해요" value="${o.stop ?? ""}"></div>
-      ${kind !== "불타기" ? `<div class="field" style="flex-wrap:wrap;row-gap:8px;padding-bottom:8px"><label>계좌 <span class="note" style="font-weight:400">(단기·중장기 계좌를 나눠 쓰면)</span></label><div class="seg" role="tablist" aria-label="계좌" id="lacct" style="width:100%">${["안 나눔", "단기", "중장기"].map((a, i) => `<button role="tab" data-a="${a}" aria-selected="${i === 0}">${a}</button>`).join("")}</div></div>` : ""}
-    </div>
-    ${stops.length ? `<p class="note" style="margin:10px 4px 6px">엔진이 본 손절선 후보</p><div class="chips" id="lsc">${stops.map(s => `<button class="pill-btn press" data-v="${s.price}">${esc(s.name)} ${dhPx(s.price, t)}</button>`).join("")}</div>` : ""}
-    ${mkOff ? `<div class="mk-warn" style="margin-top:12px"><b>${esc(dhOffWhy(known, S.dhc[t]))} 새로 사지 않아요</b>이미 샀다면 기록은 그대로 해요.</div>` : ""}
-    ${kind === "불타기" && r && ["정리", "불타기분만 정리"].includes(r.status) ? `<div class="mk-warn" style="margin-top:12px"><b>지금 판정이 ‘${esc(r.status)}’예요</b>정리할 때 더 사는 기록이에요. 확인하고 저장해요.</div>` : ""}
-    <div id="lfmt" class="note" style="margin:8px 4px 0"></div>
-    <div id="lcalc" class="lot-calc"></div>
-    <button class="btn primary press" id="lsave" style="margin-top:16px" disabled>저장</button>
-    <p class="note" id="lwhy" style="margin:8px 4px 0;color:var(--fg2)"></p>
-    <p class="note" style="margin:12px 4px">저장하면 엔진이 1~2분 안에 상태를 점검해요.</p></div>`);
-  const $ = s => bg.querySelector(s), num0 = s => parseFloat($(s).value);
-  let acct = "", force = false; const cid = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), newId = "h" + Date.now().toString(36);
-  bg.querySelectorAll("#lacct button").forEach(b => b.onclick = () => { acct = b.dataset.a === "안 나눔" ? "" : b.dataset.a; bg.querySelectorAll("#lacct button").forEach(x => x.setAttribute("aria-selected", x === b)); });
-  bg.querySelectorAll("#lsc [data-v]").forEach(b => b.onclick = () => { $("#ls").value = b.dataset.v; calc(); });
-  let over = false;   // 손절 때 계좌 1%를 넘는 기록이면 저장 전에 한 번 더 확인
-  const calc = () => {
-    const px = num0("#lp"), w = num0("#lw"), sp = num0("#ls"), out = [];
-    const dd = $("#ld").value, future = dd && dd > todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul");
-    let ok = px > 0 && w > 0 && w <= 400 && sp > 0 && sp < px && !future, warn = false; over = false;
-    if (future) out.push(`<p class="bad">산 날이 오늘보다 뒤예요</p>`);
-    if (w > 400) out.push(`<p class="bad">비중은 계좌의 400% 이하로 넣어 주세요 (레버리지 포함)</p>`);
-    if (px > 0 && sp > 0){
-      if (sp >= px) out.push(`<p class="bad">손절선은 산 가격보다 낮아야 해요</p>`);
-      else { const gap = (px - sp) / px, loss = w > 0 ? w * gap : null, mx = Math.min(100, 1 / gap);   // 비중(%) × 손절폭 = 계좌 손실(%) → 1% 한도 비중 = 1 ÷ 손절폭
-        out.push(`<div class="lt-mk2"><div><b>${(gap * 100).toFixed(1)}%</b><span>손절폭</span></div><div><b class="${loss > 1 ? "hot" : ""}">${loss != null ? "−" + loss.toFixed(2) + "%" : "-"}</b><span>손절 때 계좌</span></div><div><b style="color:var(--buy)">${mx.toFixed(1)}%</b><span>1% 한도 비중</span></div></div>`);
-        if (loss > 1 && !(h && exist > 0)) over = true;
-        if (loss > 1 && !(h && exist > 0)) out.push(`<p class="bad">손절하면 계좌가 1% 넘게 줄어요. 비중을 ${mx.toFixed(1)}% 이하로</p>`);
-        if (h && loss != null && exist > 0){ const tot = exist + loss; if (tot > 1) over = true;   // 종목 전체: 이미 든 묶음 + 이번 묶음 (A19 C01 '계좌 1%'는 종목 단위)
-          out.push(`<p class="${tot > 1 ? "bad" : "note"}" style="margin:8px 4px 0">이 종목 전체로 손절하면 계좌 −${tot.toFixed(2)}% (이미 든 묶음 −${exist.toFixed(2)}% + 이번 −${loss.toFixed(2)}%)${tot > 1 ? ` · 1%를 넘어요. 이번 묶음은 ${Math.max(0, (1 - exist) / gap).toFixed(1)}% 이하로` : ""}</p>`); } }
-    }
-    if (kind === "불타기" && hi65 && px > 0 && px <= hi65) out.push(`<p class="bad">산 가격이 직전 65일 고가 ${dhPx(hi65, t)} 아래예요. 불타기는 새 고점을 넘을 때 해요</p>`);
-    if (kind === "불타기" && avg && px > 0 && px >= avg && r && isNum(r.price) && r.price < avg)
-      out.push(`<p class="bad">지금 가격이 평균 매수가 ${dhPx(avg, t, true)}보다 아래예요. 불타기는 수익 중일 때만 해요.</p>`);
-    if (kind === "불타기" && avg && px > 0 && px < avg){
-      warn = true;
-      out.push(`<div class="mk-warn"><b>물타기예요</b>평균 매수가 ${dhPx(avg, t, true)}보다 낮은 데서 더 사는 기록이에요. 물타기는 절대 안 해요. 불타기는 수익 중일 때, 새 고점을 넘을 때만.${force ? "" : ` <button class="tlink press" id="lforce" style="display:inline;padding:0">그래도 기록</button>`}</div>`);
-    }
-    if (kind !== "불타기" && w > 10) out.push(`<p class="note" style="margin:8px 4px 0">첫 진입은 보통 5~10%로 시작해요.</p>`);
-    $("#lcalc").innerHTML = out.join("");
-    const f = bg.querySelector("#lforce"); if (f) f.onclick = () => { force = true; calc(); };
-    $("#lsave").disabled = !ok || (warn && !force);
-    const fm = v => v > 0 ? dhPx(v, t, true) : "";   // 숫자 칸 아래에 쉼표 붙인 값
-    $("#lfmt").textContent = [px > 0 ? "산 가격 " + fm(px) : "", sp > 0 ? "손절선 " + fm(sp) : ""].filter(Boolean).join(" · ");
-    $("#lwhy").textContent = !(px > 0) ? "산 가격을 넣어요" : !(w > 0) ? "비중(%)을 넣어요" : !(sp > 0) ? "손절선을 넣어요 (위 후보를 눌러도 돼요)" : sp >= px ? "손절선이 산 가격보다 낮아야 해요" : future ? "산 날을 고쳐요" : w > 400 ? "비중을 줄여요" : (warn && !force) ? "물타기 확인이 필요해요" : "";
-  };
-  ["#lp", "#lw", "#ls", "#ld"].forEach(s => $(s).oninput = () => { const b = $("#lsave"); if (b.dataset.ok){ delete b.dataset.ok; b.textContent = "저장"; } calc(); }); calc();
-  $("#lsave").onclick = async () => {
-    const b = $("#lsave");
-    if (over && !b.dataset.ok){ b.dataset.ok = 1; b.textContent = "손절하면 계좌 1%를 넘어요 · 한 번 더 누르면 저장"; return; }
-    b.disabled = true; b.innerHTML = `<span class="spin"></span>저장 중`;
-    const lot = { d: $("#ld").value || todayISO(t === "dhu" ? "America/New_York" : "Asia/Seoul"), px: num0("#lp"), w: num0("#lw"), stop: num0("#ls"), kind, cid };
-    try{
-      const ok = await saveHold(`앱: 보유 ${name} ${kind}`, items => {   // cid: 응답이 늦어 다시 눌러도 같은 기록이 두 번 들어가지 않게
-        if (h){ const x = items.find(y => y.id === h.id); if (!x) throw new Error("다른 기기에서 이 종목을 뺐어요 · 새로고침해 주세요"); if ((x.lots || []).some(l => l.cid === cid)) return; (x.lots = x.lots || []).push(lot); x.lots.sort((a, c) => a.d < c.d ? -1 : a.d > c.d ? 1 : 0); }
-        else if (!items.some(y => y.id === newId)) items.push({ id: newId, sym, name, mk: holdMk(t), acct, lots: [lot] });
-      }); close(); toast(savedMsg(ok)); render("none");
-    }catch(e){ toast(e.message); b.disabled = false; b.textContent = "저장"; }
-  };
-}
-function openLotEdit(h, key, t){
-  const x = (h.lots || []).find(y => lotKey(y) === key); if (!x) return;
-  const step = t === "dhu" ? "0.01" : "1", many = h.lots.length > 1, delTxt = many ? "이 묶음 팔았어요 · 지우기" : "다 팔았어요 · 목록에서 빼기";
-  const { bg, close } = openSheet(`${String(x.d).slice(5).replace("-", "/")} ${x.kind || ""} ${dhPx(x.px, t)}`, `<div class="results"><div id="form" class="form card">
-      <div class="field"><label for="es">손절선</label><input id="es" type="number" inputmode="decimal" step="${step}" value="${x.stop ?? ""}"></div>
-    </div>
-    <p class="note" style="margin:10px 4px">수익을 지키려면 매수가 ${dhPx(x.px, t)}보다 위로 올려요. 내리지는 않아요.</p>
-    <button class="btn primary press" id="esave">손절선 저장</button>
-    <button class="btn danger press" id="edel" style="margin-top:10px">${delTxt}</button></div>`);
-  const sv = bg.querySelector("#esave"), dl = bg.querySelector("#edel");
-  const find = items => { const it = items.find(y => y.id === h.id), l = it && (it.lots || []).find(y => lotKey(y) === key);
-    if (!l) throw new Error("다른 기기에서 이 기록이 바뀌었어요 · 새로고침해 주세요"); return [it, l]; };
-  sv.onclick = async () => {
-    const v = parseFloat(bg.querySelector("#es").value); if (!(v > 0)){ toast("손절선을 넣어 주세요"); return; }
-    if (x.stop != null && v < x.stop && !sv.dataset.ok){ sv.dataset.ok = 1; sv.textContent = "손절선을 내려요? 한 번 더 누르면 저장"; return; }
-    const lqe = dqToday(h.sym, t); if (lqe && v >= lqe.p && !sv.dataset.ok2){ sv.dataset.ok2 = 1; sv.textContent = `지금 가격 ${dhPx(lqe.p, t)} 위예요 · 다음 점검에서 바로 정리로 나와요. 한 번 더 누르면 저장`; return; }
-    sv.disabled = true; sv.innerHTML = `<span class="spin"></span>저장 중`;
-    try{ const ok = await saveHold(`앱: 보유 ${h.name} 손절선`, items => { find(items)[1].stop = v; }); close(); toast(savedMsg(ok)); render("none"); }
-    catch(e){ toast(e.message); sv.disabled = false; sv.textContent = "손절선 저장"; delete sv.dataset.ok; }
-  };
-  dl.onclick = () => { close(); setTimeout(() => openSell(h, t, x), 320); };
-
-}
-
-/* ───────── 사용법 (Katoo 규칙을 그림으로) ─────────
-   그림 색은 차트와 같다: 회색 점선 = 직전 고점, 보라 점선 = 라운드피겨, 빨간 선 = 손절선, 점선 상자 = 베이스. */
-function gSvg(body, label){
-  return `<svg class="gi" viewBox="0 0 320 132" role="img" aria-label="${esc(label)}">${body}</svg>`;
-}
-const G_VOL = hs => hs.map(([x, h, hot]) => `<rect x="${x - 3}" y="${128 - h}" width="6" height="${h}" rx="1" class="${hot ? "vh" : "v"}"/>`).join("");
-const GUIDE_PICS = {
-  buy: gSvg(`<rect x="96" y="30" width="112" height="34" rx="3" class="bx"/><text x="152" y="76" class="tl" text-anchor="middle">베이스</text>
-    <line x1="80" x2="312" y1="30" y2="30" class="pv"/><text x="312" y="46" class="tl" text-anchor="end">직전 고점</text>
-    <polyline class="p" points="8,96 30,84 52,66 74,44 92,30 108,58 124,36 140,54 156,40 172,50 186,42 200,46 214,38 226,14"/>
-    <circle cx="226" cy="14" r="6" class="dg"/><text x="236" y="18" class="tg">여기서 산다</text>
-    ${G_VOL([[30,8],[52,10],[74,12],[92,14],[108,9],[124,8],[140,7],[156,6],[172,5],[186,5],[200,4],[214,5],[226,20,1]])}`, "베이스를 만든 뒤 직전 고점을 거래량과 함께 넘는 날 산다"),
-  stop: gSvg(`<line x1="8" x2="312" y1="40" y2="40" class="pv"/><text x="312" y="34" class="tl" text-anchor="end">직전 고점</text>
-    <line x1="96" x2="312" y1="62" y2="62" class="st"/><text x="312" y="76" class="tr" text-anchor="end">손절선</text>
-    <polyline class="p" points="8,70 30,52 52,62 74,50 96,38 118,28 140,36 162,48 184,58 206,72 228,80"/>
-    <circle cx="96" cy="38" r="6" class="dg"/><text x="70" y="22" class="tg">산 자리</text>
-    <path d="M200 66l12 12M212 66l-12 12" class="x"/><text x="220" y="100" class="tr">깨면 바로 판다</text>`, "산 뒤 손절선을 깨면 바로 판다"),
-  sell: gSvg(`<line x1="8" x2="312" y1="22" y2="22" class="rf"/><text x="312" y="16" class="tl" text-anchor="end">라운드피겨</text>
-    <line x1="8" x2="312" y1="58" y2="58" class="pv"/><text x="312" y="72" class="tl" text-anchor="end">직전 고점</text>
-    <polyline class="p" points="8,88 34,74 60,80 86,66 110,50 134,34 156,26 176,30 196,42 218,56 240,68"/>
-    <circle cx="110" cy="50" r="6" class="dg"/><text x="110" y="80" class="tg" text-anchor="middle">산 자리</text>
-    <circle cx="240" cy="68" r="6" class="db"/><text x="252" y="96" class="tb" text-anchor="middle">못 가고 밀리면 판다</text>`, "올라야 할 자리에서 못 가고 다시 밀리면 판다"),
-  add: gSvg(`<line x1="8" x2="160" y1="78" y2="78" class="pv"/><line x1="150" x2="312" y1="42" y2="42" class="pv"/>
-    <rect x="164" y="40" width="70" height="22" rx="3" class="bx"/>
-    <line x1="60" x2="312" y1="100" y2="100" class="st"/><text x="312" y="114" class="tr" text-anchor="end">처음 손절선</text>
-    <line x1="240" x2="312" y1="64" y2="64" class="st st2"/><text x="312" y="78" class="tr" text-anchor="end">더 산 만큼 손절선</text>
-    <polyline class="p" points="8,110 30,96 50,90 66,76 88,62 110,52 132,46 152,40 168,54 184,46 200,56 216,48 232,50 248,26"/>
-    <circle cx="66" cy="76" r="6" class="dg"/><text x="20" y="66" class="tg">처음</text>
-    <circle cx="248" cy="26" r="6" class="dg"/><text x="258" y="22" class="tg">더 산다</text>`, "오른 뒤 다시 쉬었다가 새 고점을 넘으면 더 사고, 더 산 만큼은 따로 손절선을 둔다"),
-};
-const GUIDE_REAL = [
-  { f: "4_kospi", t: "시장부터 보기", s: "코스피 2026 · 초록 바탕 = 엔진이 ‘할 때’로 본 날 · ▼ = 실제로 다 판 날",
-    n: ["빨간 ▼는 엔진도 그날 전량매도 경고를 띄운 날이에요 (6번 중 5번). 회색 ▼(1/20)는 뉴스로 판 날이라 못 잡았어요", "3월 급락 뒤 쉬다가 4/14 지수가 박스 상단을 넘자 다시 ‘할 때’. 실제로도 그날 다시 샀어요"] },
-  { f: "1_amd", t: "살 때 · 더 살 때 · 더 산 만큼만 팔 때", s: "AMD 2026",
-    n: ["7주 쉰 베이스 위로 직전 고점을 거래량 실어 넘은 날 산다 ($608, 15%)", "3주 높은 데서 버티다 새 고점 → 불타기 ($651, +5%). 더 산 만큼 손절선은 $620", "$620 아래로 내려가자 스탑로스로 더 산 5%만 판다. 처음 산 15%는 처음 손절선 그대로"] },
-  { f: "2_dell", t: "수익을 지킬 때", s: "DELL 2026",
-    n: ["3개월 박스를 거래량 실어 넘은 날 25% 산다", "가야 할 자리($600) 근처, +17%까지 오자 손절선을 산 가격 위($518)로 올림", "시장 급락 날 그 손절선에 걸려 +0.3%로 나옴. 안 올렸으면 손실"] },
-  { f: "3_ls", t: "가야 할 자리에서 못 가면 팔 때", s: "LS ELECTRIC 2026년 1월",
-    n: ["직전 고점(107,800)까지 거래량 실어 올라온 날 산다 (1/14)", "위로 긴 꼬리만 반복 = 가야 할 자리에서 못 감. 엔진은 3일째(1/19)에 ‘가야 할 자리 실패’, 실제로는 이틀 더 보고 팔았어요", "밀리자 −5.8% 손절. 단기 계좌로 산 물량은 다음 날 아침 본전에 팔았어요"] },
-];
-S.gimg = {};
-try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (S.tab === "guide") guideImages(); }); }catch(e){}   // 밝은/어두운 화면이 바뀌면 그 색 그림으로
-async function guideImages(){
-  const dark = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  for (const el of $app.querySelectorAll("[data-gimg]")){
-    const path = `연구/donghyun/사용법차트/${dark}/${el.dataset.gimg}.png`;
-    try{
-      if (!S.gimg[path]){ const j = await gh("/contents/" + enc(path) + "?ref=main");
-        if (j.content) S.gimg[path] = "data:image/png;base64," + j.content.replace(/\n/g, "");
-        else S.gimg[path] = URL.createObjectURL(await gh("/contents/" + enc(path) + "?ref=main", { raw: true, blob: true })); }   // 1MB 넘는 파일은 내용이 비어 와서 원본으로
-      if (el.isConnected) el.innerHTML = `<img src="${S.gimg[path]}" alt="">`;
-    }catch(e){ if (el.isConnected) el.innerHTML = `<p class="note" style="margin:0">차트를 불러오지 못했어요</p>`; }
-  }
-}
-function renderGuide(){
-  const rule = (k, tone, title, head, items, dont) => `<section class="card gd-card" id="g-${k}">
-      <div class="gd-h"><b class="lt-chip ${tone}">${title}</b></div>
-      <p class="gd-lead">${head}</p>
-      <div class="gd-pic">${GUIDE_PICS[k]}</div>
-      <ul class="gd-ul">${items.map(x => `<li>${x}</li>`).join("")}</ul>
-      ${dont ? `<p class="gd-dont">${dont}</p>` : ""}
-    </section>`;
-  $app.innerHTML = `<div class="wrap gd">
-    <div class="navbar"><div class="side">${S.guideFrom ? `<button class="icon-btn press" id="gback" aria-label="뒤로">${BACK}<span>${S.guideFrom.dhd ? "종목" : "동현"}</span></button>` : ""}</div><span class="mini">사용법</span><div class="side r"></div></div>
-    <div class="title-block" data-anchor><h1 class="big">사용법</h1><div class="sub">정해진 규칙으로 주도주를 고르고, 살 자리·손절선·비중을 계산해요. 결정은 직접 해요.</div></div>
-
-    <h2 class="sec-title">하루 순서</h2>
-    <ol class="card gd-steps">
-      <li><b>시장부터 보기</b><span>맨 위 카드가 ‘할 때’면 종목을 찾고, ‘쉴 때’면 쉬어요. 빨간 전량매도 경고가 뜨면 들고 있는 걸 정리해요.</span></li>
-      <li><b>장 마감 전에 예비 카드 보기</b><span>🇰🇷는 14:30~15:10쯤 두 번 지금 값으로 미리 계산해서 맨 위에 ‘마감 전 예비’ 카드가 떠요. 지금 매수 기준선을 넘어 있는 종목이 나오고, 종가까지 버티면 15:20~15:30 동시호가 때 종가에 사요. 🇺🇸는 미국 15:00~15:30쯤 (한국 새벽 4시대, 11월부터 5시대).</span></li>
-      <li><b>장 끝나고 목록 보기</b><span>🇰🇷는 평일 16:05, 🇺🇸는 아침 07:20에 새로 계산돼요. 초록 ‘돌파 자리’부터 봐요.</span></li>
-      <li><b>사기 전에 손절선·비중 정하기</b><span>종목을 눌러 손절선을 고르면 최대 비중이 나와요. 사고 나서 정하지 않아요.</span></li>
-      <li><b>확인하고 사기</b><span>직전 고점을 거래대금 실어 넘는 걸 확인한 뒤 사요. 늦고 비싸도 확인 후. 종가·NXT 종가에도 사요. 5~10%만 먼저.</span></li>
-      <li><b>산 걸 ‘내 보유’에 넣기</b><span>산 가격·비중·손절선을 넣으면 매일 장 마감 뒤 상태(정리·불타기·수익 보존 등)를 판정해서 보여 줘요. 휴대폰 알림은 아직 꺼져 있어요. 더 사면 ‘불타기’로 따로 넣어요.</span></li>
-    </ol>
-
-    <h2 class="sec-title">시장 판정</h2>
-    <div class="list">
-      ${[["buy", "할 때", "지수가 지난 20일 박스 상단을 종가로 넘었어요. 그 뒤로 경고가 없는 동안"], ["", "쉴 때", "전량매도 경고 뒤, 다시 박스 상단을 넘기 전까지. 현금도 포지션이에요"], ["sell", "전량매도 경고", "지수 −3% 이상 급락, 또는 소수 종목만 오르던 쏠림 뒤 첫 하락에 장중 고점에서 2.25% 넘게 밀림. 들고 있는 종목은 정리"]]
-        .map(([c, n, x]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${x}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
-    </div>
-    <p class="note" style="margin:8px var(--pad-card) 0">2026년 실제 국내 매매와 맞춰 봤어요: 할 때 84% · 쉴 때 98% 일치, 전량매도 6번 중 5번 경고. 코스닥 종목은 코스닥 지수로 봐요. 미국은 실제 미국 매수일이 모두 ‘할 때’가 되게 맞췄어요.</p>
-
-    <h2 class="sec-title" id="g-chart">차트 보는 법</h2>
-    <p class="note" style="margin:0 var(--pad-card) 10px;line-height:1.5">위 버튼으로 봉 간격을 골라요 (1분·5분·15분·1시간·일·주). 자리는 <b>일봉</b>으로 보고, 사는 순간은 분봉으로 돌파 때 거래량이 실렸는지 확인해요. 옆으로 끌면 지난 봉, 두 손가락으로 벌리면 확대, 누르고 있으면 그 봉의 시·고·저·종이 위에 나와요. 지난 봉을 보다가 ‘최근으로’를 누르면 돌아와요. 1분~1시간봉은 설정의 분봉 중계 주소가 있어야 보여요.</p>
-    <div class="card gd-legend">
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" stroke="#0B9B8A" stroke-width="2.5"/></svg><span><b>매수 기준</b>이 선을 거래대금 실어 넘으면 사요. 직전 고점이고, 바로 아래(3% 안)나 바로 위(0.5% 안)에 라운드피겨가 있으면 그 라운드피겨예요</span></div>
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><path d="M20 1 L26 9 L14 9 Z" fill="#0B9B8A"/></svg><span><b>▲ 돌파</b>매수 기준을 넘은 봉 중 거래량이 앞 20봉 평균보다 큰 봉 (일·주봉 1.1배, 분봉 2배). 옆 숫자는 거래량이 평균의 몇 배였는지예요. 작은 회색 점은 거래량 없이 넘은 봉 (마지막 것 하나만)</span></div>
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="pv"/></svg><span><b>직전 고점</b>매수 기준이 라운드피겨일 때 따로 보여요</span></div>
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="rf"/></svg><span><b>라운드피겨</b>12만·175만처럼 딱 떨어지는 가격. 주문이 몰려 막히거나 받쳐줘요. 돌파 전엔 ‘넘을 라운드피겨’, 돌파 뒤엔 ‘가야 할 자리’</span></div>
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><line x1="0" x2="40" y1="5" y2="5" class="st"/></svg><span><b>손절선</b>여기를 깨면 팔아요</span></div>
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><rect x="1" y="1" width="38" height="8" rx="2" class="bx"/></svg><span><b>베이스</b>고점 근처에서 옆으로 쉬는 구간. 고점에서 55% 넘게 빠졌으면 베이스가 아니라 하락이라 안 그려요</span></div>
-      <div><svg viewBox="0 0 40 10" aria-hidden="true"><rect x="4" y="4" width="6" height="6" class="v"/><rect x="17" y="2" width="6" height="8" class="v"/><rect x="30" y="0" width="6" height="10" class="vh"/></svg><span><b>아래 막대</b>거래량. 돌파 날 커야 해요</span></div>
-    </div>
-
-    ${rule("buy", "buy", "살 때", "쉬었다가 직전 고점을 <b>거래대금 실어 종가로</b> 넘은 날", [
-      "고점 뒤 5일 이상 쉰 뒤예요. 흔들림·거래대금이 줄었으면 더 좋지만(VCP) 꼭은 아니에요",
-      "돌파 날 거래대금이 평소(20일 평균)의 1.1배 이상 (실제 산 돌파 중 가장 작은 게 하이닉스 4/14 1.27배)",
-      "직전 고점 바로 아래(3% 안) 라운드피겨를 넘어도 돌파예요 (직전 고점 112,100 → 11만 돌파). 바로 위(0.5% 안)에 라운드피겨가 있으면 그걸 넘어야 해요 (169,400 → 17만)",
-      "같은 업종이 같이 오르면 그 업종 <b>1등</b>만 사요"],
-      "이럴 땐 안 사요: 쉬지 않고 급하게 오른 걸 쫓을 때 · 거래대금 없이 슬쩍 넘을 때")}
-    ${rule("stop", "sell", "손절할 때", "사기 전에 정한 손절선을 <b>깨면 바로</b>", [
-      "미국은 스탑로스를 걸어 둬서 장중에 닿아도 팔려요. 한국은 대부분 직접 봐요",
-      "손절선은 돌파한 날(산 날) 저점 · 넘은 라운드피겨 · 박스 하단 중 하나. 셋업은 상세에서 박스 하단으로 미리 계산해 볼 수 있어요",
-      "한 번 손절해도 계좌는 <b>1%</b>만 줄도록 비중을 맞춰요",
-      "내려갈 때 더 사지 않아요 (물타기 안 함)"])}
-    ${rule("sell", "soon", "팔 때", "가야 할 자리에서 <b>못 가고 밀리면</b>", [
-      "산 지 1~3일 안에 다시 직전 고점 아래로 마감하면 팔아요",
-      "라운드피겨·새 고점 앞에서 힘없이 밀리면 팔아요. 이건 엔진이 못 잡아요, 직접 봐요",
-      "시장 전량매도 경고면 다 팔아요: 지수 −3% 급락, 또는 쏠림 뒤 첫 하락에 장중 고점에서 2.25% 넘게 밀릴 때",
-      "+10% 넘게 오르거나 시장이 쉴 때면 손절선을 산 가격 위로 올려 수익을 지켜요"])}
-    ${rule("add", "buy", "더 살 때", "맞았을 때만 더 사요 (불타기)", [
-      "오른 뒤 다시 쉬었다가 새 고점을 넘을 때 더 사요",
-      "더 산 만큼은 따로 손절선을 둬요 (새 박스 하단)",
-      "처음 산 것은 처음 손절선 그대로"])}
-
-    <h2 class="sec-title">실제 매매로 보기</h2>
-    <p class="note" style="margin:0 var(--pad-card) 10px;line-height:1.5">실제로 한 매매를 앱 차트와 같은 방식으로 그렸어요. 파란 숫자가 아래 설명 순서예요.</p>
-    ${GUIDE_REAL.map(g => `<section class="card gd-real">
-      <b class="gd-rt">${g.t}</b><span class="gd-rs">${g.s}</span>
-      <div class="gd-img" data-gimg="${g.f}"><div class="sk"></div></div>
-      <ol>${g.n.map(x => `<li>${x}</li>`).join("")}</ol>
-    </section>`).join("")}
-
-    <h2 class="sec-title">내 보유 상태</h2>
-    <div class="list">
-      ${[["sell", "정리", "손절선을 종가로 깼거나(미국은 장중도) · 이 종목으로 계좌가 1% 줄었거나 · 시장 전량매도 경고예요. 팔아요"], ["sell", "불타기분만 정리", "더 산 묶음의 손절선만 깼어요. 그만큼만 팔아요"], ["wait", "가야 할 자리 실패", "산 지 1~3일 안에 돌파 기준점 아래로 마감했거나 윗꼬리가 반복돼요. 못 가면 팔아요"], ["wait", "매입가 위협", "평균 매수가 아래예요. 잘 갈 종목은 이러지 않아요. 기다려도 계좌 1% 안에서만"], ["wait", "실적일 주의", "실적 발표 2거래일 안이에요. 수익 버퍼가 없으면 발표 전에 정리"], ["buy", "불타기 자리", "수익 중에 쉬었다가 다시 신고가로 마감했어요 (또는 산 다음 날 돌파 확인). 더 살 수 있는 자리 — 더 살지는 비중·시장 보고 직접"], ["soon", "수익 보존", "산 뒤 +10% 넘게 올랐거나 시장이 쉴 때예요. 손절선을 매수가 위로"], ["", "유지", "수익 중이고 경고가 없어요. 그대로 둬요"], ["", "판정 대기", "산 날 종가가 아직 없어요. 장이 끝나면 점검해요"]]
-        .map(([c, n, x]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${x}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
-    </div>
-    <p class="note" style="margin:8px var(--pad-card) 0">내려갈 때 더 사는 기록(물타기)을 넣으면 앱이 막아요.</p>
-
-    <h2 class="sec-title">칩 뜻</h2>
-    <div class="list">
-      ${[["buy", "돌파 자리", "살 자리. 손절선·비중부터 정해요"], ["", "2등주 돌파", "돌파는 맞지만 업종 1등이 아니라 안 사요"], ["soon", "주도 후보", "주도주 조건은 넘었지만 돌파는 아직"], ["soon", "셋업", "최근 주도주가 고점 아래에서 쉬는 중"], ["", "역의 역", "지수가 빠진 날 안 빠지거나 오른 종목. 관찰 목록이에요"]]
-        .map(([c, n, s]) => `<div class="row lt-srow"><div class="main"><div class="lt-s" style="margin:0;font-size:var(--t-body);color:var(--fg)">${s}</div></div><div class="lt-px"><b class="lt-chip ${c}">${n}</b></div></div>`).join("")}
-    </div>
-
-    <h2 class="sec-title">비중 정하기</h2>
-    <section class="card gd-calc">
-      <p class="gd-f">최대 비중 = 1% ÷ 손절폭</p>
-      <div class="lt-mk2"><div><b>20%</b><span>손절폭 5%</span></div><div><b>12.5%</b><span>손절폭 8%</span></div><div><b>10%</b><span>손절폭 10%</span></div></div>
-      <p class="n">최대 비중은 넘으면 안 되는 한도예요. 손절선이 멀수록 적게 사요. 처음엔 그 안에서 5~10%로 시작하고, 맞으면 불타기로 키워요.</p>
-    </section>
-
-    <h2 class="sec-title">말 뜻</h2>
-    <ul class="card gd-ul gd-note">
-      <li><b>역의 역</b> 지수가 크게 빠진 날 안 빠지거나 오른 종목. 사는 자리가 아니라 지켜볼 목록이에요</li>
-      <li><b>고점 뒤 n일</b> 직전 고점을 찍고 며칠 쉬었는지. 0일이면 오늘이 고점이라 쉬지 않은 거예요</li>
-      <li><b>손익비</b> 손절하면 잃는 폭 대비 오를 때 버는 폭. 급하게 오른 걸 쫓으면 손절폭이 커져서 나빠져요</li>
-      <li><b>셀온</b> 실적 발표 전에 미리 오르면, 발표 날 오히려 파는 물량이 나오는 것</li>
-      <li><b>동시호가·NXT 종가</b> 15:20~15:30 마지막 가격을 정하는 시간 · NXT는 대체거래소로 정규장 뒤(~20:00)에도 거래돼요</li>
-      <li><b>VCP</b> 쉬는 동안 흔들림이 점점 작아지는 모양. 있으면 좋고 꼭은 아니에요</li>
-    </ul>
-
-    <h2 class="sec-title">알아둘 것</h2>
-    <ul class="card gd-ul gd-note">
-      <li>후보가 0개인 날이 많아요. 주도주는 하루 몇 개 없는 게 정상이에요.</li>
-      <li>엔진은 일봉만 봐요. 분봉·호가·뉴스는 직접 확인해요.</li>
-      <li>실적 발표일은 한국은 DART 공시(없으면 작년 같은 분기로 추정), 미국은 야후에서 받아요. ‘추정’은 날짜가 며칠 다를 수 있어요.</li>
-      <li>뉴스 때문에 파는 날(예: 1/20)은 엔진이 못 잡아요. 그런 날은 직접 판단해요.</li>
-      <li>규칙으로 계산한 결과예요. 사고파는 결정은 직접 해요.</li>
-    </ul>
-  </div>`;
-  bindNavbar(); guideImages();
-  const gb = document.getElementById("gback"); if (gb) gb.onclick = () => { BACK_ANIM = true; history.back(); };   // 연 곳(종목·목록)으로 (아이폰 홈 화면 앱엔 시스템 뒤로가 없어서)
-  if (S.guideAt){ const el = document.getElementById("g-" + S.guideAt); S.guideAt = null; if (el) requestAnimationFrame(() => scrollTo(0, el.getBoundingClientRect().top + scrollY - 60)); }
+/* 기준 (오동엔진 규칙 요약) */
+function renderRules(){
+  $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">기준</span><div class="side r"></div></div>
+    <div class="title-block" data-anchor><h1 class="big">기준</h1><div class="sub">오동엔진가 공개한 원칙 · 2025.2~2026.10 글</div></div>
+    <div class="card"><b>한 줄 원칙</b><p style="margin:6px 0 0">장기금리와 유가가 내려오지 않는데 오르는 증시는 믿지 않는다. 채권·신용시장이 주식보다 먼저 말한다.</p></div>
+    <div class="sec-title" role="heading" aria-level="2">매크로 점검표</div>
+    <div class="list">${[["미국 10년물 금리", "하락 추세", "5% 이상 유지·상승"], ["WTI 유가", "하락 추세", "고점 장기화"], ["근원 CPI", "예상 하회", "2개월 연속 예상 상회"], ["연준", "인하·동결 기대", "인상 확률 상승"], ["하이일드 스프레드", "안정", "급등 · 400bp 근접"], ["CNN 공포탐욕", "25 이하 공포 → 분할매수 시작", "75 이상 탐욕"]]
+      .map(([n, g, w]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub"><span style="color:var(--buy)">우호</span> ${esc(g)}<br><span style="color:var(--sell)">경계</span> ${esc(w)}</div></div></div>`).join("")}</div>
+    <div class="sec-title" role="heading" aria-level="2">시장 전체 신호 (BofA 하트넷)</div>
+    <div class="list">${[["Bull & Bear", "8 이상 매도 · 2 이하 매수", "매주"], ["펀드매니저 현금 비중", "4% 미만 과열 · 5% 이상 매수", "매월 중순"], ["하이일드 스프레드", "400bp 근접 = 매수 조건 중 하나", "매일"], ["시장 폭", "60% 이상이 이평선 아래 = 매수 쪽", "매일"]]
+      .map(([n, r, f]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub">${esc(r)} · ${esc(f)}</div></div></div>`).join("")}</div>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">하트넷 결합 매수 조건: 현금 비중 4% 초과 + 하이일드 400bp 접근 + 주식 자금 유출 가속이 동시에 나올 때. 2025년 3월 이 조건으로 S&P 5,300을 제시했고 4월 저점은 4,835였어요.</p>
+    <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
+    <div class="card"><p class="note" style="margin:0;color:var(--fg)">일반 기준이에요 (오동엔진 기준 아님).<br><b style="color:var(--buy)">상승장</b> 지수가 200일선 위 + 200일선 오르는 중<br><b style="color:var(--wait)">조정</b> 1년 고점보다 10~20% 아래<br><b style="color:var(--sell)">하락장</b> 1년 고점보다 20% 넘게 아래, 또는 200일선 아래 + 200일선 내리는 중<br><b>방향 탐색</b> 그 밖</p></div>
+    <div class="sec-title" role="heading" aria-level="2">현금과 헤지</div>
+    <div class="card"><p class="note" style="margin:0;color:var(--fg)">현금 기본 30% (20~50%, 위험할 때 더). 헤지 1순위는 현금 늘리기, 그다음 VIX·숏 (합쳐서 현금의 30% 이하). 공포 구간에선 서둘러 바닥을 잡지 않고 나눠서 사요.</p></div>
+    <p class="note" style="margin:18px 4px">공개 글을 정리한 참고 자료예요. 투자 권유가 아니에요.</p></div>`;
+  bindNavbar();
 }
 
 function renderSettings(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">설정</span><div class="side r"></div></div>
     <div class="title-block" data-anchor><h1 class="big">설정</h1></div>
-    <div class="list">
-      <button class="row press" id="recat"><span class="main" style="color:var(--blue)">검색용 종목 목록 새로 받기</span></button>
-    </div>
     <div class="sec-title" role="heading" aria-level="2">자동 계산 (한국 시간)</div>
     <div class="list">
-      <div class="row"><div class="main"><b>동현 🇰🇷</b><div class="sub">평일 16:05 (한국장 마감 뒤)</div></div></div>
-      <div class="row"><div class="main"><b>동현 🇺🇸</b><div class="sub">화~토 07:20 (미국장 마감 뒤)</div></div></div>
+      <div class="row"><div class="main"><b>매크로 숫자</b><div class="sub">06:40 (미국장 마감 뒤) · 16:10 (한국장 마감 뒤) · 22:50 (미국 지표 발표 뒤) · 평일</div></div></div>
+      <div class="row"><div class="main"><b>아침 브리핑</b><div class="sub">평일 07:30쯤 · BofA 지표·CPI 예상·FedWatch·오동엔진 최근 글</div></div></div>
     </div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">하루 한 번 종가로 계산해요. 보유 종목은 저장할 때마다 다시 점검해요.</p>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">알림은 꺼져 있어요. 앱을 열면 최신 숫자를 받아요.</p>
     <details class="adv"><summary class="press">고급 설정 ›</summary>
     <div class="list" style="margin-top:var(--gap-sub)">
-      <div class="row"><div class="main"><div class="sub">엔진 저장소</div><b>${esc(S.repo)}</b></div></div>
-      <a class="row press" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener"><span class="main" style="color:var(--blue)">실행 기록 보기</span><svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l6 6-6 6"/></svg></a>
+      <div class="row"><div class="main"><div class="sub">자료 저장소</div><b>${esc(S.repo)}</b></div></div>
+      <a class="row press" href="https://github.com/${esc(S.repo)}/actions" target="_blank" rel="noopener"><span class="main" style="color:var(--blue)">실행 기록 보기</span>${CHEV}</a>
     </div>
-    <div class="sec-title" role="heading" aria-level="2">분봉</div>
-    <div class="list">
-      <div class="row"><div class="main"><label class="sub" for="qurl">분봉 중계 주소</label>
-        <input id="qurl" class="qurl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://....workers.dev" value="${esc(LS.get("burl", "") || LS.get("qurl", ""))}"></div></div>
-      <button class="row press" id="qsave"><span class="main" style="color:var(--blue)">저장하고 시험하기</span></button>
-    </div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">내 Cloudflare 중계(timing-app 저장소의 relay/worker.js)를 거쳐 분봉을 받아요 (한국 최근 6거래일은 네이버, 그 전·미국은 야후). 종목 화면의 차트 위에서 1분·5분·15분·1시간봉을 고르면 보여요.</p>
     <div class="list" style="margin-top:var(--gap-block)">
       <button class="row press" id="out"><span class="main" style="color:var(--sell)">토큰 지우기</span></button>
     </div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">토큰은 이 기기에만 저장돼요. 지워도 다시 넣으면 그대로 돌아와요.</p>
     </details>
-    <p class="note" style="margin:18px 4px">내가 정한 규칙으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
+    <p class="note" style="margin:18px 4px">오동엔진가 공개한 기준으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
-  document.getElementById("recat").onclick = async (ev) => { const b = ev.currentTarget; b.disabled = true; LS.del("catalog"); try{ const r = await catalog(); toast(r.length.toLocaleString() + "개 종목을 받았어요"); }catch(e){ toast(e.message); } b.disabled = false; };
-  const $qs = document.getElementById("qsave"); if ($qs) $qs.onclick = async () => {
-    const v = document.getElementById("qurl").value.trim();
-    if (v && !/^https:\/\/[\w.-]+(\/[\w./-]*)?$/.test(v)){ toast("https:// 로 시작하는 주소를 넣어 주세요"); return; }
-    LS.set("burl", v); LS.del("qurl");   // 분봉 전용 키 (실시간 시세 자동 갱신은 다시 켜지지 않게)
-    if (!v){ toast("분봉 중계 주소를 지웠어요"); return; }
-    try{ const j = await fetchBars("005930.KS", "1m"); toast(`연결됐어요 · 삼성전자 1분봉 ${j.rows.length}개`); }
-    catch(e){ toast(e.message); }
-  };
-  const out = document.getElementById("out");
-  out.onclick = () => {
-    LS.del("tok"); LS.del("dash"); S.token = ""; render("fade");
-  };
+  document.getElementById("out").onclick = () => { LS.del("tok"); LS.del("dash"); S.token = ""; render("fade"); };
+  bindNavbar();
 }
 
 let toastT;
 
-/* 차트 풀이: 한 문장 + 상태 꼬리표 + 가격 사다리(위·지금·아래) + 조심할 점 — 엔진 규칙으로 만든 글 */
 /* 새 버전이 올라오면 다시 불러오기 (홈 화면에 추가한 앱은 예전 화면을 오래 들고 있음) */
 async function checkVersion(){
   try{
@@ -2101,13 +1088,11 @@ document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => {
   S.guideFrom = null; histTo(b.dataset.tab === HOME ? 0 : 1, "t");   // 탭을 바꾸면 기록은 '홈' 또는 '홈 + 그 탭' 한 칸만
   go("fade", () => { S.tab = b.dataset.tab; S.dhd = null; });
 });
-let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (S.dhd && S.chart) S.chart.redraw(); }, 150); });
 addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.token && !S.busy) refresh(); });
 { const v = LS.get("view");   // 보던 탭은 늘, 상세 화면은 10분 안에 다시 열었을 때만
-  if (v && ["dh", "dhu", "math", "guide", "settings"].includes(v.tab)){ S.tab = v.tab;
-    if (Date.now() - (v.t || 0) < 6e5){ S.dhd = v.dhd || null; }
+  if (v && ["today", "cal", "rules", "settings"].includes(v.tab)){ S.tab = v.tab;
+    if (Date.now() - (v.t || 0) < 6e5){ S.dhd = String(v.dhd || "").startsWith("m:") ? v.dhd : null; }
     histTo((S.tab !== HOME ? 1 : 0) + (S.dhd ? 1 : 0), S.dhd ? "d" : "t"); } }   // 다시 열 때마다 기록이 쌓이지 않게 깊이를 맞춤
-try{ if (LS.get("qurl", "") && !LS.get("burl", "")){ LS.set("burl", LS.get("qurl", "")); LS.del("qurl"); } }catch(e){}   // 예전 주소는 분봉 전용 키로 옮김 (실시간 시세 자동 갱신은 끔)
 render("none");   // 첫 화면이 자료를 받으니 시작할 때 refresh는 따로 안 함 (같은 요청 두 번, 오류 두 번 나오던 것)
 </script>
 </body>
