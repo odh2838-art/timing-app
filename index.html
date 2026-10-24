@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-15">
+<meta name="app-version" content="2026-10-24-16">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -306,8 +306,16 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-tag.t-info{background:var(--info-bg);color:var(--info)} .mc-tag.t-wait{background:var(--wait-bg);color:var(--wait)}
 .mc-tag.t-none{background:var(--fill);color:var(--fg2)}
 .mc-big{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums}
-.mc-chart{overflow:hidden} .mc-chart svg{width:100%;height:auto;display:block}
-.mc-axis{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:var(--t-foot)}
+/* 차트: 데이터 선만 진하게, 눈금·기준선은 한발 물러남 (선 2px · 눈금 1px 실선 · 기준선만 점선) */
+.mc-ch{margin-top:4px} .mc-ch-read{display:flex;align-items:center;gap:6px;min-height:26px;font-size:var(--t-detail);font-variant-numeric:tabular-nums} .mc-ch-read b{font-weight:600}
+.mc-ch-plot{min-width:0} .mc-ch svg{display:block;touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:crosshair}
+.mc-ch .g{stroke:var(--line);stroke-width:1} .mc-ch .rf{stroke:var(--fg2);stroke-width:1;stroke-dasharray:4 3}
+.mc-ch .s1{fill:none;stroke:var(--blue);stroke-width:2;stroke-linejoin:round;stroke-linecap:round} .mc-ch .s2{fill:none;stroke:var(--fg3);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.mc-ch .xh{stroke:var(--fg3);stroke-width:1} .mc-ch .dt{fill:var(--blue);stroke:var(--card);stroke-width:2} .mc-ch .dt2{fill:var(--fg3);stroke:var(--card);stroke-width:2}
+.mc-ch text{font-size:12px;fill:var(--fg2);font-variant-numeric:tabular-nums} .mc-ch .tr{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
+.mc-ch svg:focus-visible{outline:2px solid var(--blue);outline-offset:4px;border-radius:4px}
+.mc-lg{display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 0 4px;font-size:var(--t-foot)} .mc-lg span{display:inline-flex;align-items:center;gap:6px}
+.mc-key{display:inline-block;width:14px;height:2px;border-radius:1px;background:var(--blue);flex:none} .mc-key.g{background:var(--fg3)} .mc-key.f{background:var(--fg)}
 .mc-ci{font-size:20px;width:28px;text-align:center;flex:none}
 .text-btn{color:var(--blue);font-size:var(--t-detail);font-weight:600;min-height:44px;display:inline-flex;align-items:center}
 </style>
@@ -644,17 +652,73 @@ function macItems(){
     why: `${bo.fms_cash}% · ${mMD(bo.fms_d)} BofA 서베이` + (bo.fms_note ? ` · ${bo.fms_note}` : ""), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src});
   return { core: (m.core || []).map(fix), heat, kr: (m.kr || []).map(fix) };
 }
-/* 작은 선 그래프 (SVG). pts = [[날짜, 값], ...] */
+/* 선 그래프 공통: x는 날짜 기준(두 선의 기간이 달라도 맞춰 그림) */
+const tms = d => Date.parse(String(d).slice(0, 10) + "T00:00:00Z");
+const clean = ps => (ps || []).filter(p => p && p[1] != null && isFinite(tms(p[0])));
+/* 작은 선 그래프 (목록·시장 국면). 선 = 흐름(회색), 끝점 = 지금(파랑). 판정 색은 옆 배지가 맡음 */
 function spark(pts, o = {}){
-  pts = (pts || []).filter(p => p[1] != null);
+  pts = clean(pts);
   if (pts.length < 2) return "";
-  const W = o.w || 92, H = o.h || 30, vs = pts.map(p => p[1]).concat(o.refs || []).concat((o.pts2 || []).map(p => p[1]).filter(v => v != null));
+  const W = o.w || 92, H = o.h || 30, p2 = clean(o.pts2), all = pts.concat(p2), vs = all.map(p => p[1]);
   let lo = Math.min(...vs), hi = Math.max(...vs); if (hi === lo){ hi += 1; lo -= 1; }
-  const X = i => (i / (pts.length - 1)) * W, Y = v => H - 2 - ((v - lo) / (hi - lo)) * (H - 4);
-  const line = (ps, n) => ps.map((p, i) => `${i ? "L" : "M"}${X(i * (pts.length - 1) / (n - 1)).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
-  const p2 = o.pts2 && o.pts2.filter(p => p[1] != null);
-  const refs = (o.refs || []).map(r => `<line x1="0" x2="${W}" y1="${Y(r).toFixed(1)}" y2="${Y(r).toFixed(1)}" stroke="var(--fg3)" stroke-width="1" stroke-dasharray="3 3"/>`).join("");
-  return `<svg class="mc-spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${refs}${p2 && p2.length > 1 ? `<path d="${line(p2, p2.length)}" fill="none" stroke="var(--fg3)" stroke-width="1.4"/>` : ""}<path d="${line(pts, pts.length)}" fill="none" stroke="${o.color || "var(--fg)"}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  const t0 = tms(pts[0][0]), t1 = Math.max(tms(pts[pts.length - 1][0]), t0 + 1), pad = 3;
+  const X = d => pad / 2 + ((tms(d) - t0) / (t1 - t0)) * (W - pad - 2), Y = v => H - pad - ((v - lo) / (hi - lo)) * (H - pad * 2);
+  const path = ps => ps.filter(p => tms(p[0]) >= t0).map((p, i) => `${i ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
+  const e = pts[pts.length - 1], main = o.main || "var(--fg3)";
+  return `<svg class="mc-spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${p2.length > 1 ? `<path d="${path(p2)}" fill="none" stroke="var(--fg3)" stroke-width="1.5" stroke-linejoin="round" opacity=".55"/>` : ""}<path d="${path(pts)}" fill="none" stroke="${main}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(e[0]).toFixed(1)}" cy="${Y(e[1]).toFixed(1)}" r="2.5" fill="var(--blue)" stroke="var(--card)" stroke-width="1.5"/></svg>`;
+}
+/* 상세 차트: 값 눈금(오른쪽) · 날짜 3개 · 기준선 이름표 · 끝점 · 손가락으로 훑으면 그 날 값 표시 */
+function niceTicks(lo, hi, n){
+  const raw = (hi - lo) / Math.max(1, n - 1), mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag;
+  const step = (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * mag, out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return {ticks: out, step};
+}
+const CH = {};
+function chartHTML(id, d){ CH[id] = d; return `<div class="mc-ch" id="${id}"><div class="mc-ch-read" aria-hidden="true"></div><div class="mc-ch-plot"></div></div>`; }
+function drawChart(id){
+  const box = document.getElementById(id), d = CH[id]; if (!box || !d) return;
+  const plot = box.querySelector(".mc-ch-plot"), read = box.querySelector(".mc-ch-read");
+  const pts = clean(d.pts), p2 = clean(d.pts2), W = Math.max(240, Math.round(plot.clientWidth || 320)), H = 188, T = 10, B = 24;
+  const t0 = tms(pts[0][0]), t1 = Math.max(tms(pts[pts.length - 1][0]), t0 + 1);
+  const vs = pts.concat(p2.filter(p => tms(p[0]) >= t0)).map(p => p[1]).concat(d.refs || []);
+  let lo = Math.min(...vs), hi = Math.max(...vs); if (hi === lo){ hi += 1; lo -= 1; }
+  const padv = (hi - lo) * .08; lo -= padv; hi += padv;
+  const {ticks, step} = niceTicks(lo, hi, 4), dec = step >= 1 ? 0 : Math.min(2, Math.ceil(-Math.log10(step)));
+  const fy = v => (+v).toLocaleString("ko-KR", {minimumFractionDigits: dec, maximumFractionDigits: dec});
+  const R = 12 + Math.max(...ticks.map(v => fy(v).length)) * 7, PW = W - R, X = t => ((t - t0) / (t1 - t0)) * PW, Y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const path = ps => ps.filter(p => tms(p[0]) >= t0).map((p, i) => `${i ? "L" : "M"}${X(tms(p[0])).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
+  const grid = ticks.map(v => `<line x1="0" x2="${PW}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" class="g"/><text x="${PW + 8}" y="${(Y(v) + 4).toFixed(1)}" class="ty">${fy(v)}</text>`).join("");
+  const refs = (d.refs || []).map(r => `<line x1="0" x2="${PW}" y1="${Y(r).toFixed(1)}" y2="${Y(r).toFixed(1)}" class="rf"/><text x="4" y="${(Y(r) - 5).toFixed(1)}" class="tr">기준 ${esc(d.fmt(r))}</text>`).join("");
+  const xi = [0, Math.floor((pts.length - 1) / 2), pts.length - 1];
+  const xl = xi.map((i, k) => `<text x="${k === 0 ? 0 : k === 2 ? PW : X(tms(pts[i][0])).toFixed(1)}" y="${H - 6}" class="tx" text-anchor="${["start", "middle", "end"][k]}">${esc(dAx(pts[i][0], d.monthly))}</text>`).join("");
+  const e = pts[pts.length - 1];
+  plot.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" tabindex="0" aria-label="${esc(d.label)}">
+    ${grid}${refs}${p2.length > 1 ? `<path d="${path(p2)}" class="s2"/>` : ""}<path d="${path(pts)}" class="s1"/>
+    <line class="xh" y1="${T}" y2="${H - B}" x1="0" x2="0" visibility="hidden"/>
+    ${p2.length > 1 ? `<circle class="dt2" r="4" visibility="hidden"/>` : ""}<circle class="dt" r="4" cx="${X(tms(e[0])).toFixed(1)}" cy="${Y(e[1]).toFixed(1)}"/>${xl}</svg>`;
+  const svg = plot.querySelector("svg"), xh = svg.querySelector(".xh"), dt = svg.querySelector(".dt"), dt2 = svg.querySelector(".dt2");
+  const near = (ps, t) => { let b = null, bd = Infinity; for (const p of ps){ const dd = Math.abs(tms(p[0]) - t); if (dd < bd){ bd = dd; b = p; } } return b; };
+  const at = (ps, t) => { let b = null; for (const p of ps){ if (tms(p[0]) <= t) b = p; else break; } return b; };
+  const say = (p, q) => { read.innerHTML = `${q ? `<i class="mc-key"></i>` : ""}<b>${esc(d.fmt(p[1]))}</b>${q ? `<i class="mc-key g" style="margin-left:8px"></i><b>${esc(d.fmt(q[1]))}</b>` : ""}<span class="sub"> ${esc(dFull(p[0], d.monthly))}</span>`; };
+  const show = i => {
+    const p = pts[i], x = X(tms(p[0])), q = p2.length > 1 ? (d.step2 ? at(p2, tms(p[0])) : near(p2, tms(p[0]))) : null;
+    xh.setAttribute("x1", x); xh.setAttribute("x2", x); xh.setAttribute("visibility", "visible");
+    dt.setAttribute("cx", x); dt.setAttribute("cy", Y(p[1]));
+    if (dt2 && q){ dt2.setAttribute("cx", x); dt2.setAttribute("cy", Y(q[1])); dt2.setAttribute("visibility", "visible"); }
+    say(p, q); svg.dataset.i = i;
+  };
+  const reset = () => { xh.setAttribute("visibility", "hidden"); if (dt2) dt2.setAttribute("visibility", "hidden");
+    dt.setAttribute("cx", X(tms(e[0]))); dt.setAttribute("cy", Y(e[1])); delete svg.dataset.i;
+    read.innerHTML = `<span class="sub">${esc(dAx(pts[0][0], d.monthly))} ~ ${esc(dAx(e[0], d.monthly))} · 그래프를 누르면 그날 값</span>`; };
+  const idx = ev => { const r = svg.getBoundingClientRect(), t = t0 + Math.min(1, Math.max(0, (ev.clientX - r.left) / PW)) * (t1 - t0);
+    let b = 0, bd = Infinity; pts.forEach((p, i) => { const dd = Math.abs(tms(p[0]) - t); if (dd < bd){ bd = dd; b = i; } }); return b; };
+  svg.onpointerdown = svg.onpointermove = ev => show(idx(ev));
+  svg.onpointerleave = svg.onpointercancel = reset;
+  svg.onkeydown = ev => { if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return; ev.preventDefault();
+    const i = svg.dataset.i != null ? +svg.dataset.i : pts.length - 1; show(Math.max(0, Math.min(pts.length - 1, i + (ev.key === "ArrowLeft" ? -1 : 1)))); };
+  svg.onblur = reset;
+  reset();
 }
 const fmtV = x => x.value == null ? "-" : x.key === "fed" && x.lo != null ? `${(+x.lo).toFixed(2)}~${(+x.hi).toFixed(2)}%` : x.unit === "$" ? "$" + (+x.value).toLocaleString("en-US", {maximumFractionDigits: 1})
   : x.unit === "원" ? (+x.value).toLocaleString("ko-KR") + "원" : x.unit === "억원" ? ((x.value > 0 ? "+" : "") + (+x.value).toLocaleString("ko-KR") + "억")
@@ -664,7 +728,7 @@ function badge(x){ if (x.status === "경계" && SELL_NOTE[x.key]) return [SELL_N
 function mcRow(x){
   const [bw, tone] = badge(x);
   return `<button class="row press mc-row" data-mk="${esc(x.key)}"><div class="main"><div class="mc-n"><span>${esc(x.name)}</span>${tag(bw, tone)}</div><div class="sub mc-why">${esc(x.why || "")}</div></div>
-    <div class="mc-r"><div class="mc-v">${esc(fmtV(x))}</div>${spark(x.spark, {w: 64, h: 22, color: TONE_COL[tone]})}</div>${CHEV}</button>`;
+    <div class="mc-r"><div class="mc-v">${esc(fmtV(x))}</div>${spark(x.spark, {w: 64, h: 22})}</div>${CHEV}</button>`;
 }
 function regTile(r0, flag, key){
   const q = S.live?.[key], r = q && r0 && q.p != null && (q.d || "") >= r0.date ? {...r0, close: +q.p, dd: (q.p / Math.max(r0.hi, q.p) - 1) * 100} : r0;
@@ -672,7 +736,7 @@ function regTile(r0, flag, key){
   const kv = (k, v) => `<div class="mc-kv"><span>${k}</span><b>${v}</b></div>`;
   return `<div class="card mc-reg"><div class="sub mc-reg-n">${flag} ${esc(r.name)}</div>
     <div class="mc-reg-s">${esc(r.state)}</div>
-    ${spark(r.spark, {w: 140, h: 40, color: "var(--fg)", pts2: r.ma_spark})}
+    ${spark(r.spark, {w: 140, h: 40, main: "var(--fg)", pts2: r.ma_spark})}<div class="mc-lg sub"><span><i class="mc-key f"></i>지수</span><span><i class="mc-key g"></i>200일선</span></div>
     ${kv("지수", (+r.close).toLocaleString("en-US", {maximumFractionDigits: 0}))}${kv("고점 대비", pct(r.dd))}${kv("200일선", `${r.above ? "위" : "아래"} · ${r.ma200up ? "상승" : "하락"}`)}</div>`;
 }
 /* 오늘의 신호: 지표 판정을 오동엔진 원칙대로 묶은 결론 하나 (매수 · 경계 · 매도 신호) */
@@ -816,28 +880,31 @@ const MC_ABOUT = {
 };
 const nf = v => v == null ? "-" : (+v).toLocaleString("ko-KR", {maximumFractionDigits: 2});
 const dAx = (d, mo) => { const t = String(d).slice(0, 10), yr = t.slice(0, 4); return mo || yr !== String(new Date().getFullYear()) ? `${yr}.${+t.slice(5, 7)}` : mMD(t); };
-const UNIT_AX = {us10y: "%", core_cpi: "% (전년비)", fed: "%", hy: "bp", breadth: "%", sox: "%", krw: "원", foreign: "억원", wti: "$", fg: ""};
+const UNIT_V = {us10y: "%", core_cpi: "%", fed: "%", hy: "bp", breadth: "%", sox: "%", krw: "원", foreign: "억원", bb: "", fms: "%"};
+const fmtU = (k, v) => k === "wti" ? "$" + nf(v) : k === "fg" ? String(Math.round(v)) : nf(v) + (UNIT_V[k] || "");
+const dFull = (d, mo) => { const t = String(d).slice(0, 10), yr = t.slice(0, 4); return mo ? `${yr}년 ${+t.slice(5, 7)}월` : yr === String(new Date().getFullYear()) ? mDay(t) : `${yr}.${+t.slice(5, 7)}.${+t.slice(8, 10)}`; };
+let RZ = 0; addEventListener("resize", () => { cancelAnimationFrame(RZ); RZ = requestAnimationFrame(() => Object.keys(CH).forEach(drawChart)); });
 function renderMacDetail(key){
   if (!S.macL){ $app.innerHTML = `<div class="wrap"><div class="navbar"></div><div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div><div class="card"><div class="sk" style="width:70%;height:16px"></div></div></div>`;
     loadMac().then(() => { if (S.dhd === "m:" + key) renderMacDetail(key); }).catch(e => toast(e.message)); return; }
   const it = macItems(), all = [...it.core, ...it.heat, ...it.kr], x = all.find(a => a.key === key);
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>오늘</span></button></div><span class="mini">${esc(x?.name || "")}</span><div class="side r"></div></div>`;
   if (!x){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>이 지표를 찾지 못했어요</b>뒤로 가서 다시 선택해 주세요.</div></div>`; document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); }; return; }
-  const tone = ST_TONE[x.status] || "none", pts = (x.spark || []).filter(p => p[1] != null);
+  const pts = (x.spark || []).filter(p => p[1] != null);
   const refs = {us10y: [5], hy: [400], fg: [25, 75], breadth: [60], sox: [55], vix: [25]}[key] || [];
   const lo = pts.length ? Math.min(...pts.map(p => p[1])) : null, hi = pts.length ? Math.max(...pts.map(p => p[1])) : null;
   $app.innerHTML = `<div class="wrap">${back}
     <div class="title-block" data-anchor><div class="sub">${esc(x.asof ? (x.monthly ? `${x.asof.slice(0, 4)}년 ${+x.asof.slice(5, 7)}월분` : mDay(x.asof) + " 기준") : "")}</div><h1 class="big">${esc(x.name)}</h1></div>
     <div class="card"><div class="mc-reg-h"><span class="mc-big">${esc(fmtV(x))}</span>${tag(badge(x)[0], badge(x)[1])}</div>
       <p class="note" style="margin:6px 0 12px">${x.liveT && x.liveChg != null ? `<span style="color:var(--fg)">전일 대비 ${key === "us10y" ? `${x.liveChg >= 0 ? "+" : "−"}${Math.abs(x.liveChg).toFixed(0)}bp` : esc(pct(x.liveChg))}</span><br>` : ""}${esc(x.why || "")}</p>
-      ${pts.length > 1 ? `<div class="mc-chart">${spark(pts, {w: 600, h: 180, color: TONE_COL[tone], refs, pts2: x.spark2})}</div>
-      <div class="mc-axis sub"><span>${esc(dAx(pts[0][0], x.monthly))}</span><span>최저 ${nf(lo)} · 최고 ${nf(hi)}${UNIT_AX[key] ? " " + UNIT_AX[key] : ""}</span><span>${esc(dAx(pts[pts.length - 1][0], x.monthly))}</span></div>
-      ${refs.length ? `<p class="sub" style="margin:6px 0 0">점선 = 기준선 ${refs.map(r => r + (UNIT_AX[key] && UNIT_AX[key] !== "$" ? UNIT_AX[key].split(" ")[0] : "")).join(" · ")}</p>` : ""}${x.spark2 ? `<p class="sub" style="margin:4px 0 0">색 선 = 기준금리 상단 · 회색 선 = 미국 2년물 금리</p>` : ""}` : ""}</div>
+      ${pts.length > 1 ? `${x.spark2 ? `<div class="mc-lg sub"><span><i class="mc-key"></i>기준금리 상단</span><span><i class="mc-key g"></i>미국 2년물 금리</span></div>` : key === "core_cpi" ? `<div class="mc-lg sub"><span>전년 대비 상승률</span></div>` : ""}${chartHTML("mch", {pts, pts2: x.spark2, refs, monthly: x.monthly, fmt: v => fmtU(key, v),
+        label: `${x.name} 추이, ${dFull(pts[0][0], x.monthly)}부터 ${dFull(pts[pts.length - 1][0], x.monthly)}까지, 최저 ${fmtU(key, lo)}, 최고 ${fmtU(key, hi)}, 최근 ${fmtU(key, pts[pts.length - 1][1])}`})}` : ""}</div>
     <div class="sec-title" role="heading" aria-level="2">오동엔진 기준</div>
     <div class="card"><p style="margin:0;font-weight:600">${esc(x.rule || "")}</p>${MC_ABOUT[key] ? `<p class="note" style="margin:8px 0 0">${esc(MC_ABOUT[key])}</p>` : ""}</div>
     ${x.mom ? `<div class="sec-title" role="heading" aria-level="2">전월비 (최근 6개월)</div><div class="list">${x.mom.slice().reverse().map(p => `<div class="row"><div class="main">${esc(p[0].slice(0, 4))}년 ${+p[0].slice(5, 7)}월</div><b>${p[1] > 0 ? "+" : ""}${p[1]}%</b></div>`).join("")}</div>` : ""}
     ${x.src ? `<p class="note" style="margin:12px 4px"><a class="mc-link" href="${esc(x.src)}" target="_blank" rel="noopener">출처 보기</a></p>` : ""}
   </div>`;
+  if (pts.length > 1) drawChart("mch");
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
   bindNavbar();
 }
