@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-18">
+<meta name="app-version" content="2026-10-24-19">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -601,7 +601,7 @@ function openSheet(label, inner){
 }
 
 /* ───────── 매크로 (tc/macro.py · 오동엔진 점검표) ─────────
-   자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST) · 상태/브리핑.json (평일 아침, Claude가 BofA·CPI 예상·FedWatch를 찾아 씀).
+   자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST) · 상태/브리핑.json (화~토 아침, Claude가 BofA·CPI 예상·FedWatch를 찾아 씀).
    참고 계정가 직접 보는 것만: 미국 10년물 · WTI · 근원 CPI · 연준 · 하이일드 스프레드 · 공포탐욕 + 과열 신호 + 한국 최소(환율·외국인). */
 const MAC_FILE = "상태/매크로.json", BRIEF_FILE = "상태/브리핑.json";
 S.mac = null; S.brief = null; S.macL = false; S.macErr = null;
@@ -938,8 +938,8 @@ function renderSettings(){
     <div class="title-block" data-anchor><h1 class="big">설정</h1></div>
     <div class="sec-title" role="heading" aria-level="2">자동 계산 (한국 시간)</div>
     <div class="list">
-      <div class="row"><div class="main"><b>매크로 숫자</b><div class="sub">06:40 (미국장 마감 뒤) · 16:10 (한국장 마감 뒤) · 22:50 (미국 지표 발표 뒤) · 평일</div></div></div>
-      <div class="row"><div class="main"><b>아침 브리핑</b><div class="sub">평일 07:40쯤 · BofA 지표·CPI 예상·FedWatch</div></div></div>
+      <div class="row"><div class="main"><b>매크로 숫자</b><div class="sub">06:40 미국장 마감 뒤 (화~토) · 16:10 한국장 마감 뒤 · 22:50 미국 지표 발표 뒤 (월~금)</div></div></div>
+      <div class="row"><div class="main"><b>아침 브리핑</b><div class="sub">화~토 07:40쯤 (전날 밤 미국장 정리) · BofA 지표·CPI 예상·FedWatch</div></div></div>
     </div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">알림은 꺼져 있어요. 앱을 열면 최신 숫자를 받아요.</p>
     <details class="adv"><summary class="press">고급 설정 ›</summary>
