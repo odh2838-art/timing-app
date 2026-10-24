@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-16">
+<meta name="app-version" content="2026-10-24-17">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -316,7 +316,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-ch svg:focus-visible{outline:2px solid var(--blue);outline-offset:4px;border-radius:4px}
 .mc-lg{display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 0 4px;font-size:var(--t-foot)} .mc-lg span{display:inline-flex;align-items:center;gap:6px}
 .mc-key{display:inline-block;width:14px;height:2px;border-radius:1px;background:var(--blue);flex:none} .mc-key.g{background:var(--fg3)} .mc-key.f{background:var(--fg)}
-.mc-ci{font-size:20px;width:28px;text-align:center;flex:none}
+.mc-ci{width:28px;display:flex;justify-content:center;color:var(--fg2);flex:none}
 .text-btn{color:var(--blue);font-size:var(--t-detail);font-weight:600;min-height:44px;display:inline-flex;align-items:center}
 </style>
 </head>
@@ -685,7 +685,7 @@ function drawChart(id){
   let lo = Math.min(...vs), hi = Math.max(...vs); if (hi === lo){ hi += 1; lo -= 1; }
   const padv = (hi - lo) * .08; lo -= padv; hi += padv;
   const {ticks, step} = niceTicks(lo, hi, 4), dec = step >= 1 ? 0 : Math.min(2, Math.ceil(-Math.log10(step)));
-  const fy = v => (+v).toLocaleString("ko-KR", {minimumFractionDigits: dec, maximumFractionDigits: dec});
+  const fy = v => (+v).toLocaleString("ko-KR", {minimumFractionDigits: dec, maximumFractionDigits: dec}).replace("-", "−");
   const R = 12 + Math.max(...ticks.map(v => fy(v).length)) * 7, PW = W - R, X = t => ((t - t0) / (t1 - t0)) * PW, Y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
   const path = ps => ps.filter(p => tms(p[0]) >= t0).map((p, i) => `${i ? "L" : "M"}${X(tms(p[0])).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
   const grid = ticks.map(v => `<line x1="0" x2="${PW}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" class="g"/><text x="${PW + 8}" y="${(Y(v) + 4).toFixed(1)}" class="ty">${fy(v)}</text>`).join("");
@@ -721,7 +721,7 @@ function drawChart(id){
   reset();
 }
 const fmtV = x => x.value == null ? "-" : x.key === "fed" && x.lo != null ? `${(+x.lo).toFixed(2)}~${(+x.hi).toFixed(2)}%` : x.unit === "$" ? "$" + (+x.value).toLocaleString("en-US", {maximumFractionDigits: 1})
-  : x.unit === "원" ? (+x.value).toLocaleString("ko-KR") + "원" : x.unit === "억원" ? ((x.value > 0 ? "+" : "") + (+x.value).toLocaleString("ko-KR") + "억")
+  : x.unit === "원" ? (+x.value).toLocaleString("ko-KR") + "원" : x.unit === "억원" ? ((x.value > 0 ? "+" : x.value < 0 ? "−" : "") + Math.abs(+x.value).toLocaleString("ko-KR") + "억")
   : (+x.value).toLocaleString("ko-KR", {maximumFractionDigits: 2}) + (x.unit && !x.unit.startsWith("%") ? (x.unit === "bp" ? "bp" : "") : x.unit ? "%" : "");
 const TONE_COL = {buy: "var(--buy)", sell: "var(--sell)", info: "var(--info)", wait: "var(--wait)", none: "var(--fg2)"};
 function badge(x){ if (x.status === "경계" && SELL_NOTE[x.key]) return [SELL_NOTE[x.key], "sell"]; if (x.status === "기회") return ["매수 신호", "info"]; return [ST_WORD[x.status] || x.status || "-", ST_TONE[x.status] || "none"]; }
@@ -823,7 +823,7 @@ async function renderMac0(){
   const it = macItems(), rg = m.regime || {};
   const cal = (m.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; }).slice(0, 3);
   $app.innerHTML = `<div class="wrap">${head}
-    <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">${esc(mDay(m.date))} ${esc(S.liveAt ? new Date(S.liveAt).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}) : (m.at || "").slice(11, 16))} 기준</div></div>
+    <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">${esc(mDay(S.liveAt ? new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(S.liveAt)) : m.date))} ${esc(S.liveAt ? new Date(S.liveAt).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}) : (m.at || "").slice(11, 16))} 기준</div></div>
     ${signalCard()}
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
     <div class="mc-regs">${regTile(rg.spx, "🇺🇸", "spx")}${regTile(rg.kospi, "🇰🇷", "kospi")}</div>
@@ -840,7 +840,8 @@ async function renderMac0(){
   const tr = document.getElementById("torules"); if (tr) tr.onclick = () => { histTo(1, "t"); go("fade", () => { S.tab = "rules"; }); };
   macBind();
 }
-const CAL_ICON = {fed: "🏛", data: "📊", kr: "🇰🇷", earn: "💼"};
+/* 일정 아이콘: 탭 막대와 같은 선 굵기(1.8)의 단색 선 아이콘 — 이모지는 색·모양이 제각각이라 목록 리듬을 깨서 바꿈 */
+const CAL_ICON = {fed: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 4l9 5.5M5 10v8M9.7 10v8M14.3 10v8M19 10v8M3 20.5h18"/></svg>', data: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5h16M6.5 17v-5M12 17V6M17.5 17v-8"/></svg>', kr: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l3.5 12L12 8l3.5 10L19 6M4 11h16M4 14.5h16"/></svg>', earn: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/></svg>', etc: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'};
 /* 일정 한 줄: 한국 시간 날짜·시각 하나로 (발표 시각이 있으면 그 날짜) */
 function calKst(c){
   const m = /^(\d{1,2})\/(\d{1,2}) (\d{1,2}:\d{2})/.exec(c.time || "");
@@ -850,7 +851,7 @@ function calKst(c){
 }
 function calRow(c){
   const k = calKst(c), today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date()), dd = Math.round((Date.parse(k.d) - Date.parse(today)) / 864e5);
-  return `<div class="row"><span class="mc-ci" aria-hidden="true">${CAL_ICON[c.kind] || "📅"}</span><div class="main"><div class="mc-n">${esc(c.name)}</div><div class="sub">${esc(mDay(k.d))}${k.hm ? " " + esc(k.hm) : ""}${c.note ? " · " + esc(c.note) : ""}</div></div><span class="sub">${dd === 0 ? "오늘" : dd === 1 ? "내일" : dd > 0 ? dd + "일 뒤" : ""}</span></div>`;
+  return `<div class="row"><span class="mc-ci" aria-hidden="true">${CAL_ICON[c.kind] || CAL_ICON.etc}</span><div class="main"><div class="mc-n">${esc(c.name)}</div><div class="sub">${esc(mDay(k.d))}${k.hm ? " " + esc(k.hm) : ""}${c.note ? " · " + esc(c.note) : ""}</div></div><span class="sub">${dd === 0 ? "오늘" : dd === 1 ? "내일" : dd > 0 ? dd + "일 뒤" : ""}</span></div>`;
 }
 async function renderCal(){
   const head = `<div class="navbar"><div class="side"></div><span class="mini">일정</span><div class="side r"></div></div>`;
@@ -878,7 +879,7 @@ const MC_ABOUT = {
   krw: "원화가 빠르게 약해지면 외국인 자금이 빠져나가기 쉬워요.",
   foreign: "코스피 외국인 순매수 금액이에요. 5일·20일 누적이 같은 방향이면 추세로 판단해요."
 };
-const nf = v => v == null ? "-" : (+v).toLocaleString("ko-KR", {maximumFractionDigits: 2});
+const nf = v => v == null ? "-" : (+v).toLocaleString("ko-KR", {maximumFractionDigits: 2}).replace("-", "−");
 const dAx = (d, mo) => { const t = String(d).slice(0, 10), yr = t.slice(0, 4); return mo || yr !== String(new Date().getFullYear()) ? `${yr}.${+t.slice(5, 7)}` : mMD(t); };
 const UNIT_V = {us10y: "%", core_cpi: "%", fed: "%", hy: "bp", breadth: "%", sox: "%", krw: "원", foreign: "억원", bb: "", fms: "%"};
 const fmtU = (k, v) => k === "wti" ? "$" + nf(v) : k === "fg" ? String(Math.round(v)) : nf(v) + (UNIT_V[k] || "");
