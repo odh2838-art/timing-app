@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-17">
+<meta name="app-version" content="2026-10-24-18">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -613,7 +613,7 @@ const mDay = d => d ? `${mMD(d)} (${WD[new Date(String(d).slice(0, 10) + "T12:00
 /* 실시간 시세 (내 Cloudflare 중계 relay/worker.js): 숫자만 지금 값으로. 판정·신호는 계산 시점 기준 그대로 */
 const LIVE = { "^TNX": "us10y", "CL=F": "wti", "^VIX": "vix", "KRW=X": "krw", "^GSPC": "spx", "^KS11": "kospi" };
 const RELAY = () => LS.get("burl", "") || "https://rooru-quote.odh2838.workers.dev";
-S.live = null; S.liveAt = null;
+S.live = null; S.liveAt = null; S.liveQ = null;
 async function pullLive(){
   try{
     const r = await fetch(RELAY() + "?s=" + Object.keys(LIVE).map(encodeURIComponent).join(","), {cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined});
@@ -621,7 +621,9 @@ async function pullLive(){
     const j = await r.json(), out = {};
     for (const [sym, k] of Object.entries(LIVE)) if (j[sym] && j[sym].p != null) out[k] = j[sym];
     if (!Object.keys(out).length) return false;
-    S.live = out; S.liveAt = Date.now(); return true;
+    /* 머리 시각 = 받은 시각이 아니라 시세가 찍힌 시각 (주말·휴장엔 마지막 거래 시각) */
+    const qt = Math.max(0, ...Object.values(out).map(q => Date.parse(q.t || "") || 0));
+    S.live = out; S.liveAt = Date.now(); S.liveQ = qt ? Math.min(qt, S.liveAt) : S.liveAt; return true;
   }catch(e){ return false; }
 }
 let liveT = null;
@@ -721,7 +723,7 @@ function drawChart(id){
   reset();
 }
 const fmtV = x => x.value == null ? "-" : x.key === "fed" && x.lo != null ? `${(+x.lo).toFixed(2)}~${(+x.hi).toFixed(2)}%` : x.unit === "$" ? "$" + (+x.value).toLocaleString("en-US", {maximumFractionDigits: 1})
-  : x.unit === "원" ? (+x.value).toLocaleString("ko-KR") + "원" : x.unit === "억원" ? ((x.value > 0 ? "+" : x.value < 0 ? "−" : "") + Math.abs(+x.value).toLocaleString("ko-KR") + "억")
+  : x.unit === "원" ? (+x.value).toLocaleString("ko-KR", {maximumFractionDigits: 1}) + "원" : x.unit === "억원" ? ((x.value > 0 ? "+" : x.value < 0 ? "−" : "") + Math.abs(+x.value).toLocaleString("ko-KR") + "억")
   : (+x.value).toLocaleString("ko-KR", {maximumFractionDigits: 2}) + (x.unit && !x.unit.startsWith("%") ? (x.unit === "bp" ? "bp" : "") : x.unit ? "%" : "");
 const TONE_COL = {buy: "var(--buy)", sell: "var(--sell)", info: "var(--info)", wait: "var(--wait)", none: "var(--fg2)"};
 function badge(x){ if (x.status === "경계" && SELL_NOTE[x.key]) return [SELL_NOTE[x.key], "sell"]; if (x.status === "기회") return ["매수 신호", "info"]; return [ST_WORD[x.status] || x.status || "-", ST_TONE[x.status] || "none"]; }
@@ -823,7 +825,7 @@ async function renderMac0(){
   const it = macItems(), rg = m.regime || {};
   const cal = (m.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; }).slice(0, 3);
   $app.innerHTML = `<div class="wrap">${head}
-    <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">${esc(mDay(S.liveAt ? new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(S.liveAt)) : m.date))} ${esc(S.liveAt ? new Date(S.liveAt).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}) : (m.at || "").slice(11, 16))} 기준</div></div>
+    <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">${esc(mDay(S.liveQ ? new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(S.liveQ)) : m.date))} ${esc(S.liveQ ? new Date(S.liveQ).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}) : (m.at || "").slice(11, 16))} 기준</div></div>
     ${signalCard()}
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
     <div class="mc-regs">${regTile(rg.spx, "🇺🇸", "spx")}${regTile(rg.kospi, "🇰🇷", "kospi")}</div>
