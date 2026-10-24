@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-20">
+<meta name="app-version" content="2026-10-24-21">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -63,7 +63,6 @@ html,body{overflow-x:clip}
 .ghost.top{z-index:4;box-shadow:-8px 0 24px rgba(0,0,0,.08)}
 #app.over{box-shadow:-8px 0 24px rgba(0,0,0,.08)}
 .shade{position:fixed;inset:0;z-index:3;background:rgba(0,0,0,.1);pointer-events:none;opacity:0}
-body.sheet-open{background:#1D1D1F}
 .v-push{animation:push .38s var(--ease) both}
 .v-pop{animation:pop .34s var(--ease) both}
 .v-fade{animation:fade .24s var(--ease-out) both}
@@ -159,7 +158,7 @@ body.sheet-open{background:#1D1D1F}
 /* 아이패드: 조금 넓은 가운데 칸, 시트는 가운데 폼 시트, 위쪽 바 바탕은 화면 끝까지 */
 @media (min-width:1024px){ .wrap{max-width:760px} }
 @media (min-width:768px){
-.sheet-bg{align-items:center} .sheet{max-width:560px;height:min(680px,86vh);border-radius:var(--r-card)} .sheet::after{display:none}
+
 .navbar.solid{box-shadow:0 0 0 100vmax var(--bar),0 .5px 0 100vmax var(--line);clip-path:inset(0 -100vmax -1px)}
 }
 input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
@@ -203,15 +202,6 @@ textarea{resize:none}
 .btn:disabled{opacity:.5} .btn.primary:disabled{background:var(--fill);color:var(--fg3);opacity:1}
 .note{font-size:var(--t-detail);color:var(--fg2);line-height:1.45}
 
-/* 검색 시트 */
-.sheet-bg{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center}
-.scrim{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0}
-.sheet::after{content:"";position:absolute;left:0;right:0;top:calc(100% - 1px);height:100vh;background:var(--sheet);pointer-events:none}
-.sheet{position:relative;background:var(--sheet);width:100%;max-width:640px;height:90vh;height:min(90dvh,calc(100% - 12px));border-radius:var(--r-card) var(--r-card) 0 0;display:flex;flex-direction:column;padding:var(--gap-sub) max(var(--gutter),env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(var(--gutter),env(safe-area-inset-left,0px));transform:translateY(100%);box-shadow:0 -10px 40px rgba(0,0,0,.08);will-change:transform}
-.grab{display:none}
-@media (pointer:coarse){ .grab{width:100%;height:20px;display:flex;align-items:center;justify-content:center} .grab::before{content:"";width:36px;height:5px;border-radius:2.5px;background:var(--fg3)} }
-.sheet-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--gap-caption);min-height:44px}
-.sheet-top h2{margin:0;font-size:var(--t-heading);font-weight:600;line-height:1.3}
 
 .results{flex:1;overflow:auto;margin-top:12px;-webkit-overflow-scrolling:touch;padding-bottom:16px;overscroll-behavior:contain}
 
@@ -398,7 +388,7 @@ function syncBusy(){ document.querySelectorAll("[data-busy]").forEach(b => b.dis
 async function refresh(){   // 화면의 자료는 그대로 두고 뒤에서 받아서, 성공했을 때만 바꿈 (오프라인이면 그대로)
   S.err = ""; S.loading = false;
   try{ await loadMac(); }catch(e){ if (S.mac) toast(e.message); else { S.macL = false; } }
-  if (!S.dirty && !document.querySelector(".sheet-bg")) render("none");
+  if (!S.dirty) render("none");
 }
 /* 화면 확대 막기 (iOS는 user-scalable=no를 무시하므로 손가락 두 개 확대를 직접 막는다). 차트 안의 확대·축소는 그대로 */
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => { if (!e.target.closest?.(".plot, .pro-box")) e.preventDefault(); }, {passive: false}));
@@ -488,8 +478,6 @@ addEventListener("popstate", () => {
   if (skipPop){ skipPop--; const f = popFix; popFix = null; f?.(); return; }
   if (SWIPING) return;
   document.querySelectorAll(".ghost").forEach(g => { if (!g.getAnimations().length) g.remove(); });   // 전환이 끝났는데 남은 화면 조각 (터치가 막히는 원인)
-  const sh = document.querySelector(".sheet-bg:not(.closing)");
-  if (sh){ sh._close?.(true); return; }
   const how = BACK_ANIM ? "pop" : "none"; BACK_ANIM = false;   // 앱의 뒤로 버튼이면 밀리는 전환, 시스템 제스처면 그대로 (두 번 밀리지 않게)
   if (S.tab === "guide" && S.guideFrom){ const g = S.guideFrom; S.guideFrom = null; go("fade", () => { S.tab = g.tab; S.dhd = g.dhd || null; }); return; }   // 사용법을 연 곳으로
   if (S.dhd){ go(how, () => S.dhd = null); return; }
@@ -539,66 +527,6 @@ function renderSetup(msg){
    아이폰(홈 화면 앱엔 시스템 뒤로가 없음)에서만. 안드로이드는 시스템 뒤로 제스처가 같은 자리를 써서 둘이 부딪히면 화면이 멈춘다 */
 let SWIPING = false;
 
-/* 아래에서 올라오는 창: 같은 곡선(.32,.72,0,1)으로 열림 0.4초 · 닫힘 0.28초(끌다 놓으면 손가락 속도를 이어받아 0.12~0.28초)
-   닫는 길 네 가지: ✕ · 바깥 터치 · 아래로 끌기(높이 1/3 또는 빠른 튕김) · Escape. 목록이 맨 위일 때만 끌려 내려간다. */
-function openSheet(label, inner){
-  const bg = document.createElement("div"); bg.className = "sheet-bg";
-  bg.innerHTML = `<div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}"><div class="grab" aria-hidden="true"></div>
-    <div class="sheet-top"><h2 class="sh3">${esc(label)}</h2><button class="icon-btn press" data-x aria-label="닫기" style="margin-right:-12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>${inner}</div>`;
-  const opener = document.activeElement;
-  document.body.appendChild(bg); document.body.style.overflow = "hidden"; document.body.classList.add("sheet-open");
-  $app.inert = true; document.getElementById("tabbar").inert = true;   // 시트 밖으로 포커스가 새지 않게
-  const sheet = bg.querySelector(".sheet"), scrim = bg.querySelector(".scrim");
-  const H = () => sheet.getBoundingClientRect().height;
-  const move = (y, dur, curve) => {
-    const t = REDUCED ? "none" : (dur ? `transform ${dur}ms ${curve}` : "none");
-    sheet.style.transition = t; scrim.style.transition = REDUCED ? "none" : (dur ? `opacity ${dur}ms ${curve}` : "none");
-    sheet.style.transform = `translateY(${y}px)`; scrim.style.opacity = Math.max(0, 1 - y / H());
-    const p = Math.max(0, 1 - y / H());   // 창이 올라온 만큼 뒤 화면이 작아지고 모서리가 둥글어짐
-    $app.style.transition = t.replace("transform", "transform") ; $app.style.transformOrigin = `50% ${scrollY + innerHeight / 2}px`;
-    $app.style.transform = p ? `scale(${1 - 0.06 * p})` : ""; $app.style.borderRadius = p ? `${14 * p}px` : ""; $app.style.overflow = p ? "hidden" : "";
-  };
-  requestAnimationFrame(() => requestAnimationFrame(() => move(0, 400, "var(--ease)")));
-  let closed = false;
-  hPush("s");
-  const close = (v = 0, fromPop = false) => {
-    if (closed) return; closed = true; bg.classList.add("closing");
-    if (!fromPop && history.state?.v === "s"){ skipPop++; history.back(); }
-    const cur = new DOMMatrix(getComputedStyle(sheet).transform).m42, rest = H() - cur;
-    const dur = v > 0 ? Math.max(120, Math.min(280, rest / v)) : 280;
-    move(H(), dur, "var(--ease)"); document.body.style.overflow = "";
-    removeEventListener("keydown", onKey);
-    $app.inert = false; document.getElementById("tabbar").inert = !!S.dhd; try{ opener?.focus?.(); }catch(e){}
-    setTimeout(() => { bg.remove(); document.body.classList.remove("sheet-open"); $app.style.transition = ""; $app.style.transform = ""; $app.style.borderRadius = ""; $app.style.overflow = ""; }, REDUCED ? 0 : dur);
-  };
-  bg._close = fromPop => close(0, fromPop);
-  const onKey = e => { if (e.key === "Escape") close(); };
-  addEventListener("keydown", onKey);
-  scrim.onclick = () => close();
-  bg.querySelector("[data-x]").onclick = () => close();
-  /* 끌기 */
-  let y0 = null, dy = 0, dragging = false, samples = [];
-  const scroller = () => sheet.querySelector(".results");
-  sheet.addEventListener("touchstart", e => { y0 = e.touches[0].clientY; dy = 0; dragging = false; samples = [[y0, e.timeStamp]]; }, {passive:true});
-  sheet.addEventListener("touchmove", e => {
-    if (y0 == null) return;
-    const y = e.touches[0].clientY; dy = y - y0;
-    const sc = scroller(), inList = sc && sc.contains(e.target);
-    if (!dragging){
-      if (dy > 4 && (!inList || sc.scrollTop <= 0)) dragging = true;   // 목록이 맨 위일 때만 창이 내려감
-      else if (Math.abs(dy) > 4){ y0 = null; return; }                  // 아니면 목록 스크롤
-    }
-    if (dragging){ e.preventDefault(); move(Math.max(0, dy), 0); samples.push([y, e.timeStamp]); if (samples.length > 5) samples.shift(); }
-  }, {passive:false});
-  sheet.addEventListener("touchend", () => {
-    if (!dragging){ y0 = null; return; }
-    const [a, b] = [samples[0], samples[samples.length - 1]], v = (b[0] - a[0]) / Math.max(1, b[1] - a[1]); // px/ms
-    y0 = null; dragging = false;
-    if (dy > H() / 3 || v > 0.5) close(v > 0 ? v : 0);
-    else move(0, 400, "var(--ease-back)");   // 제자리로 돌아올 때만 살짝 튕김
-  });
-  return { bg, sheet, close };
-}
 
 /* ───────── 매크로 (tc/macro.py · 오동엔진 점검표) ─────────
    자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST) · 상태/브리핑.json (화~토 아침, Claude가 BofA·CPI 예상·FedWatch를 찾아 씀).
@@ -972,7 +900,7 @@ async function checkVersion(){
     const mine = document.querySelector('meta[name="app-version"]')?.content;
     const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"})).text();
     const v = (t.match(/name="app-version" content="([^"]+)"/) || [])[1];
-    const busy = S.dirty || S.busy || document.querySelector(".sheet-bg");   // 입력 중·계산 기다리는 중엔 미룸 (다음에 돌아올 때 바꿈)
+    const busy = S.dirty || S.busy;   // 입력 중·계산 기다리는 중엔 미룸 (다음에 돌아올 때 바꿈)
     let tried = ""; try{ tried = sessionStorage.getItem("verTry") || ""; }catch(e){}
     if (v && mine && v !== mine && !busy && tried !== v){ try{ sessionStorage.setItem("verTry", v); }catch(e){} toast("새 버전으로 바꾸는 중"); setTimeout(() => location.replace(location.pathname + "?v=" + encodeURIComponent(v)), 600); }   // 같은 버전으로 한 번만 (캐시가 늦어도 계속 새로고침하지 않게)
   }catch(e){}
