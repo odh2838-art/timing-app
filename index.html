@@ -262,7 +262,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-sig{padding:20px}
 /* 신호 단계: 지금 신호가 네 단계 중 어디인지 (색은 지금 칸에만) */
 .mc-scale{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:14px} .mc-scale i{display:block;height:4px;border-radius:2px;background:var(--fill)}
-.mc-scale span{display:block;margin-top:6px;font-size:var(--t-foot);color:var(--fg3);text-align:center;white-space:nowrap} .mc-scale .on i{background:var(--c)} .mc-scale .on span{color:var(--fg);font-weight:600}
+.mc-scale span{display:block;margin-top:6px;font-size:var(--t-foot);color:var(--fg2);text-align:center;white-space:nowrap} .mc-scale .on i{background:var(--c)} .mc-scale .on span{color:var(--fg);font-weight:600}
 /* 현금과 헤지: 왼쪽 항목 · 오른쪽 할 일 */
 .mc-cash{padding:4px var(--pad-card)} .mc-cr{display:grid;grid-template-columns:minmax(76px,auto) 1fr;column-gap:16px;padding:12px 0;font-size:var(--t-detail)} .mc-cr+.mc-cr{border-top:.5px solid var(--line)}
 .mc-cr>span{color:var(--fg2)} .mc-cr b{font-weight:600;display:block} .mc-cr small{display:block;color:var(--fg2);font-size:var(--t-foot);margin-top:2px}
@@ -303,7 +303,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-tag.t-none{background:var(--fill);color:var(--fg2)}
 .mc-big{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums}
 /* 차트: 데이터 선만 진하게, 눈금·기준선은 한발 물러남 (선 2px · 눈금 1px 실선 · 기준선만 점선) */
-.mc-ch{margin-top:4px} .mc-cread{display:flex;align-items:center;gap:6px;min-height:26px;font-size:var(--t-detail);font-variant-numeric:tabular-nums} .mc-cread b{font-weight:600}
+.mc-ch{margin-top:4px} .mc-ch-read{display:flex;align-items:center;gap:6px;min-height:26px;font-size:var(--t-detail);font-variant-numeric:tabular-nums} .mc-ch-read b{font-weight:600}
 .mc-ch-plot{min-width:0} .mc-ch svg{display:block;touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:crosshair}
 .mc-ch .g{stroke:var(--line);stroke-width:1} .mc-ch .rf{stroke:var(--fg2);stroke-width:1;stroke-dasharray:4 3}
 .mc-ch .s1{fill:none;stroke:var(--blue);stroke-width:2;stroke-linejoin:round;stroke-linecap:round} .mc-ch .s2{fill:none;stroke:var(--fg3);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
@@ -617,10 +617,10 @@ function niceTicks(lo, hi, n){
   return {ticks: out, step};
 }
 const CH = {};
-function chartHTML(id, d){ CH[id] = d; return `<div class="mc-ch" id="${id}"><div class="mc-cread" aria-hidden="true"></div><div class="mc-ch-plot"></div></div>`; }
+function chartHTML(id, d){ CH[id] = d; return `<div class="mc-ch" id="${id}"><div class="mc-ch-read" aria-hidden="true"></div><div class="mc-ch-plot"></div></div>`; }
 function drawChart(id){
   const box = document.getElementById(id), d = CH[id]; if (!box || !d) return;
-  const plot = box.querySelector(".mc-ch-plot"), read = box.querySelector(".mc-cread");
+  const plot = box.querySelector(".mc-ch-plot"), read = box.querySelector(".mc-ch-read");
   const pts = clean(d.pts), p2 = clean(d.pts2), W = Math.max(240, Math.round(plot.clientWidth || 320)), H = 188, T = 10, B = 24;
   const t0 = tms(pts[0][0]), t1 = Math.max(tms(pts[pts.length - 1][0]), t0 + 1);
   const vs = pts.concat(p2.filter(p => tms(p[0]) >= t0)).map(p => p[1]).concat(d.refs || []);
