@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-25-13">
+<meta name="app-version" content="2026-10-25-14">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -721,12 +721,12 @@ function macSignal(){
   let label, tone, line;
   const miss0 = it.core.filter(x => x.status === "자료 없음" || x.value == null).map(x => SHORT_NAME[x.key] || x.name);
   if (miss0.length){ label = "판정 보류"; tone = "none"; line = `${miss0.join("·")} 자료를 받지 못해 판정을 보류해요. 핵심 6개가 모두 있어야 신호를 내요. 오른쪽 위 ↻로 다시 계산해 보세요.`; }
-  else if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "현금 비중 확대 · 소량 헤지 · 신규 매수 보류"; }
+  else if (sell.length >= 2 && !buy.length){ label = "비중 축소"; tone = "sell"; line = "현금 비중 확대 · 소량 헤지 · 신규 매수 보류"; }
   else if (buy.length && !warn.length && !sell.length && rule?.tone !== "wait"){ label = "분할매수"; tone = "buy"; line = "분할매수 · 현금 비중 30% 유지"; }
   else if (buy.length){ label = "소량 분할매수"; tone = "info";
     const but = [sell.length ? "과열 신호" : "", warn.length ? "경계 " + warn.length + "개" : "", rule?.tone === "wait" ? "금리·유가 상승 추세" : ""].filter(Boolean).join(" · ");
     line = `공포 구간이라 분할매수는 시작하되, ${but} → 소량만 · 바닥을 서둘러 잡지 않음 · 현금 30~50%`; }
-  else if (warn.length || rule?.tone === "wait"){ label = "관망"; tone = "wait"; line = "신규 매수 보류 · 현금 비중 30% 이상 유지"; }
+  else if (warn.length || sell.length || rule?.tone === "wait"){ label = "관망"; tone = "wait"; line = sell.length ? "과열 신호 1개 · 신규 매수 보류 · 현금 비중 30% 이상 유지" : "신규 매수 보류 · 현금 비중 30% 이상 유지"; }
   else { label = "중립"; tone = "none"; line = "현금 비중 30% 유지 · 기존 계획대로"; }
   const miss = label === "판정 보류" ? [] : all.filter(x => x.status === "자료 없음").map(x => SHORT_NAME[x.key] || x.name);
   return { label, tone, line, buy, warn, sell, miss, rule };
@@ -759,7 +759,7 @@ function cashCard(){
     "분할매수": ["30%", "필요 없음"],
     "소량 분할매수": ["30~50%", crowd ? "롱 쏠림(펀드매니저 현금 4% 미만) · 지수가 꺾이면 숏 소량" : "하락 이벤트가 예상되면 소량"],
     "중립": ["30%", "필요 없음"],
-    "관망": ["30~50%", "하락 이벤트가 예상되면 소량"],
+    "관망": ["30~50%", crowd ? "롱 쏠림 · 지수가 꺾이면 숏 소량" : "하락 이벤트가 예상되면 소량"],
     "비중 축소": ["최대 50%까지 (기본 30%에서 늘림)", "소량 · 큰 일정 앞이면 VIX 먼저" + (crowd ? ", 숏은 지수가 꺾일 때" : "")]
   }[g.label];
   const undo = g.label === "비중 축소" ? g.sell.map(x => x.k ? ({fg: "공포탐욕 75 아래", bb: "Bull & Bear 8 아래", fms: "펀드매니저 현금 4% 이상", sox: "반도체 이격 55% 아래"}[x.k]) : "장기금리·유가 하락 전환").filter(Boolean) : [];
@@ -914,7 +914,7 @@ function renderRules(){
     <div class="card"><b>한 줄 원칙</b><p style="margin:6px 0 0">장기금리와 유가가 내려오지 않는데 오르는 증시는 믿지 않는다. 채권·신용시장이 주식보다 먼저 말한다.</p></div>
     <div class="sec-title" role="heading" aria-level="2">오늘의 신호가 정해지는 순서</div>
     <p class="note" style="margin:0 var(--pad-card) var(--gap-caption)">위에서부터 먼저 맞는 것 하나가 오늘의 신호예요. 신호는 미국 시장 지표 기준이에요.</p>
-    <div class="list">${[["판정 보류", "핵심 6개 중 하나라도 자료가 없을 때"], ["비중 축소", "과열·매도 신호가 있고 매수 신호는 없을 때"], ["분할매수", "매수 신호만 있고 경계·과열이 없고 금리·유가가 내려올 때"], ["소량 분할매수", "매수 신호가 있지만 경계·과열이 섞이거나 금리·유가가 아직 오를 때 (공포 구간은 사되 소량, 바닥을 서둘러 잡지 않음)"], ["관망", "경계만 있거나 금리·유가가 아직 오를 때"], ["중립", "아무 신호도 없을 때"]]
+    <div class="list">${[["판정 보류", "핵심 6개 중 하나라도 자료가 없을 때"], ["비중 축소", "과열·매도 신호가 2개 이상(금리·유가 없는 상승 포함)이고 매수 신호는 없을 때"], ["분할매수", "매수 신호만 있고 경계·과열이 없고 금리·유가가 내려올 때"], ["소량 분할매수", "매수 신호가 있지만 경계·과열이 섞이거나 금리·유가가 아직 오를 때 (공포 구간은 사되 소량, 바닥을 서둘러 잡지 않음)"], ["관망", "경계가 있거나, 과열 신호가 1개뿐이거나, 금리·유가가 아직 오를 때"], ["중립", "아무 신호도 없을 때"]]
       .map(([n, d]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub">${esc(d)}</div></div></div>`).join("")}</div>
     <div class="sec-title" role="heading" aria-level="2">매크로 점검표</div>
     <p class="note" style="margin:0 var(--pad-card) var(--gap-caption)">단기 = 최근 20거래일(약 1달) 변화 · 중기 추세 = 20일 평균과 60일 평균의 위치</p>
