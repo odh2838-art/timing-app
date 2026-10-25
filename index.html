@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-25-3">
+<meta name="app-version" content="2026-10-25-4">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -703,7 +703,7 @@ function macSignal(){
   let label, tone, line;
   const miss0 = it.core.filter(x => x.status === "자료 없음" || x.value == null).map(x => SHORT_NAME[x.key] || x.name);
   if (miss0.length){ label = "판정 보류"; tone = "none"; line = `${miss0.join("·")} 자료를 받지 못해 판정을 보류해요. 핵심 6개가 모두 있어야 신호를 내요.`; }
-  else if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "중단기 비중 축소 · 현금 비중 확대 · 소량 헤지"; }
+  else if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "현금 비중 확대 · 소량 헤지 · 신규 매수 보류"; }
   else if (buy.length && !warn.length && !sell.length && rule?.tone !== "wait"){ label = "분할매수"; tone = "buy"; line = "분할매수 · 현금 비중 30% 유지"; }
   else if (buy.length){ label = "분할매수"; tone = "info"; line = "분할매수 시작 · 현금 비중 30~50% 유지"; }
   else if (warn.length || rule?.tone === "wait"){ label = "관망"; tone = "wait"; line = "신규 매수 보류 · 현금 비중 30% 이상 유지"; }
@@ -729,10 +729,10 @@ function cashCard(){
   const g = macSignal(); if (g.label === "판정 보류") return "";
   const crowd = g.sell.some(x => x.k === "fms" || x.k === "bb");   // 롱 쏠림: FMS 4% 미만 · Bull & Bear 8 이상
   const P = {
-    "분할매수": g.tone === "buy" ? ["30%", "필요 없음", "계획대로"] : ["30~50%", crowd ? "롱 쏠림 · 방향 전환 보이면 숏 소량" : "필요 없음", "신규 진입 신중"],
-    "중립": ["30%", "필요 없음", "계획대로"],
-    "관망": ["30~50%", "하락 이벤트가 예상되면 소량", "신규 진입 보류"],
-    "비중 축소": ["50%까지 확대", crowd ? "소량 · 롱 쏠림이면 숏, 큰 일정 앞이면 VIX" : "소량 · 큰 일정 앞이면 VIX", "비중 축소"]
+    "분할매수": g.tone === "buy" ? ["30%", "필요 없음"] : ["30~50%", crowd ? "롱 쏠림 · 방향 전환 보이면 숏 소량" : "필요 없음"],
+    "중립": ["30%", "필요 없음"],
+    "관망": ["30~50%", "하락 이벤트가 예상되면 소량"],
+    "비중 축소": ["50%까지 확대", crowd ? "소량 · 롱 쏠림이면 숏, 큰 일정 앞이면 VIX" : "소량 · 큰 일정 앞이면 VIX"]
   }[g.label];
   const today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date());
   const ev = (S.mac?.cal || []).map(c => ({...c, k: calKst(c)})).filter(c => (c.kind === "fed" || /CPI/.test(c.name)) && c.k.d >= today && (Date.parse(c.k.d) - Date.parse(today)) / 864e5 <= 7).sort((a, b) => a.k.d < b.k.d ? -1 : 1)[0];
@@ -740,7 +740,6 @@ function cashCard(){
   return `<div class="sec-title" role="heading" aria-level="2">현금과 헤지</div><div class="card mc-cash">
     ${r("현금 비중", P[0], "현금이 가장 싼 보험 · 급락이 오면 기회")}
     ${r("헤지", P[1], P[1] === "필요 없음" ? "" : "VIX·숏 합쳐 현금의 30% 이내 · 목표가는 짧게, 손절선 지나면 정리")}
-    ${r("중단기 종목", P[2], "")}
     ${ev ? r("큰 일정", `${mMD(ev.k.d)} ${ev.name.replace(/ 금리 결정| \(.*\)/g, "")}`, "불확실성이 큰 이벤트 · 헤지는 VIX로") : ""}</div>`;
 }
 /* 아침 브리핑: 한 줄 결론 + '지표 — 의미' 줄 + 이번 주 일정 (오늘의 신호와 같은 모양) */
@@ -890,7 +889,7 @@ function renderRules(){
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
     <div class="card"><p class="note" style="margin:0;color:var(--fg)">일반 기준이에요.<br><b style="color:var(--buy)">상승장</b> 지수가 200일선 위 + 200일선 오르는 중<br><b style="color:var(--wait)">조정</b> 1년 고점보다 10~20% 아래<br><b style="color:var(--sell)">하락장</b> 1년 고점보다 20% 넘게 아래, 또는 200일선 아래 + 200일선 내리는 중<br><b>방향 탐색</b> 그 밖</p></div>
     <div class="sec-title" role="heading" aria-level="2">현금과 헤지 · 운용 원칙</div>
-    <div class="list"><div class="row"><div class="main"><div class="mc-n">현금은 가장 싼 보험</div><div class="sub">기본 30% (20~50%). 급락이 와도 현금이 있으면 기회</div></div></div><div class="row"><div class="main"><div class="mc-n">하락 이벤트가 예상되면</div><div class="sub">중단기 종목 비중 축소 + 소량 헤지</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 순서</div><div class="sub">1순위 현금 확대 · 불확실성 큰 이벤트는 VIX · 롱 쏠림(과열)에서 방향 전환 예상 시 숏</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 한도</div><div class="sub">VIX·숏 합쳐서 현금의 30% 이하</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 청산</div><div class="sub">목표가는 짧게 · 손절선을 지나면 바로 정리</div></div></div><div class="row"><div class="main"><div class="mc-n">매크로 하락 때</div><div class="sub">분할매수 (바닥을 서둘러 잡지 않음)</div></div></div></div>
+    <div class="list"><div class="row"><div class="main"><div class="mc-n">현금은 가장 싼 보험</div><div class="sub">기본 30% (20~50%). 급락이 와도 현금이 있으면 기회</div></div></div><div class="row"><div class="main"><div class="mc-n">하락 이벤트가 예상되면</div><div class="sub">현금 확대 + 소량 헤지</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 순서</div><div class="sub">1순위 현금 확대 · 불확실성 큰 이벤트는 VIX · 롱 쏠림(과열)에서 방향 전환 예상 시 숏</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 한도</div><div class="sub">VIX·숏 합쳐서 현금의 30% 이하</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 청산</div><div class="sub">목표가는 짧게 · 손절선을 지나면 바로 정리</div></div></div><div class="row"><div class="main"><div class="mc-n">매크로 하락 때</div><div class="sub">분할매수 (바닥을 서둘러 잡지 않음)</div></div></div></div>
     <p class="note" style="margin:18px 4px">참고 자료예요. 투자 권유가 아니에요.</p></div>`;
   bindNavbar();
 }
