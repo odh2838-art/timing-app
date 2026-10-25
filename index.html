@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-25-9">
+<meta name="app-version" content="2026-10-25-11">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -250,7 +250,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-reg-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
 .mc-reg-s{font-size:var(--t-title2);font-weight:700;letter-spacing:-.01em;margin:2px 0 4px}
 .mc-reg .mc-spark{width:100%;height:40px;display:block;margin:2px 0 6px}
-.mc-kv{display:flex;justify-content:space-between;gap:8px;font-size:var(--t-small);padding:2px 0} .mc-kv span{color:var(--fg2)} .mc-kv b{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;word-break:keep-all}
+.mc-kv{display:flex;flex-wrap:wrap;justify-content:space-between;column-gap:8px;font-size:var(--t-small);padding:2px 0} .mc-kv span{color:var(--fg2);white-space:nowrap} .mc-kv b{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;word-break:keep-all;overflow-wrap:normal;margin-left:auto}
 .mc-brief{margin-top:var(--gap-block)}
 .mc-bh{margin:6px 0 0;font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
 .mc-bp{margin-top:12px}
@@ -294,7 +294,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-row .main{min-width:0}
 .mc-n{font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .mc-reg-n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mc-why{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty;margin-top:2px}
+.mc-why{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;text-wrap:pretty;margin-top:2px}
 .mc-r{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none}
 .mc-v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .mc-row .mc-spark{flex:none}
@@ -605,9 +605,9 @@ function macItems(){
   const heat = (m.heat || []).map(fix);
   const bo = b.bofa || {};
   if (bo.bb != null) heat.unshift({key: "bb", name: "BofA Bull & Bear", value: bo.bb, unit: "", asof: bo.bb_d, status: bo.bb >= 8 ? "경계" : bo.bb <= 2 ? "기회" : "중립",
-    why: `${mMD(bo.bb_d)} 발표` + (bo.bb_note ? ` · ${bo.bb_note}` : ""), rule: "8 이상 매도 신호 (8 아래로 내려오면 해제) · 2 이하 매수 신호 (하트넷, 매주)", src: bo.bb_src});
+    why: `${mMD(bo.bb_d)} 발표 · ` + (bo.bb >= 8 ? "8 이상 매도 신호" : bo.bb <= 2 ? "2 이하 매수 신호" : "2~8 사이 중립 (8 이상 매도 · 2 이하 매수)"), rule: "8 이상 매도 신호 (8 아래로 내려오면 해제) · 2 이하 매수 신호 (하트넷, 매주)", src: bo.bb_src});
   if (bo.fms_cash != null) heat.splice(bo.bb != null ? 1 : 0, 0, {key: "fms", name: "펀드매니저 현금 비중", value: bo.fms_cash, unit: "%", asof: bo.fms_d, status: bo.fms_cash < 4 ? "경계" : bo.fms_cash >= 5 ? "기회" : "중립",
-    why: `${mMD(bo.fms_d)} 서베이` + (bo.fms_note ? ` · ${bo.fms_note}` : ""), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src});
+    why: `${mMD(bo.fms_d)} 서베이 · ` + (bo.fms_cash < 4 ? "4% 미만 과열" : bo.fms_cash >= 5 ? "5% 이상 매수 신호" : "4~5% 사이 중립 (4% 미만 과열 · 5% 이상 매수)"), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src});
   return { core: (m.core || []).map(fix), heat, kr: (m.kr || []).map(fix) };
 }
 /* 선 그래프 공통: x는 날짜 기준(두 선의 기간이 달라도 맞춰 그림) */
@@ -734,7 +734,7 @@ function macSignal(){
 function signalCard(){
   const g = macSignal();
   const grp = (t, arr, col) => arr.length ? `<div class="mc-sg"><div class="mc-sg-h"><span class="mc-dot" style="background:${col}"></span>${t}</div>${arr.map(x => `<div class="mc-sg-r"><span>${esc(x.t)}</span><span class="sub">${esc(x.n)}</span></div>`).join("")}</div>` : "";
-  return `<div class="card mc-sig"><div class="sub">오늘의 신호</div>
+  return `<div class="card mc-sig"><div class="sub">오늘의 신호 · 미국 시장 기준</div>
     <div class="mc-sig-l" style="color:${TONE_COL[g.tone]}">${esc(g.label)}</div>
     <p class="mc-sig-s">${esc(g.line)}</p>
     ${g.label === "판정 보류" ? "" : `<div class="mc-scale" aria-hidden="true">${SCALE.map(w => `<div class="${w === g.label ? "on" : ""}"${w === g.label ? ` style="--c:${TONE_COL[g.tone]}"` : ""}><i></i><span>${w}</span></div>`).join("")}</div>`}
@@ -753,14 +753,16 @@ function cashCard(){
     "소량 분할매수": ["30~50%", crowd ? "롱 쏠림(펀드매니저 현금 4% 미만) · 지수가 꺾이면 숏 소량" : "하락 이벤트가 예상되면 소량"],
     "중립": ["30%", "필요 없음"],
     "관망": ["30~50%", "하락 이벤트가 예상되면 소량"],
-    "비중 축소": ["50%까지 확대", crowd ? "소량 · 롱 쏠림이면 숏, 큰 일정 앞이면 VIX" : "소량 · 큰 일정 앞이면 VIX"]
+    "비중 축소": ["최대 50%까지 (기본 30%에서 늘림)", "소량 · 큰 일정 앞이면 VIX 먼저" + (crowd ? ", 숏은 지수가 꺾일 때" : "")]
   }[g.label];
+  const undo = g.label === "비중 축소" ? g.sell.filter(x => x.k).map(x => ({fg: "공포탐욕 75 아래", bb: "Bull & Bear 8 아래", fms: "펀드매니저 현금 4% 이상", sox: "반도체 이격 55% 아래"}[x.k])).filter(Boolean) : [];
   const today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date());
   const ev = (S.mac?.cal || []).map(c => ({...c, k: calKst(c)})).filter(c => (c.kind === "fed" || /CPI/.test(c.name)) && c.k.d >= today && (Date.parse(c.k.d) - Date.parse(today)) / 864e5 <= 7).sort((a, b) => a.k.d < b.k.d ? -1 : 1)[0];
   const r = (k, v, sub) => `<div class="mc-cr"><span>${k}</span><div><b>${esc(v)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div></div>`;
   return `<div class="sec-title" role="heading" aria-level="2">현금과 헤지</div><div class="card mc-cash">
-    ${r("현금 비중", P[0], "현금이 가장 싼 보험 · 급락이 오면 기회")}
-    ${r("헤지", P[1], P[1] === "필요 없음" ? "" : "VIX·숏 합쳐 현금의 30% 이내 · 목표가는 짧게, 손절선 지나면 정리")}
+    ${r("현금 비중", P[0], "투자금 중 현금 · 가장 싼 보험, 급락이 오면 기회" + (g.label === "비중 축소" ? " · 한 번에 말고 나눠서" : ""))}
+    ${r("헤지", P[1], P[1] === "필요 없음" ? "" : "VIX·숏 합쳐 지금 현금의 30% 이내 · 목표가는 짧게, 손절선 지나면 정리")}
+    ${undo.length ? r("되돌리는 조건", undo.join(" · "), "과열 신호가 풀리면 현금 기본 30%로") : ""}
     ${ev ? r("큰 일정", `${mMD(ev.k.d)} ${ev.name.replace(/ 금리 결정| \(.*\)/g, "")}`, "불확실성이 큰 이벤트 · 헤지한다면 VIX로") : ""}</div>`;
 }
 /* 아침 브리핑: 한 줄 결론 + '지표 — 의미' 줄 + 이번 주 일정 (오늘의 신호와 같은 모양) */
@@ -856,7 +858,7 @@ const MC_ABOUT = {
   hy: "투기등급 회사채와 국채의 금리 차이예요. 채권·신용시장은 주식보다 먼저 위험을 반영해요. 400bp에 가까워지면 위험 신호예요.",
   fg: "CNN 공포탐욕 지수예요. 25 이하 공포 구간부터 분할매수를 시작하고, 75 이상 탐욕은 과열로 봐요.",
   breadth: "S&P 500 종목 중 200일선 아래에 있는 비율이에요. 60% 이상이 이평선을 밑돌면 과매도, 매수 쪽 신호예요.",
-  sox: "반도체지수의 200일선 대비 이격도예요. 닷컴 정점은 55%였고, 62%까지 벌어졌을 때 버블 신호로 봤어요.",
+  sox: "반도체지수가 200일선보다 몇 % 위에 있는지예요. 55% 이상이면 과열이에요 (닷컴 정점이 55%).",
   vix: "S&P 500 옵션으로 본 예상 변동성이에요. 불확실성이 큰 이벤트 앞에서는 헤지 수단으로 써요.",
   bb: "BofA 하트넷의 Bull & Bear 지표예요. 8 이상이면 매도 신호(주식 비중 축소, 현금 확대), 2 이하면 매수 신호예요.",
   fms: "BofA 펀드매니저 서베이의 현금 비중이에요. 4% 미만은 투자자들이 주식을 가득 채운 과열, 5% 이상은 매수 신호예요.",
@@ -881,7 +883,7 @@ function renderMacDetail(key){
   $app.innerHTML = `<div class="wrap">${back}
     <div class="title-block" data-anchor><div class="sub">${esc(x.liveT ? mDay(new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(x.liveT))) + " " + new Date(x.liveT).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}) + " 시세" : x.asof ? (x.monthly ? `${x.asof.slice(0, 4)}년 ${+x.asof.slice(5, 7)}월분` : mDay(x.asof) + " 기준") : "")}</div><h1 class="big">${esc(x.name)}</h1></div>
     <div class="card"><div class="mc-reg-h"><span class="mc-big">${esc(fmtV(x))}</span>${tag(badge(x)[0], badge(x)[1])}</div>
-      <p class="note" style="margin:6px 0 12px">${x.liveT && x.liveChg != null ? `<span style="color:var(--fg)">전일 대비 ${key === "us10y" ? `${x.liveChg >= 0 ? "+" : "−"}${Math.abs(x.liveChg).toFixed(0)}bp` : esc(pct(x.liveChg))}</span><br>` : ""}${esc(x.why || "")}${x.why0 && x.why0 !== x.why ? `<br><span class="sub">계산: ${esc(x.why0)}</span>` : ""}</p>
+      <p class="note" style="margin:6px 0 12px">${x.liveT && x.liveChg != null ? `<span style="color:var(--fg)">전일 대비 ${key === "us10y" ? `${x.liveChg >= 0 ? "+" : "−"}${Math.abs(x.liveChg).toFixed(0)}bp` : esc(pct(x.liveChg))}</span><br>` : ""}${esc(x.why || "")}${x.why0 && x.why0 !== x.why ? `<br><span class="sub">참고 (자동 계산): ${esc(x.why0)}</span>` : ""}</p>
       ${pts.length > 1 ? `${x.spark2 ? `<div class="mc-lg sub"><span><i class="mc-key"></i>기준금리 상단</span><span><i class="mc-key g"></i>미국 2년물 금리</span></div>` : key === "core_cpi" ? `<div class="mc-lg sub"><span>전년 대비 상승률</span></div>` : ""}${chartHTML("mch", {pts, pts2: x.spark2, refs, monthly: x.monthly, fmt: v => fmtU(key, v),
         label: `${x.name} 추이, ${dFull(pts[0][0], x.monthly)}부터 ${dFull(pts[pts.length - 1][0], x.monthly)}까지, 최저 ${fmtU(key, lo)}, 최고 ${fmtU(key, hi)}, 최근 ${fmtU(key, pts[pts.length - 1][1])}`})}` : ""}</div>
     <div class="sec-title" role="heading" aria-level="2">오동엔진 기준</div>
@@ -901,7 +903,8 @@ function renderRules(){
     <div style="height:var(--gap-block)"></div>
     <div class="card"><b>한 줄 원칙</b><p style="margin:6px 0 0">장기금리와 유가가 내려오지 않는데 오르는 증시는 믿지 않는다. 채권·신용시장이 주식보다 먼저 말한다.</p></div>
     <div class="sec-title" role="heading" aria-level="2">오늘의 신호가 정해지는 순서</div>
-    <div class="list">${[["판정 보류", "핵심 6개 중 하나라도 자료가 없을 때"], ["비중 축소", "과열·매도 신호만 있고 매수 신호는 없을 때"], ["분할매수", "매수 신호만 있고 경계·과열이 없고 금리·유가가 내려올 때"], ["소량 분할매수", "매수 신호가 있지만 경계·과열이 섞이거나 금리·유가가 아직 오를 때 (공포 구간은 사되 소량, 바닥을 서둘러 잡지 않음)"], ["관망", "경계만 있거나 금리·유가가 아직 오를 때"], ["중립", "아무 신호도 없을 때"]]
+    <p class="note" style="margin:0 var(--pad-card) var(--gap-caption)">위에서부터 먼저 맞는 것 하나가 오늘의 신호예요. 신호는 미국 시장 지표 기준이에요.</p>
+    <div class="list">${[["판정 보류", "핵심 6개 중 하나라도 자료가 없을 때"], ["비중 축소", "과열·매도 신호가 있고 매수 신호는 없을 때"], ["분할매수", "매수 신호만 있고 경계·과열이 없고 금리·유가가 내려올 때"], ["소량 분할매수", "매수 신호가 있지만 경계·과열이 섞이거나 금리·유가가 아직 오를 때 (공포 구간은 사되 소량, 바닥을 서둘러 잡지 않음)"], ["관망", "경계만 있거나 금리·유가가 아직 오를 때"], ["중립", "아무 신호도 없을 때"]]
       .map(([n, d]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub">${esc(d)}</div></div></div>`).join("")}</div>
     <div class="sec-title" role="heading" aria-level="2">매크로 점검표</div>
     <p class="note" style="margin:0 var(--pad-card) var(--gap-caption)">단기 = 최근 20거래일(약 1달) 변화 · 중기 추세 = 20일 평균과 60일 평균의 위치</p>
