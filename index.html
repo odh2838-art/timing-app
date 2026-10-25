@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-25-11">
+<meta name="app-version" content="2026-10-25-13">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -731,6 +731,12 @@ function macSignal(){
   const miss = label === "판정 보류" ? [] : all.filter(x => x.status === "자료 없음").map(x => SHORT_NAME[x.key] || x.name);
   return { label, tone, line, buy, warn, sell, miss, rule };
 }
+/* 하트넷 결합 매수 조건: 펀드매니저 현금 4% 초과 + 하이일드 400bp 접근 + 주식 자금 유출 가속. 앞의 둘이 맞으면 알려 줌 (자금 유출은 앱이 받지 못함) */
+function hartnett(){
+  const it = macItems(), all = [...it.core, ...it.heat], f = all.find(x => x.key === "fms"), h = all.find(x => x.key === "hy");
+  if (!f || !h || f.value == null || h.value == null || !(f.value > 4 && h.value >= 370)) return "";
+  return `<div class="mc-rule"><span class="mc-dot" style="background:var(--info)"></span><span>하트넷 매수 조건 2/3 충족: 펀드매니저 현금 ${f.value}% (4% 초과) · 하이일드 ${Math.round(h.value)}bp (400bp 접근) · 남은 하나는 주식 자금 유출 가속 (브리핑에서 확인)</span></div>`;
+}
 function signalCard(){
   const g = macSignal();
   const grp = (t, arr, col) => arr.length ? `<div class="mc-sg"><div class="mc-sg-h"><span class="mc-dot" style="background:${col}"></span>${t}</div>${arr.map(x => `<div class="mc-sg-r"><span>${esc(x.t)}</span><span class="sub">${esc(x.n)}</span></div>`).join("")}</div>` : "";
@@ -740,6 +746,7 @@ function signalCard(){
     ${g.label === "판정 보류" ? "" : `<div class="mc-scale" aria-hidden="true">${SCALE.map(w => `<div class="${w === g.label ? "on" : ""}"${w === g.label ? ` style="--c:${TONE_COL[g.tone]}"` : ""}><i></i><span>${w}</span></div>`).join("")}</div>`}
     ${grp("매수 신호", g.buy, "var(--info)")}${grp("경계", g.warn, "var(--wait)")}${grp("과열·매도 신호", g.sell.filter(x => x.t !== "원칙"), "var(--sell)")}
     ${g.rule ? `<div class="mc-rule"><span class="mc-dot" style="background:${TONE_COL[g.rule.tone]}"></span><span>${esc(g.rule.t)}</span></div>` : ""}
+    ${hartnett()}
     ${g.miss.length ? `<p class="sub" style="margin:12px 0 0">자료 없음: ${esc(g.miss.join(" · "))} (보조 지표라 판정은 유지)</p>` : ""}
     <button class="text-btn press mc-more" id="torules">오동엔진 기준 보기 ›</button></div>`;
 }
@@ -755,7 +762,7 @@ function cashCard(){
     "관망": ["30~50%", "하락 이벤트가 예상되면 소량"],
     "비중 축소": ["최대 50%까지 (기본 30%에서 늘림)", "소량 · 큰 일정 앞이면 VIX 먼저" + (crowd ? ", 숏은 지수가 꺾일 때" : "")]
   }[g.label];
-  const undo = g.label === "비중 축소" ? g.sell.filter(x => x.k).map(x => ({fg: "공포탐욕 75 아래", bb: "Bull & Bear 8 아래", fms: "펀드매니저 현금 4% 이상", sox: "반도체 이격 55% 아래"}[x.k])).filter(Boolean) : [];
+  const undo = g.label === "비중 축소" ? g.sell.map(x => x.k ? ({fg: "공포탐욕 75 아래", bb: "Bull & Bear 8 아래", fms: "펀드매니저 현금 4% 이상", sox: "반도체 이격 55% 아래"}[x.k]) : "장기금리·유가 하락 전환").filter(Boolean) : [];
   const today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date());
   const ev = (S.mac?.cal || []).map(c => ({...c, k: calKst(c)})).filter(c => (c.kind === "fed" || /CPI/.test(c.name)) && c.k.d >= today && (Date.parse(c.k.d) - Date.parse(today)) / 864e5 <= 7).sort((a, b) => a.k.d < b.k.d ? -1 : 1)[0];
   const r = (k, v, sub) => `<div class="mc-cr"><span>${k}</span><div><b>${esc(v)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div></div>`;
@@ -794,7 +801,7 @@ function macBind(){
 async function ensureMac(head){
   if (S.macL) return true;
   $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><div class="sk" style="width:40%;height:34px"></div></div><div class="card"><div class="sk" style="width:60%;height:16px"></div><div class="sk" style="width:80%;height:12px;margin-top:12px"></div></div></div>`;
-  try{ await loadMac(); }catch(e){ S.macErr = e.message; S.macL = true; }
+  try{ await loadMac(); }catch(e){ S.macErr = e.message; S.macAuth = !!e.auth || /권한/.test(e.message); S.macL = true; }
   return false;
 }
 async function renderMac0(){
@@ -802,7 +809,10 @@ async function renderMac0(){
   if (!(await ensureMac(head)) && S.tab !== "today") return;
   if (S.tab !== "today" || S.dhd) return;
   const m = S.mac;
-  if (!m){ $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">오늘</h1></div>${S.macErr ? `<div class="err">${esc(S.macErr)}</div>` : ""}<div class="empty"><b>아직 결과가 없어요</b>오른쪽 위 ↻를 누르면 약 1분 뒤 첫 결과가 나와요.</div></div>`; macBind(); return; }
+  if (!m){ $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">오늘</h1></div>${S.macErr ? `<div class="err">${esc(S.macErr)}</div>` : ""}${S.macAuth ? `<div class="empty"><b>토큰을 다시 넣어 주세요</b>GitHub에서 새 토큰을 만들어 넣으면 그대로 돌아와요.<br><button class="btn primary press" id="retok" style="margin-top:16px">토큰 다시 넣기</button></div>` : S.macErr ? `<div class="empty"><b>자료를 불러오지 못했어요</b>연결을 확인한 뒤 아래 버튼을 눌러 주세요.<br><button class="btn ghost press" id="reload" style="margin-top:16px">다시 불러오기</button></div>` : `<div class="empty"><b>아직 결과가 없어요</b>오른쪽 위 ↻를 누르면 약 1분 뒤 첫 결과가 나와요.</div>`}</div>`;
+    const rt = document.getElementById("retok"); if (rt) rt.onclick = () => { LS.del("tok"); S.token = ""; S.macErr = null; S.macAuth = false; render("fade"); };
+    const rl = document.getElementById("reload"); if (rl) rl.onclick = () => { S.macL = false; S.macErr = null; render("none"); };
+    macBind(); return; }
   if (!S.liveAt || Date.now() - S.liveAt > 60000){ pullLive().then(ok => { if (ok && S.tab === "today" && !S.dhd && !S.dirty) render("none"); }); }
   liveTick();
   const it = macItems(), rg = m.regime || {};
