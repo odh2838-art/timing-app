@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-24-21">
+<meta name="app-version" content="2026-10-25-1">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -697,9 +697,9 @@ function macSignal(){
   let label, tone, line;
   const miss0 = it.core.filter(x => x.status === "자료 없음" || x.value == null).map(x => SHORT_NAME[x.key] || x.name);
   if (miss0.length){ label = "판정 보류"; tone = "none"; line = `${miss0.join("·")} 자료를 받지 못해 판정을 보류해요. 핵심 6개가 모두 있어야 신호를 내요.`; }
-  else if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "현금 비중 확대 · 신규 매수 보류"; }
-  else if (buy.length && !warn.length && !sell.length && rule?.tone !== "wait"){ label = "분할매수"; tone = "buy"; line = "계획한 가격대에서 분할매수 · 현금 비중 30% 유지"; }
-  else if (buy.length){ label = "분할매수"; tone = "info"; line = "분할매수 시작 · 현금 비중 30~50% 유지"; }
+  else if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "중단기 비중 축소 · 현금 비중 확대 · 소량 헤지"; }
+  else if (buy.length && !warn.length && !sell.length && rule?.tone !== "wait"){ label = "분할매수"; tone = "buy"; line = "장기 종목 분할매수 · 현금 비중 30% 유지"; }
+  else if (buy.length){ label = "분할매수"; tone = "info"; line = "장기 종목만 분할매수 · 현금 비중 30~50% 유지"; }
   else if (warn.length || rule?.tone === "wait"){ label = "관망"; tone = "wait"; line = "신규 매수 보류 · 현금 비중 30% 이상 유지"; }
   else { label = "중립"; tone = "none"; line = "현금 비중 30% 유지 · 기존 계획대로"; }
   const miss = label === "판정 보류" ? [] : all.filter(x => x.status === "자료 없음").map(x => SHORT_NAME[x.key] || x.name);
@@ -861,8 +861,8 @@ function renderRules(){
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">하트넷 결합 매수 조건: 현금 비중 4% 초과 + 하이일드 400bp 접근 + 주식 자금 유출 가속이 동시에 나올 때. 2025년 3월 이 조건으로 S&P 5,300을 제시했고 4월 저점은 4,835였어요.</p>
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
     <div class="card"><p class="note" style="margin:0;color:var(--fg)">일반 기준이에요.<br><b style="color:var(--buy)">상승장</b> 지수가 200일선 위 + 200일선 오르는 중<br><b style="color:var(--wait)">조정</b> 1년 고점보다 10~20% 아래<br><b style="color:var(--sell)">하락장</b> 1년 고점보다 20% 넘게 아래, 또는 200일선 아래 + 200일선 내리는 중<br><b>방향 탐색</b> 그 밖</p></div>
-    <div class="sec-title" role="heading" aria-level="2">현금과 헤지</div>
-    <div class="card"><p class="note" style="margin:0;color:var(--fg)">현금 기본 30% (20~50%, 위험할 때 더). 헤지 1순위는 현금 늘리기, 그다음 VIX·숏 (합쳐서 현금의 30% 이하). 공포 구간에서도 바닥을 서둘러 잡지 않고 분할매수해요.</p></div>
+    <div class="sec-title" role="heading" aria-level="2">현금과 헤지 · 운용 원칙</div>
+    <div class="list"><div class="row"><div class="main"><div class="mc-n">현금은 가장 싼 보험</div><div class="sub">기본 30% (20~50%). 급락이 와도 현금이 있으면 기회</div></div></div><div class="row"><div class="main"><div class="mc-n">하락 이벤트가 예상되면</div><div class="sub">중단기 종목 비중 축소 + 소량 헤지</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 순서</div><div class="sub">1순위 현금 확대 · 불확실성 큰 이벤트는 VIX · 롱 쏠림(과열)에서 방향 전환 예상 시 숏</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 한도</div><div class="sub">VIX·숏 합쳐서 현금의 30% 이하</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 청산</div><div class="sub">목표가는 짧게 · 손절선을 지나면 바로 정리</div></div></div><div class="row"><div class="main"><div class="mc-n">매크로 하락 때</div><div class="sub">장기 종목을 분할매수 (바닥을 서둘러 잡지 않음)</div></div></div><div class="row"><div class="main"><div class="mc-n">종목 수</div><div class="sub">장기 4개 · 중단기 최대 6개 (많으면 익절·손절 시점을 놓침)</div></div></div></div>
     <p class="note" style="margin:18px 4px">참고 자료예요. 투자 권유가 아니에요.</p></div>`;
   bindNavbar();
 }
