@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-25-1">
+<meta name="app-version" content="2026-10-25-2">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -260,6 +260,12 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-wk{margin-top:14px;background:var(--fill);border-radius:12px;padding:10px 12px}
 .mc-wkr{display:flex;gap:12px;font-size:var(--t-detail);padding:3px 0} .mc-wkr b{min-width:40px;font-variant-numeric:tabular-nums}
 .mc-sig{padding:20px}
+/* 신호 단계: 지금 신호가 네 단계 중 어디인지 (색은 지금 칸에만) */
+.mc-scale{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:14px} .mc-scale i{display:block;height:4px;border-radius:2px;background:var(--fill)}
+.mc-scale span{display:block;margin-top:6px;font-size:var(--t-foot);color:var(--fg3);text-align:center;white-space:nowrap} .mc-scale .on i{background:var(--c)} .mc-scale .on span{color:var(--fg);font-weight:600}
+/* 현금과 헤지: 왼쪽 항목 · 오른쪽 할 일 */
+.mc-cash{padding:4px var(--pad-card)} .mc-cr{display:grid;grid-template-columns:minmax(76px,auto) 1fr;column-gap:16px;padding:12px 0;font-size:var(--t-detail)} .mc-cr+.mc-cr{border-top:.5px solid var(--line)}
+.mc-cr>span{color:var(--fg2)} .mc-cr b{font-weight:600;display:block} .mc-cr small{display:block;color:var(--fg2);font-size:var(--t-foot);margin-top:2px}
 .mc-sig-l{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-top:2px}
 .mc-sig-s{margin:4px 0 0;color:var(--fg2);font-size:var(--t-detail)}
 .mc-why2{margin:4px 0 0}
@@ -297,7 +303,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-tag.t-none{background:var(--fill);color:var(--fg2)}
 .mc-big{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums}
 /* 차트: 데이터 선만 진하게, 눈금·기준선은 한발 물러남 (선 2px · 눈금 1px 실선 · 기준선만 점선) */
-.mc-ch{margin-top:4px} .mc-ch-read{display:flex;align-items:center;gap:6px;min-height:26px;font-size:var(--t-detail);font-variant-numeric:tabular-nums} .mc-ch-read b{font-weight:600}
+.mc-ch{margin-top:4px} .mc-cread{display:flex;align-items:center;gap:6px;min-height:26px;font-size:var(--t-detail);font-variant-numeric:tabular-nums} .mc-cread b{font-weight:600}
 .mc-ch-plot{min-width:0} .mc-ch svg{display:block;touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:crosshair}
 .mc-ch .g{stroke:var(--line);stroke-width:1} .mc-ch .rf{stroke:var(--fg2);stroke-width:1;stroke-dasharray:4 3}
 .mc-ch .s1{fill:none;stroke:var(--blue);stroke-width:2;stroke-linejoin:round;stroke-linecap:round} .mc-ch .s2{fill:none;stroke:var(--fg3);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
@@ -611,10 +617,10 @@ function niceTicks(lo, hi, n){
   return {ticks: out, step};
 }
 const CH = {};
-function chartHTML(id, d){ CH[id] = d; return `<div class="mc-ch" id="${id}"><div class="mc-ch-read" aria-hidden="true"></div><div class="mc-ch-plot"></div></div>`; }
+function chartHTML(id, d){ CH[id] = d; return `<div class="mc-ch" id="${id}"><div class="mc-cread" aria-hidden="true"></div><div class="mc-ch-plot"></div></div>`; }
 function drawChart(id){
   const box = document.getElementById(id), d = CH[id]; if (!box || !d) return;
-  const plot = box.querySelector(".mc-ch-plot"), read = box.querySelector(".mc-ch-read");
+  const plot = box.querySelector(".mc-ch-plot"), read = box.querySelector(".mc-cread");
   const pts = clean(d.pts), p2 = clean(d.pts2), W = Math.max(240, Math.round(plot.clientWidth || 320)), H = 188, T = 10, B = 24;
   const t0 = tms(pts[0][0]), t1 = Math.max(tms(pts[pts.length - 1][0]), t0 + 1);
   const vs = pts.concat(p2.filter(p => tms(p[0]) >= t0)).map(p => p[1]).concat(d.refs || []);
@@ -711,10 +717,31 @@ function signalCard(){
   return `<div class="card mc-sig"><div class="sub">오늘의 신호</div>
     <div class="mc-sig-l" style="color:${TONE_COL[g.tone]}">${esc(g.label)}</div>
     <p class="mc-sig-s">${esc(g.line)}</p>
+    ${g.label === "판정 보류" ? "" : `<div class="mc-scale" aria-hidden="true">${SCALE.map(w => `<div class="${w === g.label ? "on" : ""}"${w === g.label ? ` style="--c:${TONE_COL[g.tone]}"` : ""}><i></i><span>${w}</span></div>`).join("")}</div>`}
     ${grp("매수 신호", g.buy, "var(--info)")}${grp("경계", g.warn, "var(--wait)")}${grp("과열·매도 신호", g.sell.filter(x => x.t !== "원칙"), "var(--sell)")}
     ${g.rule ? `<div class="mc-rule"><span class="mc-dot" style="background:${TONE_COL[g.rule.tone]}"></span><span>${esc(g.rule.t)}</span></div>` : ""}
     ${g.miss.length ? `<p class="sub" style="margin:12px 0 0">자료 없음: ${esc(g.miss.join(" · "))} (보조 지표라 판정은 유지)</p>` : ""}
     <button class="text-btn press mc-more" id="torules">오동엔진 기준 보기 ›</button></div>`;
+}
+/* 현금과 헤지: 오늘의 신호를 운용 원칙(현금 = 가장 싼 보험 · 헤지 순서 현금→VIX→숏 · VIX·숏은 현금의 30% 이내)으로 옮긴 것 */
+const SCALE = ["분할매수", "중립", "관망", "비중 축소"];
+function cashCard(){
+  const g = macSignal(); if (g.label === "판정 보류") return "";
+  const crowd = g.sell.some(x => x.k === "fms" || x.k === "bb");   // 롱 쏠림: FMS 4% 미만 · Bull & Bear 8 이상
+  const P = {
+    "분할매수": g.tone === "buy" ? ["30%", "필요 없음", "계획대로"] : ["30~50%", crowd ? "롱 쏠림 · 방향 전환 보이면 숏 소량" : "필요 없음", "신규 진입 신중"],
+    "중립": ["30%", "필요 없음", "계획대로"],
+    "관망": ["30~50%", "하락 이벤트가 예상되면 소량", "신규 진입 보류"],
+    "비중 축소": ["50%까지 확대", crowd ? "소량 · 롱 쏠림이면 숏, 큰 일정 앞이면 VIX" : "소량 · 큰 일정 앞이면 VIX", "비중 축소"]
+  }[g.label];
+  const today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date());
+  const ev = (S.mac?.cal || []).map(c => ({...c, k: calKst(c)})).filter(c => (c.kind === "fed" || /CPI/.test(c.name)) && c.k.d >= today && (Date.parse(c.k.d) - Date.parse(today)) / 864e5 <= 7).sort((a, b) => a.k.d < b.k.d ? -1 : 1)[0];
+  const r = (k, v, sub) => `<div class="mc-cr"><span>${k}</span><div><b>${esc(v)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div></div>`;
+  return `<div class="sec-title" role="heading" aria-level="2">현금과 헤지</div><div class="card mc-cash">
+    ${r("현금 비중", P[0], "현금이 가장 싼 보험 · 급락이 오면 기회")}
+    ${r("헤지", P[1], P[1] === "필요 없음" ? "" : "VIX·숏 합쳐 현금의 30% 이내 · 목표가는 짧게, 손절선 지나면 정리")}
+    ${r("중단기 종목", P[2], "")}
+    ${ev ? r("큰 일정", `${mMD(ev.k.d)} ${ev.name.replace(/ 금리 결정| \(.*\)/g, "")}`, "불확실성이 큰 이벤트 · 헤지는 VIX로") : ""}</div>`;
 }
 /* 아침 브리핑: 한 줄 결론 + '지표 — 의미' 줄 + 이번 주 일정 (오늘의 신호와 같은 모양) */
 const BR_TONE = {buy: "var(--info)", warn: "var(--wait)", sell: "var(--sell)", good: "var(--buy)", info: "var(--fg3)"};
@@ -761,6 +788,7 @@ async function renderMac0(){
   $app.innerHTML = `<div class="wrap">${head}
     <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">${esc(mDay(S.liveQ ? new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(S.liveQ)) : m.date))} ${esc(S.liveQ ? new Date(S.liveQ).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}) : (m.at || "").slice(11, 16))} 기준${esc(closedNote())}</div></div>
     ${signalCard()}
+    ${cashCard()}
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
     <div class="mc-regs">${regTile(rg.spx, "🇺🇸", "spx")}${regTile(rg.kospi, "🇰🇷", "kospi")}</div>
     ${briefCard() ? `<div style="margin-top:var(--gap-block)">${briefCard()}</div>` : ""}
