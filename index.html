@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-25-4">
+<meta name="app-version" content="2026-10-25-5">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -247,7 +247,7 @@ h2.sec-title{font-size:var(--t-heading)}
 /* 매크로 */
 .mc-regs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .mc-reg{padding:16px;min-width:0}
-.mc-reg-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
+.mc-reg-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
 .mc-reg-s{font-size:var(--t-title2);font-weight:700;letter-spacing:-.01em;margin:2px 0 4px}
 .mc-reg .mc-spark{width:100%;height:40px;display:block;margin:2px 0 6px}
 .mc-kv{display:flex;justify-content:space-between;gap:8px;font-size:var(--t-small);padding:2px 0} .mc-kv span{color:var(--fg2)} .mc-kv b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -301,7 +301,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-tag.t-buy{background:var(--buy-bg);color:var(--buy)} .mc-tag.t-sell{background:var(--sell-bg);color:var(--sell)}
 .mc-tag.t-info{background:var(--info-bg);color:var(--info)} .mc-tag.t-wait{background:var(--wait-bg);color:var(--wait)}
 .mc-tag.t-none{background:var(--fill);color:var(--fg2)}
-.mc-big{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums}
+.mc-big{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow-wrap:normal}
 /* 차트: 데이터 선만 진하게, 눈금·기준선은 한발 물러남 (선 2px · 눈금 1px 실선 · 기준선만 점선) */
 .mc-ch{margin-top:4px} .mc-ch-read{display:flex;align-items:center;gap:6px;min-height:26px;font-size:var(--t-detail);font-variant-numeric:tabular-nums} .mc-ch-read b{font-weight:600}
 .mc-ch-plot{min-width:0} .mc-ch svg{display:block;touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:crosshair}
@@ -589,9 +589,9 @@ function macItems(){
   const heat = (m.heat || []).map(fix);
   const bo = b.bofa || {};
   if (bo.bb != null) heat.unshift({key: "bb", name: "BofA Bull & Bear", value: bo.bb, unit: "", asof: bo.bb_d, status: bo.bb >= 8 ? "경계" : bo.bb <= 2 ? "기회" : "중립",
-    why: `${bo.bb} · ${mMD(bo.bb_d)} 발표` + (bo.bb_note ? ` · ${bo.bb_note}` : ""), rule: "8 이상 매도 신호 (8 아래로 내려오면 해제) · 2 이하 매수 신호 (하트넷, 매주)", src: bo.bb_src});
+    why: `${mMD(bo.bb_d)} 발표` + (bo.bb_note ? ` · ${bo.bb_note}` : ""), rule: "8 이상 매도 신호 (8 아래로 내려오면 해제) · 2 이하 매수 신호 (하트넷, 매주)", src: bo.bb_src});
   if (bo.fms_cash != null) heat.splice(bo.bb != null ? 1 : 0, 0, {key: "fms", name: "펀드매니저 현금 비중", value: bo.fms_cash, unit: "%", asof: bo.fms_d, status: bo.fms_cash < 4 ? "경계" : bo.fms_cash >= 5 ? "기회" : "중립",
-    why: `${bo.fms_cash}% · ${mMD(bo.fms_d)} BofA 서베이` + (bo.fms_note ? ` · ${bo.fms_note}` : ""), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src});
+    why: `${mMD(bo.fms_d)} 서베이` + (bo.fms_note ? ` · ${bo.fms_note}` : ""), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src});
   return { core: (m.core || []).map(fix), heat, kr: (m.kr || []).map(fix) };
 }
 /* 선 그래프 공통: x는 날짜 기준(두 선의 기간이 달라도 맞춰 그림) */
@@ -626,7 +626,7 @@ function drawChart(id){
   const vs = pts.concat(p2.filter(p => tms(p[0]) >= t0)).map(p => p[1]).concat(d.refs || []);
   let lo = Math.min(...vs), hi = Math.max(...vs); if (hi === lo){ hi += 1; lo -= 1; }
   const padv = (hi - lo) * .08; lo -= padv; hi += padv;
-  const {ticks, step} = niceTicks(lo, hi, 4), dec = step >= 1 ? 0 : Math.min(2, Math.ceil(-Math.log10(step)));
+  const {ticks, step} = niceTicks(lo, hi, 5), dec = step >= 1 ? 0 : Math.min(2, Math.ceil(-Math.log10(step)));
   const fy = v => (+v).toLocaleString("ko-KR", {minimumFractionDigits: dec, maximumFractionDigits: dec}).replace("-", "−");
   const R = 12 + Math.max(...ticks.map(v => fy(v).length)) * 7, PW = W - R, X = t => ((t - t0) / (t1 - t0)) * PW, Y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
   const path = ps => ps.filter(p => tms(p[0]) >= t0).map((p, i) => `${i ? "L" : "M"}${X(tms(p[0])).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
@@ -655,8 +655,10 @@ function drawChart(id){
     read.innerHTML = `<span class="sub">${esc(dAx(pts[0][0], d.monthly))} ~ ${esc(dAx(e[0], d.monthly))} · 그래프를 누르면 그날 값</span>`; };
   const idx = ev => { const r = svg.getBoundingClientRect(), t = t0 + Math.min(1, Math.max(0, (ev.clientX - r.left) / PW)) * (t1 - t0);
     let b = 0, bd = Infinity; pts.forEach((p, i) => { const dd = Math.abs(tms(p[0]) - t); if (dd < bd){ bd = dd; b = i; } }); return b; };
-  svg.onpointerdown = svg.onpointermove = ev => show(idx(ev));
-  svg.onpointerleave = svg.onpointercancel = reset;
+  /* 손가락: 떼도 4초간 값이 남고(한 번 눌러도 읽을 수 있게), 마우스: 벗어나면 바로 원래대로 */
+  let hold = 0;
+  svg.onpointerdown = svg.onpointermove = ev => { if (ev.pointerType === "mouse" && ev.type === "pointermove" && !ev.buttons && !matchMedia("(hover:hover)").matches) return; clearTimeout(hold); show(idx(ev)); };
+  svg.onpointerup = svg.onpointerleave = svg.onpointercancel = ev => { if (ev.pointerType === "mouse"){ if (ev.type !== "pointerup") reset(); return; } clearTimeout(hold); hold = setTimeout(reset, 4000); };
   svg.onkeydown = ev => { if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return; ev.preventDefault();
     const i = svg.dataset.i != null ? +svg.dataset.i : pts.length - 1; show(Math.max(0, Math.min(pts.length - 1, i + (ev.key === "ArrowLeft" ? -1 : 1)))); };
   svg.onblur = reset;
@@ -839,8 +841,8 @@ const MC_ABOUT = {
   vix: "S&P 500 옵션으로 본 예상 변동성이에요. 불확실성이 큰 이벤트 앞에서는 헤지 수단으로 써요.",
   bb: "BofA 하트넷의 Bull & Bear 지표예요. 8 이상이면 매도 신호(주식 비중 축소, 현금 확대), 2 이하면 매수 신호예요.",
   fms: "BofA 펀드매니저 서베이의 현금 비중이에요. 4% 미만은 투자자들이 주식을 가득 채운 과열, 5% 이상은 매수 신호예요.",
-  krw: "원화가 빠르게 약해지면 외국인 자금이 빠져나가기 쉬워요.",
-  foreign: "코스피 외국인 순매수 금액이에요. 5일·20일 누적이 같은 방향이면 추세로 판단해요."
+  krw: "원화가 빠르게 약해지면 외국인 자금이 빠져나가기 쉬워요. 최근 20일 변화로 봐요.",
+  foreign: "코스피 외국인 순매수 금액이에요. 5일·20일 누적이 같은 방향이면 추세로 판단해요. 집계를 시작한 지 20일이 지나야 판정이 나오고, 그 전까지는 중립이에요."
 };
 const nf = v => v == null ? "-" : (+v).toLocaleString("ko-KR", {maximumFractionDigits: 2}).replace("-", "−");
 const dAx = (d, mo) => { const t = String(d).slice(0, 10), yr = t.slice(0, 4); return mo || yr !== String(new Date().getFullYear()) ? `${yr}.${+t.slice(5, 7)}` : mMD(t); };
@@ -858,7 +860,7 @@ function renderMacDetail(key){
   const refs = {us10y: [5], hy: [400], fg: [25, 75], breadth: [60], sox: [55], vix: [25]}[key] || [];
   const lo = pts.length ? Math.min(...pts.map(p => p[1])) : null, hi = pts.length ? Math.max(...pts.map(p => p[1])) : null;
   $app.innerHTML = `<div class="wrap">${back}
-    <div class="title-block" data-anchor><div class="sub">${esc(x.asof ? (x.monthly ? `${x.asof.slice(0, 4)}년 ${+x.asof.slice(5, 7)}월분` : mDay(x.asof) + " 기준") : "")}</div><h1 class="big">${esc(x.name)}</h1></div>
+    <div class="title-block" data-anchor><div class="sub">${esc(x.liveT ? mDay(new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(x.liveT))) + " " + new Date(x.liveT).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}) + " 시세" : x.asof ? (x.monthly ? `${x.asof.slice(0, 4)}년 ${+x.asof.slice(5, 7)}월분` : mDay(x.asof) + " 기준") : "")}</div><h1 class="big">${esc(x.name)}</h1></div>
     <div class="card"><div class="mc-reg-h"><span class="mc-big">${esc(fmtV(x))}</span>${tag(badge(x)[0], badge(x)[1])}</div>
       <p class="note" style="margin:6px 0 12px">${x.liveT && x.liveChg != null ? `<span style="color:var(--fg)">전일 대비 ${key === "us10y" ? `${x.liveChg >= 0 ? "+" : "−"}${Math.abs(x.liveChg).toFixed(0)}bp` : esc(pct(x.liveChg))}</span><br>` : ""}${esc(x.why || "")}</p>
       ${pts.length > 1 ? `${x.spark2 ? `<div class="mc-lg sub"><span><i class="mc-key"></i>기준금리 상단</span><span><i class="mc-key g"></i>미국 2년물 금리</span></div>` : key === "core_cpi" ? `<div class="mc-lg sub"><span>전년 대비 상승률</span></div>` : ""}${chartHTML("mch", {pts, pts2: x.spark2, refs, monthly: x.monthly, fmt: v => fmtU(key, v),
@@ -880,6 +882,7 @@ function renderRules(){
     <div style="height:var(--gap-block)"></div>
     <div class="card"><b>한 줄 원칙</b><p style="margin:6px 0 0">장기금리와 유가가 내려오지 않는데 오르는 증시는 믿지 않는다. 채권·신용시장이 주식보다 먼저 말한다.</p></div>
     <div class="sec-title" role="heading" aria-level="2">매크로 점검표</div>
+    <p class="note" style="margin:0 var(--pad-card) var(--gap-caption)">단기 = 최근 20거래일(약 1달) 변화 · 중기 추세 = 20일 평균과 60일 평균의 위치</p>
     <div class="list">${[["미국 10년물 금리", "하락 추세", "5% 이상 유지·상승"], ["WTI 유가", "하락 추세", "고점 장기화"], ["근원 CPI", "예상 하회", "2개월 연속 예상 상회"], ["연준", "인하·동결 기대", "인상 확률 상승"], ["하이일드 스프레드", "안정", "급등 · 400bp 근접"], ["CNN 공포탐욕", "25 이하 공포 → 분할매수 시작", "75 이상 탐욕(과열)"]]
       .map(([n, g, w]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub"><span style="color:var(--buy)">우호</span> ${esc(g)}<br><span style="color:var(--sell)">경계</span> ${esc(w)}</div></div></div>`).join("")}</div>
     <div class="sec-title" role="heading" aria-level="2">시장 온도</div>
