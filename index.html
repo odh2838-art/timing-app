@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-25-6">
+<meta name="app-version" content="2026-10-25-9">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -261,8 +261,10 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-wkr{display:flex;gap:12px;font-size:var(--t-detail);padding:3px 0} .mc-wkr b{min-width:40px;font-variant-numeric:tabular-nums}
 .mc-sig{padding:20px}
 /* 신호 단계: 지금 신호가 네 단계 중 어디인지 (색은 지금 칸에만) */
-.mc-scale{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:14px} .mc-scale i{display:block;height:4px;border-radius:2px;background:var(--fill)}
-.mc-scale span{display:block;margin-top:6px;font-size:calc(12rem/17);color:var(--fg2);text-align:center;line-height:1.2;word-break:keep-all} .mc-scale .on i{background:var(--c)} .mc-scale .on span{color:var(--fg);font-weight:600}
+.mc-scale{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:14px;container-type:inline-size} .mc-scale i{display:block;height:4px;border-radius:2px;background:var(--fill)}
+.mc-scale span{display:block;margin-top:6px;font-size:calc(12rem/17);color:var(--fg2);text-align:center;line-height:1.2;word-break:keep-all;overflow-wrap:normal}
+/* 글자를 크게 키워 칸이 좁아지면 지금 칸 이름만 남김 (단어가 중간에서 끊기지 않게) */
+@container (max-width: 15em){ .mc-scale div:not(.on) span{visibility:hidden} .mc-scale .on span{white-space:nowrap} .mc-scale div:first-child.on span{text-align:left} .mc-scale div:last-child.on span{text-align:right} } .mc-scale .on i{background:var(--c)} .mc-scale .on span{color:var(--fg);font-weight:600}
 /* 현금과 헤지: 왼쪽 항목 · 오른쪽 할 일 */
 .mc-cash{padding:4px var(--pad-card)} .mc-cr{display:grid;grid-template-columns:minmax(76px,auto) 1fr;column-gap:16px;padding:12px 0;font-size:var(--t-detail)} .mc-cr+.mc-cr{border-top:.5px solid var(--line)}
 .mc-cr>span{color:var(--fg2)} .mc-cr b{font-weight:600;display:block} .mc-cr small{display:block;color:var(--fg2);font-size:var(--t-foot);margin-top:2px}
@@ -566,6 +568,20 @@ function closedNote(){
   const k = new Date(Date.now() + 9 * 3600e3), wd = k.getUTCDay(), h = k.getUTCHours();
   return wd === 6 || wd === 0 || (wd === 1 && h < 8) ? " · 주말 휴장" : " · 휴장";
 }
+/* 브리핑이 마지막으로 나왔어야 하는 날 (화~토 07:41, 늦어질 수 있어 08:30부터 셈) */
+function lastBriefDay(){
+  for (let i = 0; i < 8; i++){
+    const k = new Date(Date.now() + 9 * 3600e3 - i * 864e5), wd = k.getUTCDay();
+    if (wd >= 2 && wd <= 6 && (i > 0 || k.getUTCHours() * 60 + k.getUTCMinutes() >= 510)) return k.toISOString().slice(0, 10);
+  }
+  return "";
+}
+/* 판정이 오래됐을 때: 평일엔 30시간, 주말을 낀 일·월엔 80시간 넘게 새 계산이 없으면 알림 */
+function staleNote(m){
+  const at = Date.parse(m.at || ""); if (!at) return "";
+  const k = new Date(Date.now() + 9 * 3600e3), wd = k.getUTCDay(), lim = (wd === 0 || wd === 1 || (wd === 2 && k.getUTCHours() < 10) || wd === 6) ? 80 : 30, h = (Date.now() - at) / 3600e3;
+  return h > lim ? `<p class="ferr" style="margin-top:6px">${Math.floor(h / 24)}일 동안 새 계산이 없었어요. 오른쪽 위 ↻로 다시 계산해 주세요.</p>` : "";
+}
 let liveT = null;
 function liveTick(){
   clearInterval(liveT);
@@ -699,12 +715,12 @@ function macSignal(){
     else if (x.status === "경계") warn.push(one(x, WARN_NOTE[x.key] || "경계"));
   }
   const rule = !v ? null : v.state === "믿기 어려운 상승" ? { tone: "sell", t: "증시만 상승 · 장기금리·유가는 아직 상승 추세 → 상승을 신뢰하지 않음" }
-    : (v.us10 !== "하락" && v.wti !== "하락") ? { tone: "wait", t: "장기금리·유가 아직 상승 추세 → 반등을 서둘러 믿지 않음" }
-    : { tone: "buy", t: "장기금리·유가 " + [v.us10 === "하락" ? "금리 하락" : "", v.wti === "하락" ? "유가 하락" : ""].filter(Boolean).join("·") + " 추세 → 우호" };
+    : (v.us10 !== "하락" && v.wti !== "하락") ? { tone: "wait", t: "장기금리·유가 아직 상승 추세 → 증시 상승을 서둘러 믿지 않음" }
+    : { tone: "buy", t: (v.us10 === "하락" && v.wti === "하락" ? "장기금리·유가" : v.us10 === "하락" ? "장기금리" : "유가") + " 하락 추세 → 우호" };
   if (rule?.tone === "sell") sell.push({ t: "원칙", n: "금리·유가 없는 상승" });
   let label, tone, line;
   const miss0 = it.core.filter(x => x.status === "자료 없음" || x.value == null).map(x => SHORT_NAME[x.key] || x.name);
-  if (miss0.length){ label = "판정 보류"; tone = "none"; line = `${miss0.join("·")} 자료를 받지 못해 판정을 보류해요. 핵심 6개가 모두 있어야 신호를 내요.`; }
+  if (miss0.length){ label = "판정 보류"; tone = "none"; line = `${miss0.join("·")} 자료를 받지 못해 판정을 보류해요. 핵심 6개가 모두 있어야 신호를 내요. 오른쪽 위 ↻로 다시 계산해 보세요.`; }
   else if (sell.length && !buy.length){ label = "비중 축소"; tone = "sell"; line = "현금 비중 확대 · 소량 헤지 · 신규 매수 보류"; }
   else if (buy.length && !warn.length && !sell.length && rule?.tone !== "wait"){ label = "분할매수"; tone = "buy"; line = "분할매수 · 현금 비중 30% 유지"; }
   else if (buy.length){ label = "소량 분할매수"; tone = "info";
@@ -745,7 +761,7 @@ function cashCard(){
   return `<div class="sec-title" role="heading" aria-level="2">현금과 헤지</div><div class="card mc-cash">
     ${r("현금 비중", P[0], "현금이 가장 싼 보험 · 급락이 오면 기회")}
     ${r("헤지", P[1], P[1] === "필요 없음" ? "" : "VIX·숏 합쳐 현금의 30% 이내 · 목표가는 짧게, 손절선 지나면 정리")}
-    ${ev ? r("큰 일정", `${mMD(ev.k.d)} ${ev.name.replace(/ 금리 결정| \(.*\)/g, "")}`, "불확실성이 큰 이벤트 · 헤지는 VIX로") : ""}</div>`;
+    ${ev ? r("큰 일정", `${mMD(ev.k.d)} ${ev.name.replace(/ 금리 결정| \(.*\)/g, "")}`, "불확실성이 큰 이벤트 · 헤지한다면 VIX로") : ""}</div>`;
 }
 /* 아침 브리핑: 한 줄 결론 + '지표 — 의미' 줄 + 이번 주 일정 (오늘의 신호와 같은 모양) */
 const BR_TONE = {buy: "var(--info)", warn: "var(--wait)", sell: "var(--sell)", good: "var(--buy)", info: "var(--fg3)"};
@@ -754,9 +770,9 @@ function briefPoints(b){
   return (b.lines || []).slice(0, 3).map(l => { const m = String(l).split(/\s+[—–-]\s+/); return m.length > 1 ? { k: m[0], v: m.slice(1).join(" — "), tone: "info" } : { k: l, v: "", tone: "info" }; });
 }
 function briefCard(){
-  const b = S.brief, m = S.mac;
+  const b = S.brief;
   if (!b || !(b.points || b.lines || []).length) return "";
-  const old = m && b.date && (Date.parse(m.date) - Date.parse(b.date)) > 3 * 864e5;
+  const old = b.date && b.date < lastBriefDay();
   const pts = briefPoints(b), wk = (b.watch || []).slice(0, 3).map(w => { const x = /^(\d{1,2}\/\d{1,2})\s*(.*)$/.exec(w); return x ? [x[1], x[2]] : ["", w]; });
   return `<div class="card mc-brief"><div class="sub">아침 브리핑 · ${esc(mDay(b.date))} ${esc((b.at || "").slice(11, 16))}${old ? " · 지난 것" : ""} · 쓴 시점 숫자</div>
     ${b.headline ? `<p class="mc-bh">${esc(b.headline)}</p>` : ""}
@@ -790,7 +806,7 @@ async function renderMac0(){
   const it = macItems(), rg = m.regime || {};
   const cal = (m.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; }).slice(0, 3);
   $app.innerHTML = `<div class="wrap">${head}
-    <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">판정 ${esc(mDay(m.date))} ${esc((m.at || "").slice(11, 16))}${S.liveQ ? ` · 시세 ${esc(mMD(new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(S.liveQ))))} ${esc(new Date(S.liveQ).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}))}` : ""}${esc(closedNote())}</div></div>
+    <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">판정 ${esc(mDay(m.date))} ${esc((m.at || "").slice(11, 16))}${S.liveQ && S.liveQ > Date.parse(m.at || 0) ? ` · 시세 ${esc(mMD(new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(S.liveQ))))} ${esc(new Date(S.liveQ).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}))}` : ""}${esc(closedNote())}</div>${staleNote(m)}</div>
     ${signalCard()}
     ${cashCard()}
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
