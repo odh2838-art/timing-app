@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-25-14">
+<meta name="app-version" content="2026-10-29-1">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -246,6 +246,16 @@ h2.sec-title{font-size:var(--t-heading)}
 
 /* 매크로 */
 .mc-regs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* 주도섹터: 시장 고르기(iOS 세그먼트) · 섹터 카드(테마 이름 → 대장 한 줄 → 함께 오른 종목) */
+.seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin:0 0 var(--gap-block)} .seg button{flex:1;min-height:32px;border-radius:7px;font-size:var(--t-foot);font-weight:600;color:var(--fg)}
+.seg button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ld-idx{display:flex;gap:14px;font-size:var(--t-small);color:var(--fg2);margin:-14px 0 var(--gap-block)} .ld-idx b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
+.ld-sec{padding:14px var(--pad-card)} .ld-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px} .ld-h b{font-size:var(--t-detail)} .ld-h span{font-size:var(--t-foot);color:var(--fg2);white-space:nowrap}
+.ld-lead{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;background:var(--fill);border-radius:12px} .ld-lead .up{color:#C4272F} .ld-lead .dn{color:#1B64DA}
+@media (prefers-color-scheme: dark){ .ld-lead .up{color:var(--up)} .ld-lead .dn{color:var(--down)} } .ld-lead .n{flex:1;min-width:0;font-weight:600} .ld-lead .n small{display:block;font-weight:500;font-size:var(--t-foot);color:var(--fg2)}
+.ld-lead .c{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap} .ld-lead .tv{font-size:var(--t-foot);color:var(--fg2);text-align:right;white-space:nowrap}
+.ld-m{display:flex;justify-content:space-between;gap:10px;padding:6px 0 0;font-size:var(--t-small);color:var(--fg2)} .ld-m b{font-weight:500;color:var(--fg)} .ld-m span{font-variant-numeric:tabular-nums;white-space:nowrap}
+.up{color:var(--up)} .dn{color:var(--down)}
 .mc-reg{padding:16px;min-width:0}
 .mc-reg-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
 .mc-reg-s{font-size:var(--t-title2);font-weight:700;letter-spacing:-.01em;margin:2px 0 4px}
@@ -322,6 +332,7 @@ h2.sec-title{font-size:var(--t-heading)}
 <main id="app"></main>
 <nav class="tabbar" id="tabbar" hidden aria-label="탭">
   <button data-tab="today" aria-label="오늘"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>오늘</button>
+  <button data-tab="lead" aria-label="주도"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 4 4-6 5 3"/><path d="M3 21h18"/></svg>주도</button>
   <button data-tab="cal" aria-label="일정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>일정</button>
   <button data-tab="rules" aria-label="기준"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5V5.5M9 8h7M9 12h5"/></svg>기준</button>
   <button data-tab="settings" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
@@ -428,6 +439,8 @@ function render(how = "fade"){
   try{
     if (!S.token) renderSetup();
     else if (S.dhd && String(S.dhd).startsWith("m:")) renderMacDetail(String(S.dhd).slice(2));
+    else if (S.dhd && String(S.dhd).startsWith("l:")) renderLeadDetail(String(S.dhd).slice(2));
+    else if (S.tab === "lead") renderLead();
     else if (S.tab === "cal") renderCal();
     else if (S.tab === "rules") renderRules();
     else if (S.tab === "settings") renderSettings();
@@ -539,7 +552,7 @@ let SWIPING = false;
 /* ───────── 매크로 (tc/macro.py · 오동엔진 점검표) ─────────
    자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST) · 상태/브리핑.json (화~토 아침, Claude가 BofA·CPI 예상·FedWatch를 찾아 씀).
    참고 계정가 직접 보는 것만: 미국 10년물 · WTI · 근원 CPI · 연준 · 하이일드 스프레드 · 공포탐욕 + 과열 신호 + 한국 최소(환율·외국인). */
-const MAC_FILE = "상태/매크로.json", BRIEF_FILE = "상태/브리핑.json";
+const MAC_FILE = "상태/매크로.json", BRIEF_FILE = "상태/브리핑.json", LEAD_FILE = "상태/주도.json";
 S.mac = null; S.brief = null; S.macL = false; S.macErr = null;
 const ST_TONE = {"우호": "buy", "기회": "info", "경계": "wait", "중립": "none", "확인": "none", "자료 없음": "none"};
 const tag = (t, tone) => `<span class="mc-tag t-${tone || "none"}">${esc(t)}</span>`;
@@ -905,6 +918,118 @@ function renderMacDetail(key){
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
   bindNavbar();
 }
+
+/* ───────── 주도섹터 (한국·미국) ─────────
+   오른 뒤에 가려내는 '판별': 거래대금을 실은 상승 종목이 한 테마에 2개 이상 → 주도섹터, 그중 거래대금·상승률 1등 → 대장 */
+S.lead = null; S.leadL = false; S.leadErr = null; S.leadMk = LS.get("leadMk", "kr"); S.leadLive = null; S.leadLiveAt = 0;
+async function loadLead(){ S.lead = await readJSON(LEAD_FILE, null); S.leadL = true; S.leadErr = null; }
+const fmtTv = (v, us) => v == null ? "-" : us ? (v >= 1000 ? `$${(v / 1000).toFixed(1)}B` : `$${Math.round(v)}M`) : (v >= 10000 ? `${(v / 10000).toFixed(1)}조` : `${Math.round(v).toLocaleString("ko-KR")}억`);
+const fmtP = (v, us) => v == null ? "-" : us ? `$${(+v).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : `${Math.round(+v).toLocaleString("ko-KR")}원`;
+const chgCls = v => v > 0 ? "up" : v < 0 ? "dn" : "";
+const lid = m => m.code || m.sym;
+/* 실시간: 대장·구성 종목 시세를 1분마다 중계에서 받아 등락률·거래대금만 바꿈 (판정은 계산 때 것) */
+async function pullLeadLive(mk){
+  const d = S.lead?.[mk]; if (!d) return false;
+  const syms = [...new Set(d.sectors.flatMap(x => x.members.map(m => mk === "kr" ? lid(m) + (m.mkt === "코스닥" ? ".KQ" : ".KS") : lid(m))).concat(d.top.slice(0, 10).map(m => mk === "kr" ? lid(m) + (m.mkt === "코스닥" ? ".KQ" : ".KS") : lid(m))))].slice(0, 60);
+  if (!syms.length) return false;
+  try{
+    const r = await fetch(RELAY() + "?s=" + syms.map(encodeURIComponent).join(","), {cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined});
+    if (!r.ok) return false;
+    const j = await r.json(), out = {};
+    for (const [k, q] of Object.entries(j)) if (q && q.p != null) out[k.split(".")[0]] = q;
+    if (!Object.keys(out).length) return false;
+    S.leadLive = {mk, q: out}; S.leadLiveAt = Date.now(); return true;
+  }catch(e){ return false; }
+}
+const liveM = (m, mk) => { const q = S.leadLive?.mk === mk ? S.leadLive.q[lid(m)] : null; if (!q || !q.prev && mk !== "kr") return m;
+  const chg = q.prev ? (q.p / q.prev - 1) * 100 : m.chg; return {...m, p: q.p, chg: +chg.toFixed(2), tv: mk === "kr" && q.tv ? Math.round(q.tv / 1e8) : m.tv, live: true}; };
+function leadRow(m, mk, isLead){
+  const us = mk === "us";
+  return `<button class="row press" data-lk="${esc(mk + ":" + lid(m))}"><div class="main"><div class="mc-n"><span>${esc(m.name)}</span>${m.upper ? tag("상한가", "sell") : ""}${isLead ? tag("대장", "info") : ""}</div><div class="sub">${esc(m.ind || m.mkt || "")}${m.rs != null ? ` · 지수 대비 ${esc(pct(m.rs))}p` : ""}</div></div>
+    <div class="mc-r"><div class="mc-v ${chgCls(m.chg)}">${esc(pct(m.chg))}</div><div class="sub">${esc(fmtTv(m.tv, us))}</div></div>${CHEV}</button>`;
+}
+function secCard(x, mk){
+  const us = mk === "us", L = liveM(x.leader, mk), ms = x.members.filter(m => lid(m) !== lid(x.leader)).slice(0, 3).map(m => liveM(m, mk));
+  return `<button class="card ld-sec press" data-ls="${esc(mk + ":" + (x.no ?? x.name))}" style="text-align:left;width:100%">
+    <div class="ld-h"><b>${esc(x.name)}</b><span>${x.n_up}개 상승${x.in_top ? ` · 거래대금 상위 ${x.in_top}개` : ""}</span></div>
+    <div class="ld-lead"><div class="n">${esc(L.name)}<small>대장 · ${esc(fmtTv(L.tv, us))}${L.rs != null ? ` · 지수 대비 ${esc(pct(L.rs))}p` : ""}${L.upper ? " · 상한가" : ""}</small></div><div class="c ${chgCls(L.chg)}">${esc(pct(L.chg))}</div></div>
+    ${ms.map(m => `<div class="ld-m"><b>${esc(m.name)}</b><span class="${chgCls(m.chg)}">${esc(pct(m.chg))} · ${esc(fmtTv(m.tv, us))}</span></div>`).join("")}
+    ${x.also?.length ? `<div class="sub" style="margin-top:8px">같은 흐름: ${esc(x.also.join(" · "))}</div>` : ""}</button>`;
+}
+let leadT = null;
+function leadTick(){
+  clearInterval(leadT);
+  leadT = setInterval(async () => { if (document.hidden || S.tab !== "lead" || S.dhd || S.busy) return; if (await pullLeadLive(S.leadMk)) render("none"); }, 60000);
+}
+async function ensureLead(head){
+  if (S.leadL) return true;
+  $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><div class="sk" style="width:40%;height:34px"></div></div><div class="card"><div class="sk" style="width:60%;height:16px"></div><div class="sk" style="width:80%;height:16px;margin-top:8px"></div></div></div>`;
+  try{ await loadLead(); }catch(e){ S.leadErr = e.message; S.leadL = true; }
+  return false;
+}
+async function renderLead(){
+  const head = macHead("주도섹터");
+  if (!(await ensureLead(head)) && S.tab !== "lead") return;
+  if (S.tab !== "lead" || S.dhd) return;
+  const mk = S.leadMk, d = S.lead?.[mk], us = mk === "us";
+  if (!S.leadLiveAt || Date.now() - S.leadLiveAt > 60000 || S.leadLive?.mk !== mk){ pullLeadLive(mk).then(ok => { if (ok && S.tab === "lead" && !S.dhd) render("none"); }); }
+  leadTick();
+  const seg = `<div class="seg" role="tablist"><button role="tab" data-seg="kr" class="${mk === "kr" ? "on" : ""}" aria-selected="${mk === "kr"}">한국</button><button role="tab" data-seg="us" class="${mk === "us" ? "on" : ""}" aria-selected="${mk === "us"}">미국</button></div>`;
+  const when = d ? `${mDay(d.date)} ${d.status === "OPEN" ? "장중 · " + (S.lead.at || "").slice(11, 16) + " 계산" : "마감"}` : "";
+  const ix = d?.idx || {}, ixRow = us ? [["S&P 500", ix.spx], ["나스닥", ix.ndx]] : [["코스피", ix.kospi], ["코스닥", ix.kosdaq]];
+  $app.innerHTML = `<div class="wrap">${head}
+    <div class="title-block" data-anchor><h1 class="big">주도섹터</h1><div class="sub">${esc(when)}${S.leadLive?.mk === mk ? " · 시세 실시간" : ""}</div></div>
+    ${seg}
+    ${d ? `<div class="ld-idx">${ixRow.map(([n, v]) => `<span>${n} <b class="${chgCls(v?.chg)}">${esc(pct(v?.chg))}</b></span>`).join("")}</div>
+    ${d.sectors.length ? d.sectors.map(x => secCard(x, mk)).join("") : `<div class="empty"><b>함께 오른 섹터가 없어요</b>거래대금을 실은 상승 종목이 한 테마에 2개 이상 있어야 주도섹터로 잡아요.</div>`}
+    <div class="sec-title" role="heading" aria-level="2">거래대금 상위 · 오른 종목</div>
+    <div class="list">${d.top.slice(0, 12).map(m => leadRow(liveM(m, mk), mk, d.sectors.some(x => lid(x.leader) === lid(m)))).join("")}</div>
+    <p class="note" style="margin:18px 4px">주도주는 미리 맞히지 않고 오른 뒤에 가려내요. 대장이 왜 올랐는지는 뉴스·공시로 확인하세요. 2·3등주는 참고만.</p>`
+    : `<div class="empty"><b>${S.leadErr ? "자료를 불러오지 못했어요" : "아직 계산 전이에요"}</b>${S.leadErr ? esc(S.leadErr) : "장중 1시간마다, 마감 뒤에 계산해요. 오른쪽 위 ↻로 지금 계산할 수 있어요."}</div>`}</div>`;
+  $app.querySelectorAll(".seg button").forEach(b => b.onclick = () => { S.leadMk = b.dataset.seg; LS.set("leadMk", S.leadMk); render("none"); });
+  $app.querySelectorAll("[data-ls]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "l:" + b.dataset.ls; }));
+  $app.querySelectorAll("[data-lk]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "l:" + b.dataset.lk; }));
+  macBind();
+}
+function renderLeadDetail(key){
+  if (!S.leadL){ $app.innerHTML = `<div class="wrap"><div class="navbar"></div><div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div></div>`;
+    loadLead().then(() => { if (S.dhd === "l:" + key) renderLeadDetail(key); }).catch(e => toast(e.message)); return; }
+  const [mk, id] = key.split(":"), d = S.lead?.[mk], us = mk === "us";
+  const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>주도</span></button></div><div class="side r"></div></div>`;
+  const sec = d?.sectors.find(x => String(x.no ?? x.name) === id);
+  const stock = sec ? null : (d?.sectors.flatMap(x => x.members).concat(d?.top || []).find(m => lid(m) === id));
+  if (!sec && !stock){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>찾지 못했어요</b>뒤로 가서 다시 선택해 주세요.</div></div>`; document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); }; return; }
+  const newsUrl = m => us ? `https://finance.yahoo.com/quote/${encodeURIComponent(lid(m))}/news/` : `https://m.stock.naver.com/domestic/stock/${encodeURIComponent(lid(m))}/news`;
+  let body;
+  if (sec){
+    const L = liveM(sec.leader, mk), ms = sec.members.map(m => liveM(m, mk));
+    body = `<div class="title-block" data-anchor><div class="sub">${esc(us ? "미국" : "한국")} 주도섹터 · ${sec.n_up}개 상승</div><h1 class="big">${esc(sec.name)}</h1></div>
+      <div class="sec-title" role="heading" aria-level="2">대장</div>
+      <div class="card"><div class="mc-reg-h"><span class="mc-big">${esc(L.name)}</span>${tag(L.upper ? "상한가" : "대장", L.upper ? "sell" : "info")}</div>
+        <p class="note" style="margin:4px 0 0">${esc(fmtP(L.p, us))}${L.live ? " · 실시간" : ""}</p>
+        <div class="kv" style="grid-template-columns:repeat(3,1fr)"><div><span>등락</span><b class="${chgCls(L.chg)}">${esc(pct(L.chg))}</b></div><div><span>거래대금</span><b>${esc(fmtTv(L.tv, us))}</b></div><div><span>지수 대비</span><b>${esc(pct(L.rs))}p</b></div></div>
+        ${sec.nominal ? `<p class="note" style="margin:12px 0 0">상승률 1등은 ${esc((sec.members.find(m => lid(m) === sec.nominal) || {}).name || sec.nominal)}이지만, 등락률이 비슷하면 거래대금이 큰 쪽을 대장으로 봐요.</p>` : ""}
+        ${(() => { const t = sec.members.slice().sort((a, b) => b.tv - a.tv)[0]; return t && lid(t) !== lid(sec.leader) ? `<p class="note" style="margin:8px 0 0">거래대금 1등은 ${esc(t.name)} (${esc(fmtTv(t.tv, us))})이에요. 섹터를 대표하는 종목이 따로 있으면 그쪽을 실질 대장으로 봐요.</p>` : ""; })()}
+        <a class="mc-link" href="${esc(newsUrl(L))}" target="_blank" rel="noopener">왜 올랐는지 뉴스 보기 ›</a></div>
+      <div class="sec-title" role="heading" aria-level="2">함께 오른 종목</div>
+      <div class="list">${ms.map(m => leadRow(m, mk, lid(m) === lid(sec.leader))).join("")}</div>
+      ${sec.also?.length ? `<p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">같은 종목이 많이 겹치는 테마: ${esc(sec.also.join(" · "))}</p>` : ""}`;
+  } else {
+    const m = liveM(stock, mk), inSec = d.sectors.filter(x => x.members.some(y => lid(y) === id));
+    body = `<div class="title-block" data-anchor><div class="sub">${esc(m.ind || m.mkt || "")}</div><h1 class="big">${esc(m.name)}</h1></div>
+      <div class="card"><div class="mc-reg-h"><span class="mc-big ${chgCls(m.chg)}">${esc(pct(m.chg))}</span>${m.upper ? tag("상한가", "sell") : inSec.some(x => lid(x.leader) === id) ? tag("대장", "info") : ""}</div>
+        <p class="note" style="margin:4px 0 0">${esc(fmtP(m.p, us))}${m.live ? " · 실시간" : ""}</p>
+        <div class="kv" style="grid-template-columns:repeat(3,1fr)"><div><span>거래대금</span><b>${esc(fmtTv(m.tv, us))}</b></div>${m.rs != null ? `<div><span>지수 대비</span><b>${esc(pct(m.rs))}p</b></div>` : ""}${m.mcap ? `<div><span>시총</span><b>${esc(us ? "$" + (m.mcap / 1e9).toFixed(0) + "B" : fmtTv(m.mcap, false))}</b></div>` : ""}</div>
+        ${inSec.length ? `<p class="note" style="margin:12px 0 0">속한 주도섹터: ${esc(inSec.map(x => x.name).join(" · "))}</p>` : `<p class="note" style="margin:12px 0 0">함께 오른 테마가 잡히지 않았어요. 혼자 오른 종목은 주도섹터로 보지 않아요.</p>`}
+        <a class="mc-link" href="${esc(newsUrl(m))}" target="_blank" rel="noopener">왜 올랐는지 뉴스 보기 ›</a></div>`;
+  }
+  $app.innerHTML = `<div class="wrap">${back}${body}
+    <div class="sec-title" role="heading" aria-level="2">기준</div>
+    <div class="card"><p class="note" style="margin:0;color:var(--fg)">거래대금을 실은 상승 종목이 한 테마에 2개 이상이면 주도섹터예요. 대장은 거래대금·상승률 1등이고, 등락률이 비슷하면 거래대금으로 가려요. 물려도 대장에서 물리는 게 낫고, 2·3등주는 사지 않아요.</p></div></div>`;
+  document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
+  $app.querySelectorAll("[data-lk]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "l:" + b.dataset.lk; }));
+  bindNavbar();
+}
 /* 기준 (참고 계정 규칙 요약) */
 function renderRules(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">기준</span><div class="side r"></div></div>
@@ -926,6 +1051,9 @@ function renderRules(){
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">하트넷 결합 매수 조건: 현금 비중 4% 초과 + 하이일드 400bp 접근 + 주식 자금 유출 가속이 동시에 나올 때. 2025년 3월 이 조건으로 S&P 5,300을 제시했고 4월 저점은 4,835였어요.</p>
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
     <div class="card"><p class="note" style="margin:0;color:var(--fg)">일반 기준이에요.<br><b style="color:var(--buy)">상승장</b> 지수가 200일선 위 + 200일선 오르는 중<br><b style="color:var(--wait)">조정</b> 1년 고점보다 10~20% 아래<br><b style="color:var(--sell)">하락장</b> 1년 고점보다 20% 넘게 아래, 또는 200일선 아래 + 200일선 내리는 중<br><b>방향 탐색</b> 그 밖</p></div>
+    <div class="sec-title" role="heading" aria-level="2">주도섹터 · 대장주 (주도 탭)</div>
+    <div class="list">${[["오른 뒤에 가려낸다", "미리 맞히는 예측이 아니라, 거래대금과 상승률로 드러난 뒤에 고르는 판별"], ["주도섹터", "거래대금을 실은 상승 종목이 한 테마에 2개 이상 (지수보다 강한 종목만). 테마는 돈의 흐름 기준(한국: 네이버 테마, 미국: 산업 분류)"], ["대장", "거래대금 많고 상승률 높은 종목. 등락률이 비슷하면(한국 3%p, 미국 2%p 안) 거래대금이 큰 쪽"], ["거래대금 기준", "절대 숫자가 아니라 순위: 한국 상위 40 (300억 이상), 미국 상위 60 ($300M 이상)"], ["2·3등주", "참고만. 대장이 오를 때 제일 잘 오르고 조정 때 2등주가 더 빠진다"], ["왜 올랐는지", "앱이 뉴스를 판단하지 않아요. 대장이 오르는 걸 보고 뉴스·공시로 이유를 확인하세요"], ["계산 시각", "장중 1시간마다 + 마감 뒤. 시세는 1분마다 실시간"]]
+      .map(([n, d]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub">${esc(d)}</div></div></div>`).join("")}</div>
     <div class="sec-title" role="heading" aria-level="2">용어</div>
     <div class="list">${[["bp", "0.01%포인트. 금리 −19bp = 0.19%포인트 하락"], ["스프레드", "투기등급 회사채 금리 − 국채 금리. 벌어지면 돈 빌리기가 어려워진다는 뜻"], ["200일선", "최근 200거래일 평균값. 지수가 그 위면 큰 추세가 살아 있는 것"], ["이격도", "지수가 200일선보다 몇 % 위에 있는지"], ["FMS", "BofA 펀드매니저 서베이. 현금 비중이 낮으면 주식을 가득 채운 상태"], ["Bull & Bear", "BofA 하트넷의 투자심리 지표 (0~10)"], ["VIX", "S&P 500 옵션으로 본 예상 변동성. 오르면 불안"], ["헤지", "하락에 대비한 보험. 현금 늘리기 → VIX → 숏 순서"], ["숏", "내려가면 돈을 버는 포지션 (인버스 ETF 등)"], ["롱 쏠림", "투자자 대부분이 이미 사 놓은 상태. 펀드매니저 현금 4% 미만"]]
       .map(([n, d]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub">${esc(d)}</div></div></div>`).join("")}</div>
@@ -941,6 +1069,7 @@ function renderSettings(){
     <div class="sec-title" role="heading" aria-level="2">자동 계산 (한국 시간)</div>
     <div class="list">
       <div class="row"><div class="main"><b>매크로 숫자</b><div class="sub">06:40 미국장 마감 뒤 (화~토) · 16:10 한국장 마감 뒤 · 22:50 미국 지표 발표 뒤 (월~금)</div></div></div>
+      <div class="row"><div class="main"><b>주도섹터</b><div class="sub">매크로 숫자와 같은 시각에 계산 · 한국은 네이버, 미국은 야후 자료 · 시세는 1분마다</div></div></div>
       <div class="row"><div class="main"><b>아침 브리핑</b><div class="sub">화~토 07:40쯤 (전날 밤 미국장 정리) · BofA 지표·CPI 예상·FedWatch</div></div></div>
     </div>
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">알림은 꺼져 있어요. 앱을 열면 최신 숫자를 받아요.</p>
