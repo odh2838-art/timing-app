@@ -143,21 +143,46 @@ async function yahooBars(sym, iv) {
   return { tz: res.meta?.exchangeTimezoneName || "", prev: res.meta?.chartPreviousClose ?? null, iv, rows };
 }
 
+// 같은 요청은 잠깐 저장해 두고 다시 씀 (시세 20초 · 봉 60초): 여러 번 눌러도 위쪽 서버를 매번 부르지 않게 (무료 한도 보호)
+// (workers.dev 주소에서는 Cache API가 동작하지 않을 수 있어서, 같은 실행 환경 안의 메모리 저장도 함께 씀)
+const MEM = new Map();
+async function cached(key, ttl, make, ctx) {
+  const m = MEM.get(key);
+  if (m && Date.now() - m.at < ttl * 1000) return m.body;
+  const cache = typeof caches !== "undefined" ? caches.default : null, k = new Request("https://cache.rooru.invest/" + key);
+  const hit = cache ? await cache.match(k).catch(() => null) : null;
+  if (hit) return hit.text();
+  const body = await make();
+  MEM.set(key, { at: Date.now(), body }); if (MEM.size > 300) MEM.delete(MEM.keys().next().value);
+  if (cache) ctx?.waitUntil?.(cache.put(k, new Response(body, { headers: { "Cache-Control": `public, max-age=${ttl}`, "Content-Type": "application/json" } })).catch(() => {}));
+  return body;
+}
+
 export default {
-  async fetch(req) {
+  async fetch(req, env, ctx) {
     const cors = { "Access-Control-Allow-Origin": APP_ORIGIN, "Vary": "Origin", "Cache-Control": "no-store",
                    "Content-Type": "application/json; charset=utf-8" };
+    const origin = req.headers.get("Origin");
+    if (origin && origin !== APP_ORIGIN) return new Response("null", { status: 403, headers: cors });   // 다른 사이트의 브라우저에서 부르는 것은 거절
     if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+    if (req.method !== "GET") return new Response("null", { status: 405, headers: cors });
     const u = new URL(req.url);
     const b = (u.searchParams.get("bars") || "").trim().toUpperCase(), iv = RANGE[u.searchParams.get("i")] ? u.searchParams.get("i") : "1m";
     if (b) {
       if (!/^\^?[A-Z0-9.-]{1,15}$/.test(b)) return new Response("null", { status: 400, headers: cors });
-      let out = null;
-      try { out = await bars(b, iv); } catch (e) { out = null; }
-      return new Response(JSON.stringify(out), { headers: cors });
+      const body = await cached(`bars/${b}/${iv}`, 60, async () => { let out = null; try { out = await bars(b, iv); } catch (e) { out = null; } return JSON.stringify(out); }, ctx);
+      return new Response(body, { headers: cors });
     }
     const syms = (u.searchParams.get("s") || "").split(",").map(s => s.trim().toUpperCase())
       .filter(s => /^\^?[A-Z0-9.-]{1,15}(=[A-Z])?$/.test(s)).slice(0, 40);   // =F 선물(CL=F) · =X 환율(KRW=X)
+    const uniq = [...new Set(syms)].sort();
+    if (!uniq.length) return new Response("{}", { headers: cors });
+    const body = await cached("q/" + uniq.join(","), 20, () => quotes(uniq), ctx);
+    return new Response(body, { headers: cors });
+  },
+};
+
+async function quotes(syms) {
     const out = {}, kr = syms.filter(s => /\.(KS|KQ)$/.test(s));
     if (kr.length) {
       let m = {}; try { m = await naverMany(kr); } catch (e) { m = {}; }
@@ -172,6 +197,5 @@ export default {
         if (out[s] && s.startsWith("^")) { try { out[s].day = await intraday(s); } catch (e) {} }
       } catch (e) { out[s] = null; }
     }));
-    return new Response(JSON.stringify(out), { headers: cors });
-  },
-};
+    return JSON.stringify(out);
+}
