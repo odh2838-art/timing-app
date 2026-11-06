@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-06-7">
+<meta name="app-version" content="2026-11-06-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -23,8 +23,8 @@
   --blue:#0066CC; --up:#DC2F3D; --down:#1F6FE5; --up-t:#C4272F; --dn-t:#1B5FD1;
   --buy:#167A40; --buy-bg:#E8F7EE; --sell:#8944AB; --sell-bg:#F4ECF8; --danger:#D70015;
   --wait:#975A00; --wait-bg:#FFF4E0; --info:#1B64DA; --info-bg:#EAF2FE;
-  /* 글자: 6단계 · 굵기 700/600/400 · 기준 17px(rem이라 시스템 글자 크기를 따라감) */
-  --t-display:calc(34rem/17); --t-title:calc(28rem/17); --t-title2:calc(22rem/17); --t-heading:calc(20rem/17); --t-foot:calc(13rem/17); --t-body:1rem; --t-detail:calc(16rem/17); --t-small:calc(15rem/17);
+  /* 글자: 5단계 34·22·17·15·13 (탭 막대 글자와 그래프 눈금만 예외) · 굵기 700/600/400 · 기준 17px(rem이라 시스템 글자 크기를 따라감) */
+  --t-display:calc(34rem/17); --t-title:calc(22rem/17); --t-title2:calc(22rem/17); --t-heading:calc(22rem/17); --t-foot:calc(13rem/17); --t-body:1rem; --t-detail:1rem; --t-small:calc(15rem/17);
   /* 간격 */
   --gap-eyebrow:4px; --gap-sub:8px; --gap-text:4px; --gap-inner:16px;
   --pad-card:16px; --gap-caption:8px; --gap-block:20px; --gap-section:28px; --gutter:20px;
@@ -155,7 +155,7 @@ html,body{overflow-x:clip}
 /* 가로 휴대폰: 탭바·큰 제목을 줄여 내용이 보이게 (iOS 가로 방식) */
 @media (max-height:500px) and (orientation:landscape){
 .tabbar button{flex-direction:row;min-height:36px;gap:6px;font-size:calc(13rem/17)} .tabbar svg{width:20px;height:20px}
-.title-block .big{font-size:calc(28rem/17)} .title-block{padding-top:4px}
+.title-block .big{font-size:var(--t-display)} .title-block{padding-top:4px}
 }
 /* 아이패드: 조금 넓은 가운데 칸, 시트는 가운데 폼 시트, 위쪽 바 바탕은 화면 끝까지 */
 @media (min-width:1024px){ .wrap{max-width:760px} }
@@ -170,7 +170,7 @@ textarea{resize:none}
 .lv i{width:14px;height:14px;border-radius:50%;background:var(--card,#fff);border:3px solid currentColor;box-sizing:border-box;z-index:1}
 .lv .t{font-size:var(--t-body);line-height:1.35;min-width:0}
 .lv .p{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;font-size:var(--t-body);line-height:1.2}
-.lv .p small{display:block;font-weight:500;font-size:var(--t-small);color:var(--fg2)}
+.lv .p small{display:block;font-weight:400;font-size:var(--t-small);color:var(--fg2)}
  .lv.buy{color:var(--buy)} .lv.trim{color:var(--wait)}
 .lv .t,.lv .p{color:var(--fg)}
 .lv .t b{font-weight:600;display:block} .lv .t small{display:block;font-size:var(--t-small);color:var(--fg2);margin-top:1px}
@@ -180,7 +180,7 @@ textarea{resize:none}
 
 .kv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;padding-top:14px;box-shadow:0 -1px 0 var(--line)}
 .kv div{display:flex;flex-direction:column;gap:3px;min-width:0}
-.kv span{font-size:var(--t-small);color:var(--fg2);white-space:nowrap} .kv small{font-size:12px;color:var(--fg2);white-space:nowrap;font-variant-numeric:tabular-nums} .kv b{font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv span{font-size:var(--t-small);color:var(--fg2);white-space:nowrap} .kv small{font-size:var(--t-foot);color:var(--fg2);white-space:nowrap;font-variant-numeric:tabular-nums} .kv b{font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .chart{padding:var(--pad-card) var(--gap-sub) var(--pad-card)}
 .plot{touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:grab}
@@ -252,11 +252,11 @@ h2.sec-title{font-size:var(--t-heading)}
 /* 내 자산: 비중 = 칸 크기, 오늘 등락 = 색 (한국식: 오름 빨강 · 내림 파랑, 진할수록 많이 움직임) */
 .hm{position:relative;width:100%;border-radius:12px;overflow:hidden;background:var(--fill)} .hm>div{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;border:1.5px solid var(--card);border-radius:10px;overflow:hidden;line-height:1.2}
 /* 맵 칸은 크기가 정해진 그림이라 글자도 px로 고정 (글자 키우기는 아래 목록이 맡음) */
-.hm b{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%} .hm i{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap} .hm small{font-size:11px;opacity:.85;font-variant-numeric:tabular-nums}
+.hm b{font-size:var(--t-foot);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%} .hm i{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap} .hm small{font-size:11px;opacity:.85;font-variant-numeric:tabular-nums}
 .ha-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px} .ha-top .mc-big{font-size:var(--t-title2)}
 .ha-cash{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:12px;font-size:var(--t-detail)} .ha-cash>span{color:var(--fg2)} .ha-cash .mc-tag{flex:none}
 .he-row{display:grid;grid-template-columns:1.35fr .9fr 1fr 44px;gap:8px;align-items:start;padding:10px 0} .he-row+.he-row label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)} .he-sug{display:flex;flex-direction:column;margin:-4px 0 6px;background:var(--fill);border-radius:12px;overflow:hidden} .he-sug button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;padding:8px 12px;text-align:left;font-size:var(--t-detail)} .he-sug button+button{border-top:.5px solid var(--line)} .he-sug span{color:var(--fg2);font-size:var(--t-foot);white-space:nowrap}
-.he-nm{display:block;font-size:11px;color:var(--fg2);margin-top:3px;min-height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} input[aria-invalid="true"]{box-shadow:0 0 0 2px var(--up-t) inset!important} .he-row+.he-row{border-top:.5px solid var(--line)} .he-row .field label{font-size:var(--t-foot);margin-bottom:4px} .he-row .field input{min-height:44px;padding:8px 10px;font-size:var(--t-detail)}
+.he-nm{display:block;font-size:var(--t-foot);color:var(--fg2);margin-top:3px;min-height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} input[aria-invalid="true"]{box-shadow:0 0 0 2px var(--up-t) inset!important} .he-row+.he-row{border-top:.5px solid var(--line)} .he-row .field label{font-size:var(--t-foot);margin-bottom:4px} .he-row .field input{min-height:44px;padding:8px 10px;font-size:var(--t-detail)}
 .he-del{min-height:44px;color:var(--danger);font-size:var(--t-foot);font-weight:600}
 
 /* 주도섹터: 시장 고르기(iOS 세그먼트) · 섹터 카드(테마 이름 → 대장 한 줄 → 함께 오른 종목) */
@@ -264,16 +264,16 @@ h2.sec-title{font-size:var(--t-heading)}
 .seg button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .ld-idx{display:flex;gap:14px;font-size:var(--t-small);color:var(--fg2);margin:-14px 0 var(--gap-block)} .ld-idx b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums} .ld-idx b.up{color:var(--up-t)} .ld-idx b.dn{color:var(--dn-t)}
 .ld-sec{padding:14px var(--pad-card)} .ld-sec+.ld-sec{margin-top:var(--gap-sub)} .ld-h b,.ld-lead .n,.ld-m b,.big,.mc-n{overflow-wrap:anywhere;word-break:keep-all} .ld-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px} .ld-h b{font-size:var(--t-detail)} .ld-h span{font-size:var(--t-foot);color:var(--fg2);white-space:nowrap;display:inline-flex;align-items:center;gap:6px} .ld-h .chev{color:var(--fg3,var(--fg2))}
-.ld-lead{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 0 8px;border-bottom:1px solid var(--line)} .ld-lead .n{flex:1;min-width:0;font-weight:600} .ld-lead .n small{display:block;font-weight:500;font-size:var(--t-foot);color:var(--fg2)}
+.ld-lead{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 0 8px;border-bottom:1px solid var(--line)} .ld-lead .n{flex:1;min-width:0;font-weight:600} .ld-lead .n small{display:block;font-weight:400;font-size:var(--t-foot);color:var(--fg2)}
 .ld-lead .c{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap} .ld-lead .tv{font-size:var(--t-foot);color:var(--fg2);text-align:right;white-space:nowrap}
-.ld-m{display:flex;justify-content:space-between;gap:10px;padding:6px 0 0;font-size:var(--t-small);color:var(--fg2)} .ld-m b{font-weight:500;color:var(--fg)} .ld-m span{font-variant-numeric:tabular-nums;white-space:nowrap}
+.ld-m{display:flex;justify-content:space-between;gap:10px;padding:6px 0 0;font-size:var(--t-small);color:var(--fg2)} .ld-m b{font-weight:400;color:var(--fg)} .ld-m span{font-variant-numeric:tabular-nums;white-space:nowrap}
 .up{color:var(--up-t)} .dn{color:var(--dn-t)}   /* 글자용: 밝은 화면에서 대비 4.5 이상 */
 .mc-reg{padding:16px;min-width:0}
 .mc-reg-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
 .mc-reg-s{font-size:var(--t-title2);font-weight:700;letter-spacing:-.01em;margin:2px 0 4px}
 .mc-reg .mc-spark{width:100%;height:40px;display:block;margin:2px 0 6px}
 .mc-kv{display:flex;flex-wrap:wrap;justify-content:space-between;column-gap:8px;font-size:var(--t-small);padding:2px 0} .mc-kv span{color:var(--fg2);white-space:nowrap} .mc-kv b{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;word-break:keep-all;overflow-wrap:normal;margin-left:auto}
-.mc-brief{margin-top:var(--gap-block)} .mc-more-all{margin-top:var(--gap-section)} .mc-more-all>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-more-all>summary::-webkit-details-marker,.mc-cash>summary::-webkit-details-marker{display:none} .mc-cash>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px} .mc-cash>summary b{font-weight:600} .dchev{display:inline-block;transition:transform .2s} details[open]>summary .dchev{transform:rotate(90deg)} .gpop{position:absolute;z-index:40;background:var(--card);color:var(--fg);border-radius:12px;padding:10px 12px;box-shadow:0 0 0 .5px var(--line),0 8px 24px rgba(0,0,0,.18);font-size:var(--t-foot);line-height:1.45;display:flex;flex-direction:column;gap:2px} .cal-today .mc-n{color:var(--blue)} .cal-today .mc-ci{color:var(--blue)} .term{padding:6px 1px;margin:-6px -1px;text-decoration:underline dotted;text-decoration-color:var(--fg3,var(--fg2));text-underline-offset:3px;cursor:help} .mc-old>summary{list-style:none;min-height:44px;display:flex;align-items:center;cursor:pointer} .mc-old>summary::-webkit-details-marker{display:none}
+.mc-brief{margin-top:var(--gap-block)} .rsec{margin-top:var(--gap-sub)} .rsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0 var(--pad-card);background:var(--card);border-radius:var(--r-card)} .rsec>summary::-webkit-details-marker{display:none} .rsec>summary h2{margin:0;font-size:var(--t-body);font-weight:600} .rsec>summary .dchev{color:var(--fg3)} .rsec[open]>summary{background:none;padding-top:var(--gap-block)} .rsec[open]>summary h2{font-size:var(--t-heading)} .rsec[open]{margin-bottom:var(--gap-block)} .mc-more-all{margin-top:var(--gap-section)} .mc-more-all>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-more-all>summary::-webkit-details-marker,.mc-cash>summary::-webkit-details-marker{display:none} .mc-cash>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px} .mc-cash>summary b{font-weight:600} .dchev{display:inline-block;transition:transform .2s} details[open]>summary .dchev{transform:rotate(90deg)} .gpop{position:absolute;z-index:40;background:var(--card);color:var(--fg);border-radius:12px;padding:10px 12px;box-shadow:0 0 0 .5px var(--line),0 8px 24px rgba(0,0,0,.18);font-size:var(--t-foot);line-height:1.45;display:flex;flex-direction:column;gap:2px} .cal-today .mc-n{color:var(--blue)} .cal-today .mc-ci{color:var(--blue)} .term{padding:6px 1px;margin:-6px -1px;text-decoration:underline dotted;text-decoration-color:var(--fg3,var(--fg2));text-underline-offset:3px;cursor:help} .mc-old>summary{list-style:none;min-height:44px;display:flex;align-items:center;cursor:pointer} .mc-old>summary::-webkit-details-marker{display:none}
 .mc-bh{margin:6px 0 0;font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
 .mc-bp{margin-top:12px}
 .mc-bpr{display:grid;grid-template-columns:8px minmax(0,auto) minmax(0,1fr);align-items:baseline;column-gap:10px;padding:9px 0;border-top:.5px solid var(--line);font-size:var(--t-detail)}
@@ -283,14 +283,14 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-wkr{display:flex;gap:12px;font-size:var(--t-detail);padding:3px 0} .mc-wkr b{min-width:40px;font-variant-numeric:tabular-nums}
 .mc-sig{padding:20px}
 /* 신호 단계: 지금 신호가 네 단계 중 어디인지 (색은 지금 칸에만) */
-.mc-scale{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:14px;container-type:inline-size} .mc-scale i{display:block;height:4px;border-radius:2px;background:var(--fill)}
-.mc-scale span{display:block;margin-top:6px;font-size:calc(12rem/17);color:var(--fg2);text-align:center;line-height:1.2;word-break:keep-all;overflow-wrap:normal}
+.mc-scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-top:14px;container-type:inline-size} .mc-scale i{display:block;height:4px;border-radius:2px;background:var(--fill)}
+.mc-scale span{display:block;margin-top:6px;font-size:var(--t-foot);color:var(--fg2);text-align:center;line-height:1.2;word-break:keep-all;overflow-wrap:normal}
 /* 글자를 크게 키워 칸이 좁아지면 지금 칸 이름만 남김 (단어가 중간에서 끊기지 않게) */
 @container (max-width: 15em){ .mc-scale div:not(.on) span{visibility:hidden} .mc-scale .on span{white-space:nowrap} .mc-scale div:first-child.on span{text-align:left} .mc-scale div:last-child.on span{text-align:right} } .mc-scale .on i{background:var(--c)} .mc-scale .on span{color:var(--fg);font-weight:600}
 /* 현금과 헤지: 왼쪽 항목 · 오른쪽 할 일 */
 .mc-cash{padding:4px var(--pad-card)} .mc-cr{display:grid;grid-template-columns:minmax(76px,auto) 1fr;column-gap:16px;padding:12px 0;font-size:var(--t-detail)} .mc-cr+.mc-cr{border-top:.5px solid var(--line)}
 .mc-cr>span{color:var(--fg2)} .mc-cr b{font-weight:600;display:block} .mc-cr small{display:block;color:var(--fg2);font-size:var(--t-foot);margin-top:2px}
-.mc-sig-l{font-size:var(--t-title);font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-top:2px}
+.mc-sig-l{font-size:var(--t-display);font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-top:2px}
 .mc-sig-s{margin:4px 0 0;color:var(--fg2);font-size:var(--t-detail)}
 .mc-why2{margin:4px 0 0}
 .mc-rule{display:flex;gap:8px;align-items:baseline;margin-top:14px;padding-top:12px;border-top:.5px solid var(--line);font-size:var(--t-detail)} .mc-rule .mc-dot{align-self:flex-start;margin-top:.55em}
@@ -298,7 +298,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-leg{margin-top:8px} .mc-legr{display:flex;align-items:center;gap:10px;padding:5px 0}
 .mc-sg-r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;margin-left:14px;font-size:var(--t-detail);border-top:.5px solid var(--line)} .mc-sg-h+.mc-sg-r{border-top:0;padding-top:4px}
 .mc-sg-r{flex-wrap:wrap;row-gap:0} .mc-sg-r>span:first-child{flex:1 1 auto;min-width:0} .mc-sg-r .sub{text-align:right;margin-left:auto;flex:0 1 auto}
-.mc-sg-r span:first-child{font-weight:500}
+.mc-sg-r span:first-child{font-weight:400}
 .mc-todo{margin-top:12px;background:var(--fill);border-radius:12px;padding:10px 12px;font-size:var(--t-detail);line-height:1.5}
 .mc-todo b{margin-right:6px}
 .mc-sg{margin-top:18px} .mc-sg-h{display:flex;align-items:center;gap:6px;font-weight:600;font-size:var(--t-small);color:var(--fg2)}
@@ -952,7 +952,7 @@ async function renderMac0(){
   const tc = document.getElementById("tocal"); if (tc) tc.onclick = () => { histTo(1, "t"); go("fade", () => { S.tab = "cal"; }); };
   const mo = $app.querySelector(".mc-more-all"); if (mo) mo.ontoggle = () => { S.moreOpen = mo.open; };   // 1분마다 다시 그려도 펼친 상태 유지
   const ca = $app.querySelector(".mc-cash"); if (ca) ca.ontoggle = () => { S.cashOpen = ca.open; };
-  const tr = document.getElementById("torules"); if (tr) tr.onclick = () => { histTo(1, "t"); go("fade", () => { S.tab = "rules"; }); };
+  const tr = document.getElementById("torules"); if (tr) tr.onclick = () => { (S.rulesOpen = S.rulesOpen || new Set()).add("오늘의 신호가 정해지는 순서"); histTo(1, "t"); go("fade", () => { S.tab = "rules"; }); };
   macBind();
 }
 /* 일정 아이콘: 탭 막대와 같은 선 굵기(1.8)의 단색 선 아이콘 — 이모지는 색·모양이 제각각이라 목록 리듬을 깨서 바꿈 */
@@ -1183,7 +1183,7 @@ function holdCard(){
   return `<div class="sec-title" role="heading" aria-level="2">내 자산</div>
     <button class="card press" id="toHold" style="text-align:left;width:100%">
       <div class="ha-top"><div><div class="sub">평가금액</div><div class="mc-big">${esc(won(c.total))}</div></div><div style="text-align:right"><div class="sub">최근 거래일</div><b class="${chgCls(c.day)}">${esc(c.day == null ? "-" : pct(c.day))}</b></div></div>
-      ${heatmap(c.rows, 520, false)}
+      ${heatmap(c.rows, 400, false)}
       <div class="sub" style="font-size:var(--t-foot);margin-top:6px">칸 = 비중 · 색 = 최근 거래일 등락 (빨강 오름 · 파랑 내림)</div>
       ${cashLine(c)}</button>`;
 }
@@ -1198,7 +1198,7 @@ function renderHold(){
   const c = holdCalc();
   const best = c.rows.filter(r => r.ret != null).sort((a, b) => b.ret - a.ret);
   $app.innerHTML = `<div class="wrap">${back}
-    <div class="title-block" data-anchor><h1 class="big">내 자산</h1><div class="sub">평가금액 · 원화 환산 (환율 ${esc(Math.round(c.fx).toLocaleString("ko-KR"))}원)</div><div class="mc-big" style="white-space:nowrap;font-size:min(calc(28rem/17),9.5vw);margin-top:2px">${esc(won(c.total))}</div>
+    <div class="title-block" data-anchor><h1 class="big">내 자산</h1><div class="sub">평가금액 · 원화 환산 (환율 ${esc(Math.round(c.fx).toLocaleString("ko-KR"))}원)</div><div class="mc-big" style="white-space:nowrap;font-size:min(var(--t-title),9.5vw);margin-top:2px">${esc(won(c.total))}</div>
       ${c.stock ? `<div class="sub" style="line-height:1.6">최근 거래일 <b class="${chgCls(c.day)}">${esc(c.day == null ? "-" : pct(c.day))} (${esc((c.dayAmt >= 0 ? "+" : "−") + wonShort(Math.abs(c.dayAmt)))})</b>${c.ret != null ? `<br>전체 수익 <b class="${chgCls(c.ret)}">${esc(pct(c.ret))} (${esc((c.retAmt >= 0 ? "+" : "−") + wonShort(Math.abs(c.retAmt)))})</b>` : ""}</div>` : ""}</div>
     ${S.holdErr ? `<div class="err">${esc(S.holdErr)}</div>` : ""}
     ${c.rows.length && c.rows.every(r => r.p == null) ? `<p class="note" style="margin:0 4px var(--gap-sub)">시세를 받지 못했어요 · 잠시 뒤 다시 열어 주세요. 그동안 합계는 현금만이에요.</p>`
@@ -1437,7 +1437,18 @@ function renderRules(){
       .map(([n, d]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub">${esc(d)}</div></div></div>`).join("")}</div>
     <div class="sec-title" role="heading" aria-level="2">현금과 헤지 · 운용 원칙</div>
     <div class="list"><div class="row"><div class="main"><div class="mc-n">현금은 가장 싼 보험</div><div class="sub">기본 30% (20~50%). 급락이 와도 현금이 있으면 기회</div></div></div><div class="row"><div class="main"><div class="mc-n">하락 이벤트가 예상되면</div><div class="sub">현금 확대 + 소량 헤지</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 순서</div><div class="sub">1순위 현금 확대 · 불확실성 큰 이벤트는 VIX · 롱 쏠림(과열)에서 방향 전환 예상 시 숏</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 한도</div><div class="sub">VIX·숏 합쳐서 현금의 30% 이하</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 청산</div><div class="sub">목표가는 짧게 · 손절선을 지나면 바로 정리</div></div></div><div class="row"><div class="main"><div class="mc-n">매크로 하락 때</div><div class="sub">분할매수 (바닥을 서둘러 잡지 않음)</div></div></div></div>
-    <p class="note" style="margin:18px 4px">참고 자료예요. 투자 권유가 아니에요.</p></div>`;
+    <p class="note rnote" style="margin:18px 4px">참고 자료예요. 투자 권유가 아니에요.</p></div>`;
+  /* 묶음마다 접기: 처음엔 제목만 보여서 차례 역할 (펼친 묶음은 다시 그려도 유지) */
+  S.rulesOpen = S.rulesOpen || new Set();
+  for (const h of [...$app.querySelectorAll(".wrap > .sec-title")]){
+    const name = h.textContent.trim(), d = document.createElement("details"), sm = document.createElement("summary");
+    d.className = "rsec"; d.open = S.rulesOpen.has(name);
+    sm.className = "press"; sm.innerHTML = `<h2>${esc(name)}</h2><span class="dchev" aria-hidden="true">›</span>`;
+    h.before(d); d.appendChild(sm); h.remove();
+    let n = d.nextElementSibling;
+    while (n && !n.classList.contains("sec-title") && !n.classList.contains("rnote")){ const nx = n.nextElementSibling; d.appendChild(n); n = nx; }
+    d.ontoggle = () => { d.open ? S.rulesOpen.add(name) : S.rulesOpen.delete(name); };
+  }
   bindNavbar();
 }
 
