@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-06-1">
+<meta name="app-version" content="2026-11-06-2">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -937,12 +937,33 @@ function renderMacDetail(key){
 S.hold = null; S.holdL = false; S.holdSha = null; S.holdQ = {}; S.holdQAt = 0;
 const KO_NAME = {META: "메타플랫폼스", MSFT: "마이크로소프트", AAPL: "애플", GOOGL: "알파벳", GOOG: "알파벳", AMZN: "아마존", TSLA: "테슬라", NVDA: "엔비디아", AVGO: "브로드컴", AMD: "AMD", NFLX: "넷플릭스", PLTR: "팔란티어", TSM: "TSMC", MU: "마이크론", QQQ: "QQQ", SPY: "SPY", VOO: "VOO", "005930.KS": "삼성전자", "000660.KS": "SK하이닉스"};
 const isKR = s => /\.(KS|KQ)$/.test(s);
+/* 저장소 파일은 다른 기기·사람이 고칠 수 있으니 읽을 때마다 값을 걸러 냄 (이상한 값은 버림) */
+const SYM_RE = /^[A-Z0-9][A-Z0-9.-]{0,14}$/, MAX_QTY = 1e9, MAX_CASH = 1e13;
+const num = (v, max) => { const n = typeof v === "number" ? v : parseFloat(String(v ?? "").replace(/,/g, "")); return Number.isFinite(n) && n > 0 && n <= max ? n : null; };
+function cleanHold(h){
+  const items = [], seen = new Map();
+  for (const x of (Array.isArray(h?.items) ? h.items : []).slice(0, 50)){
+    const sym = String(x?.sym || "").trim().toUpperCase(), qty = num(x?.qty, MAX_QTY);
+    if (!SYM_RE.test(sym) || !qty) continue;
+    const avg = num(x?.avg, 1e8), name = typeof x?.name === "string" ? x.name.slice(0, 30) : undefined;
+    if (seen.has(sym)){ const o = seen.get(sym); o.avg = o.avg && avg ? (o.avg * o.qty + avg * qty) / (o.qty + qty) : (o.avg || avg); o.qty += qty; continue; }   // 같은 종목 두 줄 → 합침 (평균단가는 수량 가중)
+    const it = {sym, qty, avg, name}; seen.set(sym, it); items.push(it);
+  }
+  return {v: 1, items, cash: {krw: num(h?.cash?.krw, MAX_CASH) || 0, usd: num(h?.cash?.usd, MAX_CASH / 1000) || 0}};
+}
 async function loadHold(){
-  try{ const j = await gh("/contents/" + enc(HOLD_FILE) + "?ref=main"); S.holdSha = j.sha; S.hold = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ""))))); }
-  catch(e){ if (!e.nf) throw e; S.hold = {v: 1, items: [], cash: {krw: 0, usd: 0}}; S.holdSha = null; }
+  S.holdErr = null;
+  try{ const j = await gh("/contents/" + enc(HOLD_FILE) + "?ref=main"); S.holdSha = j.sha;
+    try{ S.hold = cleanHold(JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, "")))))); }
+    catch(e){ S.hold = cleanHold({}); S.holdErr = "보유 파일을 읽지 못했어요 · 편집에서 다시 저장하면 새로 써요"; } }
+  catch(e){ if (!e.nf) throw e; S.hold = cleanHold({}); S.holdSha = null; }
   S.holdL = true;
 }
+/* 공개 저장소에는 절대 쓰지 않음: 저장 전에 저장소가 비공개인지 확인 */
+async function repoPrivate(){ const r = await gh(""); return r && r.private === true; }
 async function saveHold(h){
+  if (!(await repoPrivate())) throw new Error("자료 저장소가 공개로 되어 있어 저장하지 않았어요 · 설정에서 비공개 저장소로 바꿔 주세요");
+  h = cleanHold(h);
   const body = JSON.stringify({...h, updated: new Date().toISOString()}, null, 1);
   const r = await gh("/contents/" + enc(HOLD_FILE), {method: "PUT", body: JSON.stringify({message: "보유종목 수정 (앱)", content: btoa(unescape(encodeURIComponent(body))), sha: S.holdSha || undefined, branch: "main"})});
   S.holdSha = r.content.sha; S.hold = JSON.parse(body);
@@ -964,17 +985,18 @@ function holdCalc(){
   const h = S.hold || {items: []}, fx = fxNow();
   const rows = h.items.map(x => {
     const q = S.holdQ[x.sym] || {}, kr = isKR(x.sym), rate = kr ? 1 : fx;
-    const p = q.p ?? x.last ?? null, prev = q.prev ?? null;
+    const fin = v => typeof v === "number" && Number.isFinite(v) && v > 0 && v < 1e9 ? v : null;   // 중계 응답도 숫자만 믿음
+    const p = fin(q.p), prev = fin(q.prev);
     const val = p != null ? p * x.qty * rate : null, cost = x.avg ? x.avg * x.qty * rate : null;
     return {...x, name: x.name || KO_NAME[x.sym] || x.sym.replace(/\.(KS|KQ)$/, ""), p, kr, val, cost,
       day: p != null && prev ? (p / prev - 1) * 100 : null, ret: val != null && cost ? (val / cost - 1) * 100 : null, dayAmt: p != null && prev ? (p - prev) * x.qty * rate : 0};
   });
-  const stock = rows.reduce((a, r) => a + (r.val || 0), 0), cost = rows.reduce((a, r) => a + (r.cost || 0), 0);
+  const both = rows.filter(r => r.val != null && r.cost), stock = rows.reduce((a, r) => a + (r.val || 0), 0), cost = both.reduce((a, r) => a + r.cost, 0);
   const cash = (h.cash?.krw || 0) + (h.cash?.usd || 0) * fx, total = stock + cash;
   const dayAmt = rows.reduce((a, r) => a + r.dayAmt, 0);
   rows.forEach(r => r.w = stock ? (r.val || 0) / stock * 100 : 0);
   rows.sort((a, b) => (b.val || 0) - (a.val || 0));
-  return {rows, stock, cash, total, cashPct: total ? cash / total * 100 : 0, ret: cost ? (rows.filter(r => r.cost).reduce((a, r) => a + (r.val || 0), 0) / cost - 1) * 100 : null,
+  return {rows, stock, cash, total, cashPct: total ? cash / total * 100 : 0, ret: cost ? (both.reduce((a, r) => a + r.val, 0) / cost - 1) * 100 : null,
     day: stock - dayAmt ? dayAmt / (stock - dayAmt) * 100 : null, dayAmt, fx};
 }
 const won = v => v == null ? "-" : "₩" + Math.round(v).toLocaleString("ko-KR");
@@ -1014,13 +1036,15 @@ function cashBand(){
   return {"분할매수": [30, 30], "소량 분할매수": [30, 50], "중립": [30, 30], "관망": [30, 50], "비중 축소": [30, 50]}[g.label] || null;
 }
 function cashLine(c){
-  const b = cashBand(); if (!b) return "";
+  const b = cashBand(); if (!b || !c.total) return "";
   const v = c.cashPct, st = v < b[0] - 5 ? ["기준보다 적음", "wait"] : v > b[1] + 10 ? ["기준보다 많음", "none"] : ["기준 안", "buy"];
   return `<div class="ha-cash"><span>현금 비중 ${esc(v.toFixed(0))}% · 오늘의 신호 기준 ${b[0] === b[1] ? b[0] : b[0] + "~" + b[1]}%</span>${tag(st[0], st[1])}</div>`;
 }
 function holdCard(){
   if (!S.token) return "";
-  if (!S.holdL){ loadHold().then(() => { pullHoldQ().then(ok => { if (ok && S.tab === "today" && !S.dhd) render("none"); }); if (S.tab === "today" && !S.dhd) render("none"); }).catch(() => {}); S.holdL = "loading"; }
+  if (!S.holdL){ loadHold().then(() => { pullHoldQ().then(ok => { if (ok && S.tab === "today" && !S.dhd) render("none"); }); if (S.tab === "today" && !S.dhd) render("none"); })
+    .catch(e => { S.holdL = "err"; S.holdErr = e.message; if (S.tab === "today" && !S.dhd) render("none"); }); S.holdL = "loading"; }
+  if (S.holdL === "err" || S.holdErr) return `<div class="sec-title" role="heading" aria-level="2">내 자산</div><button class="card press" id="toHold" style="text-align:left;width:100%"><b>보유종목을 불러오지 못했어요</b><p class="note" style="margin:6px 0 0">${esc(S.holdErr || "")}</p></button>`;
   if (S.holdL !== true) return "";
   const c = holdCalc();
   if (!c.rows.length && !c.cash) return `<div class="sec-title" role="heading" aria-level="2">내 자산</div>
@@ -1043,13 +1067,16 @@ function renderHold(){
   const best = c.rows.filter(r => r.ret != null).sort((a, b) => b.ret - a.ret);
   $app.innerHTML = `<div class="wrap">${back}
     <div class="title-block" data-anchor><div class="sub">평가금액 · 원화 환산 (환율 ${esc(Math.round(c.fx).toLocaleString("ko-KR"))}원)</div><h1 class="big" style="white-space:nowrap;font-size:min(calc(28rem/17),10.5vw)">${esc(won(c.total))}</h1>
-      <div class="sub">오늘 <b class="${chgCls(c.day)}">${esc(c.day == null ? "-" : pct(c.day))} (${esc((c.dayAmt >= 0 ? "+" : "−") + wonShort(Math.abs(c.dayAmt)))})</b>${c.ret != null ? ` · 전체 수익 <b class="${chgCls(c.ret)}">${esc(pct(c.ret))}</b>` : ""}</div></div>
-    ${c.rows.length ? `<div class="card">${heatmap(c.rows, 640, true)}<p class="note" style="margin:10px 0 0">칸 크기 = 주식 중 비중 · 색 = 오늘 등락 (빨강 오름 · 파랑 내림, 진할수록 많이: 2% · 5%)</p></div>` : ""}
-    ${cashBand() ? `<div class="sec-title" role="heading" aria-level="2">현금</div><div class="card">${cashLine(c).replace('class="ha-cash"', 'class="ha-cash" style="margin-top:0"')}<p class="note" style="margin:8px 0 0">현금 ${esc(won(c.cash))} · 주식 ${esc(won(c.stock))}</p></div>` : ""}
+      ${c.stock ? `<div class="sub">오늘 <b class="${chgCls(c.day)}">${esc(c.day == null ? "-" : pct(c.day))} (${esc((c.dayAmt >= 0 ? "+" : "−") + wonShort(Math.abs(c.dayAmt)))})</b>${c.ret != null ? ` · 전체 수익 <b class="${chgCls(c.ret)}">${esc(pct(c.ret))}</b>` : ""}</div>` : ""}</div>
+    ${S.holdErr ? `<div class="err">${esc(S.holdErr)}</div>` : ""}
+    ${c.rows.length && c.rows.every(r => r.p == null) ? `<p class="note" style="margin:0 4px var(--gap-sub)">시세를 받지 못했어요 · 잠시 뒤 다시 열어 주세요. 그동안 합계는 현금만이에요.</p>`
+      : c.rows.some(r => r.p == null) ? `<p class="note" style="margin:0 4px var(--gap-sub)">시세를 못 받은 종목: ${esc(c.rows.filter(r => r.p == null).map(r => r.sym).join(", "))} · 티커를 확인해 주세요 (한국은 .KS/.KQ). 합계에서 빠져요.</p>` : ""}
+    ${c.stock ? `<div class="card">${heatmap(c.rows, 640, true)}<p class="note" style="margin:10px 0 0">칸 크기 = 주식 중 비중 · 색 = 오늘 등락 (빨강 오름 · 파랑 내림, 진할수록 많이: 2% · 5%)</p></div>` : ""}
+    ${cashBand() && c.total ? `<div class="sec-title" role="heading" aria-level="2">현금</div><div class="card">${cashLine(c).replace('class="ha-cash"', 'class="ha-cash" style="margin-top:0"')}<p class="note" style="margin:8px 0 0">현금 ${esc(won(c.cash))} · 주식 ${esc(won(c.stock))}</p></div>` : ""}
     ${best.length > 1 ? `<div class="mc-regs" style="margin-top:var(--gap-block)"><div class="card"><div class="sub">가장 좋음</div><b>${esc(best[0].name)}</b><div class="${chgCls(best[0].ret)}" style="font-weight:700">${esc(pct(best[0].ret))}</div></div><div class="card"><div class="sub">가장 나쁨</div><b>${esc(best[best.length - 1].name)}</b><div class="${chgCls(best[best.length - 1].ret)}" style="font-weight:700">${esc(pct(best[best.length - 1].ret))}</div></div></div>` : ""}
     <div class="sec-title" role="heading" aria-level="2">보유종목 ${c.rows.length}</div>
     <div class="list">${c.rows.map(r => `<div class="row"><div class="main"><div class="mc-n">${esc(r.name)}</div><div class="sub">${esc(r.sym)} · ${esc(r.qty.toLocaleString("ko-KR"))}주 · 비중 ${esc(r.w.toFixed(1))}%</div></div>
-      <div class="mc-r"><div class="mc-v ${chgCls(r.day)}">${esc(r.day == null ? "-" : pct(r.day))}</div><div class="sub">${esc(wonShort(r.val))}${r.ret != null ? ` · ${esc(pct(r.ret))}` : ""}</div></div></div>`).join("") || `<div class="row"><div class="main sub">아직 없어요 · 오른쪽 위 편집</div></div>`}</div>
+      <div class="mc-r"><div class="mc-v ${chgCls(r.day)}">${esc(r.p == null ? "시세 없음" : r.day == null ? "-" : pct(r.day))}</div><div class="sub">${esc(wonShort(r.val))}${r.ret != null ? ` · ${esc(pct(r.ret))}` : ""}</div></div></div>`).join("") || `<div class="row"><div class="main sub">아직 없어요 · 오른쪽 위 편집</div></div>`}</div>
     <p class="note" style="margin:18px 4px">오늘 등락 = 어제 종가 대비 · 수익 = 평균단가 대비 (단가를 안 넣은 종목은 빠짐) · 비공개 자료 저장소(${esc(S.repo)})에만 저장돼요.</p></div>`;
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
   document.getElementById("edit").onclick = () => go("push", () => { S.dhd = "he"; });
@@ -1072,7 +1099,7 @@ function renderHoldEdit(){
     <div class="card stack"><div class="field"><label for="ck">원화</label><input id="ck" value="${esc(h.cash?.krw || "")}" inputmode="numeric" placeholder="0"></div><div class="field"><label for="cu">달러</label><input id="cu" value="${esc(h.cash?.usd || "")}" inputmode="decimal" placeholder="0"></div></div>
     <button class="btn primary press" id="save" style="margin-top:var(--gap-block)">저장</button>
     <p class="note" style="margin:12px 4px">비공개 자료 저장소에만 저장돼요. 공개 앱 코드에는 들어가지 않아요.</p></div>`;
-  const read = () => [...document.querySelectorAll(".he-row")].map(r => { const i = r.dataset.i; return {sym: (document.getElementById("s" + i).value || "").trim().toUpperCase(), qty: parseFloat((document.getElementById("q" + i).value || "").replace(/,/g, "")), avg: parseFloat((document.getElementById("a" + i).value || "").replace(/,/g, "")) || null}; });
+  const read = () => [...document.querySelectorAll(".he-row")].map(r => { const i = r.dataset.i; return {sym: (document.getElementById("s" + i).value || "").trim().toUpperCase(), qty: parseFloat((document.getElementById("q" + i).value || "").replace(/,/g, "")), avg: (v => v === "" ? null : parseFloat(v))((document.getElementById("a" + i).value || "").replace(/,/g, "").trim())}; });
   let draft = items.slice();
   const redraw = () => { document.getElementById("rows").innerHTML = draft.map(row).join(""); bindDel(); };
   const bindDel = () => document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { draft = read(); draft.splice(+b.dataset.del, 1); if (!draft.length) draft = [{}]; redraw(); });
@@ -1080,13 +1107,22 @@ function renderHoldEdit(){
   document.getElementById("add").onclick = () => { draft = read(); draft.push({}); redraw(); document.getElementById("s" + (draft.length - 1)).focus(); };
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
   document.getElementById("save").onclick = async () => {
-    const list = read().filter(x => x.sym), bad = list.find(x => !/^[A-Z0-9.-]{1,15}$/.test(x.sym) || !(x.qty > 0));
-    if (bad){ toast(`${bad.sym}: 티커나 수량을 확인해 주세요`); return; }
+    const list = read().filter(x => x.sym);
+    for (const x of list){
+      if (!SYM_RE.test(x.sym)){ toast(`"${x.sym.slice(0, 12)}" · 티커는 영문·숫자만 (예: META, 005930.KS)`); return; }
+      if (/^\d{6}$/.test(x.sym)){ toast(`${x.sym} · 한국 종목은 뒤에 .KS(코스피) 또는 .KQ(코스닥)를 붙여 주세요`); return; }
+      if (!(x.qty > 0 && x.qty <= MAX_QTY)){ toast(`${x.sym} · 수량은 0보다 큰 숫자로 넣어 주세요`); return; }
+      if (x.avg != null && !(x.avg > 0)){ toast(`${x.sym} · 평균단가는 0보다 큰 숫자로 (모르면 비워 두세요)`); return; }
+    }
+    if (new Set(list.map(x => x.sym)).size < list.length) toast("같은 종목이 두 줄이라 하나로 합쳐 저장해요");
     const old = Object.fromEntries((S.hold.items || []).map(x => [x.sym, x]));
     const next = {v: 1, items: list.map(x => ({...x, name: old[x.sym]?.name || KO_NAME[x.sym] || undefined})), cash: {krw: parseFloat((document.getElementById("ck").value || "0").replace(/,/g, "")) || 0, usd: parseFloat((document.getElementById("cu").value || "0").replace(/,/g, "")) || 0}};
+    if (next.cash.krw < 0 || next.cash.usd < 0){ toast("현금은 0 이상으로 넣어 주세요"); return; }
     const b = document.getElementById("save"); b.disabled = true; b.textContent = "저장 중…";
-    try{ await saveHold(next); S.holdQAt = 0; await pullHoldQ(); toast("저장했어요"); BACK_ANIM = true; history.back(); }
-    catch(e){ b.disabled = false; b.textContent = "저장"; toast(e.message); }
+    try{ await saveHold(next); S.holdErr = null; S.holdQAt = 0; await pullHoldQ(); toast("저장했어요"); BACK_ANIM = true; history.back(); }
+    catch(e){ b.disabled = false; b.textContent = "저장";
+      if (/먼저 바뀌었어요/.test(e.message)){ try{ await loadHold(); toast("다른 기기에서 먼저 바뀌었어요 · 입력한 내용 그대로 저장을 한 번 더 누르면 덮어써요"); }catch(_){ toast(e.message); } }
+      else toast(e.message); }
   };
   bindNavbar();
 }
