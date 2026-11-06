@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-06-3">
+<meta name="app-version" content="2026-11-06-4">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -252,7 +252,8 @@ h2.sec-title{font-size:var(--t-heading)}
 .hm b{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%} .hm i{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap} .hm small{font-size:11px;opacity:.85;font-variant-numeric:tabular-nums}
 .ha-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px} .ha-top .mc-big{font-size:var(--t-title2)}
 .ha-cash{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:12px;font-size:var(--t-detail)} .ha-cash>span{color:var(--fg2)} .ha-cash .mc-tag{flex:none}
-.he-row{display:grid;grid-template-columns:1.35fr .9fr 1fr 44px;gap:8px;align-items:start;padding:10px 0} .he-row+.he-row label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)} .he-nm{display:block;font-size:11px;color:var(--fg2);margin-top:3px;min-height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} input[aria-invalid="true"]{box-shadow:0 0 0 2px var(--up-t) inset!important} .he-row+.he-row{border-top:.5px solid var(--line)} .he-row .field label{font-size:var(--t-foot);margin-bottom:4px} .he-row .field input{min-height:44px;padding:8px 10px;font-size:var(--t-detail)}
+.he-row{display:grid;grid-template-columns:1.35fr .9fr 1fr 44px;gap:8px;align-items:start;padding:10px 0} .he-row+.he-row label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)} .he-sug{display:flex;flex-direction:column;margin:-4px 0 6px;background:var(--fill);border-radius:12px;overflow:hidden} .he-sug button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;padding:8px 12px;text-align:left;font-size:var(--t-detail)} .he-sug button+button{border-top:.5px solid var(--line)} .he-sug span{color:var(--fg2);font-size:var(--t-foot);white-space:nowrap}
+.he-nm{display:block;font-size:11px;color:var(--fg2);margin-top:3px;min-height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} input[aria-invalid="true"]{box-shadow:0 0 0 2px var(--up-t) inset!important} .he-row+.he-row{border-top:.5px solid var(--line)} .he-row .field label{font-size:var(--t-foot);margin-bottom:4px} .he-row .field input{min-height:44px;padding:8px 10px;font-size:var(--t-detail)}
 .he-del{min-height:44px;color:var(--down2,#C4272F);font-size:var(--t-foot);font-weight:600}
 
 /* 주도섹터: 시장 고르기(iOS 세그먼트) · 섹터 카드(테마 이름 → 대장 한 줄 → 함께 오른 종목) */
@@ -989,6 +990,20 @@ async function pullHoldQ(){
     S.holdQAt = Date.now(); return n > 0;
   }catch(e){ return false; }
 }
+/* 종목 찾기: 비공개 자료 저장소의 종목사전(한국 2,700 · 미국 6,700)으로 이름·번호·티커 검색 */
+S.dict = null;
+async function loadDict(){ if (S.dict) return S.dict; try{ const d = await readJSON("상태/종목사전.json", []); S.dict = Array.isArray(d) ? d.filter(x => Array.isArray(x) && x.length >= 3).map(([m, c, n]) => ({m: String(m), c: String(c), n: String(n).slice(0, 40)})) : []; }catch(e){ S.dict = []; } return S.dict; }
+const dictSym = x => x.m === "코스피" ? x.c + ".KS" : x.m === "코스닥" ? x.c + ".KQ" : x.c;
+const KO_REV = Object.fromEntries(Object.entries(KO_NAME).map(([k, v]) => [v, k]));
+function findStocks(qs, n = 6){
+  const q = String(qs || "").trim(); if (!q || !S.dict) return [];
+  const Q = q.toUpperCase(), out = [], seen = new Set(), add = x => { const s = dictSym(x); if (!seen.has(s)){ seen.add(s); out.push({sym: s, name: x.m === "미국" ? (KO_NAME[s] || x.n) : x.n, m: x.m}); } };
+  if (KO_REV[q]){ const x = S.dict.find(d => d.c === KO_REV[q] || dictSym(d) === KO_REV[q]); if (x) add(x); }
+  for (const x of S.dict){ if (x.c.toUpperCase() === Q || dictSym(x) === Q || x.n === q) add(x); }
+  for (const x of S.dict){ if (out.length >= n) break; if (x.n.toUpperCase().startsWith(Q) || x.c.toUpperCase().startsWith(Q)) add(x); }
+  for (const x of S.dict){ if (out.length >= n) break; if (q.length >= 2 && x.n.toUpperCase().includes(Q)) add(x); }
+  return out.slice(0, n);
+}
 async function pullHoldQFor(syms){
   syms = syms.filter(s => SYM_RE.test(s)).slice(0, 20); if (!syms.length) return;
   try{ const r = await fetch(RELAY() + "?s=" + syms.map(encodeURIComponent).join(","), {cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined});
@@ -1103,13 +1118,13 @@ function renderHoldEdit(){
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="취소">${BACK}<span>취소</span></button></div><div class="side r"></div></div>`;
   if (S.holdL !== true){ loadHold().then(() => { if (S.dhd === "he") renderHoldEdit(); }); $app.innerHTML = `<div class="wrap">${back}</div>`; return; }
   const h = S.hold, row = (x, i) => `<div class="he-row" data-i="${i}">
-      <div class="field"><label for="s${i}">티커</label><input id="s${i}" value="${esc(x.sym || "")}" placeholder="META" autocapitalize="characters" spellcheck="false"></div>
+      <div class="field"><label for="s${i}">종목</label><input id="s${i}" value="${esc(x.sym || "")}" placeholder="이름·티커" autocapitalize="characters" autocomplete="off" spellcheck="false"></div>
       <div class="field"><label for="q${i}">수량</label><input id="q${i}" value="${esc(x.qty ?? "")}" inputmode="decimal"></div>
       <div class="field"><label for="a${i}">평균단가</label><input id="a${i}" value="${esc(x.avg ?? "")}" inputmode="decimal" placeholder="선택"><small class="he-nm" id="n${i}">${esc(x.sym ? (x.name || KO_NAME[x.sym] || "") : "")}</small></div>
       <button class="he-del press" data-del="${i}" aria-label="${esc((x.sym || "이 줄") + " 지우기")}">지우기</button></div>`;
   const ord = holdCalc().rows.map(r => r.sym), items = h.items.length ? h.items.slice().sort((a, b) => ord.indexOf(a.sym) - ord.indexOf(b.sym)) : [{}];   // 상세와 같은 순서 (금액 큰 순)
   $app.innerHTML = `<div class="wrap">${back}
-    <div class="title-block" data-anchor><h1 class="big">보유종목 편집</h1><div class="sub">미국은 티커 그대로(META), 한국은 번호.KS/.KQ (005930.KS) · 단가는 그 나라 돈</div></div>
+    <div class="title-block" data-anchor><h1 class="big">보유종목 편집</h1><div class="sub">종목 칸에 이름이나 티커를 쓰고 목록에서 고르세요 (삼성전자 · 애플 · META) · 단가는 그 나라 돈</div></div>
     <div class="card" id="rows">${items.map(row).join("")}</div>
     <button class="btn soft press" id="add" style="margin-top:var(--gap-sub)">종목 추가</button>
     <div class="sec-title" role="heading" aria-level="2">현금</div>
@@ -1118,22 +1133,39 @@ function renderHoldEdit(){
     <p class="note" style="margin:12px 4px">비공개 자료 저장소에만 저장돼요. 공개 앱 코드에는 들어가지 않아요.</p></div>`;
   const bad = (id, msg) => { const e = document.getElementById(id); if (e){ e.setAttribute("aria-invalid", "true"); e.scrollIntoView({block: "center"}); e.focus(); } toast(msg); };
   S.holdDirty = false; $app.querySelectorAll("input").forEach(e => e.addEventListener("input", () => { S.holdDirty = true; e.removeAttribute("aria-invalid"); }));
-  const read = () => [...document.querySelectorAll(".he-row")].map(r => { const i = r.dataset.i; return {sym: (document.getElementById("s" + i).value || "").trim().toUpperCase(), qty: parseFloat((document.getElementById("q" + i).value || "").replace(/,/g, "")), avg: (v => v.trim() === "" ? null : parseMoney(v))(document.getElementById("a" + i).value || ""), el: i}; });
+  const read = () => [...document.querySelectorAll(".he-row")].map(r => { const i = r.dataset.i, si = document.getElementById("s" + i); return {raw: (si.value || "").trim(), nm: si.dataset.name || undefined, sym: (si.value || "").trim().toUpperCase(), qty: parseFloat((document.getElementById("q" + i).value || "").replace(/,/g, "")), avg: (v => v.trim() === "" ? null : parseMoney(v))(document.getElementById("a" + i).value || ""), el: i}; });
   let draft = items.slice();
   const redraw = () => { document.getElementById("rows").innerHTML = draft.map(row).join(""); bindDel(); bindName(); S.holdDirty = true; $app.querySelectorAll("#rows input").forEach(e => e.addEventListener("input", () => { S.holdDirty = true; e.removeAttribute("aria-invalid"); })); };
-  const bindName = () => document.querySelectorAll("[id^=s]").forEach(inp => { if (!/^s\d+$/.test(inp.id)) return; inp.onchange = async () => { const i = inp.id.slice(1), sy = inp.value.trim().toUpperCase(), n = document.getElementById("n" + i); if (!n) return;
-    if (!SYM_RE.test(sy)){ n.textContent = ""; return; } n.textContent = KO_NAME[sy] || "확인 중…"; await pullHoldQFor([sy]); n.textContent = S.holdQ[sy] ? (KO_NAME[sy] || "시세 있음 ✓") : "시세를 못 찾음"; }; });
+  /* 티커 칸: 이름·번호·티커로 찾기 (삼성전자 · 005930 · AAPL · 애플) → 고르면 티커와 이름이 채워짐 */
+  const sugBox = () => document.getElementById("sug") || Object.assign(document.createElement("div"), {id: "sug", className: "he-sug", role: "listbox"});
+  const hideSug = () => document.getElementById("sug")?.remove();
+  const pick = async (i, it) => { const inp = document.getElementById("s" + i), n = document.getElementById("n" + i); inp.value = it.sym; inp.dataset.name = it.name; if (n) n.textContent = it.name + " ✓"; hideSug(); S.holdDirty = true;
+    document.getElementById("q" + i)?.focus(); await pullHoldQFor([it.sym]); if (n && !S.holdQ[it.sym]) n.textContent = it.name + " · 시세를 못 찾음"; };
+  const bindName = () => document.querySelectorAll("[id^=s]").forEach(inp => { if (!/^s\d+$/.test(inp.id)) return; const i = inp.id.slice(1);
+    inp.oninput = async () => { await loadDict(); const list = findStocks(inp.value); const n = document.getElementById("n" + i); delete inp.dataset.name; if (n) n.textContent = "";
+      if (!list.length || (list.length === 1 && list[0].sym === inp.value.trim().toUpperCase() && (inp.dataset.name = list[0].name) && ((n && (n.textContent = list[0].name + " ✓")), true))){ hideSug(); return; }
+      const box = sugBox(); box.innerHTML = list.map((it, k) => `<button type="button" role="option" class="press" data-k="${k}"><b>${esc(it.name)}</b><span>${esc(it.sym.replace(/\.(KS|KQ)$/, ""))} · ${esc(it.m)}</span></button>`).join("");
+      inp.closest(".he-row").after(box); box.querySelectorAll("button").forEach(b => b.onclick = () => pick(i, list[+b.dataset.k])); };
+    inp.onchange = async () => { const sy = inp.value.trim().toUpperCase(), n = document.getElementById("n" + i); if (!n || inp.dataset.name) return;
+      if (!SYM_RE.test(sy)){ n.textContent = ""; return; } n.textContent = KO_NAME[sy] || "확인 중…"; await pullHoldQFor([sy]); n.textContent = S.holdQ[sy] ? (KO_NAME[sy] || "시세 있음 ✓") : "시세를 못 찾음"; }; });
+  loadDict();
   bindName();
   const bindDel = () => document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { draft = read(); draft.splice(+b.dataset.del, 1); if (!draft.length) draft = [{}]; redraw(); });
   bindDel();
   document.getElementById("add").onclick = () => { draft = read(); draft.push({}); redraw(); document.getElementById("s" + (draft.length - 1)).focus(); };
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
   document.getElementById("save").onclick = async () => {
+    hideSug(); await loadDict();
     const list = read().filter(x => x.sym);
+    for (const x of list){   // 6자리 번호·한글 이름만 넣었으면 종목사전으로 티커를 채움 (하나로 정해질 때만)
+      if (SYM_RE.test(x.sym) && !/^\d{6}$/.test(x.sym)) continue;
+      const hit = findStocks(x.raw, 2).filter(h => h.sym.replace(/\.(KS|KQ)$/, "") === x.sym || h.name === x.raw || h.sym === x.sym);
+      if (hit.length === 1){ x.sym = hit[0].sym; x.nm = hit[0].name; const inp = document.getElementById("s" + x.el); if (inp) inp.value = x.sym; }
+    }
     document.querySelectorAll("[aria-invalid]").forEach(e => e.removeAttribute("aria-invalid"));
     for (const x of list){
-      if (!SYM_RE.test(x.sym)){ bad("s" + x.el, `"${x.sym.slice(0, 12)}" · 티커는 영문·숫자만 (예: META, 005930.KS)`); return; }
-      if (/^\d{6}$/.test(x.sym)){ bad("s" + x.el, `${x.sym} · 한국 종목은 뒤에 .KS(코스피) 또는 .KQ(코스닥)를 붙여 주세요`); return; }
+      if (!SYM_RE.test(x.sym)){ bad("s" + x.el, `"${x.raw.slice(0, 12)}" · 찾지 못했어요. 목록에서 고르거나 티커로 넣어 주세요 (예: META, 005930)`); return; }
+      if (/^\d{6}$/.test(x.sym)){ bad("s" + x.el, `${x.sym} · 어느 시장인지 몰라요. 뒤에 .KS(코스피) 또는 .KQ(코스닥)를 붙여 주세요`); return; }
       if (!(x.qty > 0 && x.qty <= MAX_QTY)){ bad("q" + x.el, `${x.sym} · 수량은 0보다 큰 숫자로 넣어 주세요`); return; }
       if (x.avg != null && !(x.avg > 0)){ bad("a" + x.el, `${x.sym} · 평균단가는 0보다 큰 숫자로 (모르면 비워 두세요)`); return; }
     }
@@ -1146,7 +1178,7 @@ function renderHoldEdit(){
     if (fresh.length){ await pullHoldQFor(fresh); const miss = fresh.filter(sy => !S.holdQ[sy]);
       if (miss.length && S.holdMissOk !== miss.join()){ S.holdMissOk = miss.join(); bad("s" + list.find(x => x.sym === miss[0]).el, `${miss.join(", ")} · 시세를 찾지 못했어요. 티커가 맞으면 저장을 한 번 더 눌러 주세요`); return; } }
     const merged = new Set(list.map(x => x.sym)).size < list.length;
-    const next = {v: 1, items: list.map(({el, ...x}) => ({...x, name: old[x.sym]?.name || KO_NAME[x.sym] || undefined})), cash: {krw: ck, usd: cu}};
+    const next = {v: 1, items: list.map(({el, raw, nm, ...x}) => ({...x, name: nm || old[x.sym]?.name || KO_NAME[x.sym] || (S.dict || []).find(d => dictSym(d) === x.sym && d.m !== "미국")?.n || undefined})), cash: {krw: ck, usd: cu}};
     const b = document.getElementById("save"); b.disabled = true; b.textContent = "저장 중…";
     try{ await saveHold(next); S.holdErr = null; S.holdQAt = 0; S.holdDirty = false; S.holdMissOk = null; await pullHoldQ(); toast(merged ? "저장했어요 · 같은 종목은 하나로 합쳤어요" : "저장했어요"); BACK_ANIM = true; history.back(); }
     catch(e){ b.disabled = false; b.textContent = "저장";
