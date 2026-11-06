@@ -12,13 +12,13 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-10-29-1">
+<meta name="app-version" content="2026-11-06-1">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
 :root{
   --bg:#F5F5F7; --card:#FFFFFF; --fg:#1D1D1F; --fg2:#6E6E73; --fg3:#8E8E93; --line:#E5E5EA; --fill:#F2F2F7;
-  --blue:#0066CC; --up:#DC2F3D; --down:#1F6FE5;
+  --blue:#0066CC; --up:#DC2F3D; --down:#1F6FE5; --up-t:#C4272F; --dn-t:#1B5FD1;
   --buy:#167A40; --buy-bg:#E8F7EE; --sell:#C4272F; --sell-bg:#FDEBEC;
   --wait:#975A00; --wait-bg:#FFF4E0; --info:#1B64DA; --info-bg:#EAF2FE;
   /* 글자: 6단계 · 굵기 700/600/400 · 기준 17px(rem이라 시스템 글자 크기를 따라감) */
@@ -37,7 +37,7 @@
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#000000; --card:#1C1C1E; --fg:#F5F5F7; --fg2:#98989D; --fg3:#8E8E93; --line:#38383A; --fill:#2C2C2E;
-    --blue:#0A84FF; --up:#FF5A66; --down:#4C9AFF;
+    --blue:#0A84FF; --up:#FF5A66; --down:#4C9AFF; --up-t:#FF5A66; --dn-t:#4C9AFF;
     --buy:#30D158; --buy-bg:#0F2E1B; --sell:#FF6961; --sell-bg:#3A1416;
     --wait:#FFB340; --wait-bg:#3A2A0E; --info:#64A8FF; --info-bg:#132A4A;
     --bar:rgba(22,22,24,.92); --tab:rgba(28,28,30,.94); --thumb:#636366; --sheet:#1C1C1E; --sheet-list:#2C2C2E; --field:rgba(118,118,128,.24); --toast:rgba(58,58,60,.96);
@@ -197,7 +197,7 @@ textarea{resize:none}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:var(--r-control);padding:14px;font-size:var(--t-body);font-weight:600;text-align:center;text-decoration:none}
 .btn.primary{background:var(--blue);color:#fff;transition:background-color .25s,transform .16s var(--ease-out)}
 
-.btn.ghost{background:var(--card);color:var(--blue)}
+.btn.ghost,.btn.soft{background:var(--card);color:var(--blue)}
 
 .btn:disabled{opacity:.5} .btn.primary:disabled{background:var(--fill);color:var(--fg3);opacity:1}
 .note{font-size:var(--t-detail);color:var(--fg2);line-height:1.45}
@@ -246,16 +246,24 @@ h2.sec-title{font-size:var(--t-heading)}
 
 /* 매크로 */
 .mc-regs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* 내 자산: 비중 = 칸 크기, 오늘 등락 = 색 (한국식: 오름 빨강 · 내림 파랑, 진할수록 많이 움직임) */
+.hm{position:relative;width:100%;border-radius:12px;overflow:hidden;background:var(--fill)} .hm>div{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;border:1.5px solid var(--card);border-radius:10px;overflow:hidden;line-height:1.2}
+/* 맵 칸은 크기가 정해진 그림이라 글자도 px로 고정 (글자 키우기는 아래 목록이 맡음) */
+.hm b{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%} .hm i{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap} .hm small{font-size:11px;opacity:.85;font-variant-numeric:tabular-nums}
+.ha-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px} .ha-top .mc-big{font-size:var(--t-title2)}
+.ha-cash{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:12px;font-size:var(--t-detail)} .ha-cash>span{color:var(--fg2)} .ha-cash .mc-tag{flex:none}
+.he-row{display:grid;grid-template-columns:1fr 1fr 1fr 44px;gap:8px;align-items:end;padding:10px 0} .he-row+.he-row{border-top:.5px solid var(--line)} .he-row .field label{font-size:var(--t-foot);margin-bottom:4px} .he-row .field input{min-height:44px;padding:8px 10px;font-size:var(--t-detail)}
+.he-del{min-height:44px;color:var(--down2,#C4272F);font-size:var(--t-foot);font-weight:600}
+
 /* 주도섹터: 시장 고르기(iOS 세그먼트) · 섹터 카드(테마 이름 → 대장 한 줄 → 함께 오른 종목) */
 .seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin:0 0 var(--gap-block)} .seg button{flex:1;min-height:32px;border-radius:7px;font-size:var(--t-foot);font-weight:600;color:var(--fg)}
 .seg button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .ld-idx{display:flex;gap:14px;font-size:var(--t-small);color:var(--fg2);margin:-14px 0 var(--gap-block)} .ld-idx b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
 .ld-sec{padding:14px var(--pad-card)} .ld-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px} .ld-h b{font-size:var(--t-detail)} .ld-h span{font-size:var(--t-foot);color:var(--fg2);white-space:nowrap}
-.ld-lead{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;background:var(--fill);border-radius:12px} .ld-lead .up{color:#C4272F} .ld-lead .dn{color:#1B64DA}
-@media (prefers-color-scheme: dark){ .ld-lead .up{color:var(--up)} .ld-lead .dn{color:var(--down)} } .ld-lead .n{flex:1;min-width:0;font-weight:600} .ld-lead .n small{display:block;font-weight:500;font-size:var(--t-foot);color:var(--fg2)}
+.ld-lead{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;background:var(--fill);border-radius:12px} .ld-lead .n{flex:1;min-width:0;font-weight:600} .ld-lead .n small{display:block;font-weight:500;font-size:var(--t-foot);color:var(--fg2)}
 .ld-lead .c{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap} .ld-lead .tv{font-size:var(--t-foot);color:var(--fg2);text-align:right;white-space:nowrap}
 .ld-m{display:flex;justify-content:space-between;gap:10px;padding:6px 0 0;font-size:var(--t-small);color:var(--fg2)} .ld-m b{font-weight:500;color:var(--fg)} .ld-m span{font-variant-numeric:tabular-nums;white-space:nowrap}
-.up{color:var(--up)} .dn{color:var(--down)}
+.up{color:var(--up-t)} .dn{color:var(--dn-t)}   /* 글자용: 밝은 화면에서 대비 4.5 이상 */
 .mc-reg{padding:16px;min-width:0}
 .mc-reg-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
 .mc-reg-s{font-size:var(--t-title2);font-weight:700;letter-spacing:-.01em;margin:2px 0 4px}
@@ -440,6 +448,8 @@ function render(how = "fade"){
     if (!S.token) renderSetup();
     else if (S.dhd && String(S.dhd).startsWith("m:")) renderMacDetail(String(S.dhd).slice(2));
     else if (S.dhd && String(S.dhd).startsWith("l:")) renderLeadDetail(String(S.dhd).slice(2));
+    else if (S.dhd === "h") renderHold();
+    else if (S.dhd === "he") renderHoldEdit();
     else if (S.tab === "lead") renderLead();
     else if (S.tab === "cal") renderCal();
     else if (S.tab === "rules") renderRules();
@@ -552,7 +562,7 @@ let SWIPING = false;
 /* ───────── 매크로 (tc/macro.py · 오동엔진 점검표) ─────────
    자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST) · 상태/브리핑.json (화~토 아침, Claude가 BofA·CPI 예상·FedWatch를 찾아 씀).
    참고 계정가 직접 보는 것만: 미국 10년물 · WTI · 근원 CPI · 연준 · 하이일드 스프레드 · 공포탐욕 + 과열 신호 + 한국 최소(환율·외국인). */
-const MAC_FILE = "상태/매크로.json", BRIEF_FILE = "상태/브리핑.json", LEAD_FILE = "상태/주도.json";
+const MAC_FILE = "상태/매크로.json", BRIEF_FILE = "상태/브리핑.json", LEAD_FILE = "상태/주도.json", HOLD_FILE = "상태/보유.json";
 S.mac = null; S.brief = null; S.macL = false; S.macErr = null;
 const ST_TONE = {"우호": "buy", "기회": "info", "경계": "wait", "중립": "none", "확인": "none", "자료 없음": "none"};
 const tag = (t, tone) => `<span class="mc-tag t-${tone || "none"}">${esc(t)}</span>`;
@@ -809,6 +819,7 @@ function macBind(){
   if (r) r.onclick = async () => { if (S.busy) return; S.busy = "계산 시작"; syncBusy(); toast("계산을 시작하는 중", true);
     try{ const k = await dispatch("매크로"); await waitRun(k, "계산 중"); }catch(e){ toast(e.message); } finally{ S.busy = null; syncBusy(); } };
   $app.querySelectorAll("[data-mk]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "m:" + b.dataset.mk; }));
+  holdBind();
   bindNavbar();
 }
 async function ensureMac(head){
@@ -822,7 +833,7 @@ async function renderMac0(){
   if (!(await ensureMac(head)) && S.tab !== "today") return;
   if (S.tab !== "today" || S.dhd) return;
   const m = S.mac;
-  if (!m){ $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">오늘</h1></div>${S.macErr ? `<div class="err">${esc(S.macErr)}</div>` : ""}${S.macAuth ? `<div class="empty"><b>토큰을 다시 넣어 주세요</b>GitHub에서 새 토큰을 만들어 넣으면 그대로 돌아와요.<br><button class="btn primary press" id="retok" style="margin-top:16px">토큰 다시 넣기</button></div>` : S.macErr ? `<div class="empty"><b>자료를 불러오지 못했어요</b>연결을 확인한 뒤 아래 버튼을 눌러 주세요.<br><button class="btn ghost press" id="reload" style="margin-top:16px">다시 불러오기</button></div>` : `<div class="empty"><b>아직 결과가 없어요</b>오른쪽 위 ↻를 누르면 약 1분 뒤 첫 결과가 나와요.</div>`}</div>`;
+  if (!m){ $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">오늘</h1></div>${S.macErr ? `<div class="err">${esc(S.macErr)}</div>` : ""}${S.macAuth ? `<div class="empty"><b>토큰을 다시 넣어 주세요</b>GitHub에서 새 토큰을 만들어 넣으면 그대로 돌아와요.<br><button class="btn primary press" id="retok" style="margin-top:16px">토큰 다시 넣기</button></div>` : S.macErr ? `<div class="empty"><b>자료를 불러오지 못했어요</b>연결을 확인한 뒤 아래 버튼을 눌러 주세요.<br><button class="btn soft press" id="reload" style="margin-top:16px">다시 불러오기</button></div>` : `<div class="empty"><b>아직 결과가 없어요</b>오른쪽 위 ↻를 누르면 약 1분 뒤 첫 결과가 나와요.</div>`}</div>`;
     const rt = document.getElementById("retok"); if (rt) rt.onclick = () => { LS.del("tok"); S.token = ""; S.macErr = null; S.macAuth = false; render("fade"); };
     const rl = document.getElementById("reload"); if (rl) rl.onclick = () => { S.macL = false; S.macErr = null; render("none"); };
     macBind(); return; }
@@ -834,6 +845,7 @@ async function renderMac0(){
     <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">판정 ${esc(mDay(m.date))} ${esc((m.at || "").slice(11, 16))}${S.liveQ && S.liveQ > Date.parse(m.at || 0) ? ` · 시세 ${esc(mMD(new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(S.liveQ))))} ${esc(new Date(S.liveQ).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}))}` : ""}${esc(closedNote())}</div>${staleNote(m)}</div>
     ${signalCard()}
     ${cashCard()}
+    ${holdCard()}
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
     <div class="mc-regs">${regTile(rg.spx, "🇺🇸", "spx")}${regTile(rg.kospi, "🇰🇷", "kospi")}</div>
     ${briefCard() ? `<div style="margin-top:var(--gap-block)">${briefCard()}</div>` : ""}
@@ -919,6 +931,165 @@ function renderMacDetail(key){
   bindNavbar();
 }
 
+
+/* ───────── 내 자산 ─────────
+   보유종목은 비공개 자료 저장소(상태/보유.json)에만 저장. 시세는 1분마다 중계에서, 환율은 매크로 실시간(KRW=X) */
+S.hold = null; S.holdL = false; S.holdSha = null; S.holdQ = {}; S.holdQAt = 0;
+const KO_NAME = {META: "메타플랫폼스", MSFT: "마이크로소프트", AAPL: "애플", GOOGL: "알파벳", GOOG: "알파벳", AMZN: "아마존", TSLA: "테슬라", NVDA: "엔비디아", AVGO: "브로드컴", AMD: "AMD", NFLX: "넷플릭스", PLTR: "팔란티어", TSM: "TSMC", MU: "마이크론", QQQ: "QQQ", SPY: "SPY", VOO: "VOO", "005930.KS": "삼성전자", "000660.KS": "SK하이닉스"};
+const isKR = s => /\.(KS|KQ)$/.test(s);
+async function loadHold(){
+  try{ const j = await gh("/contents/" + enc(HOLD_FILE) + "?ref=main"); S.holdSha = j.sha; S.hold = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ""))))); }
+  catch(e){ if (!e.nf) throw e; S.hold = {v: 1, items: [], cash: {krw: 0, usd: 0}}; S.holdSha = null; }
+  S.holdL = true;
+}
+async function saveHold(h){
+  const body = JSON.stringify({...h, updated: new Date().toISOString()}, null, 1);
+  const r = await gh("/contents/" + enc(HOLD_FILE), {method: "PUT", body: JSON.stringify({message: "보유종목 수정 (앱)", content: btoa(unescape(encodeURIComponent(body))), sha: S.holdSha || undefined, branch: "main"})});
+  S.holdSha = r.content.sha; S.hold = JSON.parse(body);
+}
+async function pullHoldQ(){
+  const syms = (S.hold?.items || []).map(x => x.sym).filter(s => /^\^?[A-Z0-9.-]{1,15}$/.test(s)).slice(0, 60);
+  if (!syms.length) return false;
+  try{
+    const r = await fetch(RELAY() + "?s=" + syms.map(encodeURIComponent).join(","), {cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined});
+    if (!r.ok) return false;
+    const j = await r.json(); let n = 0;
+    for (const [k, q] of Object.entries(j)) if (q && q.p != null){ S.holdQ[k] = q; n++; }
+    S.holdQAt = Date.now(); return n > 0;
+  }catch(e){ return false; }
+}
+function fxNow(){ const k = macItems().kr?.find(x => x.key === "krw"); return k?.value || 1400; }
+/* 합계: 원화 기준. 오늘 등락 = 어제 종가 대비 */
+function holdCalc(){
+  const h = S.hold || {items: []}, fx = fxNow();
+  const rows = h.items.map(x => {
+    const q = S.holdQ[x.sym] || {}, kr = isKR(x.sym), rate = kr ? 1 : fx;
+    const p = q.p ?? x.last ?? null, prev = q.prev ?? null;
+    const val = p != null ? p * x.qty * rate : null, cost = x.avg ? x.avg * x.qty * rate : null;
+    return {...x, name: x.name || KO_NAME[x.sym] || x.sym.replace(/\.(KS|KQ)$/, ""), p, kr, val, cost,
+      day: p != null && prev ? (p / prev - 1) * 100 : null, ret: val != null && cost ? (val / cost - 1) * 100 : null, dayAmt: p != null && prev ? (p - prev) * x.qty * rate : 0};
+  });
+  const stock = rows.reduce((a, r) => a + (r.val || 0), 0), cost = rows.reduce((a, r) => a + (r.cost || 0), 0);
+  const cash = (h.cash?.krw || 0) + (h.cash?.usd || 0) * fx, total = stock + cash;
+  const dayAmt = rows.reduce((a, r) => a + r.dayAmt, 0);
+  rows.forEach(r => r.w = stock ? (r.val || 0) / stock * 100 : 0);
+  rows.sort((a, b) => (b.val || 0) - (a.val || 0));
+  return {rows, stock, cash, total, cashPct: total ? cash / total * 100 : 0, ret: cost ? (rows.filter(r => r.cost).reduce((a, r) => a + (r.val || 0), 0) / cost - 1) * 100 : null,
+    day: stock - dayAmt ? dayAmt / (stock - dayAmt) * 100 : null, dayAmt, fx};
+}
+const won = v => v == null ? "-" : "₩" + Math.round(v).toLocaleString("ko-KR");
+const wonShort = v => v == null ? "-" : Math.abs(v) >= 1e8 ? (v / 1e8).toFixed(2) + "억" : Math.round(v / 1e4).toLocaleString("ko-KR") + "만";
+/* 맵 배치: squarified treemap (Bruls 외, 2000) — 칸이 정사각형에 가깝게 */
+function squarify(items, W, H){
+  const out = [], tot = items.reduce((a, x) => a + x.v, 0); if (!tot) return out;
+  let rest = items.map(x => ({...x, a: x.v / tot * W * H})), x0 = 0, y0 = 0, w = W, h = H;
+  const worst = (row, side) => { const s = row.reduce((a, r) => a + r.a, 0), mx = Math.max(...row.map(r => r.a)), mn = Math.min(...row.map(r => r.a)); return Math.max(side * side * mx / (s * s), s * s / (side * side * mn)); };
+  while (rest.length){
+    const side = Math.min(w, h); let row = [rest[0]], i = 1;
+    while (i < rest.length && worst(row.concat(rest[i]), side) <= worst(row, side)){ row.push(rest[i]); i++; }
+    const s = row.reduce((a, r) => a + r.a, 0);
+    if (w >= h){ const cw = s / h; let yy = y0; row.forEach(r => { const ch = r.a / cw; out.push({...r, x: x0, y: yy, w: cw, h: ch}); yy += ch; }); x0 += cw; w -= cw; }
+    else { const ch = s / w; let xx = x0; row.forEach(r => { const cw = r.a / ch; out.push({...r, x: xx, y: y0, w: cw, h: ch}); xx += cw; }); y0 += ch; h -= ch; }
+    rest = rest.slice(i);
+  }
+  return out;
+}
+/* 색: 등락 크기(최대 ±5%)만큼 진하게. 진하면 흰 글자, 옅으면 기본 글자 (대비 확보) */
+function tileStyle(d){
+  if (d == null || Math.abs(d) < 0.5) return "background:var(--fill);color:var(--fg)";
+  const k = Math.abs(d) < 2 ? 0 : Math.abs(d) < 5 ? 1 : 2;   // 3단계: 2% 미만 · 5% 미만 · 5% 이상 (흰 글자 대비 5:1 이상인 색만)
+  return `background:${(d > 0 ? ["#C4272F", "#A3201F", "#7E1A1A"] : ["#2F6BD9", "#2459C7", "#1A449C"])[k]};color:#fff`;
+}
+function heatmap(rows, H, big){
+  const W = 1000, items = rows.filter(r => r.val > 0).map(r => ({...r, v: r.val, wt: r.w}));
+  const tiles = squarify(items, W, H);
+  return `<div class="hm" style="aspect-ratio:${W}/${H}" role="img" aria-label="${esc(rows.map(r => `${r.name} 비중 ${r.w.toFixed(1)}% 오늘 ${r.day == null ? "-" : pct(r.day)}`).join(", "))}">${tiles.map(t => {
+    const small = t.w < 285 || t.h < 185, tiny = t.w < 160 || t.h < 125;   // 맵 폭 약 320px 기준(1칸 = 0.32px): 세 줄 약 58px, 두 줄 약 40px
+    return `<div style="left:${t.x / W * 100}%;top:${t.y / H * 100}%;width:${t.w / W * 100}%;height:${t.h / H * 100}%;${tileStyle(t.day)}">${tiny ? "" : `<b>${esc(small ? t.sym.replace(/\.(KS|KQ)$/, "") : t.name)}</b>`}<i>${esc(t.day == null ? "-" : pct(t.day))}</i>${small ? "" : `<small>${esc(t.wt.toFixed(1))}%</small>`}</div>`;
+  }).join("")}</div>`;
+}
+/* 현금 비중을 오늘의 신호 기준과 비교 */
+function cashBand(){
+  const g = macSignal(); if (!g || g.label === "판정 보류") return null;
+  return {"분할매수": [30, 30], "소량 분할매수": [30, 50], "중립": [30, 30], "관망": [30, 50], "비중 축소": [30, 50]}[g.label] || null;
+}
+function cashLine(c){
+  const b = cashBand(); if (!b) return "";
+  const v = c.cashPct, st = v < b[0] - 5 ? ["기준보다 적음", "wait"] : v > b[1] + 10 ? ["기준보다 많음", "none"] : ["기준 안", "buy"];
+  return `<div class="ha-cash"><span>현금 비중 ${esc(v.toFixed(0))}% · 오늘의 신호 기준 ${b[0] === b[1] ? b[0] : b[0] + "~" + b[1]}%</span>${tag(st[0], st[1])}</div>`;
+}
+function holdCard(){
+  if (!S.token) return "";
+  if (!S.holdL){ loadHold().then(() => { pullHoldQ().then(ok => { if (ok && S.tab === "today" && !S.dhd) render("none"); }); if (S.tab === "today" && !S.dhd) render("none"); }).catch(() => {}); S.holdL = "loading"; }
+  if (S.holdL !== true) return "";
+  const c = holdCalc();
+  if (!c.rows.length && !c.cash) return `<div class="sec-title" role="heading" aria-level="2">내 자산</div>
+    <button class="card press" id="toHold" style="text-align:left;width:100%"><b>보유종목을 넣어 주세요</b><p class="note" style="margin:6px 0 0">넣으면 비중 맵과 함께 현금 비중을 오늘의 신호 기준과 비교해 드려요. 비공개 자료 저장소에만 저장돼요.</p></button>`;
+  return `<div class="sec-title" role="heading" aria-level="2">내 자산</div>
+    <button class="card press" id="toHold" style="text-align:left;width:100%">
+      <div class="ha-top"><div><div class="sub">평가금액</div><div class="mc-big">${esc(won(c.total))}</div></div><div style="text-align:right"><div class="sub">오늘</div><b class="${chgCls(c.day)}">${esc(c.day == null ? "-" : pct(c.day))}</b></div></div>
+      ${heatmap(c.rows, 520, false)}
+      ${cashLine(c)}</button>`;
+}
+function holdBind(){ const b = document.getElementById("toHold"); if (b) b.onclick = () => go("push", () => { S.dhd = "h"; }); }
+let holdT = null;
+function renderHold(){
+  const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>오늘</span></button></div><div class="side r"><button class="text-btn press" id="edit">편집</button></div></div>`;
+  if (S.holdL !== true){ $app.innerHTML = `<div class="wrap">${back}<div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div></div>`;
+    loadHold().then(() => pullHoldQ()).then(() => { if (S.dhd === "h") renderHold(); }).catch(e => { $app.innerHTML = `<div class="wrap">${back}<div class="err">${esc(e.message)}</div></div>`; }); return; }
+  if (Date.now() - S.holdQAt > 60000) pullHoldQ().then(ok => { if (ok && S.dhd === "h") renderHold(); });
+  clearInterval(holdT); holdT = setInterval(() => { if (document.hidden || S.dhd !== "h") return; pullHoldQ().then(ok => { if (ok && S.dhd === "h") renderHold(); }); }, 60000);
+  const c = holdCalc();
+  const best = c.rows.filter(r => r.ret != null).sort((a, b) => b.ret - a.ret);
+  $app.innerHTML = `<div class="wrap">${back}
+    <div class="title-block" data-anchor><div class="sub">평가금액 · 원화 환산 (환율 ${esc(Math.round(c.fx).toLocaleString("ko-KR"))}원)</div><h1 class="big" style="white-space:nowrap;font-size:min(calc(28rem/17),10.5vw)">${esc(won(c.total))}</h1>
+      <div class="sub">오늘 <b class="${chgCls(c.day)}">${esc(c.day == null ? "-" : pct(c.day))} (${esc((c.dayAmt >= 0 ? "+" : "−") + wonShort(Math.abs(c.dayAmt)))})</b>${c.ret != null ? ` · 전체 수익 <b class="${chgCls(c.ret)}">${esc(pct(c.ret))}</b>` : ""}</div></div>
+    ${c.rows.length ? `<div class="card">${heatmap(c.rows, 640, true)}<p class="note" style="margin:10px 0 0">칸 크기 = 주식 중 비중 · 색 = 오늘 등락 (빨강 오름 · 파랑 내림, 진할수록 많이: 2% · 5%)</p></div>` : ""}
+    ${cashBand() ? `<div class="sec-title" role="heading" aria-level="2">현금</div><div class="card">${cashLine(c).replace('class="ha-cash"', 'class="ha-cash" style="margin-top:0"')}<p class="note" style="margin:8px 0 0">현금 ${esc(won(c.cash))} · 주식 ${esc(won(c.stock))}</p></div>` : ""}
+    ${best.length > 1 ? `<div class="mc-regs" style="margin-top:var(--gap-block)"><div class="card"><div class="sub">가장 좋음</div><b>${esc(best[0].name)}</b><div class="${chgCls(best[0].ret)}" style="font-weight:700">${esc(pct(best[0].ret))}</div></div><div class="card"><div class="sub">가장 나쁨</div><b>${esc(best[best.length - 1].name)}</b><div class="${chgCls(best[best.length - 1].ret)}" style="font-weight:700">${esc(pct(best[best.length - 1].ret))}</div></div></div>` : ""}
+    <div class="sec-title" role="heading" aria-level="2">보유종목 ${c.rows.length}</div>
+    <div class="list">${c.rows.map(r => `<div class="row"><div class="main"><div class="mc-n">${esc(r.name)}</div><div class="sub">${esc(r.sym)} · ${esc(r.qty.toLocaleString("ko-KR"))}주 · 비중 ${esc(r.w.toFixed(1))}%</div></div>
+      <div class="mc-r"><div class="mc-v ${chgCls(r.day)}">${esc(r.day == null ? "-" : pct(r.day))}</div><div class="sub">${esc(wonShort(r.val))}${r.ret != null ? ` · ${esc(pct(r.ret))}` : ""}</div></div></div>`).join("") || `<div class="row"><div class="main sub">아직 없어요 · 오른쪽 위 편집</div></div>`}</div>
+    <p class="note" style="margin:18px 4px">오늘 등락 = 어제 종가 대비 · 수익 = 평균단가 대비 (단가를 안 넣은 종목은 빠짐) · 비공개 자료 저장소(${esc(S.repo)})에만 저장돼요.</p></div>`;
+  document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
+  document.getElementById("edit").onclick = () => go("push", () => { S.dhd = "he"; });
+  bindNavbar();
+}
+function renderHoldEdit(){
+  const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="취소">${BACK}<span>취소</span></button></div><div class="side r"></div></div>`;
+  if (S.holdL !== true){ loadHold().then(() => { if (S.dhd === "he") renderHoldEdit(); }); $app.innerHTML = `<div class="wrap">${back}</div>`; return; }
+  const h = S.hold, row = (x, i) => `<div class="he-row" data-i="${i}">
+      <div class="field"><label for="s${i}">티커</label><input id="s${i}" value="${esc(x.sym || "")}" placeholder="META · 005930.KS" autocapitalize="characters" spellcheck="false"></div>
+      <div class="field"><label for="q${i}">수량</label><input id="q${i}" value="${esc(x.qty ?? "")}" inputmode="decimal"></div>
+      <div class="field"><label for="a${i}">평균단가</label><input id="a${i}" value="${esc(x.avg ?? "")}" inputmode="decimal" placeholder="선택"></div>
+      <button class="he-del press" data-del="${i}" aria-label="${esc((x.sym || "이 줄") + " 지우기")}">지우기</button></div>`;
+  const items = h.items.length ? h.items : [{}];
+  $app.innerHTML = `<div class="wrap">${back}
+    <div class="title-block" data-anchor><h1 class="big">보유종목 편집</h1><div class="sub">미국은 티커 그대로(META), 한국은 번호.KS/.KQ (005930.KS) · 단가는 그 나라 돈</div></div>
+    <div class="card" id="rows">${items.map(row).join("")}</div>
+    <button class="btn soft press" id="add" style="margin-top:var(--gap-sub)">종목 추가</button>
+    <div class="sec-title" role="heading" aria-level="2">현금</div>
+    <div class="card stack"><div class="field"><label for="ck">원화</label><input id="ck" value="${esc(h.cash?.krw || "")}" inputmode="numeric" placeholder="0"></div><div class="field"><label for="cu">달러</label><input id="cu" value="${esc(h.cash?.usd || "")}" inputmode="decimal" placeholder="0"></div></div>
+    <button class="btn primary press" id="save" style="margin-top:var(--gap-block)">저장</button>
+    <p class="note" style="margin:12px 4px">비공개 자료 저장소에만 저장돼요. 공개 앱 코드에는 들어가지 않아요.</p></div>`;
+  const read = () => [...document.querySelectorAll(".he-row")].map(r => { const i = r.dataset.i; return {sym: (document.getElementById("s" + i).value || "").trim().toUpperCase(), qty: parseFloat((document.getElementById("q" + i).value || "").replace(/,/g, "")), avg: parseFloat((document.getElementById("a" + i).value || "").replace(/,/g, "")) || null}; });
+  let draft = items.slice();
+  const redraw = () => { document.getElementById("rows").innerHTML = draft.map(row).join(""); bindDel(); };
+  const bindDel = () => document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { draft = read(); draft.splice(+b.dataset.del, 1); if (!draft.length) draft = [{}]; redraw(); });
+  bindDel();
+  document.getElementById("add").onclick = () => { draft = read(); draft.push({}); redraw(); document.getElementById("s" + (draft.length - 1)).focus(); };
+  document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
+  document.getElementById("save").onclick = async () => {
+    const list = read().filter(x => x.sym), bad = list.find(x => !/^[A-Z0-9.-]{1,15}$/.test(x.sym) || !(x.qty > 0));
+    if (bad){ toast(`${bad.sym}: 티커나 수량을 확인해 주세요`); return; }
+    const old = Object.fromEntries((S.hold.items || []).map(x => [x.sym, x]));
+    const next = {v: 1, items: list.map(x => ({...x, name: old[x.sym]?.name || KO_NAME[x.sym] || undefined})), cash: {krw: parseFloat((document.getElementById("ck").value || "0").replace(/,/g, "")) || 0, usd: parseFloat((document.getElementById("cu").value || "0").replace(/,/g, "")) || 0}};
+    const b = document.getElementById("save"); b.disabled = true; b.textContent = "저장 중…";
+    try{ await saveHold(next); S.holdQAt = 0; await pullHoldQ(); toast("저장했어요"); BACK_ANIM = true; history.back(); }
+    catch(e){ b.disabled = false; b.textContent = "저장"; toast(e.message); }
+  };
+  bindNavbar();
+}
 /* ───────── 주도섹터 (한국·미국) ─────────
    오른 뒤에 가려내는 '판별': 거래대금을 실은 상승 종목이 한 테마에 2개 이상 → 주도섹터, 그중 거래대금·상승률 1등 → 대장 */
 S.lead = null; S.leadL = false; S.leadErr = null; S.leadMk = LS.get("leadMk", "kr"); S.leadLive = null; S.leadLiveAt = 0;
