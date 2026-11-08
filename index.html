@@ -460,7 +460,10 @@ async function waitRun(since, label){
       id = run.id;
       if (run.status === "completed"){
         S.busy = null; syncBusy();
-        if (run.conclusion === "success"){ const b0 = macSnap(); await refresh(); toast(b0 && macSnap() === b0 ? "다시 계산했어요 · 달라진 숫자는 없어요" : "최신 결과로 바꿨어요"); }
+        const b0 = macSnap(), at0 = S.mac?.at || ""; await refresh();   // 결론과 상관없이 결과 파일이 새로 올라왔으면 성공으로 (뒷정리 단계만 실패하는 경우)
+        const fresh = (S.mac?.at || "") > at0 || Date.parse(S.mac?.at || 0) >= since - 60000;
+        if (run.conclusion === "success" || fresh) toast(b0 && macSnap() === b0 ? "다시 계산했어요 · 달라진 숫자는 없어요" : "최신 결과로 바꿨어요");
+        else if (run.conclusion === "cancelled") toast("다른 계산이 먼저 돌고 있어요 · 잠시 뒤 ↻를 다시 눌러 주세요");
         else toast("계산하지 못했어요. 설정 > 고급 > 실행 기록을 확인해 주세요.");
         return;
       }
@@ -717,11 +720,12 @@ function macItems(){
     }
     return y; };
   const heat = (m.heat || []).map(fix);
-  const bo = b.bofa || {};
-  if (bo.bb != null) heat.unshift({key: "bb", name: "BofA Bull & Bear", value: bo.bb, unit: "", asof: bo.bb_d, status: bo.bb >= 8 ? "경계" : bo.bb <= 2 ? "기회" : "중립",
-    why: `${mMD(bo.bb_d)} 발표 · ` + (bo.bb >= 8 ? "8 이상 매도 신호" : bo.bb <= 2 ? "2 이하 매수 신호" : "2~8 사이 중립 (8 이상 매도 · 2 이하 매수)"), rule: "8 이상 매도 신호 (8 아래로 내려오면 해제) · 2 이하 매수 신호 (하트넷, 매주)", src: bo.bb_src});
-  if (bo.fms_cash != null) heat.splice(bo.bb != null ? 1 : 0, 0, {key: "fms", name: "펀드매니저 현금 비중", value: bo.fms_cash, unit: "%", asof: bo.fms_d, status: bo.fms_cash < 4 ? "경계" : bo.fms_cash >= 5 ? "기회" : "중립",
-    why: `${mMD(bo.fms_d)} 서베이 · ` + (bo.fms_cash < 4 ? "4% 미만 과열" : bo.fms_cash >= 5 ? "5% 이상 매수 신호" : "4~5% 사이 중립 (4% 미만 과열 · 5% 이상 매수)"), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src});
+  const bo = {...(b.bofa || {})}, ageD = d => d ? (Date.parse(todayK()) - Date.parse(String(d).slice(0, 10))) / 864e5 : 999;
+  if (ageD(bo.bb_d) > 14) bo.bb_old = true; if (ageD(bo.fms_d) > 45) bo.fms_old = true;
+  if (bo.bb != null) heat.unshift({key: "bb", name: "BofA Bull & Bear", value: bo.bb, unit: "", asof: bo.bb_d, status: bo.bb_old ? "확인" : bo.bb >= 8 ? "경계" : bo.bb <= 2 ? "기회" : "중립",
+    why: `${mMD(bo.bb_d)} 발표 · ` + (bo.bb_old ? "2주 넘게 지난 값이라 판정에 안 써요 · " : "") + (bo.bb >= 8 ? "8 이상 매도 신호" : bo.bb <= 2 ? "2 이하 매수 신호" : "2~8 사이 중립 (8 이상 매도 · 2 이하 매수)"), rule: "8 이상 매도 신호 (8 아래로 내려오면 해제) · 2 이하 매수 신호 (하트넷, 매주)", src: bo.bb_src});
+  if (bo.fms_cash != null) heat.splice(bo.bb != null ? 1 : 0, 0, {key: "fms", name: "펀드매니저 현금 비중", value: bo.fms_cash, unit: "%", asof: bo.fms_d, status: bo.fms_old ? "확인" : bo.fms_cash < 4 ? "경계" : bo.fms_cash >= 5 ? "기회" : "중립",
+    why: `${mMD(bo.fms_d)} 서베이 · ` + (bo.fms_old ? "한 달 반 넘게 지난 값이라 판정에 안 써요 · " : "") + (bo.fms_cash < 4 ? "4% 미만 과열" : bo.fms_cash >= 5 ? "5% 이상 매수 신호" : "4~5% 사이 중립 (4% 미만 과열 · 5% 이상 매수)"), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src});
   return { core: (m.core || []).map(fix), heat, kr: (m.kr || []).map(fix) };
 }
 /* 선 그래프 공통: x는 날짜 기준(두 선의 기간이 달라도 맞춰 그림) */
@@ -816,7 +820,7 @@ function regTile(r0, flag, key){
     ${kv("지수", (+r.close).toLocaleString("en-US", {maximumFractionDigits: 0}))}${kv("고점 대비", pct(r.dd))}${kv("200일선", `${r.above ? "위" : "아래"} · 선 ${r.ma200up ? "상승" : "하락"} 중`)}</div>`;
 }
 /* 오늘의 신호: 지표 판정을 오동엔진 원칙대로 묶은 결론 하나 (매수 · 경계 · 매도 신호) */
-const ST_WORD = {"우호": "우호", "경계": "경계", "기회": "매수 구간", "중립": "중립", "확인": "확인 중", "자료 없음": "자료 없음"};
+const ST_WORD = {"우호": "우호", "경계": "경계", "기회": "매수 구간", "중립": "중립", "확인": "오래된 값", "자료 없음": "자료 없음"};
 const SELL_NOTE = {bb: "매도 신호", fms: "과열", fg: "과열", sox: "과열"};
 const SELL_WHY = {bb: "8 이상", fms: "4% 미만", fg: "75 이상", sox: "55% 이상"};
 const BUY_NOTE = {fg: "공포 구간 (25 이하)", breadth: "과매도 (60% 이상)", bb: "2 이하", fms: "5% 이상"};
@@ -851,7 +855,7 @@ function macSignal(){
 /* 하트넷 결합 매수 조건: 펀드매니저 현금 4% 초과 + 하이일드 400bp 접근 + 주식 자금 유출 가속. 앞의 둘이 맞으면 알려 줌 (자금 유출은 앱이 받지 못함) */
 function hartnett(){
   const it = macItems(), all = [...it.core, ...it.heat], f = all.find(x => x.key === "fms"), h = all.find(x => x.key === "hy");
-  if (!f || !h || f.value == null || h.value == null || !(f.value > 4 && h.value >= 370)) return "";
+  if (!f || !h || f.value == null || h.value == null || f.status === "확인" || !(f.value > 4 && h.value >= 370)) return "";
   return `<div class="mc-rule"><span class="mc-dot" style="background:var(--buy)"></span><span>하트넷 매수 조건 2/3 충족: <span class="term" role="button" tabindex="0" data-g="펀드매니저 현금">펀드매니저 현금</span> ${esc(f.value)}% (4% 초과) · <span class="term" role="button" tabindex="0" data-g="하이일드">하이일드</span> ${Math.round(h.value)}<span class="term" role="button" tabindex="0" data-g="bp">bp</span> (400bp 접근) · 남은 하나는 주식 자금 유출 가속 (브리핑에서 확인)</span></div>`;
 }
 function signalCard(){
@@ -1385,7 +1389,7 @@ async function renderLead(){
     <div class="title-block" data-anchor><h1 class="big">주도</h1><div class="sub">${esc(when)}${S.leadLive?.mk === mk && d?.status === "OPEN" ? " · 시세 실시간" : ""}</div></div>
     ${seg}
     ${d ? `<div class="ld-idx">${ixRow.map(([n, v]) => `<span>${n} <b class="${chgCls(v?.chg)}">${esc(pct(v?.chg))}</b></span>`).join("")}</div>
-    ${d.sectors.length ? d.sectors.map(x => secCard(x, mk)).join("") : `<div class="empty"><b>함께 오른 섹터가 없어요</b>거래대금을 실은 상승 종목이 한 테마에 2개 이상 있어야 주도섹터로 잡아요.</div>`}
+    ${d.sectors.length ? d.sectors.map(x => secCard(x, mk)).join("") : d.ok === false ? `<div class="empty"><b>${esc(us ? "미국" : "한국")} 자료를 받지 못했어요</b>${esc(S.lead?.errors?.[0] || "계산할 때 자료 서버가 응답하지 않았어요.")} 오른쪽 위 ↻로 다시 계산해 보세요.</div>` : `<div class="empty"><b>함께 오른 섹터가 없어요</b>거래대금을 실은 상승 종목이 한 테마에 2개 이상 있어야 주도섹터로 잡아요.</div>`}
     <div class="sec-title" role="heading" aria-level="2">거래대금 상위 · 오른 종목</div>
     <div class="list">${d.top.slice(0, 12).map(m => leadRow(liveM(m, mk), mk, d.sectors.some(x => lid(x.leader) === lid(m)))).join("")}</div>
     <p class="note" style="margin:18px 4px">주도주는 미리 맞히지 않고 오른 뒤에 가려내요. 대장이 왜 올랐는지는 뉴스·공시로 확인하세요. 2·3등주는 참고만.</p>`
