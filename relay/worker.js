@@ -163,7 +163,7 @@ export default {
     const cors = { "Access-Control-Allow-Origin": APP_ORIGIN, "Vary": "Origin", "Cache-Control": "no-store",
                    "Content-Type": "application/json; charset=utf-8" };
     const origin = req.headers.get("Origin");
-    if (origin && origin !== APP_ORIGIN) return new Response("null", { status: 403, headers: cors });   // 다른 사이트의 브라우저에서 부르는 것은 거절
+    if (origin !== APP_ORIGIN) return new Response("null", { status: 403, headers: cors });   // 앱 주소에서 온 요청만 (Origin 없는 비브라우저 요청도 거절)
     if (req.method === "OPTIONS") return new Response(null, { headers: cors });
     if (req.method !== "GET") return new Response("null", { status: 405, headers: cors });
     const u = new URL(req.url);
