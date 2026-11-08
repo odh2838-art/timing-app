@@ -14,13 +14,13 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-08-1">
+<meta name="app-version" content="2026-11-08-2">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
 :root{
   --bg:#F5F5F7; --card:#FFFFFF; --fg:#1D1D1F; --fg2:#6E6E73; --fg3:#8E8E93; --line:#E5E5EA; --fill:#F2F2F7;
-  --blue:#0066CC; --up:#DC2F3D; --down:#1F6FE5; --up-t:#C4272F; --dn-t:#1B5FD1;
+  --blue:#0066CC; --chart:#3A3A3C; --up:#DC2F3D; --down:#1F6FE5; --up-t:#C4272F; --dn-t:#1B5FD1;
   --buy:#167A40; --buy-bg:#E8F7EE; --sell:#8944AB; --sell-bg:#F4ECF8; --danger:#D70015;
   --wait:#975A00; --wait-bg:#FFF4E0; --info:#1B64DA; --info-bg:#EAF2FE;
   /* 글자: 5단계 34·22·17·15·13 (탭 막대 글자와 그래프 눈금만 예외) · 굵기 700/600/400 · 기준 17px(rem이라 시스템 글자 크기를 따라감) */
@@ -37,14 +37,22 @@
 }
 /* 다크 모드: 아이폰 설정을 따라감 (애플 다크 팔레트) */
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --bg:#000000; --card:#1C1C1E; --fg:#F5F5F7; --fg2:#98989D; --fg3:#8E8E93; --line:#38383A; --fill:#2C2C2E;
-    --blue:#0A84FF; --up:#FF5A66; --down:#4C9AFF; --up-t:#FF5A66; --dn-t:#4C9AFF;
+    --blue:#0A84FF; --chart:#D1D1D6; --up:#FF5A66; --down:#4C9AFF; --up-t:#FF5A66; --dn-t:#4C9AFF;
     --buy:#30D158; --buy-bg:#0F2E1B; --sell:#DA8FFF; --sell-bg:#2E1A3A; --danger:#FF453A;
     --wait:#FFB340; --wait-bg:#3A2A0E; --info:#64A8FF; --info-bg:#132A4A;
     --bar:rgba(22,22,24,.92); --tab:rgba(28,28,30,.94); --thumb:#636366; --sheet:#1C1C1E; --sheet-list:#2C2C2E; --field:rgba(118,118,128,.24); --toast:rgba(58,58,60,.96);
     color-scheme:dark;
   }
+}
+:root[data-theme="dark"]{
+    --bg:#000000; --card:#1C1C1E; --fg:#F5F5F7; --fg2:#98989D; --fg3:#8E8E93; --line:#38383A; --fill:#2C2C2E;
+  --blue:#0A84FF; --chart:#D1D1D6; --up:#FF5A66; --down:#4C9AFF; --up-t:#FF5A66; --dn-t:#4C9AFF;
+  --buy:#30D158; --buy-bg:#0F2E1B; --sell:#DA8FFF; --sell-bg:#2E1A3A; --danger:#FF453A;
+  --wait:#FFB340; --wait-bg:#3A2A0E; --info:#64A8FF; --info-bg:#132A4A;
+  --bar:rgba(22,22,24,.92); --tab:rgba(28,28,30,.94); --thumb:#636366; --sheet:#1C1C1E; --sheet-list:#2C2C2E; --field:rgba(118,118,128,.24); --toast:rgba(58,58,60,.96);
+  color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 @supports (font: -apple-system-body){ html{font:-apple-system-body} }
@@ -330,8 +338,8 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-ch{margin-top:4px} .mc-ch-read{display:flex;align-items:center;gap:6px;min-height:26px;font-size:var(--t-detail);font-variant-numeric:tabular-nums} .mc-ch-read b{font-weight:600}
 .mc-ch-plot{min-width:0} .mc-ch svg{display:block;touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:crosshair}
 .mc-ch .g{stroke:var(--line);stroke-width:1} .mc-ch .rf{stroke:var(--fg2);stroke-width:1;stroke-dasharray:4 3}
-.mc-ch .s1{fill:none;stroke:var(--blue);stroke-width:2;stroke-linejoin:round;stroke-linecap:round} .mc-ch .s2{fill:none;stroke:var(--fg3);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
-.mc-ch .xh{stroke:var(--fg3);stroke-width:1} .mc-ch .dt{fill:var(--blue);stroke:var(--card);stroke-width:2} .mc-ch .dt2{fill:var(--fg3);stroke:var(--card);stroke-width:2}
+.mc-ch .s1{fill:none;stroke:var(--chart,var(--fg));stroke-width:2;stroke-linejoin:round;stroke-linecap:round} .mc-ch .s2{fill:none;stroke:var(--fg3);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.mc-ch .xh{stroke:var(--fg3);stroke-width:1} .mc-ch .dt{fill:var(--chart,var(--fg));stroke:var(--card);stroke-width:2} .mc-ch .dt2{fill:var(--fg3);stroke:var(--card);stroke-width:2}
 .mc-ch text{font-size:12px;fill:var(--fg2);font-variant-numeric:tabular-nums} .mc-ch .tr{paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
 .mc-ch svg:focus-visible{outline:2px solid var(--blue);outline-offset:4px;border-radius:4px}
 .mc-lg{display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 0 4px;font-size:var(--t-foot)} .mc-lg span{display:inline-flex;align-items:center;gap:6px}
@@ -478,6 +486,11 @@ if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIn
 
 /* ───────── 공통 ───────── */
 const $app = document.getElementById("app");
+/* 화면 모드: 시스템 따라가기(기본) · 밝게 · 어둡게 */
+function applyTheme(){ const t = LS.get("theme", "auto"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+  const dark = t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches); document.querySelectorAll('meta[name="theme-color"]').forEach(x => x.remove());
+  const mt = document.createElement("meta"); mt.name = "theme-color"; mt.content = dark ? "#000000" : "#F5F5F7"; document.head.appendChild(mt); }
+applyTheme();
 // 엔진 문장에서 사람 이름·규칙 번호는 화면에 안 보여요 (예전 결과 파일 대비)
 const esc = s => String(s ?? "").replace(/[\u200B-\u200F\u2060\uFEFF\u00AD]/g, "").replace(/\u0044ONS|\uB3C8\uC2A4|@?\u0064ons_korea/gi, "오동엔진").replace(/\uCE74\uD22C|@?\u006Batoo\w*/gi, "참고 계정").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const escN = s => esc(String(s ?? "").replace(/(^|[\s(:~,])-(?=\d)/g, "$1−"));   // 엔진 문장의 음수 부호를 화면 기호(−)로 통일
@@ -686,8 +699,11 @@ function liveTick(){
 }
 async function loadMac(){
   const [m, b] = await Promise.all([readJSON(MAC_FILE, null), readJSON(BRIEF_FILE, null).catch(() => null)]);
-  S.mac = normMac(m); S.brief = normBrief(b); S.macL = true; S.macErr = null;
+  S.mac = normMac(m); S.brief = normBrief(b); S.macL = true; S.macErr = null; S.macStale = false;
+  try{ if (S.mac) localStorage.setItem("lastMac", JSON.stringify({m: S.mac, b: S.brief, t: Date.now()})); }catch(e){}
 }
+/* 못 불러왔을 때: 마지막으로 받아 둔 결과가 있으면 그걸로 (판정 시각은 그대로라 오래됐다는 게 보임) */
+function useLastMac(){ try{ const c = JSON.parse(localStorage.getItem("lastMac") || "null"); if (c && c.m){ S.mac = normMac(c.m); S.brief = normBrief(c.b); S.macStale = true; return true; } }catch(e){} return false; }
 /* 브리핑이 덮어쓰는 판정 (예: 근원 CPI 예상치 비교) + BofA 지표 */
 function macItems(){
   const m = S.mac || {}, b = S.brief || {}, ov = b.override || {};
@@ -721,7 +737,7 @@ function spark(pts, o = {}){
   const X = d => pad / 2 + ((tms(d) - t0) / (t1 - t0)) * (W - pad - 2), Y = v => H - pad - ((v - lo) / (hi - lo)) * (H - pad * 2);
   const path = ps => ps.filter(p => tms(p[0]) >= t0).map((p, i) => `${i ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
   const e = pts[pts.length - 1], main = o.main || "var(--fg3)";
-  return `<svg class="mc-spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${p2.length > 1 ? `<path d="${path(p2)}" fill="none" stroke="var(--fg3)" stroke-width="1.5" stroke-linejoin="round" opacity=".55"/>` : ""}<path d="${path(pts)}" fill="none" stroke="${main}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(e[0]).toFixed(1)}" cy="${Y(e[1]).toFixed(1)}" r="2.5" fill="var(--blue)" stroke="var(--card)" stroke-width="1.5"/></svg>`;
+  return `<svg class="mc-spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${p2.length > 1 ? `<path d="${path(p2)}" fill="none" stroke="var(--fg3)" stroke-width="1.5" stroke-linejoin="round" opacity=".55"/>` : ""}<path d="${path(pts)}" fill="none" stroke="${main}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(e[0]).toFixed(1)}" cy="${Y(e[1]).toFixed(1)}" r="2.5" fill="var(--chart,var(--fg))" stroke="var(--card)" stroke-width="1.5"/></svg>`;
 }
 /* 상세 차트: 값 눈금(오른쪽) · 날짜 3개 · 기준선 이름표 · 끝점 · 손가락으로 훑으면 그 날 값 표시 */
 function niceTicks(lo, hi, n){
@@ -917,8 +933,12 @@ function macBind(){
 }
 async function ensureMac(head){
   if (S.macL) return true;
-  $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><div class="sk" style="width:40%;height:34px"></div></div><div class="card"><div class="sk" style="width:60%;height:16px"></div><div class="sk" style="width:80%;height:12px;margin-top:12px"></div></div></div>`;
-  try{ await loadMac(); }catch(e){ S.macErr = e.message; S.macAuth = !!e.auth || /권한/.test(e.message); S.macL = true; }
+  const skRow = `<div class="row"><div class="main"><div class="sk" style="width:45%;height:15px"></div><div class="sk" style="width:70%;height:12px;margin-top:8px"></div></div><div class="sk" style="width:56px;height:18px"></div></div>`;
+  $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">${esc(head.includes("오늘") ? "오늘" : "")}</h1><div class="sk" style="width:50%;height:13px;margin-top:6px"></div></div>
+    <div class="card"><div class="sk" style="width:55%;height:13px"></div><div class="sk" style="width:45%;height:30px;margin-top:10px"></div><div class="sk" style="width:92%;height:14px;margin-top:12px"></div><div class="sk" style="width:80%;height:14px;margin-top:6px"></div><div class="sk" style="width:100%;height:4px;margin-top:18px"></div></div>
+    <div class="sec-title"><div class="sk" style="width:30%;height:20px"></div></div><div class="card"><div class="sk" style="width:40%;height:13px"></div><div class="sk" style="width:55%;height:26px;margin-top:8px"></div></div>
+    <div class="sec-title"><div class="sk" style="width:30%;height:20px"></div></div><div class="list">${skRow}${skRow}${skRow}</div></div>`;
+  try{ await loadMac(); }catch(e){ S.macErr = e.message; S.macAuth = !!e.auth || /권한/.test(e.message); S.macL = true; if (!S.macAuth) useLastMac(); }
   return false;
 }
 async function renderMac0(){
@@ -935,6 +955,7 @@ async function renderMac0(){
   const it = macItems(), rg = m.regime || {}, td = todayK(), bc = safe(briefCard);
   const cal = (m.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i && calKst(c).d >= td).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; }).slice(0, 3);
   $app.innerHTML = `<div class="wrap">${head}
+    ${S.macStale ? `<div class="err" style="margin:8px 0 0;display:flex;justify-content:space-between;align-items:center;gap:10px"><span>지금은 새 자료를 못 받아요 · 마지막으로 받은 결과예요</span><button class="text-btn press" id="reload" style="flex:none">다시</button></div>` : ""}
     <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">판정 ${esc(mDay(m.date))} ${esc((m.at || "").slice(11, 16))}${S.liveQ && S.liveQ > Date.parse(m.at || 0) ? ` · 시세 ${esc(mMD(new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(S.liveQ))))} ${esc(new Date(S.liveQ).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}))}` : ""}${esc(closedNote())}</div>${staleNote(m)}</div>
     ${safe(signalCard)}
     ${safe(holdCard)}
@@ -953,6 +974,7 @@ async function renderMac0(){
     ${(m.errors || []).length ? `<details class="adv"><summary class="press">일부 자료를 받지 못했어요 (${m.errors.length}) <span class="dchev" aria-hidden="true">›</span></summary><p class="note" style="margin:8px 4px">${m.errors.map(esc).join("<br>")}</p></details>` : ""}
     <p class="note" style="margin:18px 4px">오동엔진 기준으로 계산한 결과예요. 투자 판단은 직접 하세요.</p></div>`;
   const tc = document.getElementById("tocal"); if (tc) tc.onclick = () => { histTo(1, "t"); go("fade", () => { S.tab = "cal"; }); };
+  const rl2 = document.getElementById("reload"); if (rl2) rl2.onclick = () => { S.macL = false; S.macErr = null; render("none"); };
   const mo = $app.querySelector(".mc-more-all"); if (mo) mo.ontoggle = () => { S.moreOpen = mo.open; };
   const wy = $app.querySelector(".mc-why"); if (wy) wy.ontoggle = () => { S.whyOpen = wy.open; };   // 1분마다 다시 그려도 펼친 상태 유지
   const ca = $app.querySelector(".mc-cash"); if (ca) ca.ontoggle = () => { S.cashOpen = ca.open; };
@@ -1374,6 +1396,14 @@ async function renderLead(){
   $app.querySelectorAll("[data-lk]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "l:" + b.dataset.lk; }));
   macBind();
 }
+/* 종목 상세 차트: 중계의 봉 자료(일봉 2년치)에서 최근 60거래일 종가만 */
+S.bars = {};
+async function loadBars(sym){
+  try{ const r = await fetch(RELAY() + "?bars=" + encodeURIComponent(sym) + "&i=1d", {cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined});
+    const j = r.ok ? await r.json() : null, rows = Array.isArray(j?.rows) ? j.rows : [];
+    const pts = rows.filter(x => Array.isArray(x) && typeof x[0] === "number" && typeof x[4] === "number" && Number.isFinite(x[4])).slice(-60).map(x => [new Date(x[0] * 1000).toISOString().slice(0, 10), x[4]]);
+    S.bars[sym] = pts.length > 2 ? pts : null; return true; }catch(e){ S.bars[sym] = null; return true; }
+}
 function renderLeadDetail(key){
   if (!S.leadL){ $app.innerHTML = `<div class="wrap"><div class="navbar"></div><div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div></div>`;
     loadLead().then(() => { if (S.dhd === "l:" + key) renderLeadDetail(key); }).catch(e => toast(e.message)); return; }
@@ -1401,16 +1431,20 @@ function renderLeadDetail(key){
       ${sec.also?.length ? `<p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">같은 종목이 많이 겹치는 테마: ${esc(sec.also.join(" · "))}</p>` : ""}`;
   } else {
     const m = liveM(stock, mk), inSec = d.sectors.filter(x => x.members.some(y => lid(y) === id));
-    body = `<div class="title-block" data-anchor><div class="sub">${esc(m.ind || m.mkt || "")}</div><h1 class="big">${esc(m.name)}</h1></div>
+    const bsym = us ? lid(m) : lid(m) + (m.mkt === "코스닥" ? ".KQ" : ".KS"), bars = S.bars?.[bsym];
+    if (!bars) loadBars(bsym).then(ok => { if (ok && S.dhd === "l:" + key) renderLeadDetail(key); });
+    body = `<div class="title-block" data-anchor><div class="sub">${esc(m.ind || m.mkt || "")}${us ? " · " + esc(lid(m)) : ""}</div><h1 class="big">${esc(m.name)}</h1></div>
       <div class="card"><div class="mc-reg-h"><span class="mc-big ${chgCls(m.chg)}">${esc(pct(m.chg))}</span>${m.upper ? tag("상한가", "sell") : inSec.some(x => lid(x.leader) === id) ? tag("대장", "none") : ""}</div>
         <p class="note" style="margin:4px 0 0">${esc(fmtP(m.p, us))} · ${m.live ? "실시간" : esc(mDay(d.date)) + " 마감"}</p>
         <div class="kv" style="grid-template-columns:repeat(3,1fr)"><div><span>거래대금</span><b>${esc(fmtTv(m.tv, us))}</b></div>${m.rs != null ? `<div><span>${gl("지수 대비")}</span><b>${esc(pct(m.rs))}p</b></div>` : ""}${m.mcap ? `<div><span>시총</span><b>${esc(us ? (m.mcap >= 1e12 ? "$" + (m.mcap / 1e12).toFixed(1) + "T" : "$" + (m.mcap / 1e9).toFixed(0) + "B") : fmtTv(m.mcap, false))}</b></div>` : ""}</div>
+        ${bars && bars.length > 2 ? `<div style="margin-top:14px">${chartHTML("stch", {pts: bars, fmt: v => fmtP(v, us), label: `${m.name} 최근 ${bars.length}거래일 종가`})}</div>` : bars === null ? "" : `<div class="sk" style="width:100%;height:120px;margin-top:14px"></div>`}
         ${inSec.length ? `<p class="note" style="margin:12px 0 0">속한 주도섹터: ${esc(inSec.map(x => x.name).join(" · "))}</p>` : `<p class="note" style="margin:12px 0 0">함께 오른 테마가 잡히지 않았어요. 혼자 오른 종목은 주도섹터로 보지 않아요.</p>`}
         <a class="mc-link" href="${esc(newsUrl(m))}" target="_blank" rel="noopener">왜 올랐는지 뉴스 보기 ›</a></div>`;
   }
   $app.innerHTML = `<div class="wrap">${back}${body}
     <div class="sec-title" role="heading" aria-level="2">기준</div>
     <div class="card"><p class="note" style="margin:0;color:var(--fg)">거래대금을 실은 상승 종목이 한 테마에 2개 이상이면 주도섹터예요. 대장은 거래대금·상승률 1등이고, 등락률이 비슷하면 거래대금으로 가려요. 참고 트레이더는 2·3등주보다 대장을 봐요.</p></div></div>`;
+  if (document.getElementById("stch")) drawChart("stch");
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
   $app.querySelectorAll("[data-lk]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "l:" + b.dataset.lk; }));
   bindNavbar();
@@ -1462,7 +1496,17 @@ function renderRules(){
 function renderSettings(){
   $app.innerHTML = `<div class="wrap"><div class="navbar"><div class="side"></div><span class="mini">설정</span><div class="side r"></div></div>
     <div class="title-block" data-anchor><h1 class="big">설정</h1></div>
-    <div class="sec-title" role="heading" aria-level="2">자동 계산 (한국 시간)</div>
+    <div class="sec-title" role="heading" aria-level="2">화면</div>
+    <div class="list">
+      <div class="row"><div class="main"><b>모드</b></div><div class="seg" role="tablist" id="thm" style="margin:0;width:200px">${[["auto", "시스템"], ["light", "밝게"], ["dark", "어둡게"]].map(([k, n]) => `<button role="tab" data-th="${k}" class="${LS.get("theme", "auto") === k ? "on" : ""}" aria-selected="${LS.get("theme", "auto") === k}">${n}</button>`).join("")}</div></div>
+      <div class="row"><div class="main"><b>주도 탭 처음 화면</b></div><div class="seg" role="tablist" id="lmk" style="margin:0;width:140px">${[["kr", "한국"], ["us", "미국"]].map(([k, n]) => `<button role="tab" data-lm="${k}" class="${S.leadMk === k ? "on" : ""}" aria-selected="${S.leadMk === k}">${n}</button>`).join("")}</div></div>
+    </div>
+    <div class="sec-title" role="heading" aria-level="2">내 자산</div>
+    <div class="list">
+      <button class="row press" id="toHoldS"><span class="main">보유종목 편집</span>${CHEV}</button>
+      <button class="row press" id="clrHold"><span class="main" style="color:var(--danger)">보유종목 모두 지우기</span></button>
+    </div>
+    <div class="sec-title" role="heading" aria-level="2">정보 · 자동 계산 (한국 시간)</div>
     <div class="list">
       <div class="row"><div class="main"><b>매크로 숫자</b><div class="sub">06:40 미국장 마감 뒤 (화~토) · 16:10 한국장 마감 뒤 · 22:50 미국 지표 발표 뒤 (월~금)</div></div></div>
       <div class="row"><div class="main"><b>주도섹터</b><div class="sub">매크로 숫자와 같은 시각에 계산 · 한국은 네이버, 미국은 야후 자료 · 시세는 1분마다</div></div></div>
@@ -1477,11 +1521,18 @@ function renderSettings(){
     <div class="list" style="margin-top:var(--gap-block)">
       <button class="row press" id="out"><span class="main" style="color:var(--danger)">토큰 지우기</span></button>
     </div>
-    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">토큰은 이 기기에만 저장돼요. 지워도 다시 넣으면 그대로 돌아와요.</p>
+    <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">토큰은 이 기기에만 저장돼요. 지워도 다시 넣으면 그대로 돌아와요. · 앱 버전 ${esc(document.querySelector('meta[name="app-version"]')?.content || "")}</p>
     </details>
     <p class="note" style="margin:18px 4px">오동엔진 기준으로 계산한 결과예요. 투자 판단은 직접 하세요.</p>
   </div>`;
-  document.getElementById("out").onclick = () => { LS.del("tok"); LS.del("dash"); S.token = ""; render("fade"); };
+  document.getElementById("out").onclick = () => { LS.del("tok"); LS.del("dash"); try{ localStorage.removeItem("lastMac"); }catch(e){} S.token = ""; S.mac = null; S.macL = false; render("fade"); };
+  $app.querySelectorAll("#thm button").forEach(b => b.onclick = () => { LS.set("theme", b.dataset.th); applyTheme(); render("none"); });
+  $app.querySelectorAll("#lmk button").forEach(b => b.onclick = () => { S.leadMk = b.dataset.lm; LS.set("leadMk", S.leadMk); render("none"); });
+  document.getElementById("toHoldS").onclick = () => go("push", () => { S.dhd = "he"; });
+  /* 지우기는 두 번 확인: 한 번 누르면 문구가 바뀌고, 4초 안에 다시 누르면 지움 */
+  const ch = document.getElementById("clrHold");
+  ch.onclick = async () => { if (!ch.dataset.arm){ ch.dataset.arm = "1"; ch.firstElementChild.textContent = "정말 지울까요? 한 번 더 누르면 지워요"; setTimeout(() => { if (ch.isConnected){ delete ch.dataset.arm; ch.firstElementChild.textContent = "보유종목 모두 지우기"; } }, 4000); return; }
+    try{ if (!S.holdL || S.holdL !== true) await loadHold(); await saveHold({v: 1, items: [], cash: {krw: 0, usd: 0}}); S.holdQAt = 0; toast("보유종목을 지웠어요"); render("none"); }catch(e){ toast(e.message); } };
   bindNavbar();
 }
 
