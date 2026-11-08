@@ -14,13 +14,13 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-08-2">
+<meta name="app-version" content="2026-11-08-4">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
 :root{
   --bg:#F5F5F7; --card:#FFFFFF; --fg:#1D1D1F; --fg2:#6E6E73; --fg3:#8E8E93; --line:#E5E5EA; --fill:#F2F2F7;
-  --blue:#0066CC; --chart:#3A3A3C; --up:#DC2F3D; --down:#1F6FE5; --up-t:#C4272F; --dn-t:#1B5FD1;
+  --blue:#0066CC; --btn:#0066CC; --chart:#3A3A3C; --up:#DC2F3D; --down:#1F6FE5; --up-t:#C4272F; --dn-t:#1B5FD1;
   --buy:#167A40; --buy-bg:#E8F7EE; --sell:#8944AB; --sell-bg:#F4ECF8; --danger:#D70015;
   --wait:#975A00; --wait-bg:#FFF4E0; --info:#1B64DA; --info-bg:#EAF2FE;
   /* 글자: 5단계 34·22·17·15·13 (탭 막대 글자와 그래프 눈금만 예외) · 굵기 700/600/400 · 기준 17px(rem이라 시스템 글자 크기를 따라감) */
@@ -39,7 +39,7 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#000000; --card:#1C1C1E; --fg:#F5F5F7; --fg2:#98989D; --fg3:#8E8E93; --line:#38383A; --fill:#2C2C2E;
-    --blue:#0A84FF; --chart:#D1D1D6; --up:#FF5A66; --down:#4C9AFF; --up-t:#FF5A66; --dn-t:#4C9AFF;
+    --blue:#0A84FF; --btn:#0A6BD6; --chart:#D1D1D6; --up:#FF5A66; --down:#4C9AFF; --up-t:#FF5A66; --dn-t:#4C9AFF;
     --buy:#30D158; --buy-bg:#0F2E1B; --sell:#DA8FFF; --sell-bg:#2E1A3A; --danger:#FF453A;
     --wait:#FFB340; --wait-bg:#3A2A0E; --info:#64A8FF; --info-bg:#132A4A;
     --bar:rgba(22,22,24,.92); --tab:rgba(28,28,30,.94); --thumb:#636366; --sheet:#1C1C1E; --sheet-list:#2C2C2E; --field:rgba(118,118,128,.24); --toast:rgba(58,58,60,.96);
@@ -48,15 +48,16 @@
 }
 :root[data-theme="dark"]{
     --bg:#000000; --card:#1C1C1E; --fg:#F5F5F7; --fg2:#98989D; --fg3:#8E8E93; --line:#38383A; --fill:#2C2C2E;
-  --blue:#0A84FF; --chart:#D1D1D6; --up:#FF5A66; --down:#4C9AFF; --up-t:#FF5A66; --dn-t:#4C9AFF;
+  --blue:#0A84FF; --btn:#0A6BD6; --chart:#D1D1D6; --up:#FF5A66; --down:#4C9AFF; --up-t:#FF5A66; --dn-t:#4C9AFF;
   --buy:#30D158; --buy-bg:#0F2E1B; --sell:#DA8FFF; --sell-bg:#2E1A3A; --danger:#FF453A;
   --wait:#FFB340; --wait-bg:#3A2A0E; --info:#64A8FF; --info-bg:#132A4A;
   --bar:rgba(22,22,24,.92); --tab:rgba(28,28,30,.94); --thumb:#636366; --sheet:#1C1C1E; --sheet-list:#2C2C2E; --field:rgba(118,118,128,.24); --toast:rgba(58,58,60,.96);
   color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-@supports (font: -apple-system-body){ html{font:-apple-system-body} }
-html{font-size:106.25%;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior-y:none}
+html{font-size:106.25%}
+@supports (font: -apple-system-body){ html{font:-apple-system-body;font-size:unset} html{font-size:calc(1rem * 1.0625)} }   /* 시스템 글자 크기(접근성 설정)를 따라가되 기본 17px 비율 유지 */
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior-y:none}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;font-size:var(--t-body);line-height:1.45;word-break:keep-all;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
 html,body{touch-action:manipulation}   /* 두 번 탭 확대 막기 */
 button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
@@ -188,7 +189,7 @@ textarea{resize:none}
 
 .kv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;padding-top:14px;box-shadow:0 -1px 0 var(--line)}
 .kv div{display:flex;flex-direction:column;gap:3px;min-width:0}
-.kv span{font-size:var(--t-small);color:var(--fg2);white-space:nowrap} .kv small{font-size:var(--t-foot);color:var(--fg2);white-space:nowrap;font-variant-numeric:tabular-nums} .kv b{font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv span{font-size:var(--t-small);color:var(--fg2);white-space:nowrap} .kv small{font-size:var(--t-foot);color:var(--fg2);white-space:nowrap;font-variant-numeric:tabular-nums} .kv b{white-space:normal;overflow-wrap:anywhere;font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .chart{padding:var(--pad-card) var(--gap-sub) var(--pad-card)}
 .plot{touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:grab}
@@ -205,7 +206,7 @@ textarea{resize:none}
 .field input:focus,.field select:focus,.field textarea:focus{box-shadow:0 0 0 2px var(--blue) inset;background-color:var(--card)}
 
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:var(--r-control);padding:14px;font-size:var(--t-body);font-weight:600;text-align:center;text-decoration:none}
-.btn.primary{background:var(--blue);color:#fff;transition:background-color .25s,transform .16s var(--ease-out)}
+.btn.primary{background:var(--btn,var(--blue));color:#fff;transition:background-color .25s,transform .16s var(--ease-out)}
 
 .btn.ghost,.btn.soft{background:var(--card);color:var(--blue)}
 
@@ -260,10 +261,10 @@ h2.sec-title{font-size:var(--t-heading)}
 /* 내 자산: 비중 = 칸 크기, 오늘 등락 = 색 (한국식: 오름 빨강 · 내림 파랑, 진할수록 많이 움직임) */
 .hm{position:relative;width:100%;border-radius:12px;overflow:hidden;background:var(--fill)} .hm>div{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;border:1.5px solid var(--card);border-radius:10px;overflow:hidden;line-height:1.2}
 /* 맵 칸은 크기가 정해진 그림이라 글자도 px로 고정 (글자 키우기는 아래 목록이 맡음) */
-.hm b{font-size:var(--t-foot);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%} .hm i{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap} .hm small{font-size:11px;opacity:.85;font-variant-numeric:tabular-nums}
+.hm b{font-size:var(--t-foot);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%} .hm i{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap} .hm small{opacity:1;font-size:11px;opacity:.85;font-variant-numeric:tabular-nums}
 .ha-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px} .ha-top .mc-big{font-size:var(--t-title2)}
 .ha-cash{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:12px;font-size:var(--t-detail)} .ha-cash>span{color:var(--fg2)} .ha-cash .mc-tag{flex:none}
-.he-row{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-items:start;padding:12px 0} .he-row .f-sym{grid-column:1/3;display:flex;gap:8px;align-items:flex-start} .he-row .f-sym .field{flex:1;min-width:0} .he-row label{font-size:var(--t-foot);color:var(--fg2)} .he-row input{width:100%;font-variant-numeric:tabular-nums} .he-row+.he-row{border-top:1px solid var(--line)} .he-unit{font-size:var(--t-foot);color:var(--fg3);margin-left:4px} .he-sug{display:flex;flex-direction:column;margin:-4px 0 6px;background:var(--fill);border-radius:12px;overflow:hidden} .he-sug button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;padding:8px 12px;text-align:left;font-size:var(--t-detail)} .he-sug button+button{border-top:.5px solid var(--line)} .he-sug span{color:var(--fg2);font-size:var(--t-foot);white-space:nowrap}
+.he-row{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-items:start;padding:12px 0} .he-row .f-sym{grid-column:1/3;display:flex;gap:8px;align-items:flex-start} .he-row .f-sym .field{flex:1;min-width:0} .he-row label{font-size:var(--t-foot);color:var(--fg2)} .he-row input{width:100%;font-variant-numeric:tabular-nums} .he-row+.he-row{border-top:1px solid var(--line)} .he-unit{font-size:var(--t-foot);color:var(--fg2);margin-left:4px} .he-sug{display:flex;flex-direction:column;margin:-4px 0 6px;background:var(--fill);border-radius:12px;overflow:hidden} .he-sug button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;padding:8px 12px;text-align:left;font-size:var(--t-detail)} .he-sug button+button{border-top:.5px solid var(--line)} .he-sug span{color:var(--fg2);font-size:var(--t-foot);white-space:nowrap}
 .he-nm{display:block;font-size:var(--t-foot);color:var(--fg2);margin-top:3px;min-height:13px;line-height:1.35} .he-nm.dup{color:var(--wait)} input[aria-invalid="true"]{box-shadow:0 0 0 2px var(--up-t) inset!important} .he-row+.he-row{border-top:.5px solid var(--line)} .he-row .field label{font-size:var(--t-foot);margin-bottom:4px} .he-row .field input{min-height:44px;padding:8px 10px;font-size:var(--t-detail)}
 .he-del{width:44px;height:44px;margin-top:18px;flex:none;display:inline-flex;align-items:center;justify-content:center;color:var(--danger);font-size:22px;line-height:1;border-radius:22px}
 
@@ -271,7 +272,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin:0 0 var(--gap-block)} .seg button{flex:1;min-height:36px;border-radius:7px;font-size:var(--t-foot);font-weight:600;color:var(--fg)}
 .seg button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .ld-idx{display:flex;gap:14px;font-size:var(--t-small);color:var(--fg2);margin:-14px 0 var(--gap-block)} .ld-idx b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums} .ld-idx b.up{color:var(--up-t)} .ld-idx b.dn{color:var(--dn-t)}
-.ld-sec{padding:14px var(--pad-card)} .ld-sec+.ld-sec{margin-top:var(--gap-sub)} .ld-h b,.ld-lead .n,.ld-m b,.big,.mc-n{overflow-wrap:anywhere;word-break:keep-all} .ld-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px} .ld-h b{font-size:var(--t-detail)} .ld-h span{font-size:var(--t-foot);color:var(--fg2);white-space:nowrap;display:inline-flex;align-items:center;gap:6px} .ld-h .chev{color:var(--fg3,var(--fg2))}
+.ld-sec{padding:14px var(--pad-card)} .ld-sec+.ld-sec{margin-top:var(--gap-sub)} .ld-h b,.ld-lead .n,.ld-m b,.big,.mc-n{overflow-wrap:anywhere;word-break:keep-all} .ld-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px} .ld-h b{font-size:var(--t-detail)} .ld-h b{flex:1 1 auto;min-width:0} .ld-h span{font-size:var(--t-foot);color:var(--fg2);flex:0 1 auto;min-width:0;text-align:right;display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end} .ld-h .chev{color:var(--fg3,var(--fg2))}
 .ld-lead{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 0 8px;border-bottom:1px solid var(--line)} .ld-lead .n{flex:1;min-width:0;font-weight:600} .ld-lead .n small{display:block;font-weight:400;font-size:var(--t-foot);color:var(--fg2)}
 .ld-lead .c{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap} .ld-lead .tv{font-size:var(--t-foot);color:var(--fg2);text-align:right;white-space:nowrap}
 .ld-m{display:flex;justify-content:space-between;gap:10px;padding:6px 0 0;font-size:var(--t-small);color:var(--fg2)} .ld-m b{font-weight:400;color:var(--fg)} .ld-m span{font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -281,7 +282,8 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-reg-s{font-size:var(--t-title2);font-weight:700;letter-spacing:-.01em;margin:2px 0 4px}
 .mc-reg .mc-spark{width:100%;height:40px;display:block;margin:2px 0 6px}
 .mc-kv{display:flex;flex-wrap:wrap;justify-content:space-between;column-gap:8px;font-size:var(--t-small);padding:2px 0} .mc-kv span{color:var(--fg2);white-space:nowrap} .mc-kv b{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;word-break:keep-all;overflow-wrap:normal;margin-left:auto}
-.mc-brief{margin-top:var(--gap-block)} .rsec{margin-top:var(--gap-sub)} .rsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0 var(--pad-card);background:var(--card);border-radius:var(--r-card)} .rsec>summary::-webkit-details-marker{display:none} .rsec>summary h2{margin:0;font-size:var(--t-body);font-weight:600} .rsec>summary .dchev{color:var(--fg3)} .rsec[open]>summary{border-radius:var(--r-card) var(--r-card) 0 0;border-bottom:1px solid var(--line)} .rsec[open]>.card,.rsec[open]>.list{border-radius:0 0 var(--r-card) var(--r-card);margin-top:0} .rsec[open]>.sec-title,.rsec[open]>.note{margin-left:var(--pad-card);margin-right:var(--pad-card)} .rsec[open]{margin-bottom:var(--gap-block)} .mc-why{margin-top:12px} .mc-why>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:4px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-why>summary::-webkit-details-marker{display:none} .mc-why .mo-c,.mc-why[open] .mo-t{display:none} .mc-why[open] .mo-c{display:inline} .mc-more-all{margin-top:var(--gap-section)} .mc-more-all .mo-c,.mc-more-all[open] .mo-t,.mc-cash .mo-c,.mc-cash[open] .mo-t{display:none} .mc-more-all[open] .mo-c,.mc-cash[open] .mo-c{display:inline} .mc-more-all>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-more-all>summary::-webkit-details-marker,.mc-cash>summary::-webkit-details-marker{display:none} .mc-cash>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px} .mc-cash>summary b{font-weight:600} .dchev{display:inline-block;transition:transform .2s;transform:rotate(90deg)} details[open]>summary .dchev{transform:rotate(-90deg)} .gpop::before{content:"";position:absolute;left:calc(var(--ax,50%) - 7px);border:7px solid transparent} .gpop.dn::before{top:-14px;border-bottom-color:var(--card)} .gpop.up::before{bottom:-14px;border-top-color:var(--card)} .gpop{position:absolute;z-index:40;background:var(--card);color:var(--fg);border-radius:12px;padding:10px 12px;box-shadow:0 0 0 .5px var(--line),0 8px 24px rgba(0,0,0,.18);font-size:var(--t-foot);line-height:1.45;display:flex;flex-direction:column;gap:2px} .cal-today .mc-n{color:var(--blue)} .cal-today .mc-ci{color:var(--blue)} .term{padding:6px 1px;margin:-6px -1px;text-decoration:underline dotted;text-decoration-color:var(--fg3,var(--fg2));text-underline-offset:3px;cursor:help} .mc-old>summary{list-style:none;min-height:44px;display:flex;align-items:center;cursor:pointer} .mc-old>summary::-webkit-details-marker{display:none}
+@media (forced-colors:active){ .seg .on,.tabbar .on{outline:2px solid CanvasText;outline-offset:-2px} .card,.list,.field input{border:1px solid CanvasText} .hm>div{border:1px solid CanvasText} }
+.mc-brief{margin-top:var(--gap-block)} .rsec{margin-top:var(--gap-sub)} .rsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0 var(--pad-card);background:var(--card);border-radius:var(--r-card)} .rsec>summary::-webkit-details-marker{display:none} .rsec>summary .rh{margin:0;font-size:var(--t-body);font-weight:600} .rsec>summary .dchev{color:var(--fg3)} .rsec[open]>summary{border-radius:var(--r-card) var(--r-card) 0 0;border-bottom:1px solid var(--line)} .rsec[open]>.card,.rsec[open]>.list{border-radius:0 0 var(--r-card) var(--r-card);margin-top:0} .rsec[open]>.sec-title,.rsec[open]>.note{margin-left:var(--pad-card);margin-right:var(--pad-card)} .rsec[open]{margin-bottom:var(--gap-block)} .mc-why{margin-top:12px} .mc-why>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:4px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-why>summary::-webkit-details-marker{display:none} .mc-why .mo-c,.mc-why[open] .mo-t{display:none} .mc-why[open] .mo-c{display:inline} .mc-more-all{margin-top:var(--gap-section)} .mc-more-all .mo-c,.mc-more-all[open] .mo-t,.mc-cash .mo-c,.mc-cash[open] .mo-t{display:none} .mc-more-all[open] .mo-c,.mc-cash[open] .mo-c{display:inline} .mc-more-all>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-more-all>summary::-webkit-details-marker,.mc-cash>summary::-webkit-details-marker{display:none} .mc-cash>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px} .mc-cash>summary b{font-weight:600} .dchev{display:inline-block;transition:transform .2s;transform:rotate(90deg)} details[open]>summary .dchev{transform:rotate(-90deg)} .gpop::before{content:"";position:absolute;left:calc(var(--ax,50%) - 7px);border:7px solid transparent} .gpop.dn::before{top:-14px;border-bottom-color:var(--card)} .gpop.up::before{bottom:-14px;border-top-color:var(--card)} .gpop{position:absolute;z-index:40;background:var(--card);color:var(--fg);border-radius:12px;padding:10px 12px;box-shadow:0 0 0 .5px var(--line),0 8px 24px rgba(0,0,0,.18);font-size:var(--t-foot);line-height:1.45;display:flex;flex-direction:column;gap:2px} .cal-today .mc-n{color:var(--blue)} .cal-today .mc-ci{color:var(--blue)} .term{padding:6px 1px;margin:-6px -1px;text-decoration:underline dotted;text-decoration-color:var(--fg3,var(--fg2));text-underline-offset:3px;cursor:help} .mc-old>summary{list-style:none;min-height:44px;display:flex;align-items:center;cursor:pointer} .mc-old>summary::-webkit-details-marker{display:none}
 .mc-bh{margin:6px 0 0;font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
 .mc-bp{margin-top:12px}
 .mc-bpr{display:grid;grid-template-columns:8px minmax(0,auto) minmax(0,1fr);align-items:baseline;column-gap:10px;padding:9px 0;border-top:.5px solid var(--line);font-size:var(--t-detail)}
@@ -477,7 +479,7 @@ function syncBusy(){ document.querySelectorAll("[data-busy]").forEach(b => b.dis
 async function refresh(){   // 화면의 자료는 그대로 두고 뒤에서 받아서, 성공했을 때만 바꿈 (오프라인이면 그대로)
   S.err = ""; S.loading = false;
   try{ await loadMac(); }catch(e){ if (S.mac) toast(e.message); else { S.macL = false; } }
-  if (!S.dirty) render("none");
+  if (!S.dirty && S.dhd !== "he") render("none");   // 편집 중엔 다시 그리지 않음 (입력이 날아감)
 }
 /* 화면 확대 막기 (iOS는 user-scalable=no를 무시하므로 손가락 두 개 확대를 직접 막는다). 차트 안의 확대·축소는 그대로 */
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => { if (!e.target.closest?.(".plot, .pro-box")) e.preventDefault(); }, {passive: false}));
@@ -515,6 +517,7 @@ const CHEV = `<svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="n
 const BACK = `<svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>`;
 
 /* 화면 그리기: how = push | pop | fade | none */
+function refocus(){ const k = S.refocus; if (!k) return; const el = $app.querySelector(k) || document.querySelector(k); if (el && el !== document.activeElement) try{ el.focus({preventScroll: true}); }catch(e){} }
 function render(how = "fade"){
   const tb = document.getElementById("tabbar");
   tb.hidden = !S.token;
@@ -523,6 +526,7 @@ function render(how = "fade"){
   tb.inert = !!S.dhd;   // 화면 밖으로 내려간 탭바에 포커스가 가지 않게
   LS.set("view", { tab: S.tab, dhd: S.dhd, t: Date.now() });   // 다시 열거나 새 버전으로 바뀌어도 보던 곳으로
   const keep = how === "none" ? scrollY : 0;
+  const ae = document.activeElement, fkey = ae && ae !== document.body ? (ae.id ? "#" + CSS.escape(ae.id) : ae.dataset.mk ? `[data-mk="${ae.dataset.mk}"]` : ae.dataset.tab ? `[data-tab="${ae.dataset.tab}"]` : ae.dataset.ls ? `[data-ls="${ae.dataset.ls}"]` : null) : null;
   const slide = (how === "push" || how === "pop") && !REDUCED;
   const ghost = slide ? snapshot() : null;
   try{
@@ -543,6 +547,9 @@ function render(how = "fade"){
   $app.classList.remove("v-push","v-pop","v-fade");
   if (how === "fade" && !REDUCED){ void $app.offsetWidth; $app.classList.add("v-fade"); }
   if (how === "none") scrollTo(0, keep); else if (how === "pop") scrollTo(0, S.listY || 0); else scrollTo(0, 0);
+  S.refocus = how === "none" ? fkey : null; refocus();   // 1분 갱신에도 읽던 자리 유지 (비동기 화면은 다 그린 뒤 다시 호출)
+  if (how !== "none" && !(S.dhd === "he")){ const h = $app.querySelector("h1, .title-block"); if (h){ h.tabIndex = -1; try{ h.focus({preventScroll: true}); }catch(e){} } }
+  const tt = $app.querySelector("h1")?.textContent?.trim(); document.title = tt && tt !== "rooru.invest" ? tt + " · rooru.invest" : "rooru.invest";
   bindNavbar();
   if (ghost) slidePages(how, ghost);
 }
@@ -590,7 +597,6 @@ function go(how, fn){ document.querySelectorAll('.toast[data-leave="1"], .gpop')
 /* 시스템 '뒤로'(안드로이드 제스처·버튼, 브라우저 뒤로): 시트 → 상세 → 다른 탭 순서로 한 단계씩 닫는다 */
 addEventListener("popstate", () => {
   if (skipPop){ skipPop--; const f = popFix; popFix = null; f?.(); return; }
-  if (SWIPING) return;
   document.querySelectorAll(".ghost").forEach(g => { if (!g.getAnimations().length) g.remove(); });   // 전환이 끝났는데 남은 화면 조각 (터치가 막히는 원인)
   const how = BACK_ANIM ? "pop" : "none"; BACK_ANIM = false;   // 앱의 뒤로 버튼이면 밀리는 전환, 시스템 제스처면 그대로 (두 번 밀리지 않게)
   if (S.tab === "guide" && S.guideFrom){ const g = S.guideFrom; S.guideFrom = null; go("fade", () => { S.tab = g.tab; S.dhd = g.dhd || null; }); return; }   // 사용법을 연 곳으로
@@ -642,7 +648,6 @@ function renderSetup(msg){
 
 /* 왼쪽 가장자리에서 밀면 뒤로: 손가락을 따라 앞 화면이 밀리고 뒤 화면이 드러남.
    아이폰(홈 화면 앱엔 시스템 뒤로가 없음)에서만. 안드로이드는 시스템 뒤로 제스처가 같은 자리를 써서 둘이 부딪히면 화면이 멈춘다 */
-let SWIPING = false;
 
 
 /* ───────── 매크로 (tc/macro.py · 오동엔진 점검표) ─────────
@@ -701,6 +706,10 @@ function liveTick(){
   liveT = setInterval(async () => { if (document.hidden || S.tab !== "today" || S.dhd || S.busy) return; if (await pullLive()) render("none"); }, 60000);
 }
 async function loadMac(){
+  if (S.macP) return S.macP;   // 받는 중이면 그 약속을 같이 씀 (탭을 오가도 한 번만 요청)
+  S.macP = loadMac0().finally(() => { S.macP = null; }); return S.macP;
+}
+async function loadMac0(){
   const [m, b] = await Promise.all([readJSON(MAC_FILE, null), readJSON(BRIEF_FILE, null).catch(() => null)]);
   S.mac = normMac(m); S.brief = normBrief(b); S.macL = true; S.macErr = null; S.macStale = false;
   try{ if (S.mac) localStorage.setItem("lastMac", JSON.stringify({m: S.mac, b: S.brief, t: Date.now()})); }catch(e){}
@@ -711,11 +720,13 @@ function useLastMac(){ try{ const c = JSON.parse(localStorage.getItem("lastMac")
 function macItems(){
   const m = S.mac || {}, b = S.brief || {}, ov = b.override || {};
   const lv = S.live || {}, bAge = b.date ? (Date.parse(todayK()) - Date.parse(b.date)) / 864e5 : 99;
-  const ovOk = k => ov[k] && bAge <= (k === "core_cpi" ? 31 : 3) && !(ov[k].asof && m.at && ov[k].asof < String(m.at).slice(0, 10) && k !== "core_cpi");
+  /* CPI 덮어쓰기는 브리핑이 본 달의 CPI에만: 엔진의 기준월이 브리핑 날짜보다 새 달이면(다음 발표가 나왔으면) 안 씀 */
+  const cpiM = (m.core || []).find(x => x.key === "core_cpi")?.asof || "", cpiNew = b.date && cpiM && cpiM.slice(0, 7) >= b.date.slice(0, 7);
+  const ovOk = k => ov[k] && bAge <= (k === "core_cpi" ? 31 : 3) && !(k === "core_cpi" && cpiNew) && !(ov[k].asof && m.at && ov[k].asof < String(m.at).slice(0, 10) && k !== "core_cpi");
   const fix = x => { let y = ovOk(x.key) ? {...x, ...ov[x.key], why0: x.why} : x; const q = lv[x.key];
     if (q && q.p != null && y.value != null && (!y.asof || (q.d || "") >= y.asof)){
       y = {...y, value: +q.p, liveT: q.t, liveChg: q.prev ? (x.key === "us10y" ? (q.p - q.prev) * 100 : (q.p / q.prev - 1) * 100) : null};
-      if (x.key === "us10y" && q.p >= 5 && y.status !== "경계") y.status = "경계";   // 실시간 값이 기준선을 넘으면 바로 반영 (5% 이상)
+      if (x.key === "us10y") y.status = q.p >= 5 ? "경계" : (x.status === "경계" && x.value >= 5 ? "중립" : x.status);   // 5% 문턱은 실시간으로 양방향 (엔진이 5% 때문에 경계였으면 내려오면 해제)
       if (x.key === "vix") y.status = q.p >= 25 ? "경계" : "중립";
     }
     return y; };
@@ -828,16 +839,17 @@ const WARN_NOTE = {us10y: "5% 이상", wti: "고점권 장기화", core_cpi: "�
 const SHORT_NAME = {us10y: "미 10년물", wti: "WTI", core_cpi: "근원 CPI", fed: "연준", hy: "하이일드 스프레드", fg: "공포탐욕", breadth: "시장 폭", sox: "반도체 이격", vix: "VIX", bb: "Bull & Bear", fms: "FMS 현금 비중", krw: "환율", foreign: "외국인"};
 function macSignal(){
   const it = macItems(), all = [...it.core, ...it.heat], v = S.mac?.verdict, buy = [], warn = [], sell = [];
-  const td = Date.parse(todayK()), aged = x => { const d = x.asof ? (td - Date.parse(String(x.asof).slice(0, 10))) / 864e5 : 0; const slow = x.key === "bb" || x.key === "fms" || x.key === "core_cpi"; return slow ? (x.monthly ? `${+String(x.asof).slice(5, 7)}월분` : `${mMD(x.asof)} 자료`) + (d > (x.monthly ? 45 : 21) ? " · 오래됨" : "") : ""; };
+  const td = Date.parse(todayK()), aged = x => { const d = x.asof ? (td - Date.parse(String(x.asof).slice(0, 10))) / 864e5 : 0; const slow = x.key === "bb" || x.key === "fms" || x.key === "core_cpi"; return slow ? (x.monthly ? `${+String(x.asof).slice(5, 7)}월분` : `${mMD(x.asof)} 자료`) + (d > (x.monthly ? 75 : 21) ? " · 오래됨" : "") : ""; };
   const one = (x, note) => ({ k: x.key, t: `${SHORT_NAME[x.key] || x.name} ${x.key === "core_cpi" && x.mom?.length ? "전월비 " + (x.mom[x.mom.length - 1][1] > 0 ? "+" : "") + x.mom[x.mom.length - 1][1] + "%" : fmtV(x)}`, n: note, d: aged(x) });
   for (const x of all){
     if (x.status === "기회") buy.push(one(x, BUY_NOTE[x.key] || "매수 구간"));
     else if (x.status === "경계" && SELL_NOTE[x.key]) sell.push(one(x, `${SELL_NOTE[x.key]} (${SELL_WHY[x.key]})`));
     else if (x.status === "경계") warn.push(one(x, WARN_NOTE[x.key] || "경계"));
   }
+  /* 원칙 줄은 엔진의 verdict.state 그대로 (앱이 다시 판정하지 않음) */
   const rule = !v ? null : v.state === "믿기 어려운 상승" ? { tone: "sell", t: "증시만 상승 · 장기금리·유가는 아직 상승 추세 → 상승을 신뢰하지 않음" }
-    : (v.us10 !== "하락" && v.wti !== "하락") ? { tone: "wait", t: "장기금리·유가 아직 상승 추세 → 증시 상승을 서둘러 믿지 않음" }
-    : { tone: "buy", t: (v.us10 === "하락" && v.wti === "하락" ? "장기금리·유가" : v.us10 === "하락" ? "장기금리" : "유가") + " 하락 추세 → 우호" };
+    : v.state === "조심" ? { tone: "wait", t: "장기금리·유가가 안 내려오고 증시도 힘이 없음 → 서둘러 믿지 않음" }
+    : { tone: "buy", t: (v.us10 === "하락" && v.wti === "하락" ? "장기금리·유가" : v.us10 === "하락" ? "장기금리" : "유가") + " 하락 추세 → " + (v.state === "근거 있는 상승" ? "상승을 받쳐 줌" : "바닥 다지기 후보") };
   if (rule?.tone === "sell") sell.push({ t: "원칙", n: "금리·유가 없는 상승" });
   let label, tone, line;
   const miss0 = it.core.filter(x => x.status === "자료 없음" || x.value == null).map(x => SHORT_NAME[x.key] || x.name);
@@ -980,7 +992,8 @@ async function renderMac0(){
   const tc = document.getElementById("tocal"); if (tc) tc.onclick = () => { histTo(1, "t"); go("fade", () => { S.tab = "cal"; }); };
   const rl2 = document.getElementById("reload"); if (rl2) rl2.onclick = () => { S.macL = false; S.macErr = null; render("none"); };
   const mo = $app.querySelector(".mc-more-all"); if (mo) mo.ontoggle = () => { S.moreOpen = mo.open; };
-  const wy = $app.querySelector(".mc-why"); if (wy) wy.ontoggle = () => { S.whyOpen = wy.open; };   // 1분마다 다시 그려도 펼친 상태 유지
+  const wy = $app.querySelector(".mc-why"); if (wy) wy.ontoggle = () => { S.whyOpen = wy.open; };
+  refocus();   // 1분마다 다시 그려도 펼친 상태 유지
   const ca = $app.querySelector(".mc-cash"); if (ca) ca.ontoggle = () => { S.cashOpen = ca.open; };
   const tr = document.getElementById("torules"); if (tr) tr.onclick = () => { (S.rulesOpen = S.rulesOpen || new Set()).add("오늘의 신호가 정해지는 순서"); histTo(1, "t"); go("fade", () => { S.tab = "rules"; }); };
   macBind();
@@ -1034,7 +1047,7 @@ function renderMacDetail(key){
   if (!S.macL){ $app.innerHTML = `<div class="wrap"><div class="navbar"></div><div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div><div class="card"><div class="sk" style="width:70%;height:16px"></div></div></div>`;
     loadMac().then(() => { if (S.dhd === "m:" + key) renderMacDetail(key); }).catch(e => toast(e.message)); return; }
   const it = macItems(), all = [...it.core, ...it.heat, ...it.kr], x = all.find(a => a.key === key);
-  const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>오늘</span></button></div><span class="mini">${esc(x?.name || "")}</span><div class="side r"></div></div>`;
+  const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="오늘로 뒤로 가기">${BACK}<span>오늘</span></button></div><span class="mini">${esc(x?.name || "")}</span><div class="side r"></div></div>`;
   if (!x){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>이 지표를 찾지 못했어요</b>뒤로 가서 다시 선택해 주세요.</div></div>`; document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); }; return; }
   const pts = (x.spark || []).filter(p => p[1] != null);
   const refs = {us10y: [5], hy: [400], fg: [25, 75], breadth: [60], sox: [55], vix: [25]}[key] || [];
@@ -1193,7 +1206,7 @@ function heatmap(rows, H, big){
 /* 현금 비중을 오늘의 신호 기준과 비교 */
 function cashBand(){
   const g = macSignal(); if (!g || g.label === "판정 보류") return null;
-  return {"분할매수": [30, 30], "소량 분할매수": [30, 50], "중립": [30, 30], "관망": [30, 50], "비중 축소": [30, 50]}[g.label] || null;
+  return {"분할매수": [30, 30], "소량 분할매수": [30, 50], "중립": [30, 30], "관망": [30, 50], "비중 축소": [40, 50]}[g.label] || null;
 }
 function cashLine(c){
   const b = cashBand(); if (!b || !c.total) return "";
@@ -1220,7 +1233,7 @@ function holdCard(){
 function holdBind(){ const b = document.getElementById("toHold"); if (b) b.onclick = () => { const empty = S.holdL === true && !S.hold.items.length && !(S.hold.cash?.krw || S.hold.cash?.usd); go("push", () => { S.dhd = empty ? "he" : "h"; S.holdFromCard = empty; }); }; }
 let holdT = null;
 function renderHold(){
-  const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>오늘</span></button></div><span class="mini">내 자산</span><div class="side r"><button class="text-btn press" id="edit">편집</button></div></div>`;
+  const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="오늘로 뒤로 가기">${BACK}<span>오늘</span></button></div><span class="mini">내 자산</span><div class="side r"><button class="text-btn press" id="edit">편집</button></div></div>`;
   if (S.holdL !== true){ $app.innerHTML = `<div class="wrap">${back}<div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div></div>`;
     loadHold().then(() => pullHoldQ()).then(() => { if (S.dhd === "h") renderHold(); }).catch(e => { $app.innerHTML = `<div class="wrap">${back}<div class="err">${esc(e.message)}</div></div>`; }); return; }
   if (Date.now() - S.holdQAt > 60000) pullHoldQ().then(ok => { if (ok && S.dhd === "h") renderHold(); });
@@ -1231,13 +1244,13 @@ function renderHold(){
     <div class="title-block" data-anchor><h1 class="big">내 자산</h1><div class="sub">평가금액 · 원화 환산 (환율 ${esc(Math.round(c.fx).toLocaleString("ko-KR"))}원)</div><div class="mc-big" style="white-space:nowrap;font-size:min(var(--t-title),9.5vw);margin-top:2px">${esc(won(c.total))}</div>
       ${c.stock ? `<div class="sub" style="line-height:1.6">최근 거래일 <b class="${chgCls(c.day)}">${esc(c.day == null ? "-" : pct(c.day))} (${esc((c.dayAmt >= 0 ? "+" : "−") + wonShort(Math.abs(c.dayAmt)))})</b>${c.ret != null ? `<br>전체 수익 <b class="${chgCls(c.ret)}">${esc(pct(c.ret))} (${esc((c.retAmt >= 0 ? "+" : "−") + wonShort(Math.abs(c.retAmt)))})</b>` : ""}</div>` : ""}</div>
     ${S.holdErr ? `<div class="err">${esc(S.holdErr)}</div>` : ""}
-    ${c.rows.length && c.rows.every(r => r.p == null) ? `<p class="note" style="margin:0 4px var(--gap-sub)">시세를 받지 못했어요 · 잠시 뒤 다시 열어 주세요. 그동안 합계는 현금만이에요.</p>`
+    ${c.rows.length && c.rows.every(r => r.p == null) && !S.holdQAt ? `<div class="sk" style="width:60%;height:14px;margin:0 4px var(--gap-sub)"></div>` : c.rows.length && c.rows.every(r => r.p == null) ? `<p class="note" style="margin:0 4px var(--gap-sub)">시세를 받지 못했어요 · 잠시 뒤 다시 열어 주세요. 그동안 합계는 현금만이에요.</p>`
       : c.rows.some(r => r.p == null) ? `<p class="note" style="margin:0 4px var(--gap-sub)">시세를 못 받은 종목: ${esc(c.rows.filter(r => r.p == null).map(r => r.sym).join(", "))} · 티커를 확인해 주세요 (한국은 .KS/.KQ). 합계에서 빠져요.</p>` : ""}
     ${c.stock ? `<div class="card">${heatmap(c.rows, 640, true)}<p class="note" style="margin:10px 0 0">칸 크기 = 주식 중 비중 · 색 = 최근 거래일 등락 (빨강 오름 · 파랑 내림, 진할수록 많이: 2% · 5%)</p></div>` : ""}
     ${cashBand() && c.total ? `<div class="sec-title" role="heading" aria-level="2">현금</div><div class="card">${cashLine(c).replace('class="ha-cash"', 'class="ha-cash" style="margin-top:0"')}<p class="note" style="margin:8px 0 0">현금 ${esc(won(c.cash))} · 주식 ${esc(won(c.stock))}</p></div>` : ""}
     ${false ? `<div class="mc-regs" style="margin-top:var(--gap-block)"><div class="card"><div class="sub">수익률 가장 높음</div><b>${esc(best[0].name)}</b><div class="${chgCls(best[0].ret)}" style="font-weight:700">${esc(pct(best[0].ret))}</div></div><div class="card"><div class="sub">수익률 가장 낮음</div><b>${esc(best[best.length - 1].name)}</b><div class="${chgCls(best[best.length - 1].ret)}" style="font-weight:700">${esc(pct(best[best.length - 1].ret))}</div></div></div>` : ""}
     <div class="sec-title" role="heading" aria-level="2">보유종목 ${c.rows.length}</div>
-    <div class="list">${c.rows.map(r => `<button class="row press" data-he aria-label="${esc(r.name + " 고치기")}"><div class="main"><div class="mc-n">${esc(r.name)}</div><div class="sub">${esc(r.qty.toLocaleString("ko-KR"))}주 · 비중 ${esc(r.w.toFixed(1))}%</div></div>
+    <div class="list">${c.rows.map(r => `<button class="row press" data-he><div class="main"><div class="mc-n">${esc(r.name)}</div><div class="sub">${esc(r.qty.toLocaleString("ko-KR"))}주 · 비중 ${esc(r.w.toFixed(1))}%</div></div>
       <div class="mc-r"><div class="mc-v ${chgCls(r.day)}">${esc(r.p == null ? "시세 없음" : r.day == null ? "-" : pct(r.day))}</div><div class="sub">${esc(wonShort(r.val))}원${r.ret != null ? ` · 수익 ${esc(pct(r.ret))}` : ""}</div></div></button>`).join("") || `<div class="row"><div class="main sub">아직 없어요 · 오른쪽 위 편집</div></div>`}</div>
     <p class="note" style="margin:18px 4px">등락 = 최근 거래일, 전일 종가 대비 · 수익 = 평균단가 대비, 지금 환율로 계산 (산 때 환율은 안 넣어요) (산 때 환율·단가를 안 넣은 종목은 빠짐) · 내 비공개 자료 저장소에만 저장돼요.</p></div>`;
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
@@ -1398,7 +1411,7 @@ async function renderLead(){
   $app.querySelectorAll(".seg button").forEach(b => b.onclick = () => { S.leadMk = b.dataset.seg; LS.set("leadMk", S.leadMk); render("none"); });
   $app.querySelectorAll("[data-ls]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "l:" + b.dataset.ls; }));
   $app.querySelectorAll("[data-lk]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "l:" + b.dataset.lk; }));
-  macBind();
+  macBind(); refocus();
 }
 /* 종목 상세 차트: 중계의 봉 자료(일봉 2년치)에서 최근 60거래일 종가만 */
 S.bars = {};
@@ -1481,14 +1494,14 @@ function renderRules(){
     <div class="list" id="gloss">${GLOSS.filter(([k]) => !["하이일드", "펀드매니저 현금", "이격"].includes(k))
       .map(([n, d]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub">${esc(d)}</div></div></div>`).join("")}</div>
     <div class="sec-title" role="heading" aria-level="2">현금과 헤지 · 운용 원칙</div>
-    <div class="list"><div class="row"><div class="main"><div class="mc-n">현금은 가장 싼 보험</div><div class="sub">기본 30%. 급락이 와도 현금이 있으면 기회</div></div></div><div class="row"><div class="main"><div class="mc-n">신호별 현금 비중</div><div class="sub">분할매수·중립 30% · 소량 분할매수·관망 30~50% · 비중 축소 50%까지 늘림. 기준에서 5%p 적거나 10%p 많은 것까지는 허용</div></div></div><div class="row"><div class="main"><div class="mc-n">하락 이벤트가 예상되면</div><div class="sub">현금 확대 + 소량 헤지</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 순서</div><div class="sub">1순위 현금 확대 · 불확실성 큰 이벤트는 VIX · 롱 쏠림(과열)에서 방향 전환 예상 시 숏</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 한도</div><div class="sub">VIX·숏 합쳐서 현금의 30% 이하</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 청산</div><div class="sub">목표가는 짧게 · 손절선을 지나면 바로 정리</div></div></div><div class="row"><div class="main"><div class="mc-n">매크로 하락 때</div><div class="sub">분할매수 (바닥을 서둘러 잡지 않음)</div></div></div></div>
+    <div class="list"><div class="row"><div class="main"><div class="mc-n">현금은 가장 싼 보험</div><div class="sub">기본 30%. 급락이 와도 현금이 있으면 기회</div></div></div><div class="row"><div class="main"><div class="mc-n">신호별 현금 비중</div><div class="sub">분할매수·중립 30% · 소량 분할매수·관망 30~50% · 비중 축소 40~50%(기본 30%에서 늘림). 기준에서 5%p 적거나 10%p 많은 것까지는 허용</div></div></div><div class="row"><div class="main"><div class="mc-n">하락 이벤트가 예상되면</div><div class="sub">현금 확대 + 소량 헤지</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 순서</div><div class="sub">1순위 현금 확대 · 불확실성 큰 이벤트는 VIX · 롱 쏠림(과열)에서 방향 전환 예상 시 숏</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 한도</div><div class="sub">VIX·숏 합쳐서 현금의 30% 이하</div></div></div><div class="row"><div class="main"><div class="mc-n">헤지 청산</div><div class="sub">목표가는 짧게 · 손절선을 지나면 바로 정리</div></div></div><div class="row"><div class="main"><div class="mc-n">매크로 하락 때</div><div class="sub">분할매수 (바닥을 서둘러 잡지 않음)</div></div></div></div>
     <p class="note rnote" style="margin:18px 4px">참고 자료예요. 투자 권유가 아니에요.</p></div>`;
   /* 묶음마다 접기: 처음엔 제목만 보여서 차례 역할 (펼친 묶음은 다시 그려도 유지) */
   S.rulesOpen = S.rulesOpen || new Set();
   for (const h of [...$app.querySelectorAll(".wrap > .sec-title")]){
     const name = h.textContent.trim(), d = document.createElement("details"), sm = document.createElement("summary");
     d.className = "rsec"; d.open = S.rulesOpen.has(name);
-    sm.className = "press"; sm.innerHTML = `<h2>${esc(name)}</h2><span class="dchev" aria-hidden="true">›</span>`;
+    sm.className = "press"; sm.innerHTML = `<span class="rh">${esc(name)}</span><span class="dchev" aria-hidden="true">›</span>`;
     h.before(d); d.appendChild(sm); h.remove();
     let n = d.nextElementSibling;
     while (n && !n.classList.contains("sec-title") && !n.classList.contains("rnote")){ const nx = n.nextElementSibling; d.appendChild(n); n = nx; }
@@ -1545,7 +1558,7 @@ let toastT;
 function showTerm(el){
   document.querySelectorAll(".gpop").forEach(x => x.remove());
   const r = el.getBoundingClientRect(), W = Math.min(300, innerWidth - 32), p = document.createElement("div");
-  p.className = "gpop"; p.setAttribute("role", "status"); p.innerHTML = `<b>${esc(el.dataset.g)}</b><span>${esc(GL[el.dataset.g] || "")}</span>`;
+  p.className = "gpop"; p.id = "gpop"; el.setAttribute("aria-describedby", "gpop"); p.innerHTML = `<b>${esc(el.dataset.g)}</b><span>${esc(GL[el.dataset.g] || "")}</span>`;
   const left = Math.max(16, Math.min(innerWidth - W - 16, r.left + r.width / 2 - W / 2));
   p.style.width = W + "px"; p.style.left = left + "px";
   document.body.appendChild(p);
@@ -1556,7 +1569,9 @@ function showTerm(el){
 addEventListener("scroll", () => document.querySelectorAll(".gpop").forEach(x => { if (Math.abs(scrollY - (+x.dataset.y || 0)) > 24) x.remove(); }), {passive: true});
 document.addEventListener("click", e => { if (!e.target.closest?.(".term[data-g], .gpop")) document.querySelectorAll(".gpop").forEach(x => x.remove()); }, true);
 document.addEventListener("click", e => { const t = e.target.closest?.(".term[data-g]"); if (t){ e.preventDefault(); e.stopPropagation(); showTerm(t); } }, true);
-document.addEventListener("keydown", e => { const t = e.target.closest?.(".term[data-g]"); if (t && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); e.stopPropagation(); showTerm(t); } }, true);
+document.addEventListener("keydown", e => { const t = e.target.closest?.(".term[data-g]"); if (t && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); e.stopPropagation(); showTerm(t); }
+  if (e.key === "Escape"){ document.querySelectorAll(".gpop").forEach(x => x.remove()); document.getElementById("sug")?.remove(); } }, true);
+document.addEventListener("focusin", e => { if (!e.target.closest?.(".term[data-g], .gpop")) document.querySelectorAll(".gpop").forEach(x => x.remove()); });
 
 /* 새 버전이 올라오면 다시 불러오기 (홈 화면에 추가한 앱은 예전 화면을 오래 들고 있음) */
 async function checkVersion(){
@@ -1564,7 +1579,7 @@ async function checkVersion(){
     const mine = document.querySelector('meta[name="app-version"]')?.content;
     const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache:"no-store"})).text();
     const v = (t.match(/name="app-version" content="([^"]+)"/) || [])[1];
-    const busy = S.dirty || S.busy;   // 입력 중·계산 기다리는 중엔 미룸 (다음에 돌아올 때 바꿈)
+    const busy = S.dirty || S.busy || S.dhd === "he";   // 입력 중·계산 기다리는 중엔 미룸 (다음에 돌아올 때 바꿈)
     let tried = ""; try{ tried = sessionStorage.getItem("verTry") || ""; }catch(e){}
     if (v && mine && v !== mine && !busy && tried !== v){ try{ sessionStorage.setItem("verTry", v); }catch(e){} toast("새 버전으로 바꾸는 중"); setTimeout(() => location.replace(location.pathname + "?v=" + encodeURIComponent(v)), 600); }   // 같은 버전으로 한 번만 (캐시가 늦어도 계속 새로고침하지 않게)
   }catch(e){}
@@ -1574,9 +1589,11 @@ setTimeout(checkVersion, 1500);
 try{ LS.set("swipeHint", (LS.get("swipeHint", 0) || 0) + 1); }catch(e){}
 function toast(msg, spin){
   document.querySelectorAll(".toast").forEach(t => t.remove());
-  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); t.setAttribute("aria-live","polite");
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("aria-hidden", "true");
   t.innerHTML = (spin ? `<span class="spin"></span>` : "") + `<span>${esc(msg)}</span>`;
   document.body.appendChild(t); clearTimeout(toastT); toast.last = t;
+  let live = document.getElementById("live"); if (!live){ live = document.createElement("div"); live.id = "live"; live.setAttribute("role", "status"); live.setAttribute("aria-live", "polite"); live.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"; document.body.appendChild(live); }
+  live.textContent = ""; setTimeout(() => { live.textContent = String(msg); }, 50);
   if (!spin) toastT = setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 260); }, Math.max(3600, String(msg).length * 90));
 }
 
