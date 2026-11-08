@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-08-7">
+<meta name="app-version" content="2026-11-08-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -693,11 +693,19 @@ async function pullLive(){
   }catch(e){ return false; }
 }
 /* 시세가 2시간 넘게 안 바뀌면 장이 쉬는 중: 주말(토·일, 월 아침 유가 재개 전)은 '주말 휴장', 평일 저녁엔 '미국장 개장 전', 아침엔 '한국장 개장 전' */
+/* 휴장일 (해마다 추가 · 엔진 tc/data.py HOLIDAYS와 같게) */
+const HOLIDAYS = {
+  us: new Set(["2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", "2026-05-25", "2026-06-19", "2026-07-03", "2026-09-07", "2026-11-26", "2026-12-25", "2027-01-01", "2027-01-18", "2027-02-15", "2027-03-26", "2027-05-31", "2027-06-18", "2027-07-05", "2027-09-06", "2027-11-25", "2027-12-24"]),
+  kr: new Set(["2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18", "2026-03-02", "2026-05-01", "2026-05-05", "2026-05-25", "2026-06-03", "2026-08-17", "2026-09-24", "2026-09-25", "2026-10-05", "2026-10-09", "2026-12-25", "2026-12-31", "2027-01-01", "2027-02-08", "2027-02-09", "2027-02-10", "2027-03-01", "2027-05-05", "2027-05-13", "2027-06-07", "2027-08-16", "2027-09-14", "2027-09-15", "2027-09-16", "2027-10-04", "2027-10-11", "2027-12-27", "2027-12-31"])
+};
+const usDay = () => new Intl.DateTimeFormat("sv-SE", {timeZone: "America/New_York"}).format(new Date());
 function closedNote(){
   if (!S.liveQ || Date.now() - S.liveQ < 2 * 3600e3) return "";
-  const k = new Date(Date.now() + 9 * 3600e3), wd = k.getUTCDay(), h = k.getUTCHours();
+  const k = new Date(Date.now() + 9 * 3600e3), wd = k.getUTCDay(), h = k.getUTCHours(), kd = todayK();
   if (wd === 6 || wd === 0 || (wd === 1 && h < 8)) return " · 주말 휴장";
-  return h >= 15 ? " · 시세 멈춤 (개장 전·휴장)" : h < 9 ? " · 한국장 개장 전" : " · 장 마감";
+  if (HOLIDAYS.us.has(usDay()) && h >= 15) return " · 미국 휴장";
+  if (HOLIDAYS.kr.has(kd) && h < 15) return " · 한국 휴장";
+  return h >= 15 ? " · 미국장 개장 전" : h < 9 ? " · 한국장 개장 전" : " · 장 마감";
 }
 const todayK = () => new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date());
 /* 브리핑이 마지막으로 나왔어야 하는 날 (화~토 07:41, 늦어질 수 있어 08:30부터 셈) */
