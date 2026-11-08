@@ -177,7 +177,8 @@ export default {
       .filter(s => /^\^?[A-Z0-9.-]{1,15}(=[A-Z])?$/.test(s)).slice(0, 40);   // =F 선물(CL=F) · =X 환율(KRW=X)
     const uniq = [...new Set(syms)].sort();
     if (!uniq.length) return new Response("{}", { headers: cors });
-    const body = await cached("q/" + uniq.join(","), 20, () => quotes(uniq), ctx);
+    let body = "{}";
+    try { body = await cached("q/" + uniq.join(","), 20, () => quotes(uniq), ctx); } catch (e) { body = "{}"; }   // 서브요청 한도 등으로 터져도 빈 응답
     return new Response(body, { headers: cors });
   },
 };
@@ -194,7 +195,7 @@ async function quotes(syms) {
     await Promise.all(syms.filter(s => !kr.includes(s)).map(async s => {
       try {
         out[s] = KR_INDEX[s] ? await naver(s) : await yahoo(s);
-        if (out[s] && s.startsWith("^")) { try { out[s].day = await intraday(s); } catch (e) {} }
+        if (out[s] && s.startsWith("^") && ["^GSPC", "^KS11", "^KQ11", "^IXIC", "^VIX", "^TNX"].includes(s)) { try { out[s].day = await intraday(s); } catch (e) {} }   // 장중 선은 앱이 쓰는 지수만
       } catch (e) { out[s] = null; }
     }));
     return JSON.stringify(out);

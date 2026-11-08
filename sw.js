@@ -8,6 +8,6 @@ self.addEventListener("fetch", e => {
   const u = new URL(e.request.url);
   if (u.origin !== location.origin || e.request.method !== "GET") return;   // GitHub·시세·글꼴은 건드리지 않음
   // 화면 파일: 네트워크 먼저(새 버전), 안 되면 저장본
-  e.respondWith(fetch(e.request).then(r => { if (r.ok && !u.search.includes("v=")) caches.open(C).then(c => c.put(e.request, r.clone())); return r; })
+  e.respondWith(fetch(e.request).then(r => { if (r.ok && !/[?&]v=/.test(u.search)) caches.open(C).then(c => c.put(e.request, r.clone())); return r; })
     .catch(() => caches.match(e.request, {ignoreSearch: true}).then(r => r || caches.match("./index.html"))));
 });

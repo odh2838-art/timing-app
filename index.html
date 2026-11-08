@@ -531,6 +531,7 @@ function askLeave(){
 }
 function refocus(){ const k = S.refocus; if (!k) return; const el = $app.querySelector(k) || document.querySelector(k); if (el && el !== document.activeElement) try{ el.focus({preventScroll: true}); }catch(e){} }
 function render(how = "fade"){
+  document.getElementById("leave")?.remove();
   const tb = document.getElementById("tabbar");
   tb.hidden = !S.token;
   tb.classList.toggle("away", !!S.dhd);
