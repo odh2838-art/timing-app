@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-08-6">
+<meta name="app-version" content="2026-11-08-7">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -697,7 +697,7 @@ function closedNote(){
   if (!S.liveQ || Date.now() - S.liveQ < 2 * 3600e3) return "";
   const k = new Date(Date.now() + 9 * 3600e3), wd = k.getUTCDay(), h = k.getUTCHours();
   if (wd === 6 || wd === 0 || (wd === 1 && h < 8)) return " · 주말 휴장";
-  return h >= 15 ? " · 미국장 개장 전" : h < 9 ? " · 한국장 개장 전" : " · 장 마감";
+  return h >= 15 ? " · 시세 멈춤 (개장 전·휴장)" : h < 9 ? " · 한국장 개장 전" : " · 장 마감";
 }
 const todayK = () => new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date());
 /* 브리핑이 마지막으로 나왔어야 하는 날 (화~토 07:41, 늦어질 수 있어 08:30부터 셈) */
@@ -746,7 +746,7 @@ function macItems(){
   /* CPI 덮어쓰기는 브리핑이 본 달의 CPI에만: 엔진의 기준월이 브리핑 날짜보다 새 달이면(다음 발표가 나왔으면) 안 씀 */
   const cpiM = (m.core || []).find(x => x.key === "core_cpi")?.asof || "", cpiNew = b.date && cpiM && cpiM.slice(0, 7) >= b.date.slice(0, 7);
   const ovOk = k => ov[k] && bAge <= (k === "core_cpi" ? 31 : 3) && !(k === "core_cpi" && cpiNew) && !(ov[k].asof && m.at && ov[k].asof < String(m.at).slice(0, 10) && k !== "core_cpi");
-  const fix = x => { let y = ovOk(x.key) ? {...x, ...ov[x.key], why0: x.why} : x; const q = lv[x.key];
+  const fix = x => { let y = ovOk(x.key) ? {...x, ...ov[x.key], why0: x.why, st0: x.status, ovd: b.date} : x; const q = lv[x.key];
     if (q && q.p != null && y.value != null && (!y.asof || (q.d || "") >= y.asof)){
       y = {...y, value: +q.p, liveT: q.t, liveChg: q.prev ? (x.key === "us10y" ? (q.p - q.prev) * 100 : (q.p / q.prev - 1) * 100) : null};
       if (x.key === "us10y") y.status = q.p >= 5 ? "경계" : (x.status === "경계" && x.value >= 5 ? "중립" : x.status);   // 5% 문턱은 실시간으로 양방향 (엔진이 5% 때문에 경계였으면 내려오면 해제)
@@ -869,7 +869,7 @@ const WARN_NOTE = {us10y: "5% 이상", wti: "고점권 장기화", core_cpi: "�
 const SHORT_NAME = {us10y: "미 10년물", wti: "WTI", core_cpi: "근원 CPI", fed: "연준", hy: "하이일드 스프레드", fg: "공포탐욕", breadth: "시장 폭", sox: "반도체 이격", vix: "VIX", bb: "Bull & Bear", fms: "FMS 현금 비중", krw: "환율", foreign: "외국인"};
 function macSignal(){
   const it = macItems(), all = [...it.core, ...it.heat], v = S.mac?.verdict, buy = [], warn = [], sell = [];
-  const td = Date.parse(todayK()), aged = x => { const d = x.asof ? (td - Date.parse(String(x.asof).slice(0, 10))) / 864e5 : 0; const slow = x.key === "bb" || x.key === "fms" || x.key === "core_cpi"; return slow ? (x.monthly ? `${+String(x.asof).slice(5, 7)}월분` : `${mMD(x.asof)} 자료`) + (d > (x.monthly ? 75 : 21) ? " · 오래됨" : "") : ""; };
+  const td = Date.parse(todayK()), aged = x => { const d = x.asof ? (td - Date.parse(String(x.asof).slice(0, 10))) / 864e5 : 0; const slow = x.key === "bb" || x.key === "fms" || x.key === "core_cpi", lim = x.monthly ? 75 : x.key === "fms" ? 45 : 14; return slow ? (x.monthly ? `${+String(x.asof).slice(5, 7)}월분` : `${mMD(x.asof)} 자료`) + (d > lim ? " · 오래됨" : "") : ""; };
   const one = (x, note) => ({ k: x.key, t: `${SHORT_NAME[x.key] || x.name} ${x.key === "core_cpi" && x.mom?.length ? "전월비 " + (x.mom[x.mom.length - 1][1] > 0 ? "+" : "") + x.mom[x.mom.length - 1][1] + "%" : fmtV(x)}`, n: note, d: aged(x) });
   for (const x of all){
     if (x.status === "기회") buy.push(one(x, BUY_NOTE[x.key] || "매수 구간"));
@@ -887,8 +887,8 @@ function macSignal(){
   else if (sell.length >= 2 && !buy.length){ label = "비중 축소"; tone = "sell"; line = "과열 신호가 2개 이상이에요. 새로 사지 말고 현금을 늘리세요."; }
   else if (buy.length && !warn.length && !sell.length && rule?.tone !== "wait"){ label = "분할매수"; tone = "buy"; line = "매수 신호만 있어요. 나눠서 사기 시작해요."; }
   else if (buy.length){ label = "소량 분할매수"; tone = "info";
-    const whyW = [...warn, ...sell.filter(x => x.t !== "원칙")].map(x => SHORT_NAME[x.k] || x.t.split(" ")[0]).slice(0, 3).join("·");
-    line = `공포 구간이라 사기 시작하되, ${whyW ? whyW + " 쪽이 아직 불안해" : "금리·유가가 아직 안 내려와"} 조금씩만 나눠 사요. 바닥을 서둘러 잡지 않아요.`; }
+    const ww = [...warn, ...sell.filter(x => x.t !== "원칙")], whyW = ww.map(x => SHORT_NAME[x.k] || x.t.split(" ")[0]).slice(0, 3).join("·") + (ww.length > 3 ? ` 외 ${ww.length - 3}개` : "");
+    line = `공포 구간이라 사기 시작하되, ${ww.length ? `경계·과열 ${ww.length}개(${whyW})가 있어` : "금리·유가가 아직 안 내려와"} 조금씩만 나눠 사요. 바닥을 서둘러 잡지 않아요.`; }
   else if (warn.length || sell.length || rule?.tone === "wait"){ label = "관망"; tone = "wait"; line = sell.length ? "과열 신호가 1개 있어요. 새로 사지 않고 기다려요." : "경계 신호가 있어요. 새로 사지 않고 기다려요."; }
   else { label = "중립"; tone = "none"; line = "특별한 신호가 없어요. 계획대로 가요."; }
   const miss = label === "판정 보류" ? [] : all.filter(x => x.status === "자료 없음").map(x => SHORT_NAME[x.key] || x.name);
@@ -898,16 +898,16 @@ function macSignal(){
 function hartnett(){
   const it = macItems(), all = [...it.core, ...it.heat], f = all.find(x => x.key === "fms"), h = all.find(x => x.key === "hy");
   if (!f || !h || f.value == null || h.value == null || f.status === "확인" || !(f.value > 4 && h.value >= 370)) return "";
-  return `<div class="mc-rule"><span class="mc-dot" style="background:var(--buy)"></span><span>하트넷 매수 조건 2/3 충족: <span class="term" role="button" tabindex="0" data-g="펀드매니저 현금">펀드매니저 현금</span> ${esc(f.value)}% (4% 초과) · <span class="term" role="button" tabindex="0" data-g="하이일드">하이일드</span> ${Math.round(h.value)}<span class="term" role="button" tabindex="0" data-g="bp">bp</span> (400bp 접근) · 남은 하나는 주식 자금 유출 가속 (브리핑에서 확인)</span></div>`;
+  return `<div class="mc-rule"><span class="mc-dot" style="background:var(--buy)"></span><span>하트넷 매수 조건 2/3 충족: <span class="term" role="button" tabindex="0" data-g="펀드매니저 현금">펀드매니저 현금</span> ${esc(f.value)}% (4% 초과) · <span class="term" role="button" tabindex="0" data-g="하이일드">하이일드</span> ${Math.round(h.value)}<span class="term" role="button" tabindex="0" data-g="bp">bp</span> (${h.value >= 400 ? "400bp 넘음 · 위 경계와 같은 지표" : "400bp 접근"}) · 남은 하나는 주식 자금 유출 가속 (브리핑에서 확인)</span></div>`;
 }
 function signalCard(){
   const g = macSignal();
   const grp = (t, arr, col) => arr.length ? `<div class="mc-sg"><div class="mc-sg-h"><span class="mc-dot" style="background:${col}"></span>${t}</div>${arr.map(x => `<div class="mc-sg-r"><span>${gl(x.t)}</span><span class="sub">${esc(x.n)}${x.d ? ` · ${esc(x.d)}` : ""}</span></div>`).join("")}</div>` : "";
-  return `<div class="card mc-sig"><div class="sub">오늘의 신호 · 미국 시장(S&P 500) 기준 · 어떤 종목을 살지는 정하지 않아요</div>
+  return `<div class="card mc-sig"><div class="sub">오늘의 신호 · 미국 시장(S&P 500) 기준 · 어떤 종목을 살지는 정하지 않아요${(() => { const h = (Date.now() - Date.parse(S.mac?.at || 0)) / 3600e3; return h > 80 ? ` · <b style="color:var(--danger)">${Math.floor(h / 24)}일 전 판정</b>` : ""; })()}</div>
     <div class="mc-sig-l" style="color:${TONE_COL[g.tone]}">${esc(g.label)}</div>
     <p class="mc-sig-s">${esc(g.line)}</p>
     ${g.label === "판정 보류" ? "" : `<div class="mc-scale" aria-hidden="true">${SCALE.map(w => `<div class="${w === g.label ? "on" : ""}"${w === g.label ? ` style="--c:${TONE_COL[g.tone]}"` : ""}><i></i><span>${w}</span></div>`).join("")}</div>`}
-    <details class="mc-why"${S.whyOpen ? " open" : ""}><summary class="press"><span class="mo-t">근거 ${g.buy.length + g.warn.length + g.sell.filter(x => x.t !== "원칙").length + (g.rule ? 1 : 0)}개 보기</span><span class="mo-c">근거 접기</span> <span class="dchev" aria-hidden="true">›</span></summary>
+    <details class="mc-why"${S.whyOpen ? " open" : ""}><summary class="press"><span class="mo-t">${g.label === "판정 보류" ? "받은 지표만 보기" : `근거 ${g.buy.length + g.warn.length + g.sell.filter(x => x.t !== "원칙").length + (g.rule ? 1 : 0)}개 보기`}</span><span class="mo-c">근거 접기</span> <span class="dchev" aria-hidden="true">›</span></summary>
     ${grp("매수 신호", g.buy, "var(--buy)")}${grp("경계", g.warn, "var(--wait)")}${grp("과열·매도 신호", g.sell.filter(x => x.t !== "원칙"), "var(--sell)")}
     ${g.rule ? `<div class="mc-sg"><div class="mc-sg-h"><span class="mc-dot" style="background:${TONE_COL[g.rule.tone]}"></span>원칙</div><div class="mc-sg-r"><span>${esc(g.rule.t)}</span></div></div>` : ""}
     ${hartnett()}</details>
@@ -917,14 +917,14 @@ function signalCard(){
 /* 현금과 헤지: 오늘의 신호를 운용 원칙(현금 = 가장 싼 보험 · 헤지 순서 현금→VIX→숏 · VIX·숏은 현금의 30% 이내)으로 옮긴 것 */
 const SCALE = ["분할매수", "소량 분할매수", "중립", "관망", "비중 축소"];
 function cashCard(){
-  const g = macSignal(); if (g.label === "판정 보류") return "";
+  const g = macSignal(); if (g.label === "판정 보류") return `<div class="sec-title" role="heading" aria-level="2">현금과 헤지</div><div class="card"><span class="sub">판정이 보류라 현금 기준도 쉬어요. 자료가 다 오면 다시 나와요 (기본 30%).</span></div>`;
   const crowd = g.sell.some(x => x.k === "fms" || x.k === "bb");   // 롱 쏠림: FMS 4% 미만 · Bull & Bear 8 이상
   const P = {
     "분할매수": ["30%", "필요 없음"],
     "소량 분할매수": ["30~50%", crowd ? "롱 쏠림(펀드매니저 현금 4% 미만) · 지수 추세가 꺾인 게 확인되면 숏 소량" : "하락 이벤트가 예상되면 소량"],
     "중립": ["30%", "필요 없음"],
     "관망": ["30~50%", crowd ? "롱 쏠림 · 지수 추세가 꺾인 게 확인되면 숏 소량" : "하락 이벤트가 예상되면 소량"],
-    "비중 축소": ["최대 50%까지 (기본 30%에서 늘림)", "소량 · 큰 일정 앞이면 VIX 먼저" + (crowd ? ", 숏은 지수가 꺾일 때" : "")]
+    "비중 축소": ["40~50% (기본 30%에서 늘림)", "소량 · 큰 일정 앞이면 VIX 먼저" + (crowd ? ", 숏은 지수가 꺾일 때" : "")]
   }[g.label];
   const undo = g.label === "비중 축소" ? g.sell.map(x => x.k ? ({fg: "공포탐욕 75 아래", bb: "Bull & Bear 8 아래", fms: "펀드매니저 현금 4% 이상", sox: "반도체 이격 55% 아래"}[x.k]) : "장기금리·유가 하락 전환").filter(Boolean) : [];
   const today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date());
@@ -934,8 +934,8 @@ function cashCard(){
   return `<div class="sec-title" role="heading" aria-level="2">현금과 헤지</div><details class="card mc-cash"${S.cashOpen ? " open" : ""}><summary class="press"><b>${esc(sum)}</b><span class="sub" style="display:inline-flex;align-items:center;gap:4px;font-size:var(--t-foot)"><span class="mo-t">자세히</span><span class="mo-c">접기</span> <span class="dchev" aria-hidden="true">›</span></span></summary>
     ${r("현금 비중", P[0], "투자금 중 현금 · 가장 싼 보험, 급락이 오면 기회" + (g.label === "비중 축소" ? " · 한 번에 말고 나눠서" : ""))}
     ${r("헤지", P[1], P[1] === "필요 없음" ? "" : "VIX 연계·인버스 합쳐 현금의 30% 이내 · 목표가·손절선은 앱이 정하지 않아요")}
-    ${undo.length ? r("되돌리는 조건", undo.join(" · "), "이 조건이 맞으면 현금 기본 30%로") : ""}
-    ${ev ? r("큰 일정", `${mMD(ev.k.d)} ${ev.name.replace(/ 금리 결정| \(.*\)/g, "")}`, "불확실성이 큰 이벤트 · 보험이 필요하면 VIX 연계 상품 쪽") : ""}</details>`;
+    ${undo.length ? r("되돌리는 조건", "과열 신호가 1개 이하로 줄면", "지금 켜진 것: " + undo.join(" · ") + " → 그때 현금 기본 30%로") : ""}
+    ${ev ? r("큰 일정", `${mMD(ev.k.d)} ${ev.name.replace(/ 금리 결정| \(.*\)/g, "")}`, (() => { const vx = [...macItems().core, ...macItems().heat].find(x => x.key === "vix")?.value; return vx >= 40 ? "불확실성이 큰 이벤트 · VIX가 이미 높아 보험이 비싼 때예요" : "불확실성이 큰 이벤트 · 보험이 필요하면 VIX 연계 상품 쪽"; })()) : ""}</details>`;
 }
 /* 아침 브리핑: 한 줄 결론 + '지표 — 의미' 줄 + 이번 주 일정 (오늘의 신호와 같은 모양) */
 const BR_TONE = {buy: "var(--buy)", warn: "var(--wait)", sell: "var(--sell)", good: "var(--buy)", info: "var(--fg3)"};
@@ -1086,6 +1086,7 @@ function renderMacDetail(key){
   $app.innerHTML = `<div class="wrap">${back}
     <div class="title-block" data-anchor><div class="sub">${esc(x.liveT ? mDay(new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(x.liveT))) + " " + new Date(x.liveT).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}) + " 시세" : x.asof ? (x.monthly ? `${esc(x.asof.slice(0, 4))}년 ${+x.asof.slice(5, 7)}월분` : mDay(x.asof) + " 기준") : "")}</div><h1 class="big">${esc(x.name)}</h1></div>
     <div class="card"><div class="mc-reg-h"><span class="mc-big">${esc(fmtV(x))}${key === "core_cpi" ? `<small class="sub" style="font-size:var(--t-foot);font-weight:400;margin-left:6px">전년 대비</small>` : ""}</span>${tag(badge(x)[0], badge(x)[1])}</div>
+      ${x.ovd ? `<p class="sub" style="margin:4px 0 0">판정은 ${esc(mMD(x.ovd))} 아침 브리핑 기준이에요${x.st0 && x.st0 !== x.status ? ` · 엔진 계산(${esc(mMD(x.asof))})은 '${esc(ST_WORD[x.st0] || x.st0)}'` : ""}${x.why0 ? ` · 엔진: ${escN(x.why0)}` : ""}</p>` : ""}
       <p class="note" style="margin:6px 0 12px">${x.liveT && x.liveChg != null ? `<span style="color:var(--fg)">전일 대비 ${key === "us10y" ? `${x.liveChg >= 0 ? "+" : "−"}${Math.abs(x.liveChg).toFixed(0)}bp` : esc(pct(x.liveChg))}</span><br>` : ""}${escN(x.why || "")}</p>
       ${pts.length > 1 ? `${x.spark2 ? `<div class="mc-lg sub"><span><i class="mc-key"></i>기준금리 상단</span><span><i class="mc-key g"></i>미국 2년물 금리</span></div>` : key === "core_cpi" ? `<div class="mc-lg sub"><span>전년 대비 상승률</span></div>` : ""}${chartHTML("mch", {pts, pts2: x.spark2, refs, monthly: x.monthly, fmt: v => fmtU(key, v),
         label: `${x.name} 추이, ${dFull(pts[0][0], x.monthly)}부터 ${dFull(pts[pts.length - 1][0], x.monthly)}까지, 최저 ${fmtU(key, lo)}, 최고 ${fmtU(key, hi)}, 최근 ${fmtU(key, pts[pts.length - 1][1])}`})}` : ""}</div>
@@ -1157,10 +1158,10 @@ async function pullHoldQ(){
   const syms = (S.hold?.items || []).map(x => x.sym).filter(s => /^\^?[A-Z0-9.-]{1,15}$/.test(s)).slice(0, 60);
   if (!syms.length) return false;
   try{
-    const j = await relayGet(syms); if (!j) return false; let n = 0;
+    const j = await relayGet(syms); S.holdQAt = Date.now(); if (!j) return false; let n = 0;
     for (const [k, q] of Object.entries(j)) if (q && q.p != null){ S.holdQ[k] = q; n++; }
-    S.holdQAt = Date.now(); return n > 0;
-  }catch(e){ return false; }
+    return n > 0;
+  }catch(e){ S.holdQAt = Date.now(); return false; }
 }
 /* 종목 찾기: 비공개 자료 저장소의 종목사전(한국 2,700 · 미국 6,700)으로 이름·번호·티커 검색 */
 S.dict = null;
@@ -1184,6 +1185,7 @@ async function pullHoldQFor(syms){
     if (r.ok){ const j = await r.json(); for (const [k, q] of Object.entries(j)) if (q && typeof q.p === "number") S.holdQ[k] = q; } }catch(e){}
 }
 function fxNow(){ const k = macItems().kr?.find(x => x.key === "krw"); return k?.value || 1400; }
+const fxReal = () => macItems().kr?.find(x => x.key === "krw")?.value != null;
 /* 합계: 원화 기준. 오늘 등락 = 어제 종가 대비 */
 function holdCalc(){
   const h = S.hold || {items: []}, fx = fxNow();
@@ -1241,6 +1243,7 @@ function cashBand(){
 }
 function cashLine(c){
   const b = cashBand(); if (!b || !c.total) return "";
+  if (c.rows.length && c.rows.every(r => r.p == null)) return `<div class="ha-cash"><span class="sub">시세를 받지 못해 현금 비교를 쉬어요</span></div>`;   // 종목 값이 없으면 현금 100%로 보이는 걸 막음
   const v = c.cashPct, st = v < b[0] - 5 ? ["기준보다 적음", "wait"] : v > b[1] + 10 ? ["기준보다 많음", "none"] : v > b[1] ? ["조금 많음", "none"] : v < b[0] ? ["조금 적음", "none"] : ["기준 안", "buy"];
   const need = st[1] === "wait" ? c.total * b[0] / 100 - c.cash : 0;   // 기준 하단까지 현금으로 옮길 금액
   return `<div class="ha-cash"><span>현금 ${esc(v.toFixed(0))}% · 권장 ${b[0] === b[1] ? b[0] : b[0] + "~" + b[1]}%${need > 0 ? ` · ${esc(wonShort(need))}원 부족` : ""}</span>${tag(st[0], st[1])}</div>`;
@@ -1257,8 +1260,8 @@ function holdCard(){
   return `<div class="sec-title" role="heading" aria-level="2">내 자산</div>
     <button class="card press" id="toHold" style="text-align:left;width:100%">
       <div class="ha-top"><div><div class="sub">평가금액</div><div class="mc-big">${esc(won(c.total))}</div></div><div style="text-align:right"><div class="sub">최근 거래일</div><b class="${chgCls(c.day)}">${esc(c.day == null ? "-" : pct(c.day))}</b></div></div>
-      ${heatmap(c.rows, 400, false)}
-      <div class="sub" style="font-size:var(--t-foot);margin-top:6px">칸 = 비중 · 색 = 최근 거래일 등락 (빨강 오름 · 파랑 내림)</div>
+      ${c.rows.some(r => r.val > 0) ? heatmap(c.rows, 400, false) : ""}
+      ${c.rows.some(r => r.val > 0) ? `<div class="sub" style="font-size:var(--t-foot);margin-top:6px">칸 = 비중 · 색 = 최근 거래일 등락 (빨강 오름 · 파랑 내림)</div>` : ""}
       ${cashLine(c)}</button>`;
 }
 function holdBind(){ const b = document.getElementById("toHold"); if (b) b.onclick = () => { const empty = S.holdL === true && !S.hold.items.length && !(S.hold.cash?.krw || S.hold.cash?.usd); go("push", () => { S.dhd = empty ? "he" : "h"; S.holdFromCard = empty; }); }; }
@@ -1272,9 +1275,10 @@ function renderHold(){
   const c = holdCalc();
   const best = c.rows.filter(r => r.ret != null).sort((a, b) => b.ret - a.ret);
   $app.innerHTML = `<div class="wrap">${back}
-    <div class="title-block" data-anchor><h1 class="big">내 자산</h1><div class="sub">평가금액 · 원화 환산 (환율 ${esc(Math.round(c.fx).toLocaleString("ko-KR"))}원)</div><div class="mc-big" style="white-space:nowrap;font-size:min(var(--t-title),9.5vw);margin-top:2px">${esc(won(c.total))}</div>
+    <div class="title-block" data-anchor><h1 class="big">내 자산</h1><div class="sub">평가금액 · 원화 환산${c.rows.some(r => !r.kr) ? ` (환율 ${esc(Math.round(c.fx).toLocaleString("ko-KR"))}원${fxReal() ? "" : " 가정 · 자료 없음"})` : ""}</div><div class="mc-big" style="white-space:nowrap;font-size:min(var(--t-title),9.5vw);margin-top:2px">${esc(won(c.total))}</div>
       ${c.stock ? `<div class="sub" style="line-height:1.6">최근 거래일 <b class="${chgCls(c.day)}">${esc(c.day == null ? "-" : pct(c.day))} (${esc((c.dayAmt >= 0 ? "+" : "−") + wonShort(Math.abs(c.dayAmt)))})</b>${c.ret != null ? `<br>전체 수익 <b class="${chgCls(c.ret)}">${esc(pct(c.ret))} (${esc((c.retAmt >= 0 ? "+" : "−") + wonShort(Math.abs(c.retAmt)))})</b>` : ""}</div>` : ""}</div>
     ${S.holdErr ? `<div class="err">${esc(S.holdErr)}</div>` : ""}
+    ${c.rows.some(r => r.ret != null && (r.ret <= -90 || r.ret >= 1000)) ? `<p class="note" style="margin:0 4px var(--gap-sub)">${esc(c.rows.filter(r => r.ret != null && (r.ret <= -90 || r.ret >= 1000)).map(r => r.name).join("·"))}의 수익률이 극단이에요. 평균단가 단위(원·달러)를 확인해 주세요.</p>` : ""}
     ${c.rows.length && c.rows.every(r => r.p == null) && !S.holdQAt ? `<div class="sk" style="width:60%;height:14px;margin:0 4px var(--gap-sub)"></div>` : c.rows.length && c.rows.every(r => r.p == null) ? `<p class="note" style="margin:0 4px var(--gap-sub)">시세를 받지 못했어요 · 잠시 뒤 다시 열어 주세요. 그동안 합계는 현금만이에요.</p>`
       : c.rows.some(r => r.p == null) ? `<p class="note" style="margin:0 4px var(--gap-sub)">시세를 못 받은 종목: ${esc(c.rows.filter(r => r.p == null).map(r => r.sym).join(", "))} · 티커를 확인해 주세요 (한국은 .KS/.KQ). 합계에서 빠져요.</p>` : ""}
     ${c.stock ? `<div class="card">${heatmap(c.rows, 640, true)}<p class="note" style="margin:10px 0 0">칸 크기 = 주식 중 비중 · 색 = 최근 거래일 등락 (빨강 오름 · 파랑 내림, 진할수록 많이: 2% · 5%)</p></div>` : ""}
@@ -1439,7 +1443,7 @@ async function renderLead(){
     ${seg}
     ${d ? `<div class="ld-idx">${ixRow.map(([n, v]) => `<span>${n} <b class="${chgCls(v?.chg)}">${esc(pct(v?.chg))}</b></span>`).join("")}</div>
     ${d.sectors.length ? d.sectors.map(x => secCard(x, mk)).join("") : d.ok === false ? `<div class="empty"><b>${esc(us ? "미국" : "한국")} 자료를 받지 못했어요</b>${esc(S.lead?.errors?.[0] || "계산할 때 자료 서버가 응답하지 않았어요.")} 오른쪽 위 ↻로 다시 계산해 보세요.</div>` : `<div class="empty"><b>함께 오른 섹터가 없어요</b>거래대금을 실은 상승 종목이 한 테마에 2개 이상 있어야 주도섹터로 잡아요.</div>`}
-    <div class="sec-title" role="heading" aria-level="2">거래대금 상위 · 오른 종목</div>
+    ${d.top.length ? `<div class="sec-title" role="heading" aria-level="2">거래대금 상위 · 오른 종목</div>` : ""}
     <div class="list">${d.top.slice(0, 12).map(m => leadRow(liveM(m, mk), mk, d.sectors.some(x => lid(x.leader) === lid(m)))).join("")}</div>
     <p class="note" style="margin:18px 4px">주도주는 미리 맞히지 않고 오른 뒤에 가려내요. 대장이 왜 올랐는지는 뉴스·공시로 확인하세요. 2·3등주는 참고만.</p>`
     : `<div class="empty"><b>${S.leadErr ? "자료를 불러오지 못했어요" : "아직 계산 전이에요"}</b>${S.leadErr ? esc(S.leadErr) : "장중 1시간마다, 마감 뒤에 계산해요. 오른쪽 위 ↻로 지금 계산할 수 있어요."}</div>${S.leadErr ? `<button class="btn soft press" id="reload3">다시 불러오기</button>` : ""}`}</div>`;
