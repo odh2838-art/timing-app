@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-08-4">
+<meta name="app-version" content="2026-11-08-5">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -264,7 +264,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .hm b{font-size:var(--t-foot);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%} .hm i{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;white-space:nowrap} .hm small{opacity:1;font-size:11px;opacity:.85;font-variant-numeric:tabular-nums}
 .ha-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px} .ha-top .mc-big{font-size:var(--t-title2)}
 .ha-cash{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-top:12px;font-size:var(--t-detail)} .ha-cash>span{color:var(--fg2)} .ha-cash .mc-tag{flex:none}
-.he-row{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-items:start;padding:12px 0} .he-row .f-sym{grid-column:1/3;display:flex;gap:8px;align-items:flex-start} .he-row .f-sym .field{flex:1;min-width:0} .he-row label{font-size:var(--t-foot);color:var(--fg2)} .he-row input{width:100%;font-variant-numeric:tabular-nums} .he-row+.he-row{border-top:1px solid var(--line)} .he-unit{font-size:var(--t-foot);color:var(--fg2);margin-left:4px} .he-sug{display:flex;flex-direction:column;margin:-4px 0 6px;background:var(--fill);border-radius:12px;overflow:hidden} .he-sug button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;padding:8px 12px;text-align:left;font-size:var(--t-detail)} .he-sug button+button{border-top:.5px solid var(--line)} .he-sug span{color:var(--fg2);font-size:var(--t-foot);white-space:nowrap}
+.he-row{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-items:start;padding:12px 0} .he-row .f-sym{grid-column:1/3;display:flex;gap:8px;align-items:flex-start} .he-row .f-sym .field{flex:1;min-width:0} .he-row label{font-size:var(--t-foot);color:var(--fg2)} .he-row input{width:100%;font-variant-numeric:tabular-nums} .he-row+.he-row{border-top:1px solid var(--line)} .he-unit{font-size:var(--t-foot);color:var(--fg2);margin-left:4px} .he-sug{display:flex;flex-direction:column;margin:-4px 0 6px;background:var(--fill);border-radius:12px;overflow:hidden} .he-sug button[aria-selected="true"]{background:var(--line)} .he-sug button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;padding:8px 12px;text-align:left;font-size:var(--t-detail)} .he-sug button+button{border-top:.5px solid var(--line)} .he-sug span{color:var(--fg2);font-size:var(--t-foot);white-space:nowrap}
 .he-nm{display:block;font-size:var(--t-foot);color:var(--fg2);margin-top:3px;min-height:13px;line-height:1.35} .he-nm.dup{color:var(--wait)} input[aria-invalid="true"]{box-shadow:0 0 0 2px var(--up-t) inset!important} .he-row+.he-row{border-top:.5px solid var(--line)} .he-row .field label{font-size:var(--t-foot);margin-bottom:4px} .he-row .field input{min-height:44px;padding:8px 10px;font-size:var(--t-detail)}
 .he-del{width:44px;height:44px;margin-top:18px;flex:none;display:inline-flex;align-items:center;justify-content:center;color:var(--danger);font-size:22px;line-height:1;border-radius:22px}
 
@@ -283,6 +283,7 @@ h2.sec-title{font-size:var(--t-heading)}
 .mc-reg .mc-spark{width:100%;height:40px;display:block;margin:2px 0 6px}
 .mc-kv{display:flex;flex-wrap:wrap;justify-content:space-between;column-gap:8px;font-size:var(--t-small);padding:2px 0} .mc-kv span{color:var(--fg2);white-space:nowrap} .mc-kv b{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;word-break:keep-all;overflow-wrap:normal;margin-left:auto}
 @media (forced-colors:active){ .seg .on,.tabbar .on{outline:2px solid CanvasText;outline-offset:-2px} .card,.list,.field input{border:1px solid CanvasText} .hm>div{border:1px solid CanvasText} }
+.sheetbg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px))} .sheet{width:100%;max-width:480px;background:var(--card);border-radius:var(--r-card);padding:20px var(--pad-card) var(--pad-card)} .sheet b{font-size:var(--t-body)} .sheet .btn{width:100%}
 .mc-brief{margin-top:var(--gap-block)} .rsec{margin-top:var(--gap-sub)} .rsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0 var(--pad-card);background:var(--card);border-radius:var(--r-card)} .rsec>summary::-webkit-details-marker{display:none} .rsec>summary .rh{margin:0;font-size:var(--t-body);font-weight:600} .rsec>summary .dchev{color:var(--fg3)} .rsec[open]>summary{border-radius:var(--r-card) var(--r-card) 0 0;border-bottom:1px solid var(--line)} .rsec[open]>.card,.rsec[open]>.list{border-radius:0 0 var(--r-card) var(--r-card);margin-top:0} .rsec[open]>.sec-title,.rsec[open]>.note{margin-left:var(--pad-card);margin-right:var(--pad-card)} .rsec[open]{margin-bottom:var(--gap-block)} .mc-why{margin-top:12px} .mc-why>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:4px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-why>summary::-webkit-details-marker{display:none} .mc-why .mo-c,.mc-why[open] .mo-t{display:none} .mc-why[open] .mo-c{display:inline} .mc-more-all{margin-top:var(--gap-section)} .mc-more-all .mo-c,.mc-more-all[open] .mo-t,.mc-cash .mo-c,.mc-cash[open] .mo-t{display:none} .mc-more-all[open] .mo-c,.mc-cash[open] .mo-c{display:inline} .mc-more-all>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-more-all>summary::-webkit-details-marker,.mc-cash>summary::-webkit-details-marker{display:none} .mc-cash>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px} .mc-cash>summary b{font-weight:600} .dchev{display:inline-block;transition:transform .2s;transform:rotate(90deg)} details[open]>summary .dchev{transform:rotate(-90deg)} .gpop::before{content:"";position:absolute;left:calc(var(--ax,50%) - 7px);border:7px solid transparent} .gpop.dn::before{top:-14px;border-bottom-color:var(--card)} .gpop.up::before{bottom:-14px;border-top-color:var(--card)} .gpop{position:absolute;z-index:40;background:var(--card);color:var(--fg);border-radius:12px;padding:10px 12px;box-shadow:0 0 0 .5px var(--line),0 8px 24px rgba(0,0,0,.18);font-size:var(--t-foot);line-height:1.45;display:flex;flex-direction:column;gap:2px} .cal-today .mc-n{color:var(--blue)} .cal-today .mc-ci{color:var(--blue)} .term{padding:6px 1px;margin:-6px -1px;text-decoration:underline dotted;text-decoration-color:var(--fg3,var(--fg2));text-underline-offset:3px;cursor:help} .mc-old>summary{list-style:none;min-height:44px;display:flex;align-items:center;cursor:pointer} .mc-old>summary::-webkit-details-marker{display:none}
 .mc-bh{margin:6px 0 0;font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
 .mc-bp{margin-top:12px}
@@ -517,6 +518,17 @@ const CHEV = `<svg class="chev" width="8" height="14" viewBox="0 0 8 14" fill="n
 const BACK = `<svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L2 10l8 8"/></svg>`;
 
 /* 화면 그리기: how = push | pop | fade | none */
+/* 편집 중 뒤로: 버릴지 물어보는 작은 창 (한 번 더 뒤로 가는 대신) */
+function askLeave(){
+  document.getElementById("leave")?.remove();
+  const d = document.createElement("div"); d.id = "leave"; d.className = "sheetbg"; d.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="leave-t"><b id="leave-t">바꾼 내용을 버릴까요?</b><p class="note" style="margin:6px 0 14px">저장하지 않은 입력이 사라져요.</p><button class="btn primary press" id="leave-stay">계속 편집</button><button class="btn soft press" id="leave-go" style="margin-top:8px;color:var(--danger)">버리기</button></div>`;
+  document.body.appendChild(d);
+  const close = () => d.remove();
+  d.querySelector("#leave-stay").onclick = close; d.onclick = e => { if (e.target === d) close(); };
+  d.querySelector("#leave-go").onclick = () => { close(); S.holdLeave = true; BACK_ANIM = true; history.back(); setTimeout(() => { S.holdLeave = false; }, 1500); };
+  d.querySelector("#leave-stay").focus();
+  d.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+}
 function refocus(){ const k = S.refocus; if (!k) return; const el = $app.querySelector(k) || document.querySelector(k); if (el && el !== document.activeElement) try{ el.focus({preventScroll: true}); }catch(e){} }
 function render(how = "fade"){
   const tb = document.getElementById("tabbar");
@@ -600,7 +612,7 @@ addEventListener("popstate", () => {
   document.querySelectorAll(".ghost").forEach(g => { if (!g.getAnimations().length) g.remove(); });   // 전환이 끝났는데 남은 화면 조각 (터치가 막히는 원인)
   const how = BACK_ANIM ? "pop" : "none"; BACK_ANIM = false;   // 앱의 뒤로 버튼이면 밀리는 전환, 시스템 제스처면 그대로 (두 번 밀리지 않게)
   if (S.tab === "guide" && S.guideFrom){ const g = S.guideFrom; S.guideFrom = null; go("fade", () => { S.tab = g.tab; S.dhd = g.dhd || null; }); return; }   // 사용법을 연 곳으로
-  if (S.dhd === "he" && S.holdDirty && !S.holdLeave){ S.holdLeave = true; hPush("d"); toast("바꾼 내용이 있어요 · 한 번 더 뒤로 가면 버려요"); toast.last.dataset.leave = "1"; setTimeout(() => { S.holdLeave = false; }, 4000); return; }
+  if (S.dhd === "he" && S.holdDirty && !S.holdLeave){ hPush("d"); askLeave(); return; }
   if (S.dhd){ if (S.dhd === "he"){ S.holdDirty = false; S.holdFromCard = false; }
     const p = S.dstack.pop() || {d: S.dhd === "he" && !S.holdFromCard ? "h" : null, y: S.listY}; S.listY = p.y; go(how, () => S.dhd = p.d); return; }   // 한 단계 전 화면으로 (편집 → 상세, 종목 → 주도섹터)
   if (S.tab !== HOME) go("fade", () => { S.tab = HOME; });
@@ -708,6 +720,15 @@ function liveTick(){
 async function loadMac(){
   if (S.macP) return S.macP;   // 받는 중이면 그 약속을 같이 씀 (탭을 오가도 한 번만 요청)
   S.macP = loadMac0().finally(() => { S.macP = null; }); return S.macP;
+}
+/* 보유종목 실적 발표일: 엔진이 모아 둔 상태/실적일.json에서 내 종목만 (없으면 빈 목록) */
+async function earnCal(){
+  if (!(S.hold?.items || []).length) return [];
+  if (!S.earn || Date.now() - (S.earnAt || 0) > 3600e3){ try{ S.earn = await readJSON("상태/실적일.json", {}); }catch(e){ S.earn = S.earn || {}; } S.earnAt = Date.now(); }
+  const td = todayK(), out = [];
+  for (const it of S.hold.items){ const e = S.earn?.[it.sym]; if (!e || !e.d || e.kind === "발표됨" || e.d < td) continue;
+    out.push({d: e.d, name: `${it.name || KO_NAME[it.sym] || it.sym} 실적`, kind: "earn", note: e.kind === "추정" ? "예상일" : e.kind === "마감" ? "보고서 마감" : ""}); }
+  return out;
 }
 async function loadMac0(){
   const [m, b] = await Promise.all([readJSON(MAC_FILE, null), readJSON(BRIEF_FILE, null).catch(() => null)]);
@@ -820,6 +841,13 @@ function mcRow(x){
   const [bw, tone] = badge(x);
   return `<button class="row press mc-row" data-mk="${esc(x.key)}"><div class="main"><div class="mc-n"><span>${esc(x.name)}</span>${tag(bw, tone)}</div><div class="sub mc-why">${escN(x.why || "")}</div></div>
     <div class="mc-r"><div class="mc-v"${x.key === "foreign" && x.days != null && x.days < 20 ? ` style="color:var(--fg2)"` : ""}>${esc(fmtV(x))}</div>${spark(x.spark, {w: 64, h: 22})}</div>${CHEV}</button>`;
+}
+/* 한국 한 줄: 신호는 미국 기준이라, 한국 주식 보유자를 위해 코스피 국면과 마지막 거래일 등락만 (판정 아님) */
+function krLine(rg){
+  const k = rg?.kospi, ix = S.lead?.kr?.idx?.kospi, ks = S.lead?.kr?.date; if (!k) return "";
+  if (!S.leadL && !S.leadP){ S.leadP = loadLead().catch(() => {}).finally(() => { S.leadP = null; if (S.tab === "today" && !S.dhd && !S.dirty) render("none"); }); }
+  const chg = ix?.chg != null && ks ? ` · ${esc(mMD(ks))} <b class="${chgCls(ix.chg)}">${esc(pct(ix.chg))}</b>` : "";
+  return `<div class="sub" style="margin:var(--gap-block) var(--pad-card) 0;line-height:1.5">한국은 참고만: 코스피 <b style="color:var(--fg)">${esc(k.state)}</b> · 1년 고점 대비 ${esc(pct(k.dd))}${chg}. 위 신호는 미국 시장 기준이에요.</div>`;
 }
 function regTile(r0, flag, key){
   const q = S.live?.[key], r = q && r0 && q.p != null && (q.d || "") >= r0.date ? {...r0, close: +q.p, dd: (q.p / Math.max(r0.hi, q.p) - 1) * 100} : r0;
@@ -977,6 +1005,7 @@ async function renderMac0(){
     ${safe(holdCard)}
     ${safe(cashCard)}
     ${bc ? `<div style="margin-top:var(--gap-block)">${bc}</div>` : ""}
+    ${safe(krLine, rg)}
     <div class="sec-title" role="heading" aria-level="2">핵심 지표</div>
     <div class="list">${it.core.map(x => safe(mcRow, x)).join("")}</div>
     ${cal.length && !(bc && (S.brief?.watch || []).length) ? `<div class="sec-title" role="heading" aria-level="2">다가오는 일정<button class="text-btn press" id="tocal">전체 보기</button></div><div class="list">${cal.map(calRow).join("")}</div>` : ""}
@@ -1009,14 +1038,14 @@ function calKst(c){
 }
 function calRow(c){
   const k = calKst(c), today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date()), dd = Math.round((Date.parse(k.d) - Date.parse(today)) / 864e5);
-  return `<div class="row${dd === 0 ? " cal-today" : ""}"><span class="mc-ci" aria-hidden="true">${CAL_ICON[c.kind] || CAL_ICON.etc}</span><div class="main"><div class="mc-n">${esc(c.name)}</div><div class="sub">${esc(mDay(k.d))}${k.hm ? " " + esc(k.hm) : ""}${c.note ? " · " + esc(c.note) : ""}</div></div><span class="sub">${dd === 0 ? "오늘" : dd === 1 ? "내일" : dd > 0 ? dd + "일 뒤" : ""}</span></div>`;
+  return `<div class="row${dd === 0 ? " cal-today" : ""}"><span class="mc-ci" aria-hidden="true">${CAL_ICON[c.kind] || CAL_ICON.etc}</span><div class="main"><div class="mc-n">${esc(c.name)}</div><div class="sub">${esc(mDay(k.d))}${k.hm ? " " + esc(k.hm) : ""}${c.note ? " · " + esc(c.note) : ""}${c.far ? " · 3주 뒤" : ""}</div></div><span class="sub">${dd === 0 ? "오늘" : dd === 1 ? "내일" : dd > 0 ? dd + "일 뒤" : ""}</span></div>`;
 }
 async function renderCal(){
   const head = `<div class="navbar"><div class="side"></div><span class="mini">일정</span><div class="side r"></div></div>`;
   if (!(await ensureMac(head)) && S.tab !== "cal") return;
   if (S.tab !== "cal" || S.dhd) return;
-  const td = todayK(), cal = (S.mac?.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i && calKst(c).d >= td).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; });
-  $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">일정</h1><div class="sub">앞으로 3주 · 한국 시간 기준</div></div>
+  const td = todayK(), cal = (S.mac?.cal || []).concat(S.brief?.cal || []).concat(await earnCal()).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i && calKst(c).d >= td).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; });
+  $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">일정</h1><div class="sub">앞으로 3주 + 다음 연준 회의 · 한국 시간 기준${(S.hold?.items || []).length ? " · 내 종목 실적일 포함" : ""}</div></div>
     ${cal.length ? `<div class="list">${cal.map(calRow).join("")}</div>` : `<div class="empty"><b>3주 안에 큰 일정이 없어요</b>새 일정은 매일 계산할 때 추가돼요.</div>`}
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">연준 회의는 연준, 경제지표는 FRED 발표 일정 기준이에요.</p></div>`;
   macBind();
@@ -1263,7 +1292,7 @@ function renderHoldEdit(){
   if (S.holdL !== true){ loadHold().then(() => { if (S.dhd === "he") renderHoldEdit(); }); $app.innerHTML = `<div class="wrap">${back}</div>`; return; }
   let one = false;
   const h = S.hold, row = (x, i, a) => (one = !!a && a.length === 1, `<div class="he-row" data-i="${i}">
-      <div class="f-sym"><div class="field"><label for="s${i}">종목</label><input id="s${i}" value="${esc(x.sym || "")}" placeholder="이름이나 티커 (삼성전자 · 애플 · META)" autocapitalize="characters" autocomplete="off" spellcheck="false"><small class="he-nm" id="n${i}" aria-live="polite">${esc(x.sym ? (x.name || KO_NAME[x.sym] || "") : "")}</small></div>
+      <div class="f-sym"><div class="field"><label for="s${i}">종목</label><input id="s${i}" value="${esc(x.sym || "")}" placeholder="이름이나 티커 (삼성전자 · 애플 · META)" autocapitalize="characters" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sug"><small class="he-nm" id="n${i}" aria-live="polite">${esc(x.sym ? (x.name || KO_NAME[x.sym] || "") : "")}</small></div>
       ${one && !x.sym ? "" : `<button type="button" class="he-del press" data-del="${i}" aria-label="${esc((x.name || x.sym || "이 줄") + " 지우기")}">⊖</button>`}</div>
       <div class="field"><label for="q${i}">수량<span class="he-unit">주</span></label><input id="q${i}" value="${esc(x.qty ?? "")}" inputmode="decimal" placeholder="예: 10"></div>
       <div class="field"><label for="a${i}">평균단가<span class="he-unit">${x.sym && isKR(x.sym) ? "원" : x.sym ? "$" : "원 · $"}</span></label><input id="a${i}" value="${esc(x.avg != null ? (+x.avg).toLocaleString("en-US", {maximumFractionDigits: 4}) : "")}" inputmode="decimal" placeholder="비워도 돼요"></div></div>`);
@@ -1283,7 +1312,7 @@ function renderHoldEdit(){
   const redraw = () => { document.getElementById("rows").innerHTML = draft.map(row).join(""); bindDel(); bindName(); S.holdDirty = true; $app.querySelectorAll("#rows input").forEach(e => e.addEventListener("input", () => { S.holdDirty = true; e.removeAttribute("aria-invalid"); })); };
   /* 티커 칸: 이름·번호·티커로 찾기 (삼성전자 · 005930 · AAPL · 애플) → 고르면 티커와 이름이 채워짐 */
   const sugBox = () => document.getElementById("sug") || Object.assign(document.createElement("div"), {id: "sug", className: "he-sug", role: "listbox"});
-  const hideSug = () => document.getElementById("sug")?.remove();
+  const hideSug = () => { document.getElementById("sug")?.remove(); $app.querySelectorAll('[role=combobox]').forEach(i => { i.setAttribute("aria-expanded", "false"); i.removeAttribute("aria-activedescendant"); }); };
   const pick = async (i, it) => { const inp = document.getElementById("s" + i), n = document.getElementById("n" + i); inp.value = it.sym; inp.dataset.name = it.name; hideSug(); S.holdDirty = true;
     const dup = isDup(inp, it.sym);
     if (n){ n.textContent = it.name + (dup ? " · 이미 있어요 (저장하면 하나로 합쳐요)" : " ✓"); n.classList.toggle("dup", dup); }
@@ -1294,7 +1323,11 @@ function renderHoldEdit(){
       if (!list.length && n && inp.value.trim().length >= 2 && !SYM_RE.test(inp.value.trim().toUpperCase())) n.textContent = "찾지 못했어요 · 티커로 넣어 보세요 (예: META)";
       if (!list.length || (list.length === 1 && list[0].sym === inp.value.trim().toUpperCase() && (inp.dataset.name = list[0].name) && ((n && (dp => { n.textContent = list[0].name + (dp ? " · 이미 있어요 (저장하면 하나로 합쳐요)" : " ✓"); n.classList.toggle("dup", dp); })(isDup(inp, list[0].sym))), true))){ hideSug(); return; }
       const box = sugBox(); box.innerHTML = list.map((it, k) => `<button type="button" role="option" class="press" data-k="${k}"><b>${esc(it.name)}${isDup(inp, it.sym) ? ` <span class="sub">· 보유 중</span>` : ""}</b><span>${esc(it.sym.replace(/\.(KS|KQ)$/, ""))} · ${esc(it.m)}</span></button>`).join("");
-      inp.closest(".he-row").after(box); box.querySelectorAll("button").forEach(b => b.onclick = () => pick(i, list[+b.dataset.k])); };
+      inp.closest(".he-row").after(box); inp.setAttribute("aria-expanded", "true"); box.querySelectorAll("button").forEach((b, k) => { b.id = "sug" + k; b.onclick = () => pick(i, list[+b.dataset.k]); });
+      inp.onkeydown = e => { const bs = [...document.querySelectorAll("#sug button")]; if (!bs.length) return; let k = bs.findIndex(b => b.getAttribute("aria-selected") === "true");
+        if (e.key === "ArrowDown" || e.key === "ArrowUp"){ e.preventDefault(); k = (k + (e.key === "ArrowDown" ? 1 : -1) + bs.length) % bs.length; bs.forEach((b, j) => b.setAttribute("aria-selected", j === k)); inp.setAttribute("aria-activedescendant", bs[k].id); }
+        else if (e.key === "Enter" && k >= 0){ e.preventDefault(); bs[k].click(); }
+        else if (e.key === "Escape"){ hideSug(); } }; };
     inp.onchange = async () => { const sy = inp.value.trim().toUpperCase(), n = document.getElementById("n" + i); if (!n || inp.dataset.name) return;
       if (!SYM_RE.test(sy)){ n.textContent = ""; return; } n.textContent = KO_NAME[sy] || "확인 중…"; await pullHoldQFor([sy]); const dup = isDup(inp, sy); n.textContent = (S.holdQ[sy] ? (KO_NAME[sy] || "시세 있음 ✓") : "시세를 못 찾음") + (dup ? " · 이미 있어요 (저장하면 하나로 합쳐요)" : ""); n.classList.toggle("dup", dup); }; });
   loadDict();
@@ -1395,7 +1428,7 @@ async function renderLead(){
   const mk = S.leadMk, d = S.lead?.[mk], us = mk === "us";
   if (!S.leadLiveAt || Date.now() - S.leadLiveAt > 60000 || S.leadLive?.mk !== mk){ pullLeadLive(mk).then(ok => { if (ok && S.tab === "lead" && !S.dhd) render("none"); }); }
   leadTick();
-  const seg = `<div class="seg" role="tablist"><button role="tab" data-seg="kr" class="${mk === "kr" ? "on" : ""}" aria-selected="${mk === "kr"}">한국</button><button role="tab" data-seg="us" class="${mk === "us" ? "on" : ""}" aria-selected="${mk === "us"}">미국</button></div>`;
+  const seg = `<div class="seg" role="radiogroup" aria-label="시장"><button role="radio" data-seg="kr" class="${mk === "kr" ? "on" : ""}" aria-checked="${mk === "kr"}" tabindex="${mk === "kr" ? 0 : -1}">한국</button><button role="radio" data-seg="us" class="${mk === "us" ? "on" : ""}" aria-checked="${mk === "us"}" tabindex="${mk === "us" ? 0 : -1}">미국</button></div>`;
   const when = d ? `${mDay(d.date)} ${d.status === "OPEN" ? "장중 · " + (S.lead.at || "").slice(11, 16) + " 계산" : "마감"}` : "";
   const ix = d?.idx || {}, ixRow = us ? [["S&P 500", ix.spx], ["나스닥", ix.ndx]] : [["코스피", ix.kospi], ["코스닥", ix.kosdaq]];
   $app.innerHTML = `<div class="wrap">${head}
@@ -1488,7 +1521,7 @@ function renderRules(){
     <div class="sec-title" role="heading" aria-level="2">시장 국면</div>
     <div class="card"><p class="note" style="margin:0;color:var(--fg)">일반 기준이에요.<br><b style="color:var(--buy)">상승장</b> 지수가 200일선 위 + 200일선 오르는 중<br><b style="color:var(--wait)">조정</b> 1년 고점보다 10~20% 아래<br><b style="color:var(--sell)">하락장</b> 1년 고점보다 20% 넘게 아래, 또는 200일선 아래 + 200일선 내리는 중<br><b>방향 탐색</b> 그 밖</p></div>
     <div class="sec-title" role="heading" aria-level="2">주도섹터 · 대장주 (주도 탭)</div>
-    <div class="list">${[["오른 뒤에 가려낸다", "미리 맞히는 예측이 아니라, 거래대금과 상승률로 드러난 뒤에 고르는 판별"], ["주도섹터", "거래대금을 실은 상승 종목이 한 테마에 2개 이상 (지수보다 강한 종목만). 테마는 돈의 흐름 기준(한국: 네이버 테마, 미국: 산업 분류)"], ["대장", "거래대금 많고 상승률 높은 종목. 등락률이 비슷하면(한국 3%p, 미국 2%p 안) 거래대금이 큰 쪽"], ["거래대금 기준", "섹터 안 종목은 한국 100억·미국 $100M 이상이면 세요. '거래대금 상위'는 한국 상위 40(300억 이상)·미국 상위 60($300M 이상)에 든 종목 수예요"], ["2·3등주", "참고만. 대장이 오를 때 제일 잘 오르고 조정 때 2등주가 더 빠진다"], ["왜 올랐는지", "앱이 뉴스를 판단하지 않아요. 대장이 오르는 걸 보고 뉴스·공시로 이유를 확인하세요"], ["계산 시각", "장중 1시간마다 + 마감 뒤. 시세는 1분마다 실시간"]]
+    <div class="list">${[["오른 뒤에 가려낸다", "미리 맞히는 예측이 아니라, 거래대금과 상승률로 드러난 뒤에 고르는 판별"], ["주도섹터", "거래대금을 실은 상승 종목이 한 테마에 2개 이상 (지수보다 강한 종목만). 테마는 돈의 흐름 기준(한국: 네이버 테마, 미국: 산업 분류)"], ["대장", "거래대금 많고 상승률 높은 종목. 등락률이 비슷하면(한국 3%p, 미국 2%p 안) 거래대금이 큰 쪽"], ["거래대금 기준", "섹터 안 종목은 하루 거래대금 한국 300억·미국 $300M 이상만 세요 (참고 트레이더: 100~500억짜리는 안 함). '거래대금 상위'는 한국 상위 40·미국 상위 60에 든 종목 수예요"], ["2·3등주", "참고만. 대장이 오를 때 제일 잘 오르고 조정 때 2등주가 더 빠진다"], ["왜 올랐는지", "앱이 뉴스를 판단하지 않아요. 대장이 오르는 걸 보고 뉴스·공시로 이유를 확인하세요"], ["계산 시각", "장중 1시간마다 + 마감 뒤. 시세는 1분마다 실시간"]]
       .map(([n, d]) => `<div class="row"><div class="main"><div class="mc-n">${esc(n)}</div><div class="sub">${esc(d)}</div></div></div>`).join("")}</div>
     <div class="sec-title" role="heading" aria-level="2">용어</div>
     <div class="list" id="gloss">${GLOSS.filter(([k]) => !["하이일드", "펀드매니저 현금", "이격"].includes(k))
@@ -1515,8 +1548,8 @@ function renderSettings(){
     <div class="title-block" data-anchor><h1 class="big">설정</h1></div>
     <div class="sec-title" role="heading" aria-level="2">화면</div>
     <div class="list">
-      <div class="row"><div class="main"><b>모드</b></div><div class="seg" role="tablist" id="thm" style="margin:0;width:200px">${[["auto", "시스템"], ["light", "밝게"], ["dark", "어둡게"]].map(([k, n]) => `<button role="tab" data-th="${k}" class="${LS.get("theme", "auto") === k ? "on" : ""}" aria-selected="${LS.get("theme", "auto") === k}">${n}</button>`).join("")}</div></div>
-      <div class="row"><div class="main"><b>주도 탭 처음 화면</b></div><div class="seg" role="tablist" id="lmk" style="margin:0;width:140px">${[["kr", "한국"], ["us", "미국"]].map(([k, n]) => `<button role="tab" data-lm="${k}" class="${S.leadMk === k ? "on" : ""}" aria-selected="${S.leadMk === k}">${n}</button>`).join("")}</div></div>
+      <div class="row"><div class="main"><b>모드</b></div><div class="seg" role="radiogroup" aria-label="모드" id="thm" style="margin:0;width:200px">${[["auto", "시스템"], ["light", "밝게"], ["dark", "어둡게"]].map(([k, n]) => `<button role="radio" data-th="${k}" class="${LS.get("theme", "auto") === k ? "on" : ""}" aria-checked="${LS.get("theme", "auto") === k}" tabindex="${LS.get("theme", "auto") === k ? 0 : -1}">${n}</button>`).join("")}</div></div>
+      <div class="row"><div class="main"><b>주도 탭 처음 화면</b></div><div class="seg" role="radiogroup" aria-label="주도 탭 처음 화면" id="lmk" style="margin:0;width:140px">${[["kr", "한국"], ["us", "미국"]].map(([k, n]) => `<button role="radio" data-lm="${k}" class="${S.leadMk === k ? "on" : ""}" aria-checked="${S.leadMk === k}" tabindex="${S.leadMk === k ? 0 : -1}">${n}</button>`).join("")}</div></div>
     </div>
     <div class="sec-title" role="heading" aria-level="2">내 자산</div>
     <div class="list">
@@ -1571,6 +1604,7 @@ document.addEventListener("click", e => { if (!e.target.closest?.(".term[data-g]
 document.addEventListener("click", e => { const t = e.target.closest?.(".term[data-g]"); if (t){ e.preventDefault(); e.stopPropagation(); showTerm(t); } }, true);
 document.addEventListener("keydown", e => { const t = e.target.closest?.(".term[data-g]"); if (t && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); e.stopPropagation(); showTerm(t); }
   if (e.key === "Escape"){ document.querySelectorAll(".gpop").forEach(x => x.remove()); document.getElementById("sug")?.remove(); } }, true);
+document.addEventListener("keydown", e => { const g = e.target.closest?.(".seg[role=radiogroup]"); if (!g || !(e.key === "ArrowLeft" || e.key === "ArrowRight")) return; const bs = [...g.querySelectorAll("button")], k = bs.indexOf(e.target); if (k < 0) return; e.preventDefault(); const n = bs[(k + (e.key === "ArrowRight" ? 1 : -1) + bs.length) % bs.length]; n.focus(); n.click(); });
 document.addEventListener("focusin", e => { if (!e.target.closest?.(".term[data-g], .gpop")) document.querySelectorAll(".gpop").forEach(x => x.remove()); });
 
 /* 새 버전이 올라오면 다시 불러오기 (홈 화면에 추가한 앱은 예전 화면을 오래 들고 있음) */
@@ -1585,6 +1619,8 @@ async function checkVersion(){
   }catch(e){}
 }
 addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(); });
+/* 오프라인에도 앱이 열리게: 서비스워커가 화면 파일(index.html·아이콘)만 저장. 자료(GitHub·시세)는 늘 네트워크 */
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 setTimeout(checkVersion, 1500);
 try{ LS.set("swipeHint", (LS.get("swipeHint", 0) || 0) + 1); }catch(e){}
 function toast(msg, spin){
