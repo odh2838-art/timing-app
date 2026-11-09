@@ -393,7 +393,8 @@ async function gh(path, opt={}){
   if (res.status === 401){ const e = new Error("토큰이 맞지 않거나 만료됐어요"); e.auth = true; throw e; }
   if (res.status === 403) throw new Error("토큰 권한이 부족해요. GitHub 토큰 설정에서 Contents와 Actions를 Read and write로 바꿔 주세요");
   if (res.status === 404) { const e = new Error("파일을 찾지 못했어요"); e.nf = true; throw e; }
-  if (res.status === 409 || res.status === 422) throw new Error("다른 곳에서 먼저 바뀌었어요 · 다시 시도해 주세요");
+  if (res.status === 409) throw new Error("다른 곳에서 먼저 바뀌었어요 · 다시 시도해 주세요");
+  if (res.status === 422){ let m = ""; try{ m = (await res.json()).message || ""; }catch(_){} if (/sha/i.test(m)) throw new Error("다른 곳에서 먼저 바뀌었어요 · 다시 시도해 주세요"); throw new Error("GitHub가 요청을 거절했어요 · 잠시 뒤 다시 해 주세요"); }
   if (!res.ok) throw new Error("GitHub가 응답하지 않아요. 잠시 뒤 다시 시도해 주세요");
   if (res.status === 204) return null;
   const body = await (opt.raw ? (opt.blob ? res.blob() : res.text()) : res.json());
@@ -489,7 +490,7 @@ async function refresh(){   // 화면의 자료는 그대로 두고 뒤에서 �
   if (S.dhd !== "he" && !S.saving){   // 편집 중이 아니면 보유·주도도 다시 읽음 (다른 기기에서 바꾼 것 · 장중 재계산)
     const before = JSON.stringify(S.hold || null);
     try{ if (S.holdL === true || S.holdL === "err"){ await loadHold(); if (S.holdL === true && before !== "null" && JSON.stringify(S.hold) !== before) toast("다른 기기에서 바뀐 보유종목을 불러왔어요"); S.holdQAt = 0; } }catch(e){}
-    S.leadL = false; S.earnAt = 0;
+    try{ if (S.leadL && !S.leadErr) await loadLead(); }catch(e){} S.earnAt = 0;
   }
   if (!S.dirty && S.dhd !== "he") render("none");   // 편집 중엔 다시 그리지 않음 (입력이 날아감)
 }
@@ -549,7 +550,7 @@ function render(how = "fade"){
   tb.classList.toggle("away", !!S.dhd);
   document.querySelectorAll(".tabbar button").forEach(b => { b.classList.toggle("on", b.dataset.tab === S.tab); b.toggleAttribute("aria-current", b.dataset.tab === S.tab); if (b.dataset.tab === S.tab) b.setAttribute("aria-current", "page"); });
   tb.inert = !!S.dhd;   // 화면 밖으로 내려간 탭바에 포커스가 가지 않게
-  if (how !== "none") LS.set("view", { tab: S.tab, dhd: S.dhd, t: Date.now() });   // 다시 열거나 새 버전으로 바뀌어도 보던 곳으로 (1분 갱신 때는 안 씀)
+  const vk = S.tab + "|" + (S.dhd || ""); if (vk !== render.vk){ render.vk = vk; LS.set("view", { tab: S.tab, dhd: S.dhd, t: Date.now() }); }   // 다시 열거나 새 버전으로 바뀌어도 보던 곳으로 (1분 갱신 때는 안 씀)
   const keep = how === "none" ? scrollY : 0;
   const ae = document.activeElement, fkey = ae && ae !== document.body ? (ae.id ? "#" + CSS.escape(ae.id) : ae.dataset.mk ? `[data-mk="${ae.dataset.mk}"]` : ae.dataset.tab ? `[data-tab="${ae.dataset.tab}"]` : ae.dataset.ls ? `[data-ls="${ae.dataset.ls}"]` : null) : null;
   const slide = (how === "push" || how === "pop") && !REDUCED;
@@ -625,7 +626,7 @@ addEventListener("popstate", () => {
   document.querySelectorAll(".ghost").forEach(g => { if (!g.getAnimations().length) g.remove(); });   // 전환이 끝났는데 남은 화면 조각 (터치가 막히는 원인)
   const how = BACK_ANIM ? "pop" : "none"; BACK_ANIM = false;   // 앱의 뒤로 버튼이면 밀리는 전환, 시스템 제스처면 그대로 (두 번 밀리지 않게)
   if (S.tab === "guide" && S.guideFrom){ const g = S.guideFrom; S.guideFrom = null; go("fade", () => { S.tab = g.tab; S.dhd = g.dhd || null; }); return; }   // 사용법을 연 곳으로
-  if (S.dhd === "he" && S.saving){ hPush("d"); toast("저장 중이에요 · 끝날 때까지 잠깐만요", true); setTimeout(() => { if (!S.saving) document.querySelector(".toast")?.remove(); }, 1500); return; }
+  if (S.dhd === "he" && S.saving){ hPush("d"); toast("저장 중이에요 · 끝날 때까지 잠깐만요", true); const mine = toast.last; setTimeout(() => { if (!S.saving && toast.last === mine) mine.remove(); }, 1500); return; }
   if (S.dhd === "he" && S.holdDirty && !S.holdLeave){ hPush("d"); askLeave(); return; }
   if (S.dhd){ if (S.dhd === "he"){ S.holdDirty = false; S.holdFromCard = false; }
     const p = S.dstack.pop() || {d: S.dhd === "he" && !S.holdFromCard ? "h" : null, y: S.listY}; S.listY = p.y; go(how, () => S.dhd = p.d); return; }   // 한 단계 전 화면으로 (편집 → 상세, 종목 → 주도섹터)
@@ -693,10 +694,10 @@ S.live = null; S.liveAt = null; S.liveQ = null;
 const LIVE_RNG = {us10y: [0, 30], wti: [-50, 500], vix: [3, 200], krw: [300, 5000], spx: [100, 1e6], kospi: [100, 1e6]};
 async function pullLive(){
   try{
-    const hs = S.holdL === true ? (S.hold?.items || []).map(x => x.sym).filter(s => SYM_RE.test(s)).slice(0, 34) : [];   // 보유종목 시세도 같은 요청에 (카드가 하루 종일 옛 값이던 것)
+    const hs = S.holdL === true ? (S.hold?.items || []).map(x => x.sym).filter(s => SYM_RE.test(s)).slice(0, 60) : [];   // 보유종목 시세도 같은 요청에 (카드가 하루 종일 옛 값이던 것)
     const j = await relayGet([...Object.keys(LIVE), ...hs]); S.liveAt = Date.now(); if (!j) return false;
     const out = {};
-    for (const s0 of hs){ const q = j[s0]; if (q && typeof q.p === "number" && Number.isFinite(q.p)) S.holdQ[s0] = q; } if (hs.length) S.holdQAt = Date.now();
+    let hn = 0; for (const s0 of hs){ const q = j[s0]; if (q && typeof q.p === "number" && Number.isFinite(q.p)){ S.holdQ[s0] = q; hn++; } } if (hn) S.holdQAt = Date.now();
     for (const [sym, k] of Object.entries(LIVE)){ const q = j && j[sym], [lo, hi] = LIVE_RNG[k] || [0, 1e7], ok = v => typeof v === "number" && Number.isFinite(v) && v > lo && v < hi;   // 중계 값도 지표마다 말이 되는 범위만
       if (q && ok(q.p)) out[k] = {p: q.p, prev: ok(q.prev) ? q.prev : null, d: typeof q.d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(q.d) ? q.d : "", t: typeof q.t === "string" && Date.parse(q.t) ? q.t : ""}; }
     if (!Object.keys(out).length) return false;
@@ -1170,7 +1171,7 @@ async function saveHold(h){
   if (!S.holdSha){ try{ const j = await gh("/contents/" + enc(HOLD_FILE) + "?ref=main"); S.holdSha = j.sha; }catch(e){ if (!e.nf) throw e; } }   // 처음 404를 봤어도 그새 다른 기기가 만들었을 수 있음
   const body = JSON.stringify({...h, updated: new Date().toISOString()}, null, 1);
   const r = await gh("/contents/" + enc(HOLD_FILE), {method: "PUT", body: JSON.stringify({message: "보유종목 수정 (앱)", content: btoa(unescape(encodeURIComponent(body))), sha: S.holdSha || undefined, branch: "main"})});
-  S.holdSha = r.content.sha; S.hold = JSON.parse(body);
+  S.holdSha = r.content.sha; S.hold = cleanHold(JSON.parse(body)); S.holdNewer = false;
 }
 /* 중계는 한 번에 40종목까지 → 40개씩 나눠 받아 합침 */
 async function relayGet(syms){
@@ -1429,7 +1430,7 @@ async function pullLeadLive(mk){
     for (const [k, q] of Object.entries(j)) if (q && q.p != null) out[k.split(".")[0]] = q;
     if (!Object.keys(out).length) return false;
     S.leadLive = {mk, q: out, by: {...(S.leadLive?.by || {}), [mk]: {q: out, at: Date.now()}}}; S.leadLiveAt = Date.now(); return true;
-  }catch(e){ S.leadLiveAt = Date.now(); return false; }
+  }catch(e){ S.leadLiveAt = Date.now(); (S.leadFail ||= {})[mk] = Date.now(); return false; }
 }
 const liveM = (m0, mk) => { const m = mk === "us" ? {...m0, name: usName(m0)} : m0; const q = S.leadLive?.mk === mk ? S.leadLive.q[lid(m)] : null; if (!q || !q.prev && mk !== "kr") return m;
   if (q.d && S.lead?.[mk]?.date && q.d !== S.lead[mk].date) return m;   // 판정한 날과 다른 날 시세면 판정 값 유지
@@ -1464,7 +1465,7 @@ async function renderLead(){
   if (S.tab !== "lead" || S.dhd) return;
   const mk = S.leadMk, d = S.lead?.[mk], us = mk === "us";
   const lb = S.leadLive?.by?.[mk]; if (lb && S.leadLive.mk !== mk){ S.leadLive = {...S.leadLive, mk, q: lb.q}; }   // 다른 시장으로 바꿀 때 받아 둔 게 있으면 그걸로
-  if (!lb || Date.now() - lb.at > 60000){ pullLeadLive(mk).then(ok => { if (ok && S.tab === "lead" && !S.dhd) render("none"); }); }
+  if (!lb || Date.now() - Math.max(lb.at, S.leadFail?.[mk] || 0) > 60000){ pullLeadLive(mk).then(ok => { if (ok && S.tab === "lead" && !S.dhd) render("none"); }); }
   leadTick();
   const seg = `<div class="seg" role="radiogroup" aria-label="시장"><button role="radio" data-seg="kr" class="${mk === "kr" ? "on" : ""}" aria-checked="${mk === "kr"}" tabindex="${mk === "kr" ? 0 : -1}">한국</button><button role="radio" data-seg="us" class="${mk === "us" ? "on" : ""}" aria-checked="${mk === "us"}" tabindex="${mk === "us" ? 0 : -1}">미국</button></div>`;
   const when = d ? `${mDay(d.date)} ${d.status === "OPEN" ? "장중 · 판정 " + (S.lead.at || "").slice(11, 16) : "마감"}` : "";
@@ -1620,8 +1621,10 @@ function renderSettings(){
   /* 지우기는 두 번 확인: 한 번 누르면 문구가 바뀌고, 4초 안에 다시 누르면 지움 */
   const ch = document.getElementById("clrHold");
   ch.onclick = async () => { if (!ch.dataset.arm){ ch.dataset.arm = "1"; ch.firstElementChild.textContent = "정말 지울까요? 한 번 더 누르면 지워요"; setTimeout(() => { if (ch.isConnected){ delete ch.dataset.arm; ch.firstElementChild.textContent = "보유종목 모두 지우기"; } }, 4000); return; }
+    S.saving = true;
     try{ await loadHold(); await saveHold({v: 1, items: [], cash: {krw: 0, usd: 0}}); S.holdQAt = 0; toast("보유종목을 지웠어요"); render("none"); }
-    catch(e){ delete ch.dataset.arm; if (ch.isConnected) ch.firstElementChild.textContent = "보유종목 모두 지우기"; toast(e.message); } };
+    catch(e){ delete ch.dataset.arm; if (ch.isConnected) ch.firstElementChild.textContent = "보유종목 모두 지우기"; toast(e.message); }
+    finally{ S.saving = false; } };
   bindNavbar();
 }
 
@@ -1650,7 +1653,8 @@ document.addEventListener("focusin", e => { if (!e.target.closest?.(".term[data-
 async function checkVersion(){
   try{
     const mine = document.querySelector('meta[name="app-version"]')?.content;
-    const v = (await (await fetch(location.pathname.replace(/[^/]*$/, "") + "version.txt?v=" + Date.now(), {cache:"no-store"})).text()).trim();   // 수십 바이트짜리 버전 파일만 (index.html 전체를 다시 받지 않음)
+    const vr = await fetch(location.pathname.replace(/[^/]*$/, "") + "version.txt?v=" + Date.now(), {cache:"no-store"}); if (!vr.ok) return;
+    const v = (await vr.text()).trim(); if (!/^[\w.-]{1,40}$/.test(v)) return;   // 404 페이지나 오프라인 대체 HTML을 버전으로 착각하지 않게   // 수십 바이트짜리 버전 파일만 (index.html 전체를 다시 받지 않음)
     const busy = S.dirty || S.busy || S.dhd === "he";   // 입력 중·계산 기다리는 중엔 미룸 (다음에 돌아올 때 바꿈)
     let tried = ""; try{ tried = sessionStorage.getItem("verTry") || ""; }catch(e){}
     if (v && mine && v !== mine && !busy && tried !== v){ try{ sessionStorage.setItem("verTry", v); }catch(e){} toast("새 버전으로 바꾸는 중"); setTimeout(() => location.replace(location.pathname + "?v=" + encodeURIComponent(v)), 600); }   // 같은 버전으로 한 번만 (캐시가 늦어도 계속 새로고침하지 않게)
