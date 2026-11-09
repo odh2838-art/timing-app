@@ -337,7 +337,7 @@ h1[tabindex="-1"]:focus,.title-block[tabindex="-1"]:focus{outline:none} h1[tabin
 .mc-tag.t-buy{background:var(--buy-bg);color:var(--buy)} .mc-tag.t-sell{background:var(--sell-bg);color:var(--sell)}
 .mc-tag.t-info{background:var(--info-bg);color:var(--info)} .mc-tag.t-wait{background:var(--wait-bg);color:var(--wait)}
 .mc-tag.t-none{background:var(--fill);color:var(--fg2)}
-.mc-big{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow-wrap:normal}
+.mc-big{font-size:var(--t-title);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow-wrap:normal;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 /* 차트: 데이터 선만 진하게, 눈금·기준선은 한발 물러남 (선 2px · 눈금 1px 실선 · 기준선만 점선) */
 .mc-ch{margin-top:4px} .mc-ch-read{display:flex;align-items:center;gap:6px;min-height:26px;font-size:var(--t-detail);font-variant-numeric:tabular-nums} .mc-ch-read b{font-weight:600}
 .mc-ch-plot{min-width:0} .mc-ch svg{display:block;touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:crosshair}
@@ -407,11 +407,12 @@ const ARR_K = new Set(["core", "heat", "kr_items", "cal", "errors", "points", "l
 const OBJ_ITEMS = new Set(["core", "heat", "cal", "points", "sources", "sectors", "members", "top"]);
 const STR_K = new Set(["d", "date", "at", "asof", "name", "why", "rule", "time", "kind", "note", "key", "status", "unit", "headline", "k", "v", "t", "url", "code", "sym", "mkt", "ind", "state", "tone", "next", "trend", "chg_unit", "bb_d", "fms_d", "bb_note", "fms_note", "bb_src", "fms_src", "src", "nominal"]);
 const NUM_K = new Set(["value", "chg", "tv", "n", "n_up", "in_top", "rs", "p", "bb", "fms_cash", "lo", "hi", "us2", "gap", "close", "ma200", "dd", "b50", "s5", "s20", "days", "chg20", "mcap", "prev"]);
+const DATE_K = new Set(["d", "date", "asof", "at", "bb_d", "fms_d", "next"]);
 function normData(v, k, depth = 0){
   if (depth > 8) return null;
   if (Array.isArray(v)){
     let a = v.slice(0, 4000).map(x => normData(x, null, depth + 1));
-    if (k === "spark" || k === "spark2" || k === "mom") a = a.filter(p => Array.isArray(p) && typeof p[0] === "string" && typeof p[1] === "number" && Math.abs(p[1]) < 1e12).slice(-2500);
+    if (k === "spark" || k === "spark2" || k === "mom") a = a.filter(p => Array.isArray(p) && typeof p[0] === "string" && /^\d{4}-\d{2}-\d{2}/.test(p[0]) && typeof p[1] === "number" && Math.abs(p[1]) < 1e12).slice(-2500);
     if (OBJ_ITEMS.has(k)) a = a.filter(x => x && typeof x === "object" && !Array.isArray(x));
     if (k === "also" || k === "errors" || k === "watch" || k === "lines") a = a.filter(x => typeof x === "string" || typeof x === "number").map(String);
     return a;
@@ -423,6 +424,8 @@ function normData(v, k, depth = 0){
       if (ARR_K.has(kk) && !Array.isArray(y) && kk !== "kr") y = [];
       if (STR_K.has(kk) && y != null && typeof y !== "string") y = typeof y === "number" ? String(y) : "";
       if (NUM_K.has(kk) && y != null && typeof y !== "number") y = typeof y === "string" && y.trim() && Number.isFinite(+y) ? +y : null;
+      if (NUM_K.has(kk) && typeof y === "number" && Math.abs(y) > 1e12) y = null;   // 자릿수 400개짜리 값이 카드를 뚫고 나가지 않게
+      if (DATE_K.has(kk) && y != null && !/^\d{4}-\d{2}-\d{2}/.test(String(y))) y = null;   // 날짜는 YYYY-MM-DD로 시작할 때만
       o[kk] = y; }
     return o;
   }
@@ -446,7 +449,7 @@ function normLead(l){ if (!l || typeof l !== "object" || Array.isArray(l)) retur
   return o; }
 /* 링크는 https만 (javascript:·data: 같은 주소는 링크로 안 만듦) */
 const safeUrl = u => { try{ const x = new URL(String(u || "")); return x.protocol === "https:" ? x.href : ""; }catch(e){ return ""; } };
-async function readJSON(path, d){ try{ return JSON.parse(await gh("/contents/" + enc(path) + "?ref=main", {raw:true})); }catch(e){ if (e.nf) return d; throw e; } }
+async function readJSON(path, d){ try{ return JSON.parse(await gh("/contents/" + enc(path) + "?ref=main", {raw:true})); }catch(e){ if (e.nf) return d; if (e instanceof SyntaxError) throw new Error("자료 파일이 손상됐어요 · 오른쪽 위 ↻로 다시 계산해 주세요"); throw e; } }
 
 
 /* ───────── 점검 실행 ───────── */
@@ -542,7 +545,7 @@ function askLeave(){
   d.querySelector("#leave-stay").focus();
   d.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
 }
-function refocus(){ const k = S.refocus; if (!k) return; const el = $app.querySelector(k) || document.querySelector(k); if (el && el !== document.activeElement) try{ el.focus({preventScroll: true}); }catch(e){} }
+function refocus(){ const k = S.refocus; if (!k) return; let el = null; try{ el = $app.querySelector(k) || document.querySelector(k); }catch(e){ return; } if (el && el !== document.activeElement) try{ el.focus({preventScroll: true}); }catch(e){} }
 function render(how = "fade"){
   document.getElementById("leave")?.remove();
   if (S.dhd !== "h") clearInterval(holdT); if (S.tab !== "lead" || S.dhd) clearInterval(leadT); if (S.tab !== "today" || S.dhd) clearInterval(liveT);   // 떠난 화면의 1분 타이머는 끔
@@ -553,7 +556,7 @@ function render(how = "fade"){
   tb.inert = !!S.dhd;   // 화면 밖으로 내려간 탭바에 포커스가 가지 않게
   const vk = S.tab + "|" + (S.dhd || ""); if (vk !== render.vk){ render.vk = vk; LS.set("view", { tab: S.tab, dhd: S.dhd, t: Date.now() }); }   // 다시 열거나 새 버전으로 바뀌어도 보던 곳으로 (1분 갱신 때는 안 씀)
   const keep = how === "none" ? scrollY : 0;
-  const ae = document.activeElement, fkey = ae && ae !== document.body ? (ae.id ? "#" + CSS.escape(ae.id) : ae.dataset.mk ? `[data-mk="${ae.dataset.mk}"]` : ae.dataset.tab ? `[data-tab="${ae.dataset.tab}"]` : ae.dataset.ls ? `[data-ls="${ae.dataset.ls}"]` : null) : null;
+  const ae = document.activeElement, fkey = ae && ae !== document.body ? (ae.id ? "#" + CSS.escape(ae.id) : ae.dataset.mk ? `[data-mk="${CSS.escape(ae.dataset.mk)}"]` : ae.dataset.tab ? `[data-tab="${CSS.escape(ae.dataset.tab)}"]` : ae.dataset.ls ? `[data-ls="${CSS.escape(ae.dataset.ls)}"]` : null) : null;
   const slide = (how === "push" || how === "pop") && !REDUCED;
   const ghost = slide ? snapshot() : null;
   try{
@@ -568,7 +571,7 @@ function render(how = "fade"){
     else if (S.tab === "settings") renderSettings();
     else { S.tab = "today"; S.dhd = null; S.dstack = []; renderMac(); }
   }catch(e){   // 자료 한 곳이 이상해도 앱 전체가 멈추지 않게: 전환 화면을 걷고 홈으로
-    console.error(e); ghost?.remove(); S.dhd = null; S.dstack = []; S.tab = HOME; try{ renderMac(); }catch(_){} toast("이 화면을 열지 못해 오늘 화면으로 돌아왔어요");
+    console.error(e); ghost?.remove(); S.dhd = null; S.dstack = []; S.tab = HOME; try{ histTo(0, "t"); }catch(_){} try{ renderMac(); }catch(_){} toast("이 화면을 열지 못해 오늘 화면으로 돌아왔어요");
     bindNavbar(); return;
   }
   $app.classList.remove("v-push","v-pop","v-fade");
@@ -685,9 +688,10 @@ const MAC_FILE = "상태/매크로.json", BRIEF_FILE = "상태/브리핑.json", 
 S.mac = null; S.brief = null; S.macL = false; S.macErr = null;
 const ST_TONE = {"우호": "buy", "기회": "info", "경계": "wait", "중립": "none", "확인": "none", "오래됨": "none", "자료 없음": "none"};
 const tag = (t, tone) => `<span class="mc-tag t-${tone || "none"}">${esc(t)}</span>`;
-const mMD = d => d ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : "";
+const okD = d => typeof d === "string" && /^\d{4}-\d{2}-\d{2}/.test(d);
+const mMD = d => okD(d) ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : "";
 const WD = ["일", "월", "화", "수", "목", "금", "토"];
-const mDay = d => d ? `${mMD(d)} (${WD[new Date(String(d).slice(0, 10) + "T12:00:00Z").getUTCDay()]})` : "";
+const mDay = d => okD(d) ? `${mMD(d)} (${WD[new Date(String(d).slice(0, 10) + "T12:00:00Z").getUTCDay()]})` : "";
 /* 실시간 시세 (내 Cloudflare 중계 relay/worker.js): 숫자만 지금 값으로. 판정·신호는 계산 시점 기준 그대로 */
 const LIVE = { "^TNX": "us10y", "CL=F": "wti", "^VIX": "vix", "KRW=X": "krw", "^GSPC": "spx", "^KS11": "kospi" };
 const RELAY = () => { const u = String(LS.get("burl", "") || ""); return /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev$/.test(u) || /^https:\/\/relay\.test$/.test(u) ? u : "https://rooru-quote.odh2838.workers.dev"; };
@@ -755,7 +759,7 @@ async function earnCal(){
   if (!(S.hold?.items || []).length) return [];
   if (!S.earn || Date.now() - (S.earnAt || 0) > 3600e3){ try{ S.earn = await readJSON("상태/실적일.json", {}); }catch(e){ S.earn = S.earn || {}; } S.earnAt = Date.now(); }
   const td = todayK(), out = [];
-  for (const it of S.hold.items){ const e = S.earn?.[it.sym]; if (!e || !e.d || e.kind === "발표됨" || e.d < td) continue;
+  for (const it of S.hold.items){ const e = S.earn?.[it.sym]; if (!e || typeof e !== "object" || !/^\d{4}-\d{2}-\d{2}$/.test(String(e.d || "")) || e.kind === "발표됨" || e.d < td) continue;
     out.push({d: e.d, name: `${it.name || KO_NAME[it.sym] || it.sym} 실적`, kind: "earn", note: e.kind === "추정" ? "예상일" : e.kind === "마감" ? "보고서 마감" : ""}); }
   return out;
 }
@@ -861,7 +865,7 @@ function drawChart(id){
   reset();
 }
 const fmtV = x => fmtV0(x).replace(/^-|(?<=[\s$~])-/g, "−");
-const fmtV0 = x => x.value == null ? "-" : x.key === "fed" && x.lo != null ? `${(+x.lo).toFixed(2)}~${(+x.hi).toFixed(2)}%` : x.unit === "$" ? "$" + (+x.value).toLocaleString("en-US", {maximumFractionDigits: 1})
+const fmtV0 = x => x.value == null ? "-" : x.key === "fed" && x.lo != null && x.hi != null ? `${(+x.lo).toFixed(2)}~${(+x.hi).toFixed(2)}%` : x.unit === "$" ? "$" + (+x.value).toLocaleString("en-US", {maximumFractionDigits: 1})
   : x.unit === "원" ? (+x.value).toLocaleString("ko-KR", {maximumFractionDigits: 1}) + "원" : x.unit === "억원" ? ((x.value > 0 ? "+" : x.value < 0 ? "−" : "") + (Math.abs(+x.value) >= 10000 ? (Math.abs(+x.value) / 10000).toFixed(1) + "조" : Math.abs(+x.value).toLocaleString("ko-KR") + "억"))
   : (+x.value).toLocaleString("ko-KR", {maximumFractionDigits: 2}) + (x.unit && !x.unit.startsWith("%") ? (x.unit === "bp" ? "bp" : "") : x.unit ? "%" : "");
 const TONE_COL = {buy: "var(--buy)", sell: "var(--sell)", info: "var(--buy)", wait: "var(--wait)", none: "var(--fg2)"};
@@ -880,7 +884,7 @@ function krLine(rg){
 }
 function regTile(r0, flag, key){
   const q = S.live?.[key], r = q && r0 && q.p != null && (q.d || "") >= r0.date ? {...r0, close: +q.p, dd: (q.p / Math.max(r0.hi, q.p) - 1) * 100} : r0;
-  if (!r) return `<div class="card mc-reg"><div class="sub">${flag}</div><b>자료 없음</b></div>`;
+  if (!r || !Number.isFinite(r.close) || !r.state) return `<div class="card mc-reg"><div class="sub">${flag}</div><b>자료 없음</b></div>`;
   const kv = (k, v) => `<div class="mc-kv"><span>${k}</span><b>${v}</b></div>`;
   return `<div class="card mc-reg"><div class="sub mc-reg-n">${flag} ${esc(r.name)}</div>
     <div class="mc-reg-s">${esc(r.state)}</div>
@@ -986,7 +990,7 @@ function briefBody(b, pts, wk){
     ${b.headline ? `<p class="mc-bh">${esc(b.headline)}</p>` : ""}
     <div class="mc-bp">${pts.map(p => `<div class="mc-bpr"><span class="mc-dot" style="background:${BR_TONE[p.tone] || BR_TONE.info}"></span><span class="mc-bk">${esc(p.k)}</span><span class="sub mc-bv">${esc(p.v || "")}</span></div>`).join("")}</div>
     ${wk.length ? `<div class="mc-wk"><div class="sub" style="margin-bottom:4px">다가오는 일정</div>${wk.map(([d, t]) => `<div class="mc-wkr"><b>${esc(d)}</b><span>${esc(t)}</span></div>`).join("")}</div>` : ""}
-    ${(b.sources || []).length ? `<details class="mc-src"><summary class="sub press">출처 ${b.sources.length}개 보기 <span class="dchev" aria-hidden="true">›</span></summary>${b.sources.filter(x => safeUrl(x.url)).map(x => `<a class="mc-link" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener">${esc(x.t)}</a>`).join("")}</details>` : ""}`;
+    ${(() => { const srcs = (b.sources || []).filter(x => x && safeUrl(x.url)); return srcs.length ? `<details class="mc-src"><summary class="sub press">출처 ${srcs.length}개 보기 <span class="dchev" aria-hidden="true">›</span></summary>${srcs.map(x => `<a class="mc-link" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener">${esc(x.t)}</a>`).join("")}</details>` : ""; })()}`;
 }
 const safe = (f, ...a) => { try{ return f(...a); }catch(e){ console.error(e); return ""; } };
 /* 비동기 화면이 실패하면 빈 화면 대신 안내와 다시 불러오기 */
@@ -1109,7 +1113,7 @@ function renderMacDetail(key){
   const it = macItems(), all = [...it.core, ...it.heat, ...it.kr], x = all.find(a => a.key === key);
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="오늘로 뒤로 가기">${BACK}<span>오늘</span></button></div><span class="mini">${esc(x?.name || "")}</span><div class="side r"></div></div>`;
   if (!x){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>이 지표를 찾지 못했어요</b>뒤로 가서 다시 선택해 주세요.</div></div>`; document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); }; return; }
-  const pts = (x.spark || []).filter(p => p[1] != null);
+  const pts = clean(x.spark || []);
   const refs = {us10y: [5], hy: [400], fg: [25, 75], breadth: [60], sox: [55], vix: [25]}[key] || [];
   const lo = pts.length ? Math.min(...pts.map(p => p[1])) : null, hi = pts.length ? Math.max(...pts.map(p => p[1])) : null;
   $app.innerHTML = `<div class="wrap">${back}
@@ -1216,8 +1220,8 @@ async function pullHoldQFor(syms){
   try{ const r = await fetch(RELAY() + "?s=" + syms.map(encodeURIComponent).join(","), {cache: "no-store", signal: tmo(8000)});
     if (r.ok){ const j = await r.json(); for (const [k, q] of Object.entries(j)) if (q && typeof q.p === "number") S.holdQ[k] = q; } }catch(e){}
 }
-function fxNow(){ const k = macItems().kr?.find(x => x.key === "krw"); return k?.value || 1400; }
-const fxReal = () => macItems().kr?.find(x => x.key === "krw")?.value != null;
+function fxNow(){ const v = macItems().kr?.find(x => x.key === "krw")?.value; return v > 300 && v < 5000 ? v : 1400; }
+const fxReal = () => { const v = macItems().kr?.find(x => x.key === "krw")?.value; return v > 300 && v < 5000; };
 /* 합계: 원화 기준. 오늘 등락 = 어제 종가 대비 */
 function holdCalc(){
   const h = S.hold || {items: []}, fx = fxNow();
@@ -1440,7 +1444,7 @@ async function pullLeadLive(mk){
 }
 const liveM = (m0, mk) => { const m = mk === "us" ? {...m0, name: usName(m0)} : m0; const q = S.leadLive?.mk === mk ? S.leadLive.q[lid(m)] : null; if (!q || !q.prev && mk !== "kr") return m;
   if (q.d && S.lead?.[mk]?.date && q.d !== S.lead[mk].date) return m;   // 판정한 날과 다른 날 시세면 판정 값 유지
-  const chg = q.prev ? (q.p / q.prev - 1) * 100 : m.chg; return {...m, p: q.p, chg: +chg.toFixed(2), tv: mk === "kr" && q.tv ? Math.round(q.tv / 1e8) : m.tv, live: true}; };
+  const c0 = q.prev ? (q.p / q.prev - 1) * 100 : m.chg; return {...m, p: q.p, chg: Number.isFinite(c0) ? +c0.toFixed(2) : null, tv: mk === "kr" && q.tv ? Math.round(q.tv / 1e8) : m.tv, live: true}; };
 function leadRow(m, mk, isLead){
   const us = mk === "us";
   return `<button class="row press" data-lk="${esc(mk + ":" + lid(m))}"><div class="main"><div class="mc-n"><span>${esc(m.name)}</span>${m.upper ? tag("상한가", "sell") : ""}${isLead ? tag("대장", "none") : ""}</div><div class="sub">${esc(m.ind || m.mkt || "")}${m.rs != null ? ` · 지수 대비 ${esc(pct(m.rs))}p` : ""}</div></div>
@@ -1502,9 +1506,9 @@ async function loadBars(sym){
 function renderLeadDetail(key){
   if (!S.leadL){ $app.innerHTML = `<div class="wrap">${backBar("주도주")}<div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div></div>`; bindBack();
     loadLead().catch(e => { S.leadErr = e.message; S.leadL = true; }).then(() => { if (S.dhd === "l:" + key) renderLeadDetail(key); }); return; }
-  const [mk, id] = key.split(":"), d = S.lead?.[mk], us = mk === "us";
+  const ci = key.indexOf(":"), mk = key.slice(0, ci), id = key.slice(ci + 1), d = S.lead?.[mk], us = mk === "us";
   const pv = S.dstack.at(-1)?.d || "", pSec = pv.startsWith("l:" + mk + ":") ? d?.sectors.find(x => String(x.no ?? x.name) === pv.slice(mk.length + 3)) : null;
-  const bl = pSec ? (pSec.name.length > 9 ? pSec.name.slice(0, 8) + "…" : pSec.name) : "주도주";
+  const pn = String(pSec?.name ?? "주도섹터"), bl = pSec ? (pn.length > 9 ? pn.slice(0, 8) + "…" : pn) : "주도주";
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="${esc(pSec ? "뒤로: " + pSec.name : "뒤로")}">${BACK}<span>${esc(bl)}</span></button></div><div class="side r"></div></div>`;
   const sec = d?.sectors.find(x => String(x.no ?? x.name) === id);
   const stock = sec ? null : (d?.sectors.flatMap(x => x.members).concat(d?.top || []).find(m => lid(m) === id));
