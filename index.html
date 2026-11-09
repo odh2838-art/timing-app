@@ -379,19 +379,20 @@ try{ matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", e
 
 /* ───────── GitHub ───────── */
 const enc = p => p.split("/").map(encodeURIComponent).join("/");
+const tmo = ms => { if (AbortSignal.timeout) return AbortSignal.timeout(ms); const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; };   // 옛 사파리엔 AbortSignal.timeout이 없어 무한 대기하던 것
 S.etag = {};   // 읽기 요청의 ETag·본문 기억 → 바뀌지 않았으면 304로 본문 없이 끝남 (한도도 안 씀)
 async function gh(path, opt={}){
   let res; const key = S.repo + path + (opt.raw ? "#raw" : ""), get = !opt.method || opt.method === "GET", et = get && S.etag[key];
   try{ res = await fetch("https://api.github.com/repos/" + S.repo + path, {
-    ...opt, cache:"no-store", signal: opt.signal || (AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined),
+    ...opt, cache:"no-store", signal: opt.signal || (tmo(15000)),
     headers:{ "Authorization":"Bearer " + S.token, "X-GitHub-Api-Version":"2022-11-28",
               "Accept": opt.raw ? "application/vnd.github.raw+json" : "application/vnd.github+json",
               ...(opt.body ? {"Content-Type":"application/json"} : {}), ...(et ? {"If-None-Match": et.tag} : {}) }
-  }); }catch(e){ throw new Error("연결할 수 없어요 · 인터넷을 확인해 주세요"); }
+  }); }catch(e){ throw new Error(e && (e.name === "TimeoutError" || e.name === "AbortError") ? "GitHub 응답이 늦어요 · 잠시 뒤 다시 해 주세요" : "연결할 수 없어요 · 인터넷을 확인해 주세요"); }
   if (res.status === 304 && et) return et.body;
-  if (res.status === 429 || (res.status === 403 && res.headers.get("x-ratelimit-remaining") === "0")) throw new Error("요청이 많아요 · 잠시 뒤 다시 해 주세요");
+  if (res.status === 429 || (res.status === 403 && (res.headers.get("x-ratelimit-remaining") === "0" || res.headers.get("retry-after")))) throw new Error("요청이 많아요 · 잠시 뒤 다시 해 주세요");
   if (res.status === 401){ const e = new Error("토큰이 맞지 않거나 만료됐어요"); e.auth = true; throw e; }
-  if (res.status === 403) throw new Error("토큰 권한이 부족해요. GitHub 토큰 설정에서 Contents와 Actions를 Read and write로 바꿔 주세요");
+  if (res.status === 403){ const e = new Error("토큰 권한이 부족해요. GitHub 토큰 설정에서 Contents와 Actions를 Read and write로 바꿔 주세요"); e.auth = true; throw e; }
   if (res.status === 404) { const e = new Error("파일을 찾지 못했어요"); e.nf = true; throw e; }
   if (res.status === 409) throw new Error("다른 곳에서 먼저 바뀌었어요 · 다시 시도해 주세요");
   if (res.status === 422){ let m = ""; try{ m = (await res.json()).message || ""; }catch(_){} if (/sha/i.test(m)) throw new Error("다른 곳에서 먼저 바뀌었어요 · 다시 시도해 주세요"); throw new Error("GitHub가 요청을 거절했어요 · 잠시 뒤 다시 해 주세요"); }
@@ -486,7 +487,7 @@ function syncBusy(){ document.querySelectorAll("[data-busy]").forEach(b => b.dis
 /* ───────── 데이터 ───────── */
 async function refresh(){   // 화면의 자료는 그대로 두고 뒤에서 받아서, 성공했을 때만 바꿈 (오프라인이면 그대로)
   S.err = ""; S.loading = false;
-  try{ await loadMac(); }catch(e){ if (S.mac) toast(e.message); else { S.macL = false; } }
+  try{ await loadMac(); S.macStale = false; }catch(e){ if (S.mac) S.macStale = true; else { S.macL = false; } }   // 받아둔 게 있으면 토스트 대신 '새 자료를 못 받아요' 배너
   if (S.dhd !== "he" && !S.saving){   // 편집 중이 아니면 보유·주도도 다시 읽음 (다른 기기에서 바꾼 것 · 장중 재계산)
     const before = JSON.stringify(S.hold || null);
     try{ if (S.holdL === true || S.holdL === "err"){ await loadHold(); if (S.holdL === true && before !== "null" && JSON.stringify(S.hold) !== before) toast("다른 기기에서 바뀐 보유종목을 불러왔어요"); S.holdQAt = 0; } }catch(e){}
@@ -692,7 +693,8 @@ const LIVE = { "^TNX": "us10y", "CL=F": "wti", "^VIX": "vix", "KRW=X": "krw", "^
 const RELAY = () => { const u = String(LS.get("burl", "") || ""); return /^https:\/\/[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev$/.test(u) || /^https:\/\/relay\.test$/.test(u) ? u : "https://rooru-quote.odh2838.workers.dev"; };
 S.live = null; S.liveAt = null; S.liveQ = null;
 const LIVE_RNG = {us10y: [0, 30], wti: [-50, 500], vix: [3, 200], krw: [300, 5000], spx: [100, 1e6], kospi: [100, 1e6]};
-async function pullLive(){
+function pullLive(){ if (S.liveP) return S.liveP; S.liveP = pullLive0().finally(() => { S.liveP = null; }); return S.liveP; }   // 첫 화면에서 렌더가 여러 번 돌아도 요청은 하나
+async function pullLive0(){
   try{
     const hs = S.holdL === true ? (S.hold?.items || []).map(x => x.sym).filter(s => SYM_RE.test(s)).slice(0, 60) : [];   // 보유종목 시세도 같은 요청에 (카드가 하루 종일 옛 값이던 것)
     const j = await relayGet([...Object.keys(LIVE), ...hs]); S.liveAt = Date.now(); if (!j) return false;
@@ -718,7 +720,7 @@ function closedNote(){
   if (!S.liveQ || Date.now() - S.liveQ < 2 * 3600e3) return "";
   const k = new Date(Date.now() + 9 * 3600e3), wd = k.getUTCDay(), h = k.getUTCHours(), kd = todayK();
   if (wd === 6 || wd === 0 || (wd === 1 && h < 8)) return " · 주말 휴장";
-  if (HOLIDAYS.us.has(usDay()) && h >= 15) return " · 미국 휴장";
+  if (HOLIDAYS.us.has(usDay()) && (h >= 15 || h < 7)) return " · 미국 휴장";
   if (HOLIDAYS.kr.has(kd) && h < 15) return " · 한국 휴장";
   return h >= 15 ? " · 미국장 개장 전" : h < 9 ? " · 한국장 개장 전" : " · 시세 지연";
 }
@@ -1009,7 +1011,7 @@ async function ensureMac(head){
     <div class="card"><div class="sk" style="width:55%;height:13px"></div><div class="sk" style="width:45%;height:30px;margin-top:10px"></div><div class="sk" style="width:92%;height:14px;margin-top:12px"></div><div class="sk" style="width:80%;height:14px;margin-top:6px"></div><div class="sk" style="width:100%;height:4px;margin-top:18px"></div></div>
     <div class="sec-title"><div class="sk" style="width:30%;height:20px"></div></div><div class="card"><div class="sk" style="width:40%;height:13px"></div><div class="sk" style="width:55%;height:26px;margin-top:8px"></div></div>
     <div class="sec-title"><div class="sk" style="width:30%;height:20px"></div></div><div class="list">${skRow}${skRow}${skRow}</div></div>`;
-  try{ await loadMac(); }catch(e){ S.macErr = e.message; S.macAuth = !!e.auth || /권한/.test(e.message); S.macL = true; if (!S.macAuth) useLastMac(); }
+  try{ await loadMac(); }catch(e){ S.macErr = e.message; S.macAuth = !!e.auth; S.macL = true; if (!S.macAuth) useLastMac(); }
   return false;
 }
 async function renderMac0(){
@@ -1024,7 +1026,7 @@ async function renderMac0(){
   if (!S.liveAt || Date.now() - S.liveAt > 60000){ pullLive().then(ok => { if (ok && S.tab === "today" && !S.dhd && !S.dirty) render("none"); }); }
   liveTick();
   const it = macItems(), rg = m.regime || {}, td = todayK(), bc = safe(briefCard);
-  const cal = (m.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i && calKst(c).d >= td).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; }).slice(0, 3);
+  const cal = (m.cal || []).concat(S.brief?.cal || []).filter((c, i, a) => c && calKst(c).d && a.findIndex(x => x.d === c.d && x.name === c.name) === i && calKst(c).d >= td).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; }).slice(0, 3);
   $app.innerHTML = `<div class="wrap">${head}
     ${S.macStale ? `<div class="err" style="margin:8px 0 0;display:flex;justify-content:space-between;align-items:center;gap:10px"><span>지금은 새 자료를 못 받아요 · 마지막으로 받은 결과예요</span><button class="text-btn press" id="reload" style="flex:none">다시 받기</button></div>` : ""}
     <div class="title-block" data-anchor><h1 class="big">오늘</h1><div class="sub">판정 ${esc(mDay(m.date))} ${esc((m.at || "").slice(11, 16))}${S.liveQ && S.liveQ > Date.parse(m.at || 0) ? ` · 시세 ${esc(mMD(new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date(S.liveQ))))} ${esc(new Date(S.liveQ).toLocaleTimeString("ko-KR", {hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Seoul"}))}` : ""}${esc(closedNote())}</div>${staleNote(m)}</div>
@@ -1058,10 +1060,10 @@ async function renderMac0(){
 const CAL_ICON = {fed: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 4l9 5.5M5 10v8M9.7 10v8M14.3 10v8M19 10v8M3 20.5h18"/></svg>', data: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5h16M6.5 17v-5M12 17V6M17.5 17v-8"/></svg>', kr: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l3.5 12L12 8l3.5 10L19 6M4 11h16M4 14.5h16"/></svg>', earn: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/></svg>', etc: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'};
 /* 일정 한 줄: 한국 시간 날짜·시각 하나로 (발표 시각이 있으면 그 날짜) */
 function calKst(c){
-  const m = /^(\d{1,2})\/(\d{1,2}) (\d{1,2}:\d{2})/.exec(c.time || "");
-  if (!m) return { d: c.d, hm: "" };
-  const y = +c.d.slice(0, 4) + (+m[1] < +c.d.slice(5, 7) ? 1 : 0);
-  return { d: `${y}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`, hm: m[3] };
+  const m = /^(\d{1,2})\/(\d{1,2}) (\d{1,2}:\d{2})/.exec(c.time || ""), d0 = /^\d{4}-\d{2}-\d{2}/.test(c.d || "") ? c.d : "";
+  if (!m || !d0) return { d: d0, hm: "" };
+  const y = +d0.slice(0, 4) + (+m[1] < +d0.slice(5, 7) ? 1 : 0);
+  return { d: `${y}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`, hm: m[3].padStart(5, "0") };
 }
 function calRow(c){
   const k = calKst(c), today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Asia/Seoul"}).format(new Date()), dd = Math.round((Date.parse(k.d) - Date.parse(today)) / 864e5);
@@ -1071,7 +1073,7 @@ async function renderCal(){
   const head = `<div class="navbar"><div class="side"></div><span class="mini">일정</span><div class="side r"></div></div>`;
   if (!(await ensureMac(head)) && S.tab !== "cal") return;
   if (S.tab !== "cal" || S.dhd) return;
-  const td = todayK(), cal = (S.mac?.cal || []).concat(S.brief?.cal || []).concat(await earnCal()).filter((c, i, a) => a.findIndex(x => x.d === c.d && x.name === c.name) === i && calKst(c).d >= td).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; });
+  const td = todayK(), cal = (S.mac?.cal || []).concat(S.brief?.cal || []).concat(await earnCal()).filter((c, i, a) => c && calKst(c).d && a.findIndex(x => x.d === c.d && x.name === c.name) === i && calKst(c).d >= td).sort((a, b) => { const x = calKst(a), y = calKst(b); return (x.d + x.hm) < (y.d + y.hm) ? -1 : 1; });
   $app.innerHTML = `<div class="wrap">${head}<div class="title-block" data-anchor><h1 class="big">일정</h1><div class="sub">앞으로 3주와 다음 연준 회의 · 한국 시간${(S.hold?.items || []).length ? " · 내 종목 실적일 포함" : ""}</div>${(() => { const miss = (S.hold?.items || []).filter(it => !S.earn?.[it.sym]?.d).map(it => it.name || KO_NAME[it.sym] || it.sym); return miss.length && (S.hold?.items || []).length ? `<div class="sub" style="margin-top:4px">${esc(miss.slice(0, 4).join("·"))}${miss.length > 4 ? ` 외 ${miss.length - 4}개` : ""}는 발표일 자료가 아직 없어요.</div>` : ""; })()}</div>
     ${cal.length ? `<div class="list">${cal.map(calRow).join("")}</div>` : `<div class="empty"><b>3주 안에 큰 일정이 없어요</b>새 일정은 매일 계산할 때 추가돼요.</div>`}
     <p class="note" style="margin:var(--gap-caption) var(--pad-card) 0">연준 회의는 연준 일정표, 경제지표는 FRED 발표 일정 기준이에요.</p></div>`;
@@ -1099,9 +1101,11 @@ const UNIT_V = {us10y: "%", core_cpi: "%", fed: "%", hy: "bp", breadth: "%", sox
 const fmtU = (k, v) => k === "wti" ? "$" + nf(v) : k === "fg" ? String(Math.round(v)) : nf(v) + (UNIT_V[k] || "");
 const dFull = (d, mo) => { const t = String(d).slice(0, 10), yr = t.slice(0, 4); return mo ? `${yr}년 ${+t.slice(5, 7)}월` : yr === todayK().slice(0, 4) ? mDay(t) : `${yr}.${+t.slice(5, 7)}.${+t.slice(8, 10)}`; };
 let RZ = 0; addEventListener("resize", () => { cancelAnimationFrame(RZ); RZ = requestAnimationFrame(() => Object.keys(CH).forEach(drawChart)); });
+const backBar = (label = "오늘") => `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>${esc(label)}</span></button></div><div class="side r"></div></div>`;
+const bindBack = () => { const b = document.getElementById("bk"); if (b) b.onclick = () => { BACK_ANIM = true; history.back(); }; };
 function renderMacDetail(key){
-  if (!S.macL){ $app.innerHTML = `<div class="wrap"><div class="navbar"></div><div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div><div class="card"><div class="sk" style="width:70%;height:16px"></div></div></div>`;
-    loadMac().then(() => { if (S.dhd === "m:" + key) renderMacDetail(key); }).catch(e => toast(e.message)); return; }
+  if (!S.macL){ $app.innerHTML = `<div class="wrap">${backBar()}<div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div><div class="card"><div class="sk" style="width:70%;height:16px"></div></div></div>`; bindBack();
+    loadMac().catch(e => { if (!useLastMac()) toast(e.message); S.macL = true; }).then(() => { if (S.dhd === "m:" + key) renderMacDetail(key); }); return; }
   const it = macItems(), all = [...it.core, ...it.heat, ...it.kr], x = all.find(a => a.key === key);
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="오늘로 뒤로 가기">${BACK}<span>오늘</span></button></div><span class="mini">${esc(x?.name || "")}</span><div class="side r"></div></div>`;
   if (!x){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>이 지표를 찾지 못했어요</b>뒤로 가서 다시 선택해 주세요.</div></div>`; document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); }; return; }
@@ -1176,12 +1180,13 @@ async function saveHold(h){
 /* 중계는 한 번에 40종목까지 → 40개씩 나눠 받아 합침 */
 async function relayGet(syms){
   const parts = []; for (let i = 0; i < syms.length; i += 40) parts.push(syms.slice(i, i + 40));
-  const rs = await Promise.all(parts.map(p => fetch(RELAY() + "?s=" + p.map(encodeURIComponent).join(","), {cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined}).then(r => r.ok ? r.json() : null).catch(() => null)));
+  const rs = await Promise.all(parts.map(p => fetch(RELAY() + "?s=" + p.map(encodeURIComponent).join(","), {cache: "no-store", signal: tmo(8000)}).then(r => r.ok ? r.json() : null).catch(() => null)));
   const out = Object.create(null); let any = false;
   for (const j of rs) if (j && typeof j === "object") for (const [k, q] of Object.entries(j)) if (!["__proto__", "constructor", "prototype"].includes(k) && q && typeof q === "object"){ out[k] = q; any = true; }
   return any ? out : null;
 }
-async function pullHoldQ(){
+function pullHoldQ(){ if (S.holdQP) return S.holdQP; S.holdQP = pullHoldQ0().finally(() => { S.holdQP = null; }); return S.holdQP; }
+async function pullHoldQ0(){
   const syms = (S.hold?.items || []).map(x => x.sym).filter(s => /^\^?[A-Z0-9.-]{1,15}$/.test(s)).slice(0, 60);
   if (!syms.length) return false;
   try{
@@ -1208,7 +1213,7 @@ function findStocks(qs, n = 6){
 }
 async function pullHoldQFor(syms){
   syms = syms.filter(s => SYM_RE.test(s)).slice(0, 20); if (!syms.length) return;
-  try{ const r = await fetch(RELAY() + "?s=" + syms.map(encodeURIComponent).join(","), {cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined});
+  try{ const r = await fetch(RELAY() + "?s=" + syms.map(encodeURIComponent).join(","), {cache: "no-store", signal: tmo(8000)});
     if (r.ok){ const j = await r.json(); for (const [k, q] of Object.entries(j)) if (q && typeof q.p === "number") S.holdQ[k] = q; } }catch(e){}
 }
 function fxNow(){ const k = macItems().kr?.find(x => x.key === "krw"); return k?.value || 1400; }
@@ -1296,7 +1301,7 @@ let holdT = null;
 function renderHold(){
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="오늘로 뒤로 가기">${BACK}<span>오늘</span></button></div><span class="mini">내 자산</span><div class="side r"><button class="text-btn press" id="edit">편집</button></div></div>`;
   if (S.holdL !== true){ $app.innerHTML = `<div class="wrap">${back}<div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div></div>`;
-    loadHold().then(() => pullHoldQ()).then(() => { if (S.dhd === "h") renderHold(); }).catch(e => { $app.innerHTML = `<div class="wrap">${back}<div class="err">${esc(e.message)}</div></div>`; }); return; }
+    loadHold().then(() => pullHoldQ()).then(() => { if (S.dhd === "h") renderHold(); }).catch(e => { if (S.dhd !== "h") return; $app.innerHTML = `<div class="wrap">${back}<div class="err">${esc(e.message)}</div><button class="btn soft press" id="retryH">다시 시도</button></div>`; bindBack(); document.getElementById("retryH").onclick = () => renderHold(); }); return; }
   if (Date.now() - S.holdQAt > 60000) pullHoldQ().then(ok => { if (ok && S.dhd === "h") renderHold(); });
   clearInterval(holdT); holdT = setInterval(() => { if (document.hidden || S.dhd !== "h") return; pullHoldQ().then(ok => { if (ok && S.dhd === "h") renderHold(); }); }, 60000);
   const c = holdCalc();
@@ -1322,7 +1327,8 @@ function renderHold(){
 }
 function renderHoldEdit(){
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="취소">${BACK}<span>취소</span></button></div><span class="mini">보유종목 편집</span><div class="side r"><button class="text-btn press" id="save2" style="font-weight:600">저장</button></div></div>`;
-  if (S.holdL !== true){ loadHold().then(() => { if (S.dhd === "he") renderHoldEdit(); }); $app.innerHTML = `<div class="wrap">${back}</div>`; return; }
+  if (S.holdL !== true){ $app.innerHTML = `<div class="wrap">${back}</div>`; bindBack();
+    loadHold().then(() => { if (S.dhd === "he") renderHoldEdit(); }).catch(e => { if (S.dhd !== "he") return; $app.innerHTML = `<div class="wrap">${back}<div class="err">${esc(e.message)}</div><button class="btn soft press" id="retryH">다시 시도</button></div>`; bindBack(); document.getElementById("retryH").onclick = () => renderHoldEdit(); }); return; }
   let one = false;
   const h = S.hold, row = (x, i, a) => (one = !!a && a.length === 1, `<div class="he-row" data-i="${i}">
       <div class="f-sym"><div class="field"><label for="s${i}">종목</label><input id="s${i}" value="${esc(x.sym || "")}" placeholder="이름이나 티커 (예: 삼성전자)" autocapitalize="characters" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sug"><small class="he-nm" id="n${i}" aria-live="polite">${esc(x.sym ? (x.name || KO_NAME[x.sym] || "") : "")}</small></div>
@@ -1488,14 +1494,14 @@ async function renderLead(){
 /* 종목 상세 차트: 중계의 봉 자료(일봉 2년치)에서 최근 60거래일 종가만 */
 S.bars = {};
 async function loadBars(sym){
-  try{ const r = await fetch(RELAY() + "?bars=" + encodeURIComponent(sym) + "&i=1d", {cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined});
+  try{ const r = await fetch(RELAY() + "?bars=" + encodeURIComponent(sym) + "&i=1d", {cache: "no-store", signal: tmo(8000)});
     const j = r.ok ? await r.json() : null, rows = Array.isArray(j?.rows) ? j.rows : [];
     const pts = rows.filter(x => Array.isArray(x) && typeof x[0] === "number" && typeof x[4] === "number" && Number.isFinite(x[4])).slice(-60).map(x => [new Date(x[0] * 1000).toISOString().slice(0, 10), x[4]]);
-    S.bars[sym] = pts.length > 2 ? pts : null; return true; }catch(e){ S.bars[sym] = null; return true; }
+    S.bars[sym] = pts.length > 2 ? pts : null; return true; }catch(e){ S.bars[sym] = null; return true; }   // null = 없음(다시 안 받음) · undefined = 아직
 }
 function renderLeadDetail(key){
-  if (!S.leadL){ $app.innerHTML = `<div class="wrap"><div class="navbar"></div><div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div></div>`;
-    loadLead().then(() => { if (S.dhd === "l:" + key) renderLeadDetail(key); }).catch(e => toast(e.message)); return; }
+  if (!S.leadL){ $app.innerHTML = `<div class="wrap">${backBar("주도주")}<div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div></div>`; bindBack();
+    loadLead().catch(e => { S.leadErr = e.message; S.leadL = true; }).then(() => { if (S.dhd === "l:" + key) renderLeadDetail(key); }); return; }
   const [mk, id] = key.split(":"), d = S.lead?.[mk], us = mk === "us";
   const pv = S.dstack.at(-1)?.d || "", pSec = pv.startsWith("l:" + mk + ":") ? d?.sectors.find(x => String(x.no ?? x.name) === pv.slice(mk.length + 3)) : null;
   const bl = pSec ? (pSec.name.length > 9 ? pSec.name.slice(0, 8) + "…" : pSec.name) : "주도주";
@@ -1521,7 +1527,7 @@ function renderLeadDetail(key){
   } else {
     const m = liveM(stock, mk), inSec = d.sectors.filter(x => x.members.some(y => lid(y) === id));
     const bsym = us ? lid(m) : lid(m) + (m.mkt === "코스닥" ? ".KQ" : ".KS"), bars = S.bars?.[bsym];
-    if (!bars) loadBars(bsym).then(ok => { if (ok && S.dhd === "l:" + key) renderLeadDetail(key); });
+    if (bars === undefined && !S.barsP?.[bsym]){ (S.barsP ||= {})[bsym] = loadBars(bsym).finally(() => { delete S.barsP[bsym]; }).then(() => { if (S.dhd === "l:" + key) renderLeadDetail(key); }); }
     body = `<div class="title-block" data-anchor><div class="sub">${esc([m.ind || m.mkt || "", us ? lid(m) : ""].filter(Boolean).join(" · "))}</div><h1 class="big">${esc(m.name)}</h1></div>
       <div class="card"><div class="mc-reg-h"><span class="mc-big ${chgCls(m.chg)}">${esc(pct(m.chg))}</span>${m.upper ? tag("상한가", "sell") : inSec.some(x => lid(x.leader) === id) ? tag("대장", "none") : ""}</div>
         <p class="note" style="margin:4px 0 0">${esc(fmtP(m.p, us))} · ${m.live ? "실시간" : esc(mDay(d.date)) + " 마감"}</p>
