@@ -740,7 +740,7 @@ let liveT = null;
 function liveTick(){
   clearInterval(liveT);
   liveT = setInterval(async () => { if (document.hidden || S.tab !== "today" || S.dhd || S.busy) return;
-    if (closedNote() && S.liveAt && Date.now() - S.liveAt < 600e3) return;   // 장이 닫혀 있으면 10분에 한 번만
+    const cn = closedNote(); if (cn && !/지연/.test(cn) && S.liveAt && Date.now() - S.liveAt < 600e3) return;   // 장이 닫혀 있으면 10분에 한 번만 (시세가 그냥 늦는 중이면 계속 1분)
     if (await pullLive()) render("none"); }, 60000);
 }
 async function loadMac(){
