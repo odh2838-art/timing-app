@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-21-1">
+<meta name="app-version" content="2026-11-21-2">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -66,7 +66,6 @@ b,strong{font-weight:600}
 button{cursor:pointer;border:0;background:none;padding:0;-webkit-user-select:none;user-select:none}
 :focus{outline:none} :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:10px}
 .wrap{max-width:640px;margin:0 auto;padding:0 max(var(--gutter),env(safe-area-inset-right,0px)) 120px max(var(--gutter),env(safe-area-inset-left,0px))}
-
 /* 화면 전환 (아이폰처럼: 새 화면은 오른쪽에서, 뒤 화면은 살짝 물러나며 어두워짐) */
 html,body{overflow-x:clip}
 #app{position:relative;z-index:2;background:var(--bg);min-height:100vh;min-height:100dvh;transform-origin:50% 50%}
@@ -80,12 +79,10 @@ html,body{overflow-x:clip}
 @keyframes push{from{transform:translateX(28%);opacity:.0}to{transform:none;opacity:1}}
 @keyframes pop{from{transform:translateX(-12%);opacity:.0}to{transform:none;opacity:1}}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
 /* 누름 반응 */
 .press{transition:transform .16s var(--ease-out),background-color .16s,opacity .16s}
 .press:active{transform:scale(.97)}
 .row.press:active{transform:none;background:var(--fill)}
-
 /* 큰 제목 + 스크롤하면 나타나는 작은 제목 */
 .navbar{position:sticky;top:0;z-index:15;margin:0 calc(-1*max(var(--gutter),env(safe-area-inset-left,0px))) 0;padding:0 max(var(--gutter),env(safe-area-inset-right,0px)) 0 max(var(--gutter),env(safe-area-inset-left,0px));height:52px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:transparent;transition:background-color .2s,box-shadow .2s}
 .navbar.solid{background:var(--bar);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);box-shadow:0 .5px 0 var(--line)}
@@ -100,67 +97,48 @@ html,body{overflow-x:clip}
 .icon-btn{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:2px;color:var(--blue);font-size:var(--t-body);white-space:nowrap}
 .text-btn{min-height:44px;display:inline-flex;align-items:center;gap:6px;color:var(--blue);font-size:var(--t-body);font-weight:600;margin-right:-6px;padding:0 6px}
 .text-btn:disabled{opacity:.45}
-
 .card{background:var(--card);border-radius:var(--r-card);padding:var(--pad-card)}
 .stack{display:flex;flex-direction:column;gap:var(--gap-block)}
-
 .regime{display:flex;align-items:center;gap:var(--gap-sub);background:var(--card);border-radius:999px;padding:var(--gap-sub) 14px;font-size:var(--t-small)}
-
 .list{background:var(--card);border-radius:var(--r-card);overflow:hidden}
 .row{display:flex;align-items:center;gap:12px;padding:var(--pad-card);width:100%;text-align:left;min-height:44px}
 .row+.row{position:relative} .row+.row::before{content:"";position:absolute;top:0;left:var(--pad-card);right:0;height:1px;transform:scaleY(.5);transform-origin:top;background:var(--line);pointer-events:none}
-
 @keyframes rowin{from{opacity:0;transform:translateY(-10px)}}
 .row .main{flex:1;min-width:0} a.row{text-decoration:none;color:inherit}
 .row .name{font-size:var(--t-body);font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .head .dist{color:var(--fg2);margin-left:6px;font-variant-numeric:tabular-nums} .row .head{flex-wrap:nowrap;min-width:0}
-
 .row .head{font-size:var(--t-detail);margin-top:var(--gap-text);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .row .px{text-align:right;flex:none;display:flex;align-items:center;gap:10px}
 .row .px b{display:block;font-size:var(--t-body);font-weight:600}
 .spark{width:56px;height:28px;flex:none}
 .chev{color:var(--fg3);flex:none}
-
 .tag{display:inline-flex;align-items:center;font-size:var(--t-small);font-weight:600;border-radius:6px;padding:0 7px;line-height:1.45;white-space:nowrap}
 .t-buy{background:var(--buy-bg);color:var(--buy)} .t-sell{background:var(--sell-bg);color:var(--sell)}
-.t-wait{background:var(--wait-bg);color:var(--wait)} .t-dark{background:var(--fill);color:var(--fg)}
+.t-wait{background:var(--wait-bg);color:var(--wait)}
 .t-info{background:var(--info-bg);color:var(--info)}
-
 .empty{text-align:center;padding:44px 20px;color:var(--fg2)}
 .empty{font-size:var(--t-detail)}
 .empty b{display:block;color:var(--fg);font-size:var(--t-heading);font-weight:600;line-height:1.3;margin-bottom:var(--gap-sub)}
 .sec-title{font-size:var(--t-heading);font-weight:600;line-height:1.3;color:var(--fg);margin:var(--gap-section) var(--pad-card) var(--gap-caption);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .sec-title .sub{font-weight:400}
-
 /* 뼈대 (불러오는 동안) */
 .sk{background:linear-gradient(90deg,var(--fill) 0%,var(--line) 40%,var(--fill) 80%);background-size:200% 100%;animation:sh 1.3s linear infinite;border-radius:8px}
 @keyframes sh{from{background-position:200% 0}to{background-position:-200% 0}}
-
 .tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--tab);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);box-shadow:0 -.5px 0 var(--line);display:flex;justify-content:center;padding:4px max(16px,env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20;transition:transform .3s var(--ease)}
 .tabbar.away{transform:translateY(110%)}
 .tabbar button{flex:1;max-width:160px;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:calc(11rem/17);font-weight:600;color:var(--fg2);transition:color .15s}
 .tabbar button.on{color:var(--blue)} .tabbar button[hidden]{display:none}
 .tabbar svg{width:24px;height:24px;transition:transform .2s var(--ease-out)}
 .tabbar button:active svg{transform:scale(.88)}
-
  @keyframes spin{to{transform:rotate(360deg)}}
-
 .live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--buy);margin-right:6px;vertical-align:1px}
-
 @keyframes smIn{from{opacity:0;transform:translateY(-4px)}}
-
-@media (prefers-reduced-motion:reduce){.sigm{animation:none}}
-
 .badge{font-size:var(--t-small);font-weight:600;padding:3px 9px;border-radius:7px;background:var(--fill);color:var(--fg2)}
-
 .dist{margin-top:14px}
-
- .t-trim{background:#FFF1DC;color:#B26A00} .t-none{background:var(--fill);color:var(--fg2)}
-
+  .t-none{background:var(--fill);color:var(--fg2)}
 .adv{margin-top:var(--gap-section)} .adv>summary{list-style:none;cursor:pointer;color:var(--fg2);font-size:var(--t-small);font-weight:600;padding:12px var(--pad-card);min-height:44px} .adv>summary::-webkit-details-marker{display:none}
 .ferr{margin:6px 0 0;color:var(--danger);font-size:var(--t-small)} .tlink{align-self:center;color:var(--blue);font-size:var(--t-small);font-weight:600;padding:10px;min-height:44px;display:inline-flex;align-items:center}
 .tabbar[hidden]{display:none}
-
 /* 가로 휴대폰: 탭바·큰 제목을 줄여 내용이 보이게 (iOS 가로 방식) */
 @media (max-height:500px) and (orientation:landscape){
 .tabbar button{flex-direction:row;min-height:36px;gap:6px;font-size:calc(13rem/17)} .tabbar svg{width:20px;height:20px}
@@ -169,12 +147,10 @@ html,body{overflow-x:clip}
 /* 아이패드: 조금 넓은 가운데 칸, 시트는 가운데 폼 시트, 위쪽 바 바탕은 화면 끝까지 */
 @media (min-width:1024px){ .wrap{max-width:760px} }
 @media (min-width:768px){
-
 .navbar.solid{box-shadow:0 0 0 100vmax var(--bar),0 .5px 0 100vmax var(--line);clip-path:inset(0 -100vmax -1px)}
 }
 input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
 textarea{resize:none}
-
 .lv{position:relative;display:grid;grid-template-columns:14px 1fr auto;align-items:center;column-gap:12px;padding:9px 0}
 .lv i{width:14px;height:14px;border-radius:50%;background:var(--card,#fff);border:3px solid currentColor;box-sizing:border-box;z-index:1}
 .lv .t{font-size:var(--t-body);line-height:1.35;min-width:0}
@@ -186,16 +162,12 @@ textarea{resize:none}
 .lv.now{margin-inline:-10px;padding-inline:10px;border-radius:12px;background:var(--info-bg);color:var(--info)}
 .lv.now i{background:currentColor}
 .lv.now .t,.lv.now .p{color:var(--info);font-weight:700}
-
 .kv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;padding-top:14px;box-shadow:0 -1px 0 var(--line)}
 .kv div{display:flex;flex-direction:column;gap:3px;min-width:0}
 .kv span{font-size:var(--t-small);color:var(--fg2);white-space:nowrap} .kv small{font-size:var(--t-foot);color:var(--fg2);white-space:nowrap;font-variant-numeric:tabular-nums} .kv b{white-space:normal;overflow-wrap:anywhere;font-size:var(--t-body);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-.chart{padding:var(--pad-card) var(--gap-sub) var(--pad-card)}
 .plot{touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:grab}
 .plot:active{cursor:grabbing}
 .plot svg{display:block}
-
 .field{min-width:0}
 .field label{display:block;font-size:var(--t-detail);color:var(--fg);margin:0 0 var(--gap-sub)}
 .field input,.field select,.field textarea{display:block;width:100%;min-width:0;max-width:100%;min-height:48px;background:var(--fill);border:0;border-radius:var(--r-control);padding:11px 14px;font-size:var(--t-body);outline:none;-webkit-appearance:none;appearance:none;transition:box-shadow .15s}
@@ -204,58 +176,37 @@ textarea{resize:none}
 .field input[type=date]:invalid::-webkit-datetime-edit{color:var(--fg3)}
 .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%238E8E93' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
 .field input:focus,.field select:focus,.field textarea:focus{box-shadow:0 0 0 2px var(--blue) inset;background-color:var(--card)}
-
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:var(--r-control);padding:14px;font-size:var(--t-body);font-weight:600;text-align:center;text-decoration:none}
 .btn.primary{background:var(--btn,var(--blue));color:#fff;transition:background-color .25s,transform .16s var(--ease-out)}
-
 .btn.ghost,.btn.soft{background:var(--card);color:var(--blue)}
-
 .btn:disabled{opacity:.5} .btn.primary:disabled{background:var(--fill);color:var(--fg3);opacity:1}
 .note{font-size:var(--t-detail);color:var(--fg2);line-height:1.45}
-
-
-.results{flex:1;overflow:auto;margin-top:12px;-webkit-overflow-scrolling:touch;padding-bottom:16px;overscroll-behavior:contain}
-
 .toast{position:fixed;left:0;right:0;margin:0 auto;width:fit-content;bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--toast);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 0 0 .5px rgba(255,255,255,.08),0 6px 20px rgba(0,0,0,.18);color:#fff;padding:12px 18px;border-radius:var(--r-control);font-size:var(--t-detail);z-index:40;max-width:calc(100% - 2 * var(--gutter));display:flex;gap:10px;align-items:center;animation:tin .35s var(--ease) both}
 .toast.out{animation:tout .25s var(--ease-out) both}
 @keyframes tin{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes tout{to{opacity:0;transform:translateY(8px)}}
 .spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;flex:none;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
-
 .res{flex:none;text-align:right;font-weight:600;font-size:var(--t-body)}
-
 .err{background:var(--fill);color:var(--danger);border-radius:var(--r-control);padding:var(--pad-card);font-size:var(--t-detail);margin-bottom:var(--gap-block)}
-
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 .spin,.sk{animation:none!important}
 }
-
 /* Apple식 정리: 그룹 목록 · 작은 회색 섹션 제목 · 등락 캡슐 · 아이콘 버튼 */
 .icon-btn[hidden]{display:none!important} .icon-btn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;color:var(--blue);margin-right:-8px}
 .icon-btn[disabled]{opacity:.35}
 #bk{width:auto;max-width:46vw;justify-content:flex-start;margin-left:-8px;margin-right:0;padding-right:4px} #bk span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} #bk svg{flex:none}
 .today{background:var(--card);border-radius:var(--r-card);padding:16px var(--pad-card) 18px;margin-bottom:var(--gap-block)}
-
 .today .sub{margin-top:2px}
-
 @media (max-width:400px){#stocks .spark{display:none}}
-
-.pro-box{position:relative;height:380px;touch-action:pan-y}
-
 h2.sec-title{font-size:var(--t-heading)}
-
 .why .list{background:var(--sheet-list)} .why .adv>summary{padding-left:0}
-
 .gi{width:100%;height:auto;display:block;overflow:visible}
 .gi .p{fill:none;stroke:var(--fg);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round}
-
-.gi .v,.gd-legend .v{fill:var(--fg3);opacity:.6}
-
+.gi .v{fill:var(--fg3);opacity:.6}
 .gi .x{stroke:var(--sell);stroke-width:3;stroke-linecap:round;fill:none}
 .gi text{font-size:12px;font-family:inherit} .gi .tr{fill:var(--sell);font-weight:700} .gi .tb{fill:var(--info);font-weight:700}
-
 /* 매크로 */
 .mc-regs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 /* 내 자산: 비중 = 칸 크기, 오늘 등락 = 색 (한국식: 오름 빨강 · 내림 파랑, 진할수록 많이 움직임) */
@@ -267,7 +218,6 @@ h2.sec-title{font-size:var(--t-heading)}
 .he-row{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-items:start;padding:12px 0} .he-row .f-sym{grid-column:1/3;display:flex;gap:8px;align-items:flex-start} .he-row .f-sym .field{flex:1;min-width:0} .he-row label{font-size:var(--t-foot);color:var(--fg2)} .he-row input{width:100%;font-variant-numeric:tabular-nums} .he-row+.he-row{border-top:1px solid var(--line)} .he-unit{font-size:var(--t-foot);color:var(--fg2);margin-left:4px} .he-sug{display:flex;flex-direction:column;grid-column:1/3;margin:-4px 0 6px;background:var(--fill);border-radius:12px;overflow:hidden} .he-sug button[aria-selected="true"]{background:var(--line)} .he-sug button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;padding:8px 12px;text-align:left;font-size:var(--t-detail)} .he-sug button+button{border-top:.5px solid var(--line)} .he-sug span{color:var(--fg2);font-size:var(--t-foot);white-space:nowrap}
 .he-nm{display:block;font-size:var(--t-small);color:var(--fg);font-weight:600;margin-top:4px;min-height:13px;line-height:1.35} .he-nm:empty{display:none} .he-nm.dup{color:var(--wait)} input[aria-invalid="true"]{box-shadow:0 0 0 2px var(--up-t) inset!important} .he-row+.he-row{border-top:.5px solid var(--line)} .he-row .field label{font-size:var(--t-foot);margin-bottom:4px} .he-row .field input{min-height:44px;padding:8px 10px;font-size:var(--t-detail)}
 .he-del{width:44px;height:44px;margin-top:18px;flex:none;display:inline-flex;align-items:center;justify-content:center;color:var(--danger);font-size:22px;line-height:1;border-radius:22px}
-
 /* 주도섹터: 시장 고르기(iOS 세그먼트) · 섹터 카드(테마 이름 → 대장 한 줄 → 함께 오른 종목) */
 .seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin:0 0 var(--gap-block)} .seg button{flex:1;min-height:36px;border-radius:7px;font-size:var(--t-foot);font-weight:600;color:var(--fg)}
 .seg button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -285,7 +235,7 @@ h2.sec-title{font-size:var(--t-heading)}
 @media (forced-colors:active){ .seg .on,.tabbar .on{outline:2px solid CanvasText;outline-offset:-2px} .card,.list,.field input{border:1px solid CanvasText} .hm>div{border:1px solid CanvasText} }
 .sheetbg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px))} .sheet{width:100%;max-width:480px;background:var(--card);border-radius:var(--r-card);padding:20px var(--pad-card) var(--pad-card)} .sheet b{font-size:var(--t-body)} .sheet .btn{width:100%}
 h1[tabindex="-1"]:focus,.title-block[tabindex="-1"]:focus{outline:none} h1[tabindex="-1"]:focus-visible{outline:2px solid var(--blue);outline-offset:4px;border-radius:6px}
-.mc-brief{margin-top:var(--gap-block)} .rsec{margin-top:var(--gap-sub)} .rsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0 var(--pad-card);background:var(--card);border-radius:var(--r-card)} .rsec>summary::-webkit-details-marker{display:none} .rsec>summary .rh{margin:0;font-size:var(--t-body);font-weight:600} .rsec>summary .dchev{color:var(--fg3)} .rsec[open]>summary{border-radius:var(--r-card) var(--r-card) 0 0;border-bottom:1px solid var(--line)} .rsec[open]>.card,.rsec[open]>.list{border-radius:0 0 var(--r-card) var(--r-card);margin-top:0} .rsec[open]>.sec-title,.rsec[open]>.note{margin-left:var(--pad-card);margin-right:var(--pad-card)} .rsec[open]{margin-bottom:var(--gap-block)} .mc-why{margin-top:12px} .mc-why>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:4px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-why>summary::-webkit-details-marker{display:none} .mc-why .mo-c,.mc-why[open] .mo-t{display:none} .mc-why[open] .mo-c{display:inline} .mc-more-all{margin-top:var(--gap-section)} .mc-more-all .mo-c,.mc-more-all[open] .mo-t,.mc-cash .mo-c,.mc-cash[open] .mo-t{display:none} .mc-more-all[open] .mo-c,.mc-cash[open] .mo-c{display:inline} .mc-more-all>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-more-all>summary::-webkit-details-marker,.mc-cash>summary::-webkit-details-marker{display:none} .mc-cash>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px} .mc-cash>summary b{font-weight:600} .dchev{display:inline-block;transition:transform .2s;transform:rotate(90deg)} details[open]>summary .dchev{transform:rotate(-90deg)} .gpop::before{content:"";position:absolute;left:calc(var(--ax,50%) - 7px);border:7px solid transparent} .gpop.dn::before{top:-14px;border-bottom-color:var(--card)} .gpop.up::before{bottom:-14px;border-top-color:var(--card)} .gpop{position:absolute;z-index:40;background:var(--card);color:var(--fg);border-radius:12px;padding:10px 12px;box-shadow:0 0 0 .5px var(--line),0 8px 24px rgba(0,0,0,.18);font-size:var(--t-foot);line-height:1.45;display:flex;flex-direction:column;gap:2px} .cal-today .mc-n{color:var(--blue)} .cal-today .mc-ci{color:var(--blue)} .term{padding:6px 1px;margin:-6px -1px;text-decoration:underline dotted;text-decoration-color:var(--fg3,var(--fg2));text-underline-offset:3px;cursor:help} .mc-old>summary{list-style:none;min-height:44px;display:flex;align-items:center;cursor:pointer} .mc-old>summary::-webkit-details-marker{display:none}
+.mc-brief{margin-top:var(--gap-block)} .rsec{margin-top:var(--gap-sub)} .rsec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:0 var(--pad-card);background:var(--card);border-radius:var(--r-card)} .rsec>summary::-webkit-details-marker{display:none} .rsec>summary .rh{margin:0;font-size:var(--t-body);font-weight:600} .rsec>summary .dchev{color:var(--fg3)} .rsec[open]>summary{border-radius:var(--r-card) var(--r-card) 0 0;border-bottom:1px solid var(--line)} .rsec[open]>.card,.rsec[open]>.list{border-radius:0 0 var(--r-card) var(--r-card);margin-top:0} .rsec[open]>.sec-title,.rsec[open]>.note{margin-left:var(--pad-card);margin-right:var(--pad-card)} .rsec[open]{margin-bottom:var(--gap-block)} .mc-why{margin-top:12px} .mc-why>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:4px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-why>summary::-webkit-details-marker{display:none} .mc-why .mo-c,.mc-why[open] .mo-t{display:none} .mc-why[open] .mo-c{display:inline} .mc-more-all{margin-top:var(--gap-section)} .mc-more-all .mo-c,.mc-more-all[open] .mo-t,.mc-cash .mo-c,.mc-cash[open] .mo-t{display:none} .mc-more-all[open] .mo-c,.mc-cash[open] .mo-c{display:inline} .mc-more-all>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--blue);font-weight:600;font-size:var(--t-small)} .mc-more-all>summary::-webkit-details-marker,.mc-cash>summary::-webkit-details-marker{display:none} .mc-cash>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px} .mc-cash>summary b{font-weight:600} .dchev{display:inline-block;transition:transform .2s;transform:rotate(90deg)} details[open]>summary .dchev{transform:rotate(-90deg)} .gpop::before{content:"";position:absolute;left:calc(var(--ax,50%) - 7px);border:7px solid transparent} .gpop.dn::before{top:-14px;border-bottom-color:var(--card)} .gpop.up::before{bottom:-14px;border-top-color:var(--card)} .gpop{position:absolute;z-index:40;background:var(--card);color:var(--fg);border-radius:12px;padding:10px 12px;box-shadow:0 0 0 .5px var(--line),0 8px 24px rgba(0,0,0,.18);font-size:var(--t-foot);line-height:1.45;display:flex;flex-direction:column;gap:2px} .cal-today .mc-n{color:var(--blue)} .cal-today .mc-ci{color:var(--blue)} .term{padding:6px 1px;margin:-6px -1px;text-decoration:underline dotted;text-decoration-color:var(--fg3,var(--fg2));text-underline-offset:3px;cursor:help}
 .mc-bh{margin:6px 0 0;font-size:var(--t-heading);font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
 .mc-bp{margin-top:12px}
 .mc-bpr{display:grid;grid-template-columns:8px minmax(0,auto) minmax(0,1fr);align-items:baseline;column-gap:10px;padding:9px 0;border-top:.5px solid var(--line);font-size:var(--t-detail)}
@@ -304,24 +254,14 @@ h1[tabindex="-1"]:focus,.title-block[tabindex="-1"]:focus{outline:none} h1[tabin
 .mc-cr>span{color:var(--fg2)} .mc-cr b{font-weight:600;display:block} .mc-cr small{display:block;color:var(--fg2);font-size:var(--t-foot);margin-top:2px}
 .mc-sig-l{font-size:var(--t-display);font-weight:700;letter-spacing:-.02em;line-height:1.2;margin-top:2px}
 .mc-sig-s{margin:4px 0 0;color:var(--fg2);font-size:var(--t-detail)}
-.mc-why2{margin:4px 0 0}
 .mc-rule{display:flex;gap:8px;align-items:baseline;margin-top:14px;padding-top:12px;border-top:.5px solid var(--line);font-size:var(--t-detail)} .mc-rule .mc-dot{align-self:flex-start;margin-top:.55em}
 .mc-more{margin-top:6px;padding:0}
 .mc-leg{margin-top:8px} .mc-legr{display:flex;align-items:center;gap:10px;padding:5px 0}
 .mc-sg-r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;margin-left:14px;font-size:var(--t-detail);border-top:.5px solid var(--line)} .mc-sg-h+.mc-sg-r{border-top:0;padding-top:4px}
 .mc-sg-r{flex-wrap:wrap;row-gap:0} .mc-sg-r>span:first-child{flex:1 1 auto;min-width:0} .mc-sg-r .sub{text-align:right;margin-left:auto;flex:0 1 auto}
 .mc-sg-r span:first-child{font-weight:400}
-.mc-todo{margin-top:12px;background:var(--fill);border-radius:12px;padding:10px 12px;font-size:var(--t-detail);line-height:1.5}
-.mc-todo b{margin-right:6px}
 .mc-sg{margin-top:18px} .mc-sg-h{display:flex;align-items:center;gap:6px;font-weight:600;font-size:var(--t-small);color:var(--fg2)}
-.mc-sg .mc-ul{margin-top:4px;font-size:var(--t-detail);color:var(--fg2)}
 .mc-dot{width:8px;height:8px;border-radius:50%;flex:none}
-.mc-ul2 li{font-size:var(--t-detail)}
-.mc-legend{margin:0 var(--pad-card) 8px}
-.mc-head{margin:8px 0 0;font-size:var(--t-body);line-height:1.5}
-.mc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.mc-chip{background:var(--fill);border-radius:999px;padding:4px 10px;font-size:var(--t-small);font-weight:600;color:var(--fg2)}
-.mc-ul{margin:8px 0 0;padding-left:1.1em;line-height:1.55} .mc-ul li+li{margin-top:4px}
 .mc-link{display:flex;align-items:center;min-height:44px;color:var(--blue);text-decoration:none;font-size:var(--t-detail);overflow-wrap:anywhere}
 .mc-src{margin-top:4px} .mc-src summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center} .mc-src summary::-webkit-details-marker{display:none}
 .mc-row{gap:10px}
@@ -363,17 +303,20 @@ h1[tabindex="-1"]:focus,.title-block[tabindex="-1"]:focus{outline:none} h1[tabin
 </nav>
 <script>
 "use strict";
+/* rooru.invest 앱 (한 파일). 자료는 내 GitHub 비공개 저장소(timing-agent)의 상태/*.json, 시세는 중계(relay/worker.js)에서 받는다.
+   차례:  저장 → GitHub(gh · 자료 정리 norm*) → 점검 실행(↻) → 공통(esc · 용어 · render · 기록/뒤로) → 처음 설정
+          → 매크로(오늘 탭 · 지표 상세 · BofA 직접 입력 · 일정) → 내 자산(보유 · 편집) → 주도섹터 → 기준 → 설정 → 시작
+   화면 상태는 S 하나에: S.tab(탭) · S.dhd(탭 위 상세) · S.mac/S.brief/S.lead/S.hold(받은 자료). 그릴 때는 늘 render(). */
 /* ───────── 저장 (이 기기에만) ───────── */
 const LS = {
   get(k, d=null){ try{ const v = localStorage.getItem(k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
-/* 2026-10-23: 매크로 앱 (오동엔진). 탭 = 오늘 · 일정 · 기준 · 설정. 동현·수학·오동 엔진은 없앰 */
-const HOME = "today";
+const HOME = "today";   // 탭: today(오늘) · lead(주도주) · cal(일정) · rules(기준) · settings(설정)
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const S = { token: LS.get("tok", ""), repo: (r => REPO_RE.test(r) && !/\.\./.test(r) ? r : "odh2838-art/timing-agent")(String(LS.get("repo", "odh2838-art/timing-agent"))),
-  tab: HOME, detail: null, dash: LS.get("dash"), csv: null, alerts: null, err: "", busy: null, loading: true, dirty: false };
+  tab: HOME, dhd: null, busy: null, dirty: false };   // dhd = 탭 위에 연 상세 화면 ("m:지표" · "l:시장:종목" · "h" 내 자산 · "he" 편집)
 let REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 try{ matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", e => REDUCED = e.matches); }catch(e){}
 
@@ -398,8 +341,8 @@ async function gh(path, opt={}){
   if (res.status === 422){ let m = ""; try{ m = (await res.json()).message || ""; }catch(_){} if (/sha/i.test(m)) throw new Error("다른 곳에서 먼저 바뀌었어요 · 다시 시도해 주세요"); throw new Error("GitHub가 요청을 거절했어요 · 잠시 뒤 다시 해 주세요"); }
   if (!res.ok) throw new Error("GitHub가 응답하지 않아요. 잠시 뒤 다시 시도해 주세요");
   if (res.status === 204) return null;
-  const body = await (opt.raw ? (opt.blob ? res.blob() : res.text()) : res.json());
-  const tag = res.headers.get("etag"); if (get && tag && !opt.blob){ S.etag[key] = {tag, body}; const ks = Object.keys(S.etag); if (ks.length > 12) delete S.etag[ks[0]]; }
+  const body = await (opt.raw ? res.text() : res.json());
+  const tag = res.headers.get("etag"); if (get && tag){ S.etag[key] = {tag, body}; const ks = Object.keys(S.etag); if (ks.length > 12) delete S.etag[ks[0]]; }
   return body;
 }
 /* 자료 파일 정리: 배열이어야 할 곳은 배열, 글자는 글자, 숫자는 유한한 숫자만. 너무 긴 글·목록은 자름 */
@@ -453,10 +396,10 @@ async function readJSON(path, d){ try{ return JSON.parse(await gh("/contents/" +
 
 
 /* ───────── 점검 실행 ───────── */
-async function dispatch(cmd, symbol){
+async function dispatch(cmd){
   const since = Date.now() - 5000;
   let last = 0; try{ const j = await gh("/actions/runs?event=workflow_dispatch&per_page=1"); last = j.workflow_runs?.[0]?.id || 0; }catch(e){}   // 지금까지의 마지막 실행 번호 (폰 시계와 무관하게 '그다음' 실행을 찾음)
-  await gh("/actions/workflows/agent.yml/dispatches", { method:"POST", body: JSON.stringify({ ref:"main", inputs: symbol ? {cmd, symbol} : {cmd} }) });
+  await gh("/actions/workflows/agent.yml/dispatches", { method:"POST", body: JSON.stringify({ ref:"main", inputs: {cmd} }) });
   dispatch.last = last; return since;
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -489,7 +432,6 @@ function syncBusy(){ document.querySelectorAll("[data-busy]").forEach(b => b.dis
 
 /* ───────── 데이터 ───────── */
 async function refresh(){   // 화면의 자료는 그대로 두고 뒤에서 받아서, 성공했을 때만 바꿈 (오프라인이면 그대로)
-  S.err = ""; S.loading = false;
   try{ await loadMac(); S.macStale = false; }catch(e){ if (S.mac) S.macStale = true; else { S.macL = false; } }   // 받아둔 게 있으면 토스트 대신 '새 자료를 못 받아요' 배너
   if (S.dhd !== "he" && !S.saving){   // 편집 중이 아니면 보유·주도도 다시 읽음 (다른 기기에서 바꾼 것 · 장중 재계산)
     const before = JSON.stringify(S.hold || null);
@@ -498,9 +440,8 @@ async function refresh(){   // 화면의 자료는 그대로 두고 뒤에서 �
   }
   if (!S.dirty && S.dhd !== "he") render("none");   // 편집 중엔 다시 그리지 않음 (입력이 날아감)
 }
-/* 화면 확대 막기 (iOS는 user-scalable=no를 무시하므로 손가락 두 개 확대를 직접 막는다). 차트 안의 확대·축소는 그대로 */
-["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => { if (!e.target.closest?.(".plot, .pro-box")) e.preventDefault(); }, {passive: false}));
-/* 손가락 두 개: 차트 밖이면 화면 확대를 막고, 차트 안이면 화면이 위아래로 움직이지 않게 막아 차트 확대·축소로 쓴다 */
+/* 화면 확대 막기 (iOS는 user-scalable=no를 무시하므로 손가락 두 개 확대를 직접 막는다) */
+["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), {passive: false}));
 if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)){
   document.addEventListener("touchstart", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
   document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, {passive: false});
@@ -623,13 +564,12 @@ function histTo(n, v){   // 기록을 깊이 n(맨 위 항목 v)으로 맞춘다
 }
 /* 상세 위에 상세를 열면 (주도섹터 → 종목) 뒤로 갈 때 바로 전 화면으로: 연 순서를 쌓아 둠 */
 S.dstack = [];
-function go(how, fn){ document.querySelectorAll('.toast[data-leave="1"], .gpop').forEach(x => x.remove()); if (how === "push"){ S.dstack.push({d: S.dhd || null, y: scrollY}); S.listY = scrollY; hPush("d"); } S.dirty = false; try{ S.chart?.destroy?.(); }catch(e){} S.chart = null; clearInterval(S.tfTimer); fn(); if (!S.dhd) S.dstack = []; render(how); }
+function go(how, fn){ document.querySelectorAll('.toast[data-leave="1"], .gpop').forEach(x => x.remove()); if (how === "push"){ S.dstack.push({d: S.dhd || null, y: scrollY}); S.listY = scrollY; hPush("d"); } S.dirty = false; fn(); if (!S.dhd) S.dstack = []; render(how); }
 /* 시스템 '뒤로'(안드로이드 제스처·버튼, 브라우저 뒤로): 시트 → 상세 → 다른 탭 순서로 한 단계씩 닫는다 */
 addEventListener("popstate", () => {
   if (skipPop){ skipPop--; const f = popFix; popFix = null; f?.(); return; }
   document.querySelectorAll(".ghost").forEach(g => { if (!g.getAnimations().length) g.remove(); });   // 전환이 끝났는데 남은 화면 조각 (터치가 막히는 원인)
   const how = BACK_ANIM ? "pop" : "none"; BACK_ANIM = false;   // 앱의 뒤로 버튼이면 밀리는 전환, 시스템 제스처면 그대로 (두 번 밀리지 않게)
-  if (S.tab === "guide" && S.guideFrom){ const g = S.guideFrom; S.guideFrom = null; go("fade", () => { S.tab = g.tab; S.dhd = g.dhd || null; }); return; }   // 사용법을 연 곳으로
   if (S.dhd === "he" && S.saving){ hPush("d"); toast("저장 중이에요 · 끝날 때까지 잠깐만요", true); const mine = toast.last; setTimeout(() => { if (!S.saving && toast.last === mine) mine.remove(); }, 1500); return; }
   if (S.dhd === "he" && S.holdDirty && !S.holdLeave){ hPush("d"); askLeave(); return; }
   if (S.dhd){ if (S.dhd === "he"){ S.holdDirty = false; S.holdFromCard = false; }
@@ -637,6 +577,9 @@ addEventListener("popstate", () => {
   if (S.tab !== HOME) go("fade", () => { S.tab = HOME; });
 });
 
+/* 상세 화면의 뒤로 버튼 (자료를 기다리는 뼈대·오류 화면에도 늘 달아서 막다른 화면이 없게) */
+const backBar = (label = "오늘") => `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>${esc(label)}</span></button></div><div class="side r"></div></div>`;
+const bindBack = () => { const b = document.getElementById("bk"); if (b) b.onclick = () => { BACK_ANIM = true; history.back(); }; };
 /* 큰 제목이 지나가면 위쪽 바를 불투명하게 */
 let navObs;
 function bindNavbar(){
@@ -670,19 +613,14 @@ function renderSetup(msg){
     if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(r) || /\.\./.test(r)){ S.tokDraft = t; renderSetup("자료 저장소는 '사용자/저장소' 모양으로 넣어 주세요 (예: odh2838-art/timing-agent)"); return; }
     $go.disabled = true; $go.innerHTML = `<span class="spin"></span>연결 중`;
     S.token = t; S.repo = r;
-    try{ const info = await gh(""); LS.set("tok", t); LS.set("repo", r); S.tab = HOME; S.loading = true; render("fade"); refresh(); toast(info && info.private === false ? "연결됐어요 · 이 저장소는 공개라 보유종목은 저장하지 않아요" : "연결됐어요"); }
+    try{ const info = await gh(""); LS.set("tok", t); LS.set("repo", r); S.tab = HOME; render("fade"); refresh(); toast(info && info.private === false ? "연결됐어요 · 이 저장소는 공개라 보유종목은 저장하지 않아요" : "연결됐어요"); }
     catch(e){ S.token = ""; S.tokDraft = t; renderSetup(e.nf ? "저장소를 찾을 수 없어요 · 토큰의 저장소 권한을 확인해 주세요" : e.message); }
   };
 }
 
 
-
-/* 왼쪽 가장자리에서 밀면 뒤로: 손가락을 따라 앞 화면이 밀리고 뒤 화면이 드러남.
-   아이폰(홈 화면 앱엔 시스템 뒤로가 없음)에서만. 안드로이드는 시스템 뒤로 제스처가 같은 자리를 써서 둘이 부딪히면 화면이 멈춘다 */
-
-
 /* ───────── 매크로 (tc/macro.py · 오동엔진 점검표) ─────────
-   자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST) · 상태/브리핑.json (화~토 아침, Claude가 BofA·CPI 예상·FedWatch를 찾아 씀).
+   자료: 상태/매크로.json (06:40 · 16:10 · 22:50 KST + 장중 매시) · 상태/브리핑.json (bofa = 앱에서 직접 넣는 펀드매니저 현금·B&B. 나머지는 꺼 둔 아침 브리핑의 마지막 값).
    참고 트레이더가 직접 보는 것만: 미국 10년물 · WTI · 근원 CPI · 연준 · 하이일드 스프레드 · 공포탐욕 + 과열 신호 + 한국 최소(환율·외국인). */
 const MAC_FILE = "상태/매크로.json", BRIEF_FILE = "상태/브리핑.json", LEAD_FILE = "상태/주도.json", HOLD_FILE = "상태/보유.json";
 S.mac = null; S.brief = null; S.macL = false; S.macErr = null;
@@ -1112,8 +1050,6 @@ const UNIT_V = {us10y: "%", core_cpi: "%", fed: "%", hy: "bp", breadth: "%", sox
 const fmtU = (k, v) => k === "wti" ? "$" + nf(v) : k === "fg" ? String(Math.round(v)) : nf(v) + (UNIT_V[k] || "");
 const dFull = (d, mo) => { const t = String(d).slice(0, 10), yr = t.slice(0, 4); return mo ? `${yr}년 ${+t.slice(5, 7)}월` : yr === todayK().slice(0, 4) ? mDay(t) : `${yr}.${+t.slice(5, 7)}.${+t.slice(8, 10)}`; };
 let RZ = 0; addEventListener("resize", () => { cancelAnimationFrame(RZ); RZ = requestAnimationFrame(() => Object.keys(CH).forEach(drawChart)); });
-const backBar = (label = "오늘") => `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>${esc(label)}</span></button></div><div class="side r"></div></div>`;
-const bindBack = () => { const b = document.getElementById("bk"); if (b) b.onclick = () => { BACK_ANIM = true; history.back(); }; };
 /* BofA 두 값은 공개 자료가 없어 직접 확인해서 넣음: 확인 링크 → 숫자·날짜 → 저장 (말이 안 되는 값은 저장 안 함) */
 const BOFA_IN = {
   fms: {k: "fms_cash", d: "fms_d", lo: 1.5, hi: 8, jump: 1, unit: "%", q: "BofA fund manager survey cash level", ex: "예: 3.6", label: "현금 비중 (%)", dl: "발표일"},
@@ -1166,7 +1102,7 @@ function renderMacDetail(key){
     loadMac().catch(e => { if (!useLastMac()) toast(e.message); S.macL = true; }).then(() => { if (S.dhd === "m:" + key) renderMacDetail(key); }); return; }
   const it = macItems(), all = [...it.core, ...it.heat, ...it.kr], x = all.find(a => a.key === key);
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="오늘로 뒤로 가기">${BACK}<span>오늘</span></button></div><span class="mini">${esc(x?.name || "")}</span><div class="side r"></div></div>`;
-  if (!x){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>이 지표를 찾지 못했어요</b>뒤로 가서 다시 선택해 주세요.</div></div>`; document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); }; return; }
+  if (!x){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>이 지표를 찾지 못했어요</b>뒤로 가서 다시 선택해 주세요.</div></div>`; bindBack(); return; }
   const pts = clean(x.spark || []);
   const refs = {us10y: [5], hy: [400], fg: [25, 75], breadth: [60], sox: [55], vix: [25]}[key] || [];
   const lo = pts.length ? Math.min(...pts.map(p => p[1])) : null, hi = pts.length ? Math.max(...pts.map(p => p[1])) : null;
@@ -1185,7 +1121,7 @@ function renderMacDetail(key){
   </div>`;
   if (BOFA_IN[key]) bofaBind(key, x);
   if (pts.length > 1) drawChart("mch");
-  document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
+  bindBack();
   bindNavbar();
 }
 
@@ -1380,7 +1316,7 @@ function renderHold(){
     <div class="list">${c.rows.map(r => `<button class="row press" data-he><div class="main"><div class="mc-n">${esc(r.name)}</div><div class="sub">${esc(r.qty.toLocaleString("ko-KR"))}주 · 비중 ${esc(r.w.toFixed(1))}%</div></div>
       <div class="mc-r"><div class="mc-v ${chgCls(r.day)}">${esc(r.p == null ? "시세 없음" : r.day == null ? "-" : pct(r.day))}</div><div class="sub">${esc(wonShort(r.val))}원${r.ret != null ? ` · 수익 ${esc(pct(r.ret))}` : ""}</div></div></button>`).join("") || `<div class="row"><div class="main sub">아직 없어요. 오른쪽 위 '편집'에서 넣을 수 있어요</div></div>`}</div>
     <p class="note" style="margin:18px 4px">등락은 최근 거래일 기준이에요. 수익은 평균단가 대비, 지금 환율로 계산해요. 평균단가를 안 넣은 종목은 수익에서 빠져요. 내 비공개 자료 저장소에만 저장돼요.</p></div>`;
-  document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
+  bindBack();
   document.getElementById("edit").onclick = () => go("push", () => { S.dhd = "he"; });
   $app.querySelectorAll("[data-he]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "he"; }));
   bindNavbar();
@@ -1435,7 +1371,7 @@ function renderHoldEdit(){
   const bindDel = () => document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { draft = read(); draft.splice(+b.dataset.del, 1); if (!draft.length) draft = [{}]; redraw(); });
   bindDel();
   document.getElementById("add").onclick = () => { draft = read(); draft.push({}); redraw(); document.getElementById("s" + (draft.length - 1)).focus(); };
-  document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
+  bindBack();
   const saveFlow = async () => {
     hideSug(); await loadDict();
     const list = read().filter(x => x.sym);
@@ -1479,7 +1415,7 @@ function renderHoldEdit(){
 }
 /* ───────── 주도섹터 (한국·미국) ─────────
    오른 뒤에 가려내는 '판별': 거래대금이 큰 상승 종목이 한 테마에 2개 이상 → 주도섹터, 그중 거래대금·상승률 1등 → 대장 */
-S.lead = null; S.leadL = false; S.leadErr = null; S.leadMk = ["kr", "us"].includes(LS.get("leadMk", "kr")) ? LS.get("leadMk", "kr") : "kr"; S.leadLive = null; S.leadLiveAt = 0;
+S.lead = null; S.leadL = false; S.leadErr = null; S.leadMk = ["kr", "us"].includes(LS.get("leadMk", "kr")) ? LS.get("leadMk", "kr") : "kr"; S.leadLive = null;
 async function loadLead(){ S.lead = normLead(await readJSON(LEAD_FILE, null)); S.leadL = true; S.leadErr = null; }
 const fmtTv = (v, us) => v == null ? "-" : us ? (v >= 1e6 ? `${(v / 1e6).toFixed(1)}조달러` : v >= 100 ? `${Math.round(v / 100)}억달러` : `${(v / 100).toFixed(1)}억달러`) : (v >= 10000 ? `${(v / 10000).toFixed(1)}조` : `${Math.round(v).toLocaleString("ko-KR")}억`);
 const fmtP = (v, us) => v == null ? "-" : us ? `$${(+v).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : `${Math.round(+v).toLocaleString("ko-KR")}원`;
@@ -1495,8 +1431,8 @@ async function pullLeadLive(mk){
     const j = await relayGet(syms), out = {}; if (!j) return false;
     for (const [k, q] of Object.entries(j)) if (q && q.p != null) out[k.split(".")[0]] = q;
     if (!Object.keys(out).length) return false;
-    S.leadLive = {mk, q: out, by: {...(S.leadLive?.by || {}), [mk]: {q: out, at: Date.now()}}}; S.leadLiveAt = Date.now(); return true;
-  }catch(e){ S.leadLiveAt = Date.now(); (S.leadFail ||= {})[mk] = Date.now(); return false; }
+    S.leadLive = {mk, q: out, by: {...(S.leadLive?.by || {}), [mk]: {q: out, at: Date.now()}}}; return true;
+  }catch(e){ (S.leadFail ||= {})[mk] = Date.now(); return false; }
 }
 const liveM = (m0, mk) => { const m = mk === "us" ? {...m0, name: usName(m0)} : m0; const q = S.leadLive?.mk === mk ? S.leadLive.q[lid(m)] : null; if (!q || !q.prev && mk !== "kr") return m;
   if (q.d && S.lead?.[mk]?.date && q.d !== S.lead[mk].date) return m;   // 판정한 날과 다른 날 시세면 판정 값 유지
@@ -1568,7 +1504,7 @@ function renderLeadDetail(key){
   const back = `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="${esc(pSec ? "뒤로: " + pSec.name : "뒤로")}">${BACK}<span>${esc(bl)}</span></button></div><div class="side r"></div></div>`;
   const sec = d?.sectors.find(x => String(x.no ?? x.name) === id);
   const stock = sec ? null : (d?.sectors.flatMap(x => x.members).concat(d?.top || []).find(m => lid(m) === id));
-  if (!sec && !stock){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>찾지 못했어요</b>뒤로 가서 다시 선택해 주세요.</div></div>`; document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); }; return; }
+  if (!sec && !stock){ $app.innerHTML = `<div class="wrap">${back}<div class="empty"><b>찾지 못했어요</b>뒤로 가서 다시 선택해 주세요.</div></div>`; bindBack(); return; }
   const newsUrl = m => us ? `https://finance.yahoo.com/quote/${encodeURIComponent(lid(m))}/news/` : `https://m.stock.naver.com/domestic/stock/${encodeURIComponent(lid(m))}/news`;
   let body;
   if (sec){
@@ -1600,7 +1536,7 @@ function renderLeadDetail(key){
     <div class="sec-title" role="heading" aria-level="2">기준</div>
     <div class="card"><p class="note" style="margin:0;color:var(--fg)">거래대금이 큰 상승 종목이 한 테마에 2개 이상이면 주도섹터예요. 대장은 거래대금·상승률 1등이고, 등락률이 비슷하면 거래대금으로 가려요. 참고 트레이더는 2·3등주보다 대장을 봐요.</p></div></div>`;
   if (document.getElementById("stch")) drawChart("stch");
-  document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
+  bindBack();
   $app.querySelectorAll("[data-lk]").forEach(b => b.onclick = () => go("push", () => { S.dhd = "l:" + b.dataset.lk; }));
   bindNavbar();
 }
@@ -1680,7 +1616,7 @@ function renderSettings(){
     </details>
     <p class="note" style="margin:18px 4px">참고 자료예요. 투자 권유가 아니에요.</p>
   </div>`;
-  document.getElementById("out").onclick = () => { LS.del("tok"); LS.del("dash"); try{ localStorage.removeItem("lastMac"); }catch(e){} S.token = ""; S.mac = null; S.macL = false; S.brief = null; S.hold = null; S.holdL = false; S.holdSha = null; S.holdQ = {}; S.lead = null; S.leadL = false; S.dict = null; S.earn = null; S.etag = {}; render("fade"); };
+  document.getElementById("out").onclick = () => { LS.del("tok"); try{ localStorage.removeItem("lastMac"); }catch(e){} S.token = ""; S.mac = null; S.macL = false; S.brief = null; S.hold = null; S.holdL = false; S.holdSha = null; S.holdQ = {}; S.lead = null; S.leadL = false; S.dict = null; S.earn = null; S.etag = {}; render("fade"); };
   $app.querySelectorAll("#thm button").forEach(b => b.onclick = () => { LS.set("theme", b.dataset.th); applyTheme(); render("none"); });
   $app.querySelectorAll("#lmk button").forEach(b => b.onclick = () => { S.leadMk = b.dataset.lm; LS.set("leadMk", S.leadMk); render("none"); });
   document.getElementById("toHoldS").onclick = () => go("push", () => { S.dhd = "he"; });
@@ -1730,7 +1666,6 @@ addEventListener("visibilitychange", () => { if (!document.hidden) checkVersion(
 /* 오프라인에도 앱이 열리게: 서비스워커가 화면 파일(index.html·아이콘)만 저장. 자료(GitHub·시세)는 늘 네트워크 */
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 setTimeout(checkVersion, 1500);
-try{ LS.set("swipeHint", (LS.get("swipeHint", 0) || 0) + 1); }catch(e){}
 function toast(msg, spin){
   document.querySelectorAll(".toast").forEach(t => t.remove());
   const t = document.createElement("div"); t.className = "toast"; t.setAttribute("aria-hidden", "true");
@@ -1743,7 +1678,7 @@ function toast(msg, spin){
 
 document.querySelectorAll(".tabbar button").forEach(b => b.onclick = () => {
   if (S.tab === b.dataset.tab && !S.dhd){ scrollTo({top:0, behavior: REDUCED ? "auto" : "smooth"}); return; }  // 같은 탭 다시 누르면 맨 위로
-  S.guideFrom = null; histTo(b.dataset.tab === HOME ? 0 : 1, "t");   // 탭을 바꾸면 기록은 '홈' 또는 '홈 + 그 탭' 한 칸만
+  histTo(b.dataset.tab === HOME ? 0 : 1, "t");   // 탭을 바꾸면 기록은 '홈' 또는 '홈 + 그 탭' 한 칸만
   go("fade", () => { S.tab = b.dataset.tab; S.dhd = null; });
 });
 addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.token && !S.busy) refresh(); });
