@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <title>rooru.invest</title>
-<meta name="app-version" content="2026-11-09-2">
+<meta name="app-version" content="2026-11-21-1">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
 <style>
@@ -405,7 +405,7 @@ async function gh(path, opt={}){
 /* 자료 파일 정리: 배열이어야 할 곳은 배열, 글자는 글자, 숫자는 유한한 숫자만. 너무 긴 글·목록은 자름 */
 const ARR_K = new Set(["core", "heat", "kr_items", "cal", "errors", "points", "lines", "watch", "sources", "spark", "spark2", "mom", "sectors", "members", "also", "top", "strong"]);
 const OBJ_ITEMS = new Set(["core", "heat", "cal", "points", "sources", "sectors", "members", "top"]);
-const STR_K = new Set(["d", "date", "at", "asof", "name", "why", "rule", "time", "kind", "note", "key", "status", "unit", "headline", "k", "v", "t", "url", "code", "sym", "mkt", "ind", "state", "tone", "next", "trend", "chg_unit", "bb_d", "fms_d", "bb_note", "fms_note", "bb_src", "fms_src", "src", "nominal"]);
+const STR_K = new Set(["d", "date", "at", "asof", "name", "why", "rule", "time", "kind", "note", "key", "status", "unit", "headline", "k", "v", "t", "url", "code", "sym", "mkt", "ind", "state", "tone", "next", "trend", "chg_unit", "bb_d", "fms_d", "bb_by", "fms_by", "bb_note", "fms_note", "bb_src", "fms_src", "src", "nominal"]);
 const NUM_K = new Set(["value", "chg", "tv", "n", "n_up", "in_top", "rs", "p", "bb", "fms_cash", "lo", "hi", "us2", "gap", "close", "ma200", "dd", "b50", "s5", "s20", "days", "chg20", "mcap", "prev"]);
 const DATE_K = new Set(["d", "date", "asof", "at", "bb_d", "fms_d", "next"]);
 function normData(v, k, depth = 0){
@@ -770,7 +770,14 @@ async function loadMac0(){
 }
 /* 못 불러왔을 때: 마지막으로 받아 둔 결과가 있으면 그걸로 (판정 시각은 그대로라 오래됐다는 게 보임) */
 function useLastMac(){ try{ const c = JSON.parse(localStorage.getItem("lastMac") || "null"); if (c && c.m){ S.mac = normMac(c.m); S.brief = normBrief(c.b); S.macStale = true; return true; } }catch(e){} return false; }
-/* 브리핑이 덮어쓰는 판정 (예: 근원 CPI 예상치 비교) + BofA 지표 */
+/* 펀드매니저 서베이: 매달 셋째 주 화요일(미국) 발표 → 다음 달 발표일 + 3일까지 새 값이 없으면 '오래됨' */
+function fmsNext(d){
+  const y = +String(d).slice(0, 4), m = +String(d).slice(5, 7); if (!y || !m) return "0000";
+  const ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1, first = new Date(Date.UTC(ny, nm - 1, 1)).getUTCDay();
+  const day = 1 + ((2 - first + 7) % 7) + 14 + 3;   // 셋째 화요일 + 3일
+  return new Date(Date.UTC(ny, nm - 1, day)).toISOString().slice(0, 10);
+}
+/* 브리핑이 덮어쓰는 (예: 근원 CPI 예상치 비교) + BofA 지표 */
 function macItems(){
   const m = S.mac || {}, b = S.brief || {}, ov = b.override || {};
   const lv = S.live || {}, bAge = b.date ? (Date.parse(todayK()) - Date.parse(b.date)) / 864e5 : 99;
@@ -786,11 +793,11 @@ function macItems(){
     return y; };
   const heat = (m.heat || []).map(fix);
   const bo = {...(b.bofa || {})}, ageD = d => d ? (Date.parse(todayK()) - Date.parse(String(d).slice(0, 10))) / 864e5 : 999;
-  if (ageD(bo.bb_d) > 14) bo.bb_old = true; if (ageD(bo.fms_d) > 45) bo.fms_old = true;
+  if (ageD(bo.bb_d) > 10) bo.bb_old = true; if (!bo.fms_d || todayK() > fmsNext(bo.fms_d)) bo.fms_old = true;
   if (bo.bb != null) heat.unshift({key: "bb", name: "BofA Bull & Bear", value: bo.bb, unit: "", asof: bo.bb_d, status: bo.bb_old ? "오래됨" : bo.bb >= 8 ? "경계" : bo.bb <= 2 ? "기회" : "중립",
-    why: `${mMD(bo.bb_d)} 발표 · ` + (bo.bb_old ? "2주 넘게 지난 값이라 판정에 안 써요 · " : "") + (bo.bb >= 8 ? "8 이상 매도 신호" : bo.bb <= 2 ? "2 이하 매수 신호" : "2~8 사이 중립 (8 이상 매도 · 2 이하 매수)"), rule: "8 이상 매도 신호 (8 아래로 내려오면 해제) · 2 이하 매수 신호 (하트넷, 매주)", src: bo.bb_src});
+    why: `${mMD(bo.bb_d)} 발표 · ` + (bo.bb_old ? "새 발표가 지나 판정에 안 써요 · 눌러서 새 값 넣기 · " : "") + (bo.bb >= 8 ? "8 이상 매도 신호" : bo.bb <= 2 ? "2 이하 매수 신호" : "2~8 사이 중립 (8 이상 매도 · 2 이하 매수)"), rule: "8 이상 매도 신호 (8 아래로 내려오면 해제) · 2 이하 매수 신호 (하트넷, 매주)", src: bo.bb_src, by: bo.bb_by});
   if (bo.fms_cash != null) heat.splice(bo.bb != null ? 1 : 0, 0, {key: "fms", name: "펀드매니저 현금 비중", value: bo.fms_cash, unit: "%", asof: bo.fms_d, status: bo.fms_old ? "오래됨" : bo.fms_cash < 4 ? "경계" : bo.fms_cash >= 5 ? "기회" : "중립",
-    why: `${mMD(bo.fms_d)} 서베이 · ` + (bo.fms_old ? "한 달 반 넘게 지난 값이라 판정에 안 써요 · " : "") + (bo.fms_cash < 4 ? "4% 미만 과열" : bo.fms_cash >= 5 ? "5% 이상 매수 신호" : "4~5% 사이 중립 (4% 미만 과열 · 5% 이상 매수)"), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src});
+    why: `${mMD(bo.fms_d)} 서베이 · ` + (bo.fms_old ? "새 서베이가 나와 판정에 안 써요 · 눌러서 새 값 넣기 · " : "") + (bo.fms_cash < 4 ? "4% 미만 과열" : bo.fms_cash >= 5 ? "5% 이상 매수 신호" : "4~5% 사이 중립 (4% 미만 과열 · 5% 이상 매수)"), rule: "4.0% 미만 과열 (3.5~3.8%면 극단) · 5.0% 이상 매수 신호 (매월 중순)", src: bo.fms_src, by: bo.fms_by});
   return { core: (m.core || []).map(fix), heat, kr: (m.kr || []).map(fix) };
 }
 /* 선 그래프 공통: x는 날짜 기준(두 선의 기간이 달라도 맞춰 그림) */
@@ -1107,6 +1114,53 @@ const dFull = (d, mo) => { const t = String(d).slice(0, 10), yr = t.slice(0, 4);
 let RZ = 0; addEventListener("resize", () => { cancelAnimationFrame(RZ); RZ = requestAnimationFrame(() => Object.keys(CH).forEach(drawChart)); });
 const backBar = (label = "오늘") => `<div class="navbar"><div class="side"><button class="icon-btn press" id="bk" aria-label="뒤로">${BACK}<span>${esc(label)}</span></button></div><div class="side r"></div></div>`;
 const bindBack = () => { const b = document.getElementById("bk"); if (b) b.onclick = () => { BACK_ANIM = true; history.back(); }; };
+/* BofA 두 값은 공개 자료가 없어 직접 확인해서 넣음: 확인 링크 → 숫자·날짜 → 저장 (말이 안 되는 값은 저장 안 함) */
+const BOFA_IN = {
+  fms: {k: "fms_cash", d: "fms_d", lo: 1.5, hi: 8, jump: 1, unit: "%", q: "BofA fund manager survey cash level", ex: "예: 3.6", label: "현금 비중 (%)", dl: "발표일"},
+  bb: {k: "bb", d: "bb_d", lo: 0, hi: 10, jump: 2.5, unit: "", q: "BofA Hartnett bull bear indicator", ex: "예: 7.4", label: "Bull & Bear 값 (0~10)", dl: "발표일"},
+};
+function bofaForm(key, x){
+  const c = BOFA_IN[key], old = x.status === "오래됨";
+  return `<div class="sec-title" role="heading" aria-level="2">새 값 넣기</div>
+    <div class="card stack">${old ? `<p class="ferr" style="margin:0">새 발표가 지났어요. 확인해서 넣으면 판정에 다시 써요.</p>` : `<p class="note" style="margin:0">새 발표가 나오면 확인해서 넣어 주세요.</p>`}
+      <p style="margin:0"><a class="mc-link" href="https://news.google.com/search?q=${encodeURIComponent(c.q)}&hl=en-US&gl=US&ceid=US:en" target="_blank" rel="noopener">최신 기사에서 확인하기</a></p>
+      <div class="field"><label for="bv">${esc(c.label)}</label><input id="bv" inputmode="decimal" placeholder="${esc(c.ex)}" autocomplete="off"></div>
+      <div class="field"><label for="bd">${esc(c.dl)}</label><input id="bd" type="date" max="${esc(todayK())}" value="${esc(todayK())}"></div>
+      <p class="ferr" id="berr" role="alert" style="margin:0" hidden></p>
+      <button class="btn primary press" id="bsave">저장</button></div>`;
+}
+function bofaBind(key, x){
+  const c = BOFA_IN[key], b = document.getElementById("bsave"), er = document.getElementById("berr");
+  const bad = t => { er.textContent = t; er.hidden = false; };
+  b.onclick = async () => {
+    er.hidden = true;
+    const v = parseFloat(String(document.getElementById("bv").value).replace(",", ".")), d = document.getElementById("bd").value;
+    if (!Number.isFinite(v) || v < c.lo || v > c.hi) return bad(`${c.lo}~${c.hi} 사이 숫자로 넣어 주세요`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > todayK()) return bad("발표일을 오늘이나 그 전 날짜로 골라 주세요");
+    if (x.asof && d < String(x.asof).slice(0, 10)) return bad(`지금 값(${mMD(x.asof)})보다 옛날 날짜예요`);
+    const vv = Math.round(v * 10) / 10;
+    if (x.value != null && Math.abs(vv - x.value) > c.jump && b.dataset.ok !== vv + d){ b.dataset.ok = vv + d; return bad(`직전 ${x.value}${c.unit}에서 크게 바뀌었어요. 맞으면 저장을 한 번 더 눌러 주세요`); }
+    b.disabled = true; b.textContent = "저장 중…";
+    try{ await saveBofa(key, vv, d); toast("저장했어요"); renderMacDetail(key); }
+    catch(e){ b.disabled = false; b.textContent = "저장"; bad(e.message); }
+  };
+}
+async function saveBofa(key, v, d){
+  if (!(await repoPrivate())) throw new Error("자료 저장소가 공개라 저장하지 않았어요");
+  for (let t = 0; t < 2; t++){
+    const j = await gh("/contents/" + enc(BRIEF_FILE) + "?ref=main");
+    let raw; try{ raw = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ""))))); }catch(e){ throw new Error("브리핑 파일을 읽지 못해 저장하지 않았어요"); }
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("브리핑 파일 형식이 달라 저장하지 않았어요");
+    const bo = raw.bofa && typeof raw.bofa === "object" ? raw.bofa : (raw.bofa = {});
+    if (key === "fms"){ const pv = bo.fms_cash; Object.assign(bo, {fms_cash: v, fms_d: d, fms_src: "", fms_by: "app", fms_note: v < 4 ? `4% 미만 과열${pv != null ? ` (이전 ${pv} → ${v})` : ""}` : v >= 5 ? "5% 이상 매수 신호" : "4~5% 중립"}); }
+    else Object.assign(bo, {bb: v, bb_d: d, bb_src: "", bb_by: "app", bb_note: v >= 8 ? "매도 신호 (8 이상)" : v <= 2 ? "매수 신호 (2 이하)" : "매도 신호 아래 (8 미만)"});
+    const body = JSON.stringify(raw, null, 1);
+    try{ await gh("/contents/" + enc(BRIEF_FILE), {method: "PUT", body: JSON.stringify({message: `BofA ${key === "fms" ? "펀드매니저 현금" : "B&B"} 직접 입력 (앱): ${v} · ${d}`, content: btoa(unescape(encodeURIComponent(body))), sha: j.sha, branch: "main"})}); }
+    catch(e){ if (t === 0 && /먼저 바뀌었어요/.test(e.message)) continue; throw e; }
+    S.brief = normBrief(raw); try{ if (S.mac) localStorage.setItem("lastMac", JSON.stringify({m: S.mac, b: S.brief, t: Date.now()})); }catch(e){}
+    return;
+  }
+}
 function renderMacDetail(key){
   if (!S.macL){ $app.innerHTML = `<div class="wrap">${backBar()}<div class="title-block"><div class="sk" style="width:50%;height:34px"></div></div><div class="card"><div class="sk" style="width:70%;height:16px"></div></div></div>`; bindBack();
     loadMac().catch(e => { if (!useLastMac()) toast(e.message); S.macL = true; }).then(() => { if (S.dhd === "m:" + key) renderMacDetail(key); }); return; }
@@ -1126,8 +1180,10 @@ function renderMacDetail(key){
     <div class="sec-title" role="heading" aria-level="2">판정 기준</div>
     <div class="card"><p style="margin:0;font-weight:600">${esc(x.rule || "")}</p>${MC_ABOUT[key] ? `<p class="note" style="margin:8px 0 0">${gl(MC_ABOUT[key])}</p>` : ""}</div>
     ${x.mom ? `<div class="sec-title" role="heading" aria-level="2">전월 대비 (최근 6개월)</div><div class="list">${x.mom.slice().reverse().map(p => `<div class="row"><div class="main">${esc(p[0].slice(0, 4))}년 ${+p[0].slice(5, 7)}월</div><b>${p[1] > 0 ? "+" : ""}${esc(p[1])}%</b></div>`).join("")}</div>` : ""}
-    ${safeUrl(x.src) ? `<p class="note" style="margin:12px 4px"><a class="mc-link" href="${esc(safeUrl(x.src))}" target="_blank" rel="noopener">출처 보기</a></p>` : ""}
+    ${safeUrl(x.src) ? `<p class="note" style="margin:12px 4px"><a class="mc-link" href="${esc(safeUrl(x.src))}" target="_blank" rel="noopener">출처 보기</a></p>` : x.by ? `<p class="note" style="margin:12px 4px">직접 확인해서 넣은 값이에요</p>` : ""}
+    ${BOFA_IN[key] ? bofaForm(key, x) : ""}
   </div>`;
+  if (BOFA_IN[key]) bofaBind(key, x);
   if (pts.length > 1) drawChart("mch");
   document.getElementById("bk").onclick = () => { BACK_ANIM = true; history.back(); };
   bindNavbar();
